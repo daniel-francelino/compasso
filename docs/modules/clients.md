@@ -60,12 +60,14 @@ Routes: `/admin/marketing/clients`, `/admin/marketing/clients/new`, `/admin/mark
 
 ## Data model
 
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
 | Entity | Content |
 |---|---|
 | `clients` | `organization_id`, name, `owner_user_id`, `internal_notes`, `tags`, `archived_at`, audit stamps; `unique (id, organization_id)` |
 | `client_contacts` | `client_id`, name, email, phone, role, `is_primary`, audit stamps |
 
-Reference DDL in `technical-architecture-v0.1.md`, section 9.1. Indexes: `(organization_id, archived_at)`, trigram or lower-case index on name, normalized email.
+Schema in [../reference/data-model.md](../reference/data-model.md) section 4. Indexes: `(organization_id, archived_at)`, trigram or lower-case index on name, normalized email.
 
 ## Permissions
 
@@ -84,6 +86,8 @@ Brand access: a Manager sees the clients of the brands they are linked to; a Col
 Audit events: `client.created`, `client.updated`, `client.owner_changed`, `client.archived`, `client.reactivated`, `client.deleted`, `contact.created/updated/deleted`. Do not copy full contact data or notes into the audit metadata; store identifiers and changed field names. Personal data (contact names, emails, phones) follows the retention and deletion policy of the organization (LGPD); archiving does not anonymize.
 
 ## Error codes
+
+> Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
 `client_has_brands`, `client_name_required`, `contact_email_invalid`, `conflict`, `denied`, `not_found`.
 

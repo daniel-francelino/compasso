@@ -119,7 +119,7 @@ Temporary sessions expire after 24 hours without confirmation. Cleanup removes o
 | `media_upload_sessions` | Author, purpose, reserved quota, expiry and status |
 | `content_revision_media` | The ordered versions shown in each revision (immutable) |
 
-The DDL is in `technical-architecture-v0.1.md`, section 9.3. Prefer real foreign keys per origin and `on delete restrict` on versions in use. Guarantee unique usage per version/origin and store order transactionally. **Signed URLs are temporary: never store them as the identity of a file or in persistent documents.**
+The schema is in [../reference/data-model.md](../reference/data-model.md) section 6. Prefer real foreign keys per origin and `on delete restrict` on versions in use. Guarantee unique usage per version/origin and store order transactionally. **Signed URLs are temporary: never store them as the identity of a file or in persistent documents.**
 
 ## 11. Permissions
 

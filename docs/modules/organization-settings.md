@@ -77,6 +77,8 @@ A change to a policy is audited with old and new values; policies that affect ru
 
 ## Data model
 
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
 | Entity | Content |
 |---|---|
 | `organizations` | Name, default time zone, logo asset, contact data |

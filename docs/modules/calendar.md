@@ -64,6 +64,8 @@ External users see a calendar restricted to the **brands they are linked to** an
 
 ## Queries and performance
 
+> Functions: [../reference/functions.md](../reference/functions.md) section 6 (`list_calendar_entries`, `portal_list_calendar`, `reschedule_variant`). Error codes: [../reference/error-codes.md](../reference/error-codes.md). Constants: [../reference/enums.md](../reference/enums.md).
+
 - `list_calendar_entries(p_from, p_to, p_brands, p_channels, p_assignee, p_editorial, p_publication)` filters by `calendar.view` and `can_access_brand`; the range is limited (maximum 100 days) and paginated; index `(brand_id, planned_at)`.
 - The client requests only the visible range plus a margin; changing the range or filter cancels the previous request.
 - Entries are plain data; no totals or aggregates are stored.

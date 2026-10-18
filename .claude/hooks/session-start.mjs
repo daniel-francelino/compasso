@@ -5,7 +5,8 @@ await readStdin();
 process.stdout.write(`PROJECT STANDARDS (Compasso) — apply them on every task.
 
 Source of truth: AGENTS.md (non-negotiables) > docs/standards/base.md (rules with IDs) > docs/modules, docs/spaces, docs/foundations.
-Read docs/README.md for the document map and the module document of what you change BEFORE coding.
+Read docs/README.md for the document map. Work from docs/implementation-plan.md (one task at a time, in order) and read the module document of what you change BEFORE coding.
+Look every name up in docs/reference/ (data-model, functions, routes, enums, error-codes) and the glossary docs/standards/ui-glossary.md; a name not found there must be added to the registry first.
 
 Core behavior:
 1. One way per concern (base.md section 2). Search the repository for an existing implementation first; extend it. Never create a parallel one (e.g. a second audit table/helper/document).

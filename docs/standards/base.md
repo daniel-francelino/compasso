@@ -6,9 +6,10 @@
 
 **Before writing anything**
 
-1. Read the module document of what you are changing (`docs/modules/*.md`, `docs/spaces/*.md`, `docs/foundations/*.md`) and the sections of this file listed in the *Rule map* (section 12).
-2. **Search the repository** for an existing implementation (component, hook, function, constant, SQL function, document). Reuse or extend it. Creating a second way of doing the same thing is a defect (rule **GOLD-2**).
-3. Write down (in the plan or the commit message) which rule IDs apply.
+1. Read the module document of what you are changing (`docs/modules/*.md`, `docs/spaces/*.md`, `docs/foundations/*.md`) and the sections of this file listed in the *Rule map* (section 12). If you are taking a planned task, find it in [../implementation-plan.md](../implementation-plan.md).
+2. **Look names up in the registries** ([../reference/README.md](../reference/README.md)): tables and columns, functions, routes, statuses/enums, error codes, actions, notification kinds, audit actions, UI terms. Use them exactly. A name that is not there is **not allowed to exist yet** (GOLD-4): add it to the registry first.
+3. **Search the repository** for an existing implementation (component, hook, function, constant, SQL function, document). Reuse or extend it. Creating a second way of doing the same thing is a defect (rule **GOLD-2**).
+4. Write down (in the plan or the commit message) which rule IDs apply.
 
 **While writing**: follow the canonical patterns (section 2) and templates (section 5). Do not invent names, tables, actions, error codes or routes that are not in the documentation; add them to the documentation in the same change (**DOC-2**).
 
@@ -61,6 +62,8 @@ Search these locations first. If a row says "forbidden", using that alternative 
 | **Menu** | `nav-config.ts` | Hard-coded menus |
 | **Feature docs** | One document per module in `docs/modules/`; one per area elsewhere | New overlapping documents (including new "audit" or "plan" documents) |
 | **Audit documents** | `docs/audits/<topic>.md` using the template in section 8.3, **one file per topic**, updated in place | Several files for the same topic, dated copies, scattered findings |
+
+The **registries** that hold the exact names are in [../reference/](../reference/README.md): `data-model.md` (tables), `functions.md` (SQL/server functions and who writes audit/notifications), `routes.md`, `enums.md` (statuses, keys), `error-codes.md` (codes and pt-BR messages), plus the action catalog ([../foundations/roles-and-actions.md](../foundations/roles-and-actions.md)), the notification kinds ([../foundations/notifications.md](../foundations/notifications.md)), the audit actions ([../modules/audit.md](../modules/audit.md)) and the UI terms ([ui-glossary.md](ui-glossary.md)). Look there before naming anything.
 
 When a row is missing for something you need, propose the row here **first** (section 9).
 
@@ -288,7 +291,12 @@ Never carry out the deviation and "fix the docs later" (GOLD-3).
 
 | Change | Update in the same change |
 |---|---|
-| New table / column / constraint | Module doc (data model), `technical-architecture` DDL section if it is core, migration, `db:types`, pgTAP test |
+| New table / column / constraint | [../reference/data-model.md](../reference/data-model.md), module doc (rules), migration, `db:types`, pgTAP test |
+| New SQL/server function | [../reference/functions.md](../reference/functions.md) (actions, audit, notifications, errors), module doc, tests |
+| New route | [../reference/routes.md](../reference/routes.md), `nav-config`, module doc (screens) |
+| New status / enum value / key | [../reference/enums.md](../reference/enums.md), `CHECK`, TS constant, labels, module doc |
+| New UI term or message | [ui-glossary.md](ui-glossary.md) and, for errors, [../reference/error-codes.md](../reference/error-codes.md) |
+| Task finished | [../implementation-plan.md](../implementation-plan.md) status column |
 | New action (permission) | `roles-and-actions.md` catalog and starting roles, SQL `actions` seed, `Action` constant, `nav-config`/guards, pgTAP matrix |
 | New status | Module doc (statuses and transitions), `CHECK`, TS constant, `statusStyles`/`StatusBadge` mapping, tests |
 | New error code | SQL `raise exception`, `errors.ts` message, module doc error codes |
@@ -344,6 +352,7 @@ A feature is done only when every item is true (or explicitly marked "not applic
 |---|---|
 | After editing code | `npm run lint` · `npm run typecheck` · `npm run format:check` |
 | After touching SQL or constants | `npm run check:consistency` · `npx supabase db reset` · `npx supabase test db` · `npm run db:types` |
+| After touching documents or registries | `npm run check:docs` (`node scripts/check-docs.mjs`): relative links, and that error codes, actions, audit actions and notification kinds used in `reference/functions.md` and `reference/routes.md` exist in their registries |
 | After touching flows | `npm run test` (Vitest) · `npm run e2e` (Playwright) |
 | Before pushing | the `pre-push` hook runs lint, typecheck and check:consistency |
 | Searching for existing code | `grep`/glob in `src/`, `supabase/`, `docs/` for the concern name (section 2) |
@@ -354,7 +363,10 @@ If a command cannot be run in the current environment, say so and list what rema
 
 | Task | Read |
 |---|---|
-| Any change | This file, sections 1–4 |
+| Any change | This file, sections 1–4; the registries in [../reference/README.md](../reference/README.md); the task in [../implementation-plan.md](../implementation-plan.md) |
+| New copy or label in the UI | [ui-glossary.md](ui-glossary.md), [../reference/enums.md](../reference/enums.md), [../reference/error-codes.md](../reference/error-codes.md) |
+| New route | [../reference/routes.md](../reference/routes.md) |
+| New function (SQL or server) | [../reference/functions.md](../reference/functions.md) |
 | New or changed screen | Section 8.1, [admin-layout-and-standards.md](admin-layout-and-standards.md), [design-system.md](design-system.md), the module document |
 | New or changed server function | Sections 5.1, 7, [../foundations/roles-and-actions.md](../foundations/roles-and-actions.md) |
 | New table, policy or SQL function | Sections 5.5, 5.6, 6, [../technical-architecture-v0.1.md](../technical-architecture-v0.1.md) sections 8–10 |

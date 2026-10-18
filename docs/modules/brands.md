@@ -69,7 +69,9 @@ Routes: `/admin/marketing/brands`, `/admin/marketing/brands/new`, `/admin/market
 
 ## Data model
 
-`brands` and `brand_members` as in `technical-architecture-v0.1.md`, section 9.1 (composite FK `(client_id, organization_id)`; `check (kind = 'external' or not can_decide)`; index `(user_id, brand_id) where status = 'active'`). Subordinate tables carry `brand_id` with composite foreign keys so nothing crosses brands.
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
+`brands` and `brand_members` as in [../reference/data-model.md](../reference/data-model.md) section 4 (composite FK `(client_id, organization_id)`; `check (kind = 'external' or not can_decide)`; index `(user_id, brand_id) where status = 'active'`). Subordinate tables carry `brand_id` with composite foreign keys so nothing crosses brands.
 
 ## Permissions
 
@@ -82,6 +84,8 @@ Routes: `/admin/marketing/brands`, `/admin/marketing/brands/new`, `/admin/market
 | `brands.manage_members` | Add, revoke members and change `can_decide` | `brands.update` |
 
 ## Error codes
+
+> Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
 `brand_name_taken`, `brand_not_empty`, `member_kind_mismatch`, `last_internal_member`, `approver_without_access`, `conflict`, `denied`.
 

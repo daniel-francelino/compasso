@@ -2,13 +2,16 @@
 
 Documentation, folder names and file names are in **English**; only the user interface copy is in Brazilian Portuguese. The rules of the project are in [../AGENTS.md](../AGENTS.md) and prevail over any document.
 
-Start with the [product document](product-documentation-v0.1.md) (what we are building) and the [technical architecture](technical-architecture-v0.1.md) (how). The documents below detail each area.
+Start with the [product document](product-documentation-v0.1.md) (what we are building) and the [technical architecture](technical-architecture-v0.1.md) (how). To **build**, follow the [implementation plan](implementation-plan.md) task by task, applying [standards/base.md](standards/base.md) and looking every name up in the [registries](reference/README.md). The documents below detail each area.
+
+**Reading order for an implementation task:** `implementation-plan.md` (the task) → the module document → `standards/base.md` rules that apply → `reference/*` registries (names) → `standards/ui-glossary.md` (copy).
 
 ## Folders
 
 | Folder | What it contains | Documents |
 |---|---|---|
-| `standards/` | Rules the code and the interface must follow | [Base](standards/base.md), [Back office layout](standards/admin-layout-and-standards.md), [Design system](standards/design-system.md), [Color palette](standards/color-palette.md), [Project structure](standards/project-structure.md) |
+| `standards/` | Rules the code and the interface must follow | [Base](standards/base.md) (the rulebook, with rule IDs), [Back office layout](standards/admin-layout-and-standards.md), [Design system](standards/design-system.md), [Color palette](standards/color-palette.md), [Project structure](standards/project-structure.md), [UI glossary (pt-BR)](standards/ui-glossary.md) |
+| `reference/` | **Registries**: the exact names of tables, functions, routes, statuses, error codes (look names up here; never invent) | [Index](reference/README.md), [Data model](reference/data-model.md), [Functions](reference/functions.md), [Routes](reference/routes.md), [Enums and keys](reference/enums.md), [Error codes](reference/error-codes.md) |
 | `foundations/` | What sits under everything: accounts, permissions and alerts | [Authentication](foundations/authentication.md), [Roles and actions](foundations/roles-and-actions.md), [Notifications](foundations/notifications.md) |
 | `spaces/` | The spaces and cross-cutting services | [R2 storage](spaces/r2-storage.md), [Media Library](spaces/media-library.md), [Site and CMS](spaces/cms-site.md), [CMS model](spaces/cms-dynamic-architecture.md), [Public site delivery](spaces/public-site-delivery.md) |
 | `modules/` | Functional specifications of each module | [Index](modules/README.md), [Clients](modules/clients.md), [Brands](modules/brands.md), [Channels](modules/channels.md), [Content](modules/content.md), [Approvals](modules/approvals.md), [Calendar](modules/calendar.md), [Dashboard](modules/dashboard.md), [Client Portal](modules/portal.md), [Organization and settings](modules/organization-settings.md), [Audit](modules/audit.md) |

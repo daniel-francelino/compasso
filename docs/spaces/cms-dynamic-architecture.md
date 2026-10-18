@@ -51,7 +51,7 @@ Three layers: **registry** (what *can* exist, in code) → **content** (what the
 
 ## 5. Data model
 
-Conventions: English table and column names; writes only through SQL functions that check `has_action(...)`; reads through RLS; optimistic locking by `version`. The reference DDL for the MVP is in `technical-architecture-v0.1.md`, section 9.4; below is the extended shape.
+Conventions: English table and column names; writes only through SQL functions that check `has_action(...)`; reads through RLS; optimistic locking by `version`. The authoritative schema is [../reference/data-model.md](../reference/data-model.md) section 7 (including `site_entries`, `site_case_study_authorizations`, `site_redirects` and `contact_messages`); below is the shape of the page content and the possible extension.
 
 ### 5.1 Sites and pages
 

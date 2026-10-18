@@ -31,17 +31,70 @@ Events are **append-only**: no `update`, no `delete` (a trigger refuses); the re
 
 **Single writer:** every event is written through the SQL function `audit_write(p_org uuid, p_brand uuid, p_action text, p_entity_type text, p_entity_id uuid, p_metadata jsonb)`, which validates that `p_action` is in the catalog of audit actions and fills `actor_id`, `actor_kind` and `request_id`. Nobody inserts into `audit_events` directly, and there is **one** audit table, **one** TypeScript constant list (`AuditAction` in `lib/shared/audit/actions.ts`) and **one** screen. Adding an event means adding it to this document, to `AuditAction` and to the SQL catalog, then calling `audit_write` (rule base.md section 2).
 
-## Events recorded (minimum)
+## Events recorded (the catalog)
 
-| Domain | Actions |
-|---|---|
-| Access | `auth.login_admin`, `invitation.created/revoked/accepted/resent`, `user.role_changed`, `user.suspended/reactivated`, `role.created/updated/deleted`, `brand.member_added/revoked/can_decide_changed` |
-| Clients and brands | `client.created/updated/owner_changed/archived/reactivated/deleted`, `brand.created/updated/timezone_changed/archived/reactivated/deleted`, `channel.created/updated/archived/reactivated/deleted` |
-| Content | `variant.submitted`, `variant.reopened` (reason), `variant.rescheduled` (old/new instant), `variant.cancelled`, `variant.published_manually`, `content.cancelled/deleted`, `comment.deleted` |
-| Approvals | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.cancelled`, `approval.approver_reassigned`, `approval.reminder_sent` |
-| Media | `media.published`, `media.unpublished`, `media.deleted_permanently`, `media.version_replaced` |
-| Site | `site.page_published`, `site.page_unpublished`, `site.rolled_back`, `site.case_study_authorized/withdrawn`, `site.settings_changed` |
-| Settings | `settings.policy_changed`, `organization.updated` |
+This table is the **registry of audit actions** (rule: one row per action; `AuditAction` in TypeScript and the catalog inside `audit_write` must contain exactly these). Access decisions about accounts and roles (role changes, suspension, approval of access) are **not** here: they live in `profile_audit` and `role_audit`. Logins are not audited here.
+
+| Action | Entity type | Written by |
+|---|---|---|
+| `invitation.created` | `invitation` | `invitation_create` |
+| `invitation.revoked` | `invitation` | `invitation_revoke` |
+| `invitation.accepted` | `invitation` | `accept_invitation` |
+| `client.created` | `client` | `client_save` |
+| `client.updated` | `client` | `client_save` |
+| `client.owner_changed` | `client` | `client_save` |
+| `client.archived` | `client` | `client_set_archived` |
+| `client.reactivated` | `client` | `client_set_archived` |
+| `client.deleted` | `client` | `client_delete` |
+| `contact.created` | `client_contact` | `client_contact_save` |
+| `contact.updated` | `client_contact` | `client_contact_save` |
+| `contact.deleted` | `client_contact` | `client_contact_delete` |
+| `brand.created` | `brand` | `brand_save` |
+| `brand.updated` | `brand` | `brand_save` |
+| `brand.timezone_changed` | `brand` | `brand_save` |
+| `brand.archived` | `brand` | `brand_set_archived` |
+| `brand.reactivated` | `brand` | `brand_set_archived` |
+| `brand.deleted` | `brand` | `brand_delete` |
+| `brand.member_added` | `brand_member` | `brand_member_set` |
+| `brand.member_revoked` | `brand_member` | `brand_member_set` |
+| `brand.member_can_decide_changed` | `brand_member` | `brand_member_set` |
+| `channel.created` | `channel` | `channel_save` |
+| `channel.updated` | `channel` | `channel_save` |
+| `channel.archived` | `channel` | `channel_set_archived` |
+| `channel.reactivated` | `channel` | `channel_set_archived` |
+| `channel.deleted` | `channel` | `channel_delete` |
+| `content.created` | `content_item` | `content_item_save` |
+| `content.updated` | `content_item` | `content_item_save` |
+| `content.cancelled` | `content_item` | `content_item_cancel` |
+| `content.deleted` | `content_item` | `content_item_delete` |
+| `variant.created` | `content_variant` | `content_variant_save` |
+| `variant.updated` | `content_variant` | `content_variant_save`, `content_variant_move` |
+| `variant.submitted` | `content_variant` | `submit_for_approval` |
+| `variant.reopened` | `content_variant` | `reopen_variant` (reason in metadata) |
+| `variant.rescheduled` | `content_variant` | `reschedule_variant` (old and new instant) |
+| `variant.cancelled` | `content_variant` | `content_variant_cancel` |
+| `variant.published_manually` | `content_variant` | `mark_published` |
+| `comment.created` | `comment` | `comment_add`, `portal_add_comment` |
+| `comment.deleted` | `comment` | `comment_delete` |
+| `approval.requested` | `approval_request` | `submit_for_approval`, `reassign_approver` |
+| `approval.decided` | `approval_request` | `portal_decide_approval` |
+| `approval.superseded` | `approval_request` | `submit_for_approval`, `reopen_variant`, `reschedule_variant` |
+| `approval.cancelled` | `approval_request` | `cancel_request` |
+| `approval.approver_reassigned` | `approval_request` | `reassign_approver` |
+| `approval.reminder_sent` | `approval_request` | `send_approval_reminder` |
+| `media.published` | `media_version` | `media_publish_derivative` |
+| `media.unpublished` | `media_version` | `media_withdraw_derivative` |
+| `media.deleted_permanently` | `media_asset` | `media_delete_permanently` |
+| `media.version_replaced` | `media_asset` | `media_replace_version` |
+| `site.page_published` | `site_page` | `publish_site_page` |
+| `site.page_unpublished` | `site_page` | `unpublish_site_page` |
+| `site.rolled_back` | `site_page` | `site_rollback` |
+| `site.case_study_authorized` | `site_page` | `site_case_study_authorize` |
+| `site.case_study_withdrawn` | `site_page` | `site_case_study_withdraw` |
+| `site.settings_changed` | `site` | `site_settings_save`, `site_redirect_save`, `site_redirect_delete` |
+| `settings.policy_changed` | `organization_setting` | `organization_setting_save` |
+| `organization.updated` | `organization` | `organization_save` |
+| `audit.exported` | `audit_event` | `exportAudit` (server function) |
 
 Rule: the **decision** of an approval is an immutable row in `approval_decisions`; the audit event references it; both exist in the same transaction.
 
@@ -64,6 +117,8 @@ Visibility: an event with a `brand_id` is only visible to users who `can_access_
 - The audit never stores passwords, tokens, signed URLs, invitation tokens or secrets.
 
 ## Data model
+
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
 
 ```sql
 create table audit_events (

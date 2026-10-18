@@ -35,6 +35,8 @@ Each item links to the exact record. Counts that would reveal brands or content 
 
 ## Data and functions
 
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
 Server functions (`lib/marketing/dashboard/*.functions.ts`) such as `getAttention`, `getUpcoming`, `getStatusCounts`, `getMyItems`, `getRecentActivity`; outputs validated with zod. Heavy aggregations use SQL functions with the proper indexes `(brand_id, editorial_status)`, `(brand_id, planned_at)`, `(status, due_date)`.
 
 Cache: `staleTime` of 30–60 seconds in TanStack Query; invalidated after relevant mutations (submit, decide, reopen, publish record); live updates through the notification subscription when an approval is decided.

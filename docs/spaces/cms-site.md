@@ -218,7 +218,7 @@ A public server function: zod validation, hidden honeypot field, Cloudflare Turn
 
 ## 12. Portfolio and case studies with client work
 
-A case study may only enter the public site when it has an **authorization record**: the brand, the person who authorized, the date and a consent note (stored in `case_studies` / page content metadata). Only files with a **published public derivative** can be used; client logos follow the same rule. Withdrawing the authorization:
+A case study may only enter the public site when it has an **authorization record** in `site_case_study_authorizations`: the page, the brand, the person who authorized, the date and a consent note (at most one active authorization per page; withdrawal sets `withdrawn_at`). See [../reference/data-model.md](../reference/data-model.md) section 7 and the functions `site_case_study_authorize` / `site_case_study_withdraw`. Only files with a **published public derivative** can be used; client logos follow the same rule. Withdrawing the authorization:
 
 1. marks the case study as "Sai na próxima publicação" and notifies people with `site.publish`;
 2. blocks the next publication (error) until it is removed or re-authorized;

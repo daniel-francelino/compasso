@@ -75,7 +75,9 @@ Route: `/admin/marketing/approvals` and the "Aprovações" tab of a brand.
 
 ## Data model
 
-`approval_requests` and `approval_decisions` as in `technical-architecture-v0.1.md`, section 9.2, with composite foreign keys to the revision and the variant, `approval_one_pending_per_variant` and `approval_decision_once` indexes, and immutability triggers on decisions. Additional columns proposed: `due_date` (date), `message` (text), `viewed_at` (timestamptz), `cancelled_reason`.
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
+`approval_requests` and `approval_decisions` as in [../reference/data-model.md](../reference/data-model.md) section 5, with composite foreign keys to the revision and the variant, `approval_one_pending_per_variant` and `approval_decision_once` indexes, and immutability triggers on decisions. Additional columns proposed: `due_date` (date), `message` (text), `viewed_at` (timestamptz), `cancelled_reason`.
 
 Functions: `submit_for_approval`, `portal_decide_approval`, `portal_get_approval`, `portal_list_pending`, `reassign_approver`, `cancel_request`, `reopen_variant`, `record_request_view`.
 
@@ -96,6 +98,8 @@ Deciding also requires being the designated approver and an active external memb
 `approval.requested`, `approval.decided`, `approval.superseded`, `approval.overdue` (see [../foundations/notifications.md](../foundations/notifications.md)). Email failure never removes a request: it stays available in the portal.
 
 ## Error codes
+
+> Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
 `request_not_pending`, `revision_superseded`, `comment_required`, `approver_without_access`, `approver_required`, `not_designated_approver`, `conflict`, `denied`, `not_found`.
 

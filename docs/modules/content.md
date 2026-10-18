@@ -114,7 +114,9 @@ Comments belong to a variant (and optionally a revision) with visibility `intern
 
 ## Data model
 
-`content_items`, `content_variants`, `content_revisions`, `content_revision_media`, `comments` as in `technical-architecture-v0.1.md`, section 9.2 (composite FKs `(content_item_id, brand_id)` and `(channel_id, brand_id)`, immutability triggers, `unique (variant_id, revision_no)`). Server functions: `submit_for_approval`, `reopen_variant`, `reschedule_variant`, `mark_published`, plus `cancel_variant` and `cancel_item`.
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
+`content_items`, `content_variants`, `content_revisions`, `content_revision_media`, `comments` as in [../reference/data-model.md](../reference/data-model.md) section 5 (composite FKs `(content_item_id, brand_id)` and `(channel_id, brand_id)`, immutability triggers, `unique (variant_id, revision_no)`). Server functions: `submit_for_approval`, `reopen_variant`, `reschedule_variant`, `mark_published`, plus `cancel_variant` and `cancel_item`.
 
 ## Permissions
 
@@ -135,6 +137,8 @@ Comments belong to a variant (and optionally a revision) with visibility `intern
 `content.created/updated/cancelled/deleted`, `variant.created/updated/cancelled`, `variant.submitted`, `variant.reopened` (with reason), `variant.rescheduled`, `variant.published_manually`, `comment.created/deleted`.
 
 ## Error codes
+
+> Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
 `conflict`, `revision_superseded`, `requires_new_revision`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `approver_required`, `approver_without_access`, `transition_not_allowed`, `not_approved`, `denied`, `not_found`.
 

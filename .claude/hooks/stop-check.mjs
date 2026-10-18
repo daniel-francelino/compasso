@@ -25,6 +25,14 @@ if (touchedCode && toolsInstalled()) {
   }
 }
 
+if (state.docs) {
+  const docsCheck = spawnSync("node", ["scripts/check-docs.mjs"], { cwd: projectDir, encoding: "utf8", shell: true });
+  if (docsCheck.status !== 0 && docsCheck.status !== null) {
+    const output = `${docsCheck.stdout ?? ""}${docsCheck.stderr ?? ""}`.trim().slice(0, 2500);
+    problems.push(`The documentation registries are inconsistent (node scripts/check-docs.mjs):\n${output}`);
+  }
+}
+
 if (touchedCode && !state.docs && !state.stopReminded) {
   problems.push(
     "Code or migrations changed but no document was updated. Apply docs/standards/base.md section 9.2: update the module document (data model / rules / screens) and its 'Implementation status' (files, migrations, validation actually performed, what was NOT tested). If no document is affected, say so explicitly.",

@@ -61,7 +61,9 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 
 ## Data model
 
-`channels` as in `technical-architecture-v0.1.md`, section 9.1 (`unique (id, brand_id)`, partial index on active channels). Indexes: `(brand_id) where archived_at is null`, unique `(brand_id, platform, lower(profile_name)) where archived_at is null`.
+> Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
+
+`channels` as in [../reference/data-model.md](../reference/data-model.md) section 4 (`unique (id, brand_id)`, partial index on active channels). Indexes: `(brand_id) where archived_at is null`, unique `(brand_id, platform, lower(profile_name)) where archived_at is null`.
 
 ## Permissions
 
@@ -75,6 +77,8 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 External users never read channels directly; the portal receives only the platform name, icon and profile name of the channels used by the variants shared with them.
 
 ## Error codes
+
+> Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
 `channel_duplicate`, `channel_in_use`, `channel_archived`, `platform_change_forbidden`, `conflict`, `denied`.
 

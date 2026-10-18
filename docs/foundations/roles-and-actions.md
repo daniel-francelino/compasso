@@ -72,6 +72,8 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 | **Roles** | `roles.manage` (`admin_only`) |
 | **Settings** | `settings.manage` (`admin_only`) |
 
+**Reserved actions (NOT in the MVP catalog; do not use until added here):** `approvals.override` (a manager skipping an approval, with reason and audit), `media.upload_external` (client uploads), `content.assign` (assigning owners as a separate permission), `reports.view`. Adding any of them means adding the row above, the migration seed, the `Action` constant and the starting-role changes in the same change.
+
 Dependencies (`requires`) stored in the catalog, for example:
 
 - `content.update` → `content.view`, `channels.view`

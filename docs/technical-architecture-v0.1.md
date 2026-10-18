@@ -15,7 +15,7 @@ Base: [product-documentation-v0.1.md](product-documentation-v0.1.md) (v0.3). Cod
 6. Spaces, modules and folder structure
 7. Authentication, identity and invitations
 8. Authorization: profiles, actions and brand link
-9. Data model (reference DDL)
+9. Data model (summary; schema in reference/data-model.md)
 10. State machines and transactional rules
 11. Media Library (Cloudflare R2)
 12. Public site and CMS
@@ -118,6 +118,9 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Area | Document |
 |---|---|
 | Product scope | [product-documentation-v0.1.md](product-documentation-v0.1.md) |
+| Task-level implementation backlog | [implementation-plan.md](implementation-plan.md) |
+| Registries (tables, functions, routes, enums, error codes) | [reference/README.md](reference/README.md) |
+| UI terms in pt-BR | [standards/ui-glossary.md](standards/ui-glossary.md) |
 | Functional specification of each module | [modules/README.md](modules/README.md) (clients, brands, channels, content, approvals, calendar, dashboard, portal, organization and settings, audit) |
 | Cross-cutting rules, layout, component kit | [standards/base.md](standards/base.md), [standards/admin-layout-and-standards.md](standards/admin-layout-and-standards.md), [standards/design-system.md](standards/design-system.md) |
 | Folder structure and import rules | [standards/project-structure.md](standards/project-structure.md) |
@@ -520,361 +523,17 @@ Each "yes/no" cell of the product document's permission table becomes a pgTAP ca
 
 ---
 
-## 9. Data model (reference DDL)
+## 9. Data model
 
-Conventions: `uuid` PK with `gen_random_uuid()`; `created_at` and `updated_at`; statuses as `text` with `CHECK` (and a matching `as const` constant, verified by `check:consistency`); archiving through `archived_at` where history matters. `organization_id` appears only on top-level entities; subordinate ones carry `brand_id` with **composite foreign keys** to prevent crossings.
+The **authoritative schema** (every table, column, constraint, index, trigger and the suggested migration order) is [reference/data-model.md](reference/data-model.md). This document only states the principles; do not duplicate DDL here (GOLD-2).
 
-> Reference extract. The final migrations add indexes, `updated_at` triggers, RLS policies and the seeding of the action catalog. After each migration: `npm run db:types`.
+Principles:
 
-### 9.1 Identity, profiles and access
-
-`profiles`, `roles`, `actions`, `role_actions`, `profile_audit` and `role_audit` follow the Memoria Print migration (including the triggers that protect columns, transitions and the last Owner), with these differences: no `username`, and with the `kind` column.
-
-```sql
-create table organizations (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  default_timezone text not null default 'America/Sao_Paulo',
-  created_at timestamptz not null default now()
-);
-
-alter table profiles add column kind text not null default 'internal'
-  check (kind in ('internal','external'));
-
-create table clients (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references organizations(id),
-  name text not null,
-  owner_user_id uuid references profiles(id),
-  internal_notes text,
-  archived_at timestamptz,
-  created_at timestamptz not null default now(),
-  unique (id, organization_id)
-);
-
-create table client_contacts (
-  id uuid primary key default gen_random_uuid(),
-  client_id uuid not null references clients(id) on delete cascade,
-  name text not null,
-  email text,
-  phone text,
-  role_title text
-);
-
-create table brands (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null,
-  client_id uuid not null,
-  name text not null,
-  description text,
-  target_audience text,
-  tone_of_voice text,
-  objectives text,
-  references_notes text,
-  visual_identity jsonb not null default '{}',
-  timezone text not null,
-  archived_at timestamptz,
-  created_at timestamptz not null default now(),
-  foreign key (client_id, organization_id) references clients(id, organization_id),
-  unique (id, organization_id)
-);
-create index on brands (organization_id, client_id);
-
-create table brand_members (
-  brand_id uuid not null references brands(id) on delete cascade,
-  user_id uuid not null references profiles(id) on delete cascade,
-  kind text not null check (kind in ('internal','external')),
-  can_decide boolean not null default false,
-  status text not null default 'active' check (status in ('active','revoked')),
-  granted_by uuid references profiles(id),
-  granted_at timestamptz not null default now(),
-  revoked_at timestamptz,
-  primary key (brand_id, user_id),
-  check (kind = 'external' or not can_decide)
-);
-create index on brand_members (user_id, brand_id) where status = 'active';
-
-create table channels (
-  id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null references brands(id),
-  platform text not null check (platform in
-    ('instagram','facebook','linkedin','tiktok','youtube','x','pinterest','threads','email','blog','other')),
-  profile_name text not null,
-  profile_url text,
-  external_id text,
-  archived_at timestamptz,
-  created_at timestamptz not null default now(),
-  unique (id, brand_id)
-);
-create index on channels (brand_id) where archived_at is null;
-```
-
-Trigger: the link's `kind` must match the `kind` of the user's profile; an external profile does not receive internal actions (validated in `save_role` and in `accept_invitation`).
-
-### 9.2 Content, revisions and approval
-
-```sql
-create table content_items (
-  id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null references brands(id),
-  title text not null,
-  objective text,
-  briefing jsonb,
-  internal_notes text,
-  assignee_id uuid references profiles(id),
-  tags text[] not null default '{}',
-  production_due_date date,
-  cancelled_at timestamptz,
-  created_by uuid references profiles(id),
-  created_at timestamptz not null default now(),
-  unique (id, brand_id)
-);
-
-create table content_variants (
-  id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null,
-  content_item_id uuid not null,
-  channel_id uuid not null,
-  format text not null check (format in ('image','carousel','video','text','story','reel','article','other')),
-  editorial_status text not null default 'draft' check (editorial_status in
-    ('draft','in_production','internal_review','awaiting_approval','changes_requested','approved','cancelled')),
-  publication_status text not null default 'unplanned' check (publication_status in
-    ('unplanned','planned','published_manually','cancelled')),
-  planned_at timestamptz,
-  planned_timezone text,
-  approval_due_date date,
-  caption jsonb,
-  call_to_action text,
-  current_revision_id uuid,
-  approved_revision_id uuid,
-  published_at timestamptz,
-  published_url text,
-  published_evidence_media_id uuid,
-  version int not null default 1,
-  created_at timestamptz not null default now(),
-  foreign key (content_item_id, brand_id) references content_items(id, brand_id),
-  foreign key (channel_id, brand_id) references channels(id, brand_id),
-  unique (id, brand_id),
-  check (planned_at is null or planned_timezone is not null),
-  check (publication_status <> 'planned' or planned_at is not null)
-);
-create index on content_variants (brand_id, planned_at);
-create index on content_variants (brand_id, editorial_status);
-create index on content_variants (channel_id);
-
-create table content_revisions (
-  id uuid primary key default gen_random_uuid(),
-  variant_id uuid not null,
-  brand_id uuid not null,
-  revision_no int not null,
-  snapshot jsonb not null,
-  created_by uuid references profiles(id),
-  created_at timestamptz not null default now(),
-  foreign key (variant_id, brand_id) references content_variants(id, brand_id),
-  unique (variant_id, revision_no),
-  unique (id, variant_id)
-);
-
-create table content_revision_media (
-  revision_id uuid not null references content_revisions(id),
-  media_version_id uuid not null references media_versions(id) on delete restrict,
-  position int not null,
-  primary key (revision_id, position)
-);
-
-create table approval_requests (
-  id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null,
-  variant_id uuid not null,
-  revision_id uuid not null,
-  approver_user_id uuid not null references profiles(id),
-  status text not null default 'pending' check (status in
-    ('pending','approved','changes_requested','superseded','cancelled')),
-  requested_by uuid references profiles(id),
-  requested_at timestamptz not null default now(),
-  decided_at timestamptz,
-  foreign key (revision_id, variant_id) references content_revisions(id, variant_id),
-  foreign key (variant_id, brand_id) references content_variants(id, brand_id)
-);
-create unique index approval_one_pending_per_variant on approval_requests (variant_id) where status = 'pending';
-
-create table approval_decisions (
-  id uuid primary key default gen_random_uuid(),
-  request_id uuid not null references approval_requests(id),
-  revision_id uuid not null references content_revisions(id),
-  decided_by uuid not null references profiles(id),
-  outcome text not null check (outcome in ('approved','changes_requested')),
-  comment text,
-  decided_at timestamptz not null default now(),
-  check (outcome <> 'changes_requested' or length(btrim(coalesce(comment,''))) > 0)
-);
-create unique index approval_decision_once on approval_decisions (request_id);
-
-create table comments (
-  id uuid primary key default gen_random_uuid(),
-  brand_id uuid not null,
-  variant_id uuid not null,
-  revision_id uuid,
-  author_id uuid not null references profiles(id),
-  visibility text not null check (visibility in ('internal','external')),
-  body text not null,
-  created_at timestamptz not null default now(),
-  foreign key (variant_id, brand_id) references content_variants(id, brand_id)
-);
-create index on comments (variant_id, created_at);
-```
-
-**Immutability**: `before update or delete` triggers on `content_revisions`, `content_revision_media` and `approval_decisions` raise an exception. `on delete restrict` on `content_revision_media.media_version_id` prevents deleting file versions in use.
-
-### 9.3 Media
-
-```sql
-create table media_assets (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references organizations(id),
-  scope text not null check (scope in ('site','brand')),
-  brand_id uuid references brands(id),
-  display_name text not null,
-  tags text[] not null default '{}',
-  current_version_id uuid,
-  trashed_at timestamptz,
-  created_by uuid references profiles(id),
-  created_at timestamptz not null default now(),
-  check ((scope = 'brand') = (brand_id is not null))
-);
-create index on media_assets (organization_id, scope, brand_id) where trashed_at is null;
-
-create table media_versions (
-  id uuid primary key default gen_random_uuid(),
-  asset_id uuid not null references media_assets(id),
-  version_no int not null,
-  storage_key text not null unique,
-  thumb_key text,
-  display_key text,
-  original_filename text not null,
-  mime_type text,
-  size_bytes bigint,
-  width int, height int, duration_ms int,
-  checksum text,
-  status text not null default 'pending' check (status in ('pending','processing','available','failed')),
-  failure_reason text,
-  public_published_at timestamptz,
-  uploaded_by uuid references profiles(id),
-  created_at timestamptz not null default now(),
-  unique (asset_id, version_no)
-);
-alter table media_assets add foreign key (current_version_id) references media_versions(id);
-
-create table media_collections (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references organizations(id),
-  scope text not null check (scope in ('site','brand')),
-  brand_id uuid references brands(id),
-  parent_id uuid references media_collections(id),
-  name text not null
-);
-
-create table media_collection_items (
-  collection_id uuid not null references media_collections(id) on delete cascade,
-  asset_id uuid not null references media_assets(id) on delete cascade,
-  primary key (collection_id, asset_id)
-);
-
-create table media_usages (
-  id uuid primary key default gen_random_uuid(),
-  media_version_id uuid not null references media_versions(id) on delete restrict,
-  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity')),
-  usage_ref_id uuid not null,
-  alt_text text,
-  created_at timestamptz not null default now(),
-  unique (media_version_id, usage_type, usage_ref_id)
-);
-create index on media_usages (usage_type, usage_ref_id);
-```
-
-The keys (`storage_key`, `thumb_key`, `display_key`) are opaque and generated by the server, as in Memoria Print; no signed URL is stored in the database.
-
-### 9.4 CMS
-
-```sql
-create table sites (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references organizations(id),
-  name text not null,
-  settings jsonb not null default '{}'
-);
-
-create table site_pages (
-  id uuid primary key default gen_random_uuid(),
-  site_id uuid not null references sites(id),
-  kind text not null check (kind in ('home','about','services','portfolio','case_study','contact','blog_post','generic')),
-  slug text not null,
-  status text not null default 'draft' check (status in ('draft','published','unpublished')),
-  draft_content jsonb not null default '{}',
-  published_revision_id uuid,
-  updated_by uuid references profiles(id),
-  updated_at timestamptz not null default now(),
-  unique (site_id, slug)
-);
-
-create table site_page_revisions (
-  id uuid primary key default gen_random_uuid(),
-  page_id uuid not null references site_pages(id),
-  revision_no int not null,
-  content jsonb not null,
-  published_by uuid references profiles(id),
-  published_at timestamptz not null default now(),
-  unique (page_id, revision_no)
-);
-```
-
-### 9.5 Invitations, notifications and audit
-
-```sql
-create table invitations (
-  id uuid primary key default gen_random_uuid(),
-  organization_id uuid not null references organizations(id),
-  email citext not null,
-  role_id uuid not null references roles(id),
-  grants jsonb not null,
-  token_hash text not null unique,
-  status text not null default 'pending' check (status in ('pending','accepted','revoked','expired')),
-  expires_at timestamptz not null,
-  invited_by uuid references profiles(id),
-  accepted_by uuid references profiles(id),
-  accepted_at timestamptz,
-  created_at timestamptz not null default now()
-);
-
-create table audit_events (
-  id bigint generated always as identity primary key,
-  organization_id uuid not null,
-  actor_id uuid,
-  action text not null,
-  entity_type text not null,
-  entity_id uuid,
-  brand_id uuid,
-  metadata jsonb not null default '{}',
-  occurred_at timestamptz not null default now()
-);
-create index on audit_events (organization_id, occurred_at desc);
-create index on audit_events (entity_type, entity_id);
-```
-
-`notification_kinds`, `notifications` and `notification_preferences` follow the Memoria Print model (`dedupe_key` unique per user, `read_at`, `snoozed_until`, `active`/`resolved` status, creation only by `security definer` functions). Requires `create extension citext`.
-
-`audit_events` records **business** actions (approval, reopening, publishing); access decisions stay in `profile_audit` and `role_audit`. Written only by functions; reading requires `audit.view`; no `update` or `delete`.
-
-### 9.6 Integrity checklist for migrations
-
-- RLS enabled on every table, with no policies for `anon`.
-- `updated_at` trigger wherever there is such a column.
-- Do not allow planning a variant on an archived channel.
-- Every new action enters the `actions` table in the same migration that uses it in `has_action`.
-- Every `raise exception 'code'` has a message in `errors.ts` (verified by `check:consistency`).
-- Test: apply the migrations from scratch and over an anonymized dump.
-
----
+- `uuid` primary keys, `timestamptz` instants (UTC) with an IANA zone where a local time matters, deadlines as `date`, statuses as `text` + `CHECK` with a matching TypeScript constant ([reference/enums.md](reference/enums.md)).
+- `organization_id` only on top-level entities; everything below a brand carries `brand_id` and uses **composite foreign keys** so a row can never reference another brand's row.
+- RLS on every table, no policy for `anon`, policies combine the role action and the brand link; **external roles have no policy on internal tables** and read only through `portal_*` functions ([reference/functions.md](reference/functions.md)).
+- Immutability by trigger for revisions, revision media, approval decisions and audit events; optimistic locking by `version`; transitions only through the transactional functions.
+- Statuses, error codes, actions, notification kinds and audit actions are registered in [reference/](reference/README.md) and verified by `npm run check:consistency`.
 
 ## 10. State machines and transactional rules
 
@@ -1176,6 +835,8 @@ In new features: queries and mutations in module hooks (`hooks/<space>/<module>`
 
 ## 16. Routes, guards and navigation
 
+> The complete URL list with the required action per route is [reference/routes.md](reference/routes.md) (authoritative). The tree and rules below explain the structure.
+
 Routes in `src/routes`, organized by **route groups** (folders in parentheses, which do not change the URL). Folders with `_` are layouts with no URL. The route file only assembles the screen.
 
 ```
@@ -1406,6 +1067,8 @@ Rules: `.env.local` outside git (`*.local` in `.gitignore`); `.env.example` vers
 
 ## 23. Implementation plan by phase
 
+> The task-level backlog (IDs, dependencies, documents to read, acceptance checks and status) is [implementation-plan.md](implementation-plan.md); this section keeps the phase summary and estimates.
+
 Rough estimates for one or two people; review after phase 0.
 
 ### Phase 0 — Foundations (about 1 week)
@@ -1528,12 +1191,12 @@ npm run format:check
 | Public site and `/admin` | Sections 12 and 16 |
 | Back office by spaces | Sections 6 and 16 |
 | CMS | Section 12 |
-| Clients, brands and channels | Section 9.1; `marketing` modules |
+| Clients, brands and channels | [reference/data-model.md](reference/data-model.md) section 4; `marketing` modules |
 | Client access for approval | Sections 7, 8.4 and 14 |
 | Editorial calendar | Section 13 |
 | Cross-cutting media library | Section 11 |
 | Supabase and R2 | Sections 4, 9 and 11 |
-| Variants and immutable revisions | Sections 9.2 and 10 |
+| Variants and immutable revisions | [reference/data-model.md](reference/data-model.md) section 5; section 10 |
 | Approval rules 1 to 8 | Sections 10.1 and 10.2 |
 | Profiles and permissions | Section 8 |
 | Isolation between brands | Sections 8 and 22 |
