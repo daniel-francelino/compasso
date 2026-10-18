@@ -96,6 +96,8 @@ Import: always through the alias (`@/components/marketing/content/variant-form`)
 
 This rule is enforced by `no-restricted-imports` in `eslint.config.js`, one block per space, so a violation shows up as a lint error and not only in review.
 
+**Service-role client (SEC-5).** `@/lib/shared/supabase/admin.server` may be imported only from `src/lib/shared/auth/invitations/`, `src/lib/shared/jobs/`, `src/lib/shared/audit/` and `src/lib/shared/media/**/*.server.ts`; everywhere else it is a lint error. Adding a module to that list is a rule change (base.md section 9.1).
+
 ## 6. Routes
 
 Routes stay in `src/routes` (TanStack Router generates `routeTree.gen.ts` from there) and are organized by space with **route groups**: folders in parentheses, such as `(marketing)`. A group is only organization: it **does not change the URL** and does not create a layout.

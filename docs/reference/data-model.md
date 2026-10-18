@@ -34,18 +34,23 @@ create table organizations (
   default_timezone text not null default 'America/Sao_Paulo',
   logo_media_version_id uuid,
   contact_email text,
+  version int not null default 1,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create unique index organizations_single on organizations ((true));
 
 create table organization_settings (
   key text primary key,
   value jsonb not null,
   version int not null default 1,
-  updated_by uuid references profiles(id),
+  updated_by uuid,
   updated_at timestamptz not null default now()
 );
 ```
+
+The MVP has exactly one organization (the unique index `organizations_single`); migration 1 seeds that row with `on conflict do nothing`. `organizations.logo_media_version_id` and `organization_settings.updated_by` are plain `uuid` columns in migration 1; their foreign keys (to `media_versions` and `profiles`) are added by the migrations that create those tables. In migration 1 the tables have RLS enabled and **no policies yet** (nothing is readable); policies arrive in migration 2 when `has_action` exists. The shared trigger function `set_updated_at()` is created in migration 1.
 
 `organization_settings.key` ∈ `policies.approvals`, `policies.calendar`, `policies.uploads`, `policies.urls`, `policies.retention`, `policies.invitations`, `policies.security`, `policies.email` (validated by zod per key).
 
@@ -631,7 +636,7 @@ Applies to **every** table above when the migration is written (base.md section 
 
 | # | Migration | Contains |
 |---|---|---|
-| 1 | `core_extensions_and_organization` | extensions, `organizations`, `organization_settings` |
+| 1 | `core_extensions_and_organization` | extensions, `set_updated_at()`, `organizations` (+ seed row), `organization_settings`; RLS on, policies deferred to migration 2 |
 | 2 | `auth_roles_profiles` | `roles`, `actions`, `role_actions`, `profiles`, audit tables, guards, `has_action`, `is_admin`, `my_actions`, seeds |
 | 3 | `auth_invitations` | `invitations`, `accept_invitation`, invitation functions |
 | 4 | `audit_events` | `audit_events`, `audit_write` and its action catalog |

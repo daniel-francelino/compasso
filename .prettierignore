@@ -1,0 +1,15 @@
+node_modules
+dist
+.output
+.vinxi
+.vercel
+package-lock.json
+routeTree.gen.ts
+database.types.ts
+
+/docs
+*.md
+/supabase
+/public
+.claude
+.tanstack

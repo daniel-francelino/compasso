@@ -1000,7 +1000,7 @@ Variables (names aligned with Memoria Print):
 | `R2_BUCKET`, `R2_PUBLIC_BUCKET` | Server only | Private and public |
 | `SITE_MEDIA_BASE_URL` | Server (and public read) | Public bucket domain |
 | `RESEND_API_KEY`, `EMAIL_FROM` | Server only | Transactional email |
-| `TURNSTILE_SITE_KEY` (client), `TURNSTILE_SECRET` | Mixed | Contact form |
+| `VITE_TURNSTILE_SITE_KEY` (public), `TURNSTILE_SECRET` (server) | Mixed | Contact form |
 | `CRON_SECRET` | Server only | Cron authentication |
 | `OWNER_EMAIL`, `OWNER_PASSWORD` | Only at seed time | First Owner; never versioned |
 

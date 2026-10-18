@@ -86,7 +86,7 @@ if (isSource && !generated) {
   ) {
     deny("UI-9: do not use the default Tailwind palette. Use palette tokens.");
   }
-  if (/\b(localStorage|sessionStorage)\b/.test(text) && !/lib\/shared\/stored\.ts$/.test(relativePath)) {
+  if (/\b(localStorage|sessionStorage)\b/.test(text) && !/lib\/shared\/stored-keys\.ts$/.test(relativePath)) {
     deny("CODE-4: browser storage goes through StoredKey + readStored/writeStored.");
   }
   if (/dangerouslySetInnerHTML/.test(text)) {
