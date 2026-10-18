@@ -67,8 +67,15 @@ export const QueryKey = {
       ["portal", "approvals", brandId, filters] as const,
     approval: (id: string) => ["portal", "approval", id] as const,
     comments: (variantId: string) => ["portal", "comments", variantId] as const,
+    calendar: (brandId: string, filters: Filters) =>
+      ["portal", "calendar", brandId, filters] as const,
     urls: (revisionId: string, variant: string, versionIds: readonly string[]) =>
       ["portal", "urls", revisionId, variant, versionIds] as const,
+  },
+  Calendar: {
+    all: () => ["calendar"] as const,
+    entries: (filters: Filters) => ["calendar", "entries", filters] as const,
+    zone: () => ["calendar", "zone"] as const,
   },
   Dashboard: {
     all: () => ["dashboard"] as const,

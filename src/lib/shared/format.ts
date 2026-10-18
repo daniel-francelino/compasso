@@ -130,3 +130,60 @@ export function addDaysToDate(date: string, days: number): string {
   const moved = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
   return moved.toISOString().slice(0, 10);
 }
+
+const DAY_MS = 86400000;
+
+export function localInputOccurrences(value: string, timeZone: string): Date[] {
+  const match = LOCAL_INPUT.exec(value);
+  if (match === null) return [];
+  const naive = Date.UTC(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+  );
+  const offsets = new Set([
+    offsetMinutes(naive - DAY_MS, timeZone),
+    offsetMinutes(naive + DAY_MS, timeZone),
+  ]);
+  const found = new Map<number, Date>();
+  for (const offset of offsets) {
+    const candidate = new Date(naive - offset * 60000);
+    if (instantToLocalInput(candidate, timeZone) === value)
+      found.set(candidate.getTime(), candidate);
+  }
+  return [...found.values()].sort((a, b) => a.getTime() - b.getTime());
+}
+
+export function formatMonthYear(date: string): string {
+  const match = DATE_ONLY.exec(date);
+  if (match === null) return date;
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, 1)));
+}
+
+export function formatWeekdayShort(date: string): string {
+  const match = DATE_ONLY.exec(date);
+  if (match === null) return date;
+  return new Intl.DateTimeFormat("pt-BR", { weekday: "short", timeZone: "UTC" })
+    .format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))))
+    .replace(".", "");
+}
+
+export function formatDayMonth(date: string): string {
+  const match = DATE_ONLY.exec(date);
+  if (match === null) return date;
+  return new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short", timeZone: "UTC" })
+    .format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))))
+    .replace(".", "");
+}
+
+export function weekdayIndex(date: string): number {
+  const match = DATE_ONLY.exec(date);
+  if (match === null) return 0;
+  return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))).getUTCDay();
+}

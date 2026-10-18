@@ -17,7 +17,9 @@
 | Approval (action/result) | Aprovação | |
 | Approver | Aprovador(a) | |
 | Briefing | Briefing | |
-| Calendar | Calendário | |
+| Calendar | Calendário | Views: "Mês", "Semana", "Lista"; button "Hoje"; filter "Somente prazos" |
+| Items without a date | Sem data | Side list of the calendar; button "Planejar…" |
+| Change the date | Alterar data… | Opens the confirmation dialog; confirm with "Confirmar nova data" |
 | Deadline (production / approval) | Prazo de produção / Prazo de aprovação | |
 | Planned date | Data prevista | "Planejada" for the status |
 | Manual publication | Publicação manual | Button: "Registrar publicação" |

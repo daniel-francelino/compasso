@@ -2,6 +2,9 @@ import {
   ApprovalOutcome,
   ApprovalRequestStatus,
   BrandMemberStatus,
+  CalendarAlert,
+  CalendarEntryKind,
+  CalendarView,
   CommentVisibility,
   ContentFormat,
   DashboardReason,
@@ -103,4 +106,24 @@ export const dashboardReasonLabels: Record<DashboardReason, string> = {
   [DashboardReason.ProductionOverdue]: "Prazo de produção vencido",
   [DashboardReason.PlannedDatePassed]: "Data prevista ultrapassada",
   [DashboardReason.ApproverWithoutAccess]: "Aprovador sem acesso",
+};
+
+export const calendarViewLabels: Record<CalendarView, string> = {
+  [CalendarView.Month]: "Mês",
+  [CalendarView.Week]: "Semana",
+  [CalendarView.List]: "Lista",
+};
+
+export const calendarEntryKindLabels: Record<CalendarEntryKind, string> = {
+  [CalendarEntryKind.Publication]: "Publicação planejada",
+  [CalendarEntryKind.Published]: "Publicado",
+  [CalendarEntryKind.ApprovalDeadline]: "Prazo de aprovação",
+  [CalendarEntryKind.ProductionDeadline]: "Prazo de produção",
+};
+
+export const calendarAlertLabels: Record<CalendarAlert, string> = {
+  [CalendarAlert.TooManyOnDay]: "Muitas publicações neste canal no mesmo dia",
+  [CalendarAlert.TooClose]: "Outra publicação neste canal em menos de 30 minutos",
+  [CalendarAlert.NotApprovedYet]: "Ainda não aprovado",
+  [CalendarAlert.DatePassed]: "A data já passou e a publicação não foi registrada",
 };

@@ -20,7 +20,8 @@ import {
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
-import { StatusBadge, type StatusTone } from "@/components/shared/admin/status-badge";
+import { StatusBadge } from "@/components/shared/admin/status-badge";
+import type { StatusTone } from "@/components/shared/admin/status-tones";
 import { ChangeRoleDialog } from "@/components/shared/settings/users/change-role-dialog";
 import { InviteDialog } from "@/components/shared/settings/users/invite-dialog";
 import { Button } from "@/components/shared/ui/button";

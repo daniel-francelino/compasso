@@ -1729,6 +1729,10 @@ export type Database = {
         Args: { p_brand: string | null; p_archived: boolean | null }
         Returns: Json
       }
+      calendar_range_ok: {
+        Args: { p_from: string | null; p_to: string | null }
+        Returns: boolean
+      }
       can_access_brand: {
         Args: { p_brand: string | null }
         Returns: boolean
@@ -1813,6 +1817,10 @@ export type Database = {
         Args: { p_item: string | null }
         Returns: undefined
       }
+      content_item_is_ready: {
+        Args: { p_item: string | null }
+        Returns: boolean
+      }
       content_item_save: {
         Args: { p_item: Json | null }
         Returns: Json
@@ -1876,6 +1884,10 @@ export type Database = {
       is_external_brand_member: {
         Args: { p_brand: string | null; p_must_decide?: boolean | null }
         Returns: boolean
+      }
+      list_calendar_entries: {
+        Args: { p_from: string | null; p_to: string | null; p_brands?: string[] | null; p_channels?: string[] | null; p_assignee?: string | null; p_editorial?: string[] | null; p_publication?: string[] | null }
+        Returns: Json
       }
       mark_published: {
         Args: { p_variant: string | null; p_published_at: string | null; p_url: string | null; p_evidence_media_version: string | null; p_note: string | null }
@@ -1953,6 +1965,10 @@ export type Database = {
         Args: never
         Returns: string[]
       }
+      notification_date_text: {
+        Args: { p_date: string | null }
+        Returns: string
+      }
       notification_kind_save: {
         Args: { p_kind: string | null; p_default_lead_days: number[] | null; p_default_email: boolean | null }
         Returns: undefined
@@ -1960,6 +1976,10 @@ export type Database = {
       notification_lead_days: {
         Args: { p_user: string | null; p_kind: string | null }
         Returns: number[]
+      }
+      notify_scan_content: {
+        Args: never
+        Returns: undefined
       }
       notify_scan_invitations: {
         Args: never
@@ -2005,6 +2025,10 @@ export type Database = {
         Args: never
         Returns: Json
       }
+      portal_list_calendar: {
+        Args: { p_brand: string | null; p_from: string | null; p_to: string | null }
+        Returns: Json
+      }
       portal_list_comments: {
         Args: { p_variant: string | null }
         Returns: Json
@@ -2035,6 +2059,14 @@ export type Database = {
       }
       reopen_variant: {
         Args: { p_variant: string | null; p_reason: string | null }
+        Returns: Json
+      }
+      reschedule_production_deadline: {
+        Args: { p_item: string | null; p_date: string | null; p_expected_version: number | null }
+        Returns: Json
+      }
+      reschedule_variant: {
+        Args: { p_variant: string | null; p_planned_at: string | null; p_timezone: string | null; p_expected_version: number | null }
         Returns: Json
       }
       resolve_notifications: {

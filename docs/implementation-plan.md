@@ -67,10 +67,10 @@
 
 | ID | Task | Read | Done when | Status |
 |---|---|---|---|---|
-| P4-01 | Spike: FullCalendar vs porting the Memoria Print calendar; decide and record the decision in calendar.md | calendar, architecture §4 | decision documented | todo |
-| P4-02 | `list_calendar_entries`, `portal_list_calendar`, `reschedule_variant`; time zone tests (DST) | calendar, functions §6 | DST and non-DST zones tested | todo |
-| P4-03 | Calendar UI (month, week, list, no-date list, drag with confirmation, filters in URL); portal calendar | calendar, design-system | acceptance criteria of calendar.md | todo |
-| P4-04 | Scheduled notifications (`approval.overdue`, `content.due_soon`, `variant.publish_due`) | notifications | scanners idempotent | todo |
+| P4-01 | Spike: FullCalendar vs porting the Memoria Print calendar; decide and record the decision in calendar.md | calendar, architecture §4 | decision documented | done (2026-10-18): own grid, no library; reasons in [modules/calendar.md](modules/calendar.md) "Decisions of phase 4" |
+| P4-02 | `list_calendar_entries`, `portal_list_calendar`, `reschedule_variant`; time zone tests (DST) | calendar, functions §6 | DST and non-DST zones tested | done on PGlite (2026-10-18): migration `calendar`, 56 assertions; the daylight-saving tests of Europe/Lisbon and America/Sao_Paulo run in the TypeScript converter (22 unit tests), not in the database |
+| P4-03 | Calendar UI (month, week, list, no-date list, drag with confirmation, filters in URL); portal calendar | calendar, design-system | acceptance criteria of calendar.md | done in code (2026-10-18). Not seen in a browser ([pending-external-setup.md](pending-external-setup.md) V20); day-level drag only (D19) |
+| P4-04 | Scheduled notifications (`approval.overdue`, `content.due_soon`, `variant.publish_due`) | notifications | scanners idempotent | done on PGlite (2026-10-18): `notify_scan_content` also covers `content.overdue`; 15 assertions; the daily job `/api/cron/due-notifications` waits for the real cron ([pending-external-setup.md](pending-external-setup.md) V21) |
 
 ## Phase 5 — Site and CMS
 

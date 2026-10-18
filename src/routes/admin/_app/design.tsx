@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
-import { type StatusTone, StatusBadge } from "@/components/shared/admin/status-badge";
+import { StatusBadge } from "@/components/shared/admin/status-badge";
+import type { StatusTone } from "@/components/shared/admin/status-tones";
 import { Button } from "@/components/shared/ui/button";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 

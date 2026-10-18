@@ -35,6 +35,8 @@ for (const path of [
   "/admin/marketing/content/00000000-0000-0000-0000-000000000001",
   "/admin/marketing/variants/00000000-0000-0000-0000-000000000001",
   "/admin/marketing/approvals/00000000-0000-0000-0000-000000000001",
+  "/admin/marketing/calendar",
+  "/admin/marketing/brands/00000000-0000-0000-0000-000000000001/calendar",
 ]) {
   test(`${path} requires a session`, async ({ page }) => {
     await page.goto(path);
@@ -51,6 +53,7 @@ for (const path of [
   "/portal/brands/00000000-0000-0000-0000-000000000001",
   "/portal/brands/00000000-0000-0000-0000-000000000001/approvals",
   "/portal/brands/00000000-0000-0000-0000-000000000001/approvals/00000000-0000-0000-0000-000000000002",
+  "/portal/brands/00000000-0000-0000-0000-000000000001/calendar",
   "/portal/notifications",
   "/portal/profile",
 ]) {
@@ -62,5 +65,12 @@ for (const path of [
 
 test("the email outbox job refuses calls without the cron secret", async ({ request }) => {
   const response = await request.get("/api/cron/email-outbox");
+  expect(response.status()).toBe(401);
+});
+
+test("the scheduled notifications job refuses calls without the cron secret", async ({
+  request,
+}) => {
+  const response = await request.get("/api/cron/due-notifications");
   expect(response.status()).toBe(401);
 });

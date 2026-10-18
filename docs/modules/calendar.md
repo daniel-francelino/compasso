@@ -96,6 +96,26 @@ External users see a calendar restricted to the **brands they are linked to** an
 - Filters and range are restored from the URL; keyboard users can do everything without dragging.
 - No calendar action triggers publishing or calls to social networks.
 
+## Decisions of phase 4
+
+1. **Own calendar, no library** (spike P4-01, 2026-10-18). FullCalendar was not adopted: it brings its own styles and time-zone plugin, which would have to be fitted to the tokens of [../standards/color-palette.md](../standards/color-palette.md), and the project needs only month, week and list views with day-level drag. The Memoria Print calendar was not ported (it is not part of this repository). The grid is a plain CSS grid in `shared/calendar` that reuses the kit, the status styles and the time-zone helpers of `format.ts`. Cost: no hourly lanes and no multi-day events, which the MVP does not need. If hourly lanes are wanted later, adopting a library becomes a new decision (CODE-12).
+2. **Drag moves the day, not the time.** Dragging an entry to another day keeps its local time of day and always opens the confirmation dialog, where the time can be changed ("Alterar data…" is the keyboard alternative). Hour-level dragging is not offered.
+3. **The approval deadline is read-only on the calendar.** It belongs to the approval request, which is immutable after sending (`approval_requests_guard`); changing it means sending a new version. Only the production deadline moves (`reschedule_production_deadline`, which does not create a revision).
+4. **Rescheduling a variant that is awaiting approval or approved creates the new revision straight away**, copied from the current one with the new date and addressed to the same approver; the pending request is superseded (acceptance criterion "returns the variant to awaiting approval"). If the approver no longer has access the call fails with `approver_without_access` and nothing changes. A variant in any earlier state just changes its date.
+5. **A date in the past is accepted by the server**; the dialog warns first (`date_in_past` is a UI warning, never raised by SQL).
+6. **The conflict alerts use fixed limits** (3 publications per channel per day, 30 minutes between two of the same channel) kept in `lib/shared/calendar/alerts.ts`; they are not yet a setting of `policies.calendar`.
+7. **The week starts on Monday.** `policies.calendar.weekStartsOnMonday` is stored but the calendar does not read it yet, because `organization_settings` is readable only with `settings.manage`.
+8. **A window of at most 100 days and 500 entries** replaces pagination: `list_calendar_entries` answers with `truncated = true` and the screen asks the person to filter. The "Sem data" list comes in the same call (at most 100, filtered like the grid).
+9. **Mobile shows the list** (the grid is not drawn below 768 px), as the document asks; the list is also available on desktop.
+
 ## Implementation status
 
-Not started (phase 4 of the plan; a spike decides FullCalendar versus porting the Memoria Print calendar).
+Phase 4 (tasks P4-01 to P4-04, 2026-10-18).
+
+**Files.** Migration `20261018101000_calendar.sql` (`list_calendar_entries`, `reschedule_variant`, `reschedule_production_deadline`, `portal_list_calendar`, `notify_scan_content` and the helpers `calendar_range_ok`, `content_item_is_ready`, `notification_date_text`); tests `supabase/tests/11_calendar.test.sql` and `12_calendar_notifications.test.sql`. Logic in `src/lib/shared/calendar/` (range, grouping by day, alerts, daylight-saving resolution, search schema), server functions in `src/lib/marketing/calendar/` and `src/lib/portal/calendar/`, state in `hooks/shared/use-calendar-state.ts`, components in `components/shared/calendar/`, `components/marketing/calendar/` and `components/portal/calendar/`, routes `/admin/marketing/calendar`, `/admin/marketing/brands/$brandId/calendar` and `/portal/brands/$brandId/calendar`, and the job `/api/cron/due-notifications` (daily, in `vercel.json`). `DateTimeField` now asks which occurrence when a local time happens twice. The menu has "Calendário", the brand has a "Calendário" tab, and the portal brand page links to the calendar.
+
+**Validated.** 71 new SQL assertions on PGlite (range limit, filters, brand isolation, collaborator without `calendar.manage`, external user and `anon` refused, rescheduling in every state, new revision and superseded request, approver without access, portal isolation and absence of internal fields, the four scanners: lead times, idempotency, preferences, resolution); 22 unit tests (visible range, zones, deadlines, conflict alerts, daylight saving in Europe/Lisbon in March and October and in America/Sao_Paulo); lint, typecheck, build and the 27 Playwright guard tests (the new routes and the new job require a session or the secret).
+
+**Not tested.** The screens in a browser (grid, drag and drop, keyboard navigation, 360 px, the dialogs); the two-connection race of rescheduling against a decision; the real `pg_cron` and the Vercel schedule; daylight-saving cases in the real database (only the TypeScript converter was exercised); the `organizations` read used for the default zone. Listed in [../pending-external-setup.md](../pending-external-setup.md) (V19 to V21, D18 to D21).
+
+**Not done.** `dashboard_upcoming` and the "next publications" block of the dashboard; a calendar setting for the conflict limits and the week start; ICS export (out of the MVP).

@@ -108,6 +108,7 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 |---|---|---|
 | `/api/cron/media-cleanup` | Delete expired upload sessions and orphan objects | `Authorization: Bearer ${CRON_SECRET}` |
 | `/api/cron/email-outbox` | Send queued emails with retry | same |
+| `/api/cron/due-notifications` | Run `generate_due_notifications()` once a day (the scheduled kinds); the alternative to `pg_cron` | same |
 | `/api/cron/notifications` | Only if `pg_cron` is unavailable | same |
 | `/api/media/download` (optional) | Streaming download with re-validation | session + authorization |
 

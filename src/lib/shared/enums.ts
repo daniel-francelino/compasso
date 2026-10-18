@@ -165,3 +165,26 @@ export const DashboardReason = {
   ApproverWithoutAccess: "approver_without_access",
 } as const;
 export type DashboardReason = ValueOf<typeof DashboardReason>;
+
+export const CalendarView = {
+  Month: "month",
+  Week: "week",
+  List: "list",
+} as const;
+export type CalendarView = ValueOf<typeof CalendarView>;
+
+export const CalendarEntryKind = {
+  Publication: "publication",
+  Published: "published",
+  ApprovalDeadline: "approval_deadline",
+  ProductionDeadline: "production_deadline",
+} as const;
+export type CalendarEntryKind = ValueOf<typeof CalendarEntryKind>;
+
+export const CalendarAlert = {
+  TooManyOnDay: "too_many_on_day",
+  TooClose: "too_close",
+  NotApprovedYet: "not_approved_yet",
+  DatePassed: "date_passed",
+} as const;
+export type CalendarAlert = ValueOf<typeof CalendarAlert>;

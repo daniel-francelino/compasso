@@ -95,11 +95,18 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="heading-page">Painel</h1>
-        <Button asChild variant="outline">
-          <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
-            Ver todas as aprovações
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link to="/portal/brands/$brandId/calendar" params={{ brandId }}>
+              Ver calendário
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
+              Ver todas as aprovações
+            </Link>
+          </Button>
+        </div>
       </div>
       <Section
         title={`Aguardando você (${mine.length})`}

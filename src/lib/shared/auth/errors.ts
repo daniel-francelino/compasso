@@ -115,6 +115,18 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Este canal está arquivado e não aceita novos itens.",
   },
+  date_in_past: {
+    category: ErrorCode.Invalid,
+    message: "A data escolhida já passou.",
+  },
+  local_time_nonexistent: {
+    category: ErrorCode.Invalid,
+    message: "Este horário não existe nesse dia (mudança de horário de verão).",
+  },
+  local_time_ambiguous: {
+    category: ErrorCode.Invalid,
+    message: "Este horário acontece duas vezes nesse dia. Escolha qual.",
+  },
   upload_too_large: {
     category: ErrorCode.Invalid,
     message: "O arquivo é maior que o limite permitido.",

@@ -78,6 +78,15 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             Conteúdos
           </Link>
         ) : null}
+        {can(auth, Action.Calendar.View) ? (
+          <Link
+            to="/admin/marketing/brands/$brandId/calendar"
+            params={{ brandId }}
+            className={tabClass}
+          >
+            Calendário
+          </Link>
+        ) : null}
         {can(auth, Action.Approvals.View) ? (
           <Link
             to="/admin/marketing/brands/$brandId/approvals"

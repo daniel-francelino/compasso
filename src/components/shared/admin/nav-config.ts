@@ -3,6 +3,7 @@ import {
   BellRing,
   Building2,
   Building,
+  CalendarDays,
   ClipboardCheck,
   FileText,
   Images,
@@ -71,6 +72,12 @@ export const navGroups: NavGroup[] = [
     label: "Produção",
     items: [
       { title: "Conteúdos", icon: FileText, to: AppRoute.Content, action: Action.Content.View },
+      {
+        title: "Calendário",
+        icon: CalendarDays,
+        to: AppRoute.Calendar,
+        action: Action.Calendar.View,
+      },
       {
         title: "Aprovações",
         icon: ClipboardCheck,

@@ -72,15 +72,15 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `media_not_available` | invalid | "Há arquivos que ainda não estão disponíveis." | `submit_for_approval` |
 | `approver_required` | invalid | "Escolha quem vai aprovar." | `submit_for_approval` |
 | `not_approved` | invalid | "Só é possível registrar a publicação de uma versão aprovada." | `mark_published` |
-| `requires_new_revision` | invalid | "Alterar isto exige uma nova versão e nova aprovação." | `reschedule_variant` |
+| `requires_new_revision` | invalid | "Alterar isto exige uma nova versão e nova aprovação." | `content_variant_save` (editing an approved variant) |
 | `reason_required` | invalid | "Informe o motivo." | `reopen_variant`, `cancel_request` |
 | `request_not_pending` | conflict | "Este pedido não está mais pendente." | `portal_decide_approval` |
 | `revision_superseded` | conflict | "Esta versão foi atualizada. Veja a versão atual." | `portal_decide_approval` |
 | `comment_required` | invalid | "Escreva um comentário para pedir alterações." | `portal_decide_approval` |
 | `not_designated_approver` | denied | "A decisão é de outra pessoa. Você pode comentar." | `portal_decide_approval` |
-| `date_in_past` | invalid | "A data escolhida já passou." | `reschedule_variant` (as warning) |
-| `local_time_nonexistent` | invalid | "Este horário não existe nesse dia (mudança de horário de verão)." | date conversion |
-| `local_time_ambiguous` | invalid | "Este horário acontece duas vezes nesse dia. Escolha qual." | date conversion |
+| `date_in_past` | invalid | "A data escolhida já passou." | warning of the reschedule dialog (never raised by SQL) |
+| `local_time_nonexistent` | invalid | "Este horário não existe nesse dia (mudança de horário de verão)." | date conversion in TypeScript (`resolveLocalTime`) |
+| `local_time_ambiguous` | invalid | "Este horário acontece duas vezes nesse dia. Escolha qual." | date conversion in TypeScript (`resolveLocalTime`) |
 | `brand_archived` | invalid | "Esta marca está arquivada e não aceita novos conteúdos." | `content_item_save`, `content_variant_save` |
 | `record_immutable` | denied | "Este registro não pode ser alterado." | revision, decision, comment and request triggers |
 | `content_has_history` | in_use | "Este conteúdo já tem versões ou comentários. Cancele em vez de excluir." | `content_item_delete` |
