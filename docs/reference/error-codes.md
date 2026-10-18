@@ -106,12 +106,15 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `slug_taken` | invalid | "Já existe uma página com este endereço." | `site_page_save` |
 | `slug_reserved` | invalid | "Este endereço é reservado." | `site_page_save` |
 | `page_system_protected` | denied | "Esta página do sistema não pode ser excluída nem mudar de endereço." | page functions |
+| `page_has_history` | in_use | "Esta página já foi publicada ou autorizada. Tire do ar em vez de excluir." | `site_page_delete` |
 | `publish_checks_failed` | invalid | "Corrija os itens destacados antes de publicar." | `publish_site_page` |
 | `draft_changed` | conflict | "O conteúdo mudou desde a revisão. Revise de novo antes de publicar." | `publish_site_page` |
 | `nothing_to_publish` | invalid | "Não há alterações para publicar." | `publish_site_page` |
-| `schedule_pending` | invalid | "Já existe uma publicação agendada." | `publish_site_page` |
+| `schedule_pending` | invalid | "Já existe uma publicação agendada." | reserved for scheduled publication (not raised yet) |
 | `case_study_not_authorized` | invalid | "Este case não tem autorização para ser publicado." | `publish_site_page` |
 | `redirect_invalid` | invalid | "Redirecionamento inválido (ciclo, endereço reservado ou destino inválido)." | `site_redirect_save` |
+| `contact_unavailable` | unavailable | "O envio de mensagens está indisponível agora. Tente de novo mais tarde." | `submitContactMessage` (anti-bot not configured or provider down) |
+| `captcha_failed` | invalid | "Não foi possível confirmar que você não é um robô. Tente de novo." | `submitContactMessage` (Turnstile) |
 | `contact_consent_required` | invalid | "É preciso aceitar o consentimento para enviar a mensagem." | `site_contact_submit` |
 
 ## 3. Rules

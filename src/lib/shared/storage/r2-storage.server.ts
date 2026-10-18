@@ -34,6 +34,9 @@ export const r2ServerStorage = (config: R2Config): ServerStorage => {
   });
   const base = `${config.endpoint}/${config.bucket}`;
   const urlOf = (path: string) => new URL(`${base}/${encodeKey(path)}`);
+  const publicUrlOf = (path: string) =>
+    new URL(`${config.endpoint}/${config.publicBucket ?? ""}/${encodeKey(path)}`);
+  const noPublicBucket = { ok: false, message: "O bucket público não está configurado." } as const;
 
   const presign = async (
     method: "GET" | "PUT",
@@ -134,6 +137,37 @@ export const r2ServerStorage = (config: R2Config): ServerStorage => {
         token = unescapeXml(next);
       }
       return { objects, truncated: true };
+    },
+
+    async copyToPublic(fromKey, toKey) {
+      if (config.publicBucket === undefined) return noPublicBucket;
+      const response = await client.fetch(publicUrlOf(toKey).toString(), {
+        method: "PUT",
+        headers: {
+          "x-amz-copy-source": `/${config.bucket}/${encodeKey(fromKey)}`,
+          "x-amz-metadata-directive": "REPLACE",
+          "content-type": "image/webp",
+          "cache-control": "public, max-age=31536000, immutable",
+        },
+      });
+      if (response.ok) return { ok: true };
+      logError("storage: public copy failed", response.status);
+      return { ok: false, message: "Não foi possível copiar a imagem para o espaço público." };
+    },
+
+    async removePublic(keys) {
+      if (config.publicBucket === undefined) return noPublicBucket;
+      const results = await Promise.all(
+        keys.map(async (key) => {
+          const response = await client.fetch(publicUrlOf(key).toString(), { method: "DELETE" });
+          return response.ok || response.status === 404;
+        }),
+      );
+      if (results.some((ok) => !ok)) {
+        logError("storage: public removal failed");
+        return { ok: false, message: "Não foi possível retirar a imagem do espaço público." };
+      }
+      return { ok: true };
     },
 
     async remove(paths) {

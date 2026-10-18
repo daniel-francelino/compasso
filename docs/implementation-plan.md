@@ -76,11 +76,11 @@
 
 | ID | Task | Read | Done when | Status |
 |---|---|---|---|---|
-| P5-01 | Migration 10 `site_cms`; settings, public read functions, public rendering with 503 states | cms-site, public-site-delivery, data-model §7 | states of public-site-delivery §3 verified | todo |
-| P5-02 | Section registry, `renderPage`, editor, preview, publish checks, rollback | cms-dynamic-architecture, cms-site | preview equals production | todo |
-| P5-03 | Public derivatives (`media_publish_derivative`) and `media.publish` UI | media-library, r2-storage §7 | publishing refuses unpublished images | todo |
-| P5-04 | Services, testimonials, portfolio and case study authorization | cms-site §12 | unauthorized case never published | todo |
-| P5-05 | Contact form (Turnstile, rate limit), messages inbox, SEO, sitemap/robots, redirects | cms-site §8, §11 | acceptance criteria phases D–E | todo |
+| P5-01 | Migration 10 `site_cms`; settings, public read functions, public rendering with 503 states | cms-site, public-site-delivery, data-model §7 | states of public-site-delivery §3 verified | done on PGlite and in code (2026-10-19): migrations `site_cms`, `site_functions`, `site_overview`; the 503, 404 and redirect states are checked by Playwright and unit tests; a real database and CDN are [pending-external-setup.md](pending-external-setup.md) V22, V26 |
+| P5-02 | Section registry, `renderPage`, editor, preview, publish checks, rollback | cms-dynamic-architecture, cms-site | preview equals production | done in code (2026-10-19): preview and site share `RenderPage` and `resolveDraftPage`; not seen in a browser (V23) |
+| P5-03 | Public derivatives (`media_publish_derivative`) and `media.publish` UI | media-library, r2-storage §7 | publishing refuses unpublished images | done on PGlite and in code (2026-10-19): the page and settings publishing refuse unpublished images; the copy to the public bucket needs the real R2 (V24, S14) |
+| P5-04 | Services, testimonials, portfolio and case study authorization | cms-site §12 | unauthorized case never published | done on PGlite and in code (2026-10-19): an unauthorized case cannot be published and a withdrawn one stops being served at once (D22) |
+| P5-05 | Contact form (Turnstile, rate limit), messages inbox, SEO, sitemap/robots, redirects | cms-site §8, §11 | acceptance criteria phases D–E | done in code (2026-10-19): form with consent, honeypot, Turnstile and limits, inbox, SEO defaults, sitemap, robots, redirects; Turnstile and the form against a real project are V25, S15 |
 
 ## Phase 6 — Hardening and launch
 

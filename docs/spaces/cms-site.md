@@ -218,11 +218,11 @@ A public server function: zod validation, hidden honeypot field, Cloudflare Turn
 
 ## 12. Portfolio and case studies with client work
 
-A case study may only enter the public site when it has an **authorization record** in `site_case_study_authorizations`: the page, the brand, the person who authorized, the date and a consent note (at most one active authorization per page; withdrawal sets `withdrawn_at`). See [../reference/data-model.md](../reference/data-model.md) section 7 and the functions `site_case_study_authorize` / `site_case_study_withdraw`. Only files with a **published public derivative** can be used; client logos follow the same rule. Withdrawing the authorization:
+A case study may only enter the public site when it has an **authorization record** in `site_case_study_authorizations`: the page, the brand, the person who authorized, the date and a consent note (at most one active authorization per page; withdrawal sets `withdrawn_at`). See [../reference/data-model.md](../reference/data-model.md) section 7 and the functions `site_case_study_authorize` / `site_case_study_withdraw`. Only files with a **published public derivative** can be used; client logos follow the same rule. Withdrawing the authorization (decision D22, stricter than the first draft):
 
-1. marks the case study as "Sai na próxima publicação" and notifies people with `site.publish`;
-2. blocks the next publication (error) until it is removed or re-authorized;
-3. once published, the page is unpublished and its public derivatives are withdrawn if no other revision uses them.
+1. **the case study stops being served at once**: the public read hides a case study page that has no active authorization and drops its card from the portfolio, so revoked consent never waits for the next publication;
+2. the next publication of that page is blocked (`case_study_not_authorized`) until it is re-authorized, or the page is unpublished;
+3. public derivatives are withdrawn on request (`media.publish`) and only when no draft or published revision uses them.
 
 ## 13. Delivery phases and acceptance criteria
 
@@ -273,4 +273,24 @@ In every phase: `npm run lint` and `npm run build` clean; UI in Brazilian Portug
 
 ## 17. Implementation status
 
-Not started. The space is built in phases A to F above after the foundations (phase 0), accesses (phase 1) and the Media Library (phase 2) of the implementation plan. Each delivery must update this section with: files and migrations involved, validation performed, and external pending items.
+Phase 5 (tasks P5-01 to P5-05, 2026-10-19): phases A to E of section 13 are built in code; phase F (scheduling, second language, blog) is not.
+
+**Decisions** (also in [../pending-external-setup.md](../pending-external-setup.md) D22 to D28):
+
+1. **Publishing takes a resolved page built in TypeScript.** `publish_site_page(p_page, p_note, p_resolved, p_expected_hash)` receives the page with links and images already resolved (`resolveDraftPage`) and the md5 of the draft it was built from; the function refuses (`draft_changed`) if the draft moved, so the revision always equals what the editor checked. The checks of section 6.3 run in TypeScript before the call and block the publication (`publish_checks_failed`); the database re-checks what it can know (case study authorization, public images).
+2. **Withdrawing a case study authorization hides it at once** (stricter than the first draft of section 12): revoked consent never waits for the next publication.
+3. **Rich text is a small closed syntax**, not Tiptap: a blank line separates paragraphs, "# " starts a heading and "- " a list. No marks and no HTML, so nothing can be injected and no editor dependency was added.
+4. **Services and testimonials are frozen into the section when the page is published**; the portfolio reads the cards of the authorized, published case studies when the page is served.
+5. **The contact form recipient email is stored in the section but never published or used yet**: messages reach only the inbox (and the `site.contact_message` notification).
+6. **Settings are published as a whole** (`publish_site_settings`), without their own history: rollback exists for pages only.
+7. **Scheduling** (`live_from`) and the state "Entra na próxima publicação" are not built; a page is "Fora do site", "No ar" (with or without changes) or "Sai na próxima publicação" (a withdrawn case study).
+8. **The public site answers 503, 404 and the redirects through a request middleware** (`src/start.ts`) because the router overwrites a status set inside a loader. Every public read has a 4-second timeout and keeps the last good version in memory.
+9. **Per-IP rate limit of the contact form is in memory** (best effort on serverless); the per-contact limit (3 per hour) is in the database.
+
+**Files.** Migrations `20261018101100_site_cms.sql` (tables, RLS, guards, role "Editor do site", kinds available), `…101110_site_functions.sql` (page, entry, settings, redirect, authorization, publish, rollback, contact and public read functions; `media_publish_derivative` and `media_withdraw_derivative`) and `…101120_site_overview.sql`; tests `13_site`, `14_site_content`, `15_site_media_contact`, `16_site_overview`. Contract and logic in `src/lib/shared/content/` (registry, schemas, links, resolver, checks, published format, public image names), renderers in `src/components/shared/site/`, public reading and contact in `src/lib/site/` and `src/components/site/`, routes `(site)/index`, `(site)/$`, `robots.txt`, `sitemap.xml`, server functions in `src/lib/cms/`, screens in `src/components/cms/`, routes `/admin/site/*`, public image publishing in `src/lib/shared/media/publish.functions.ts` with "Publicar para o site" in the media detail, and the public bucket methods in the R2 storage.
+
+**Validated.** 120 SQL assertions on PGlite (isolation by action, structure versus edit versus publish, immutable revisions, hash guard, rollback, redirects and cycles, anon reading no table, withdrawn cases, public images, contact consent and rate limit); 38 unit tests (links, rich text, resolver and checks, SEO, robots, sitemap, public reader with last good version and unknown format, every section rendering empty without throwing and without injecting markup); lint, typecheck, build and the Playwright tests (the public site answers 503 and "Site em preparação", `robots.txt` blocks, the sitemap is empty, every `/admin/site/*` route requires a session).
+
+**Not tested.** Every CMS screen in a browser (the editor, pickers, preview iframe, publish dialog); the real R2 copy to the public bucket and the media domain; Turnstile; a real publish → public site → rollback loop; 503/404 status through the Vercel CDN; Lighthouse and `axe`. Listed in [../pending-external-setup.md](../pending-external-setup.md) (V22 to V26, S14, S15).
+
+**Not done.** Scheduled publication, second language, blog, JSON-LD for services and case studies (only `Organization` on the home page), per-page preview width selector, settings rollback, "Entra na próxima publicação", recipient email delivery of contact messages.

@@ -16,6 +16,7 @@ const r2EnvSchema = z.object({
   accessKeyId: z.string().min(1),
   secretAccessKey: z.string().min(1),
   bucket: z.string().min(1),
+  publicBucket: z.string().min(1).optional(),
 });
 
 export type R2Config = z.infer<typeof r2EnvSchema>;
@@ -33,6 +34,7 @@ export const r2Config = (): R2Config | null => {
     accessKeyId: clean(process.env["R2_ACCESS_KEY_ID"]),
     secretAccessKey: clean(process.env["R2_SECRET_ACCESS_KEY"]),
     bucket: clean(process.env["R2_BUCKET"]),
+    publicBucket: clean(process.env["R2_PUBLIC_BUCKET"]),
   });
   return parsed.success ? parsed.data : null;
 };

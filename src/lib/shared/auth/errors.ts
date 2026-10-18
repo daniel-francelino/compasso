@@ -127,6 +127,58 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Este horário acontece duas vezes nesse dia. Escolha qual.",
   },
+  slug_taken: {
+    category: ErrorCode.Invalid,
+    message: "Já existe uma página com este endereço.",
+  },
+  slug_reserved: {
+    category: ErrorCode.Invalid,
+    message: "Este endereço é reservado.",
+  },
+  page_system_protected: {
+    category: ErrorCode.Denied,
+    message: "Esta página do sistema não pode ser excluída nem mudar de endereço.",
+  },
+  page_has_history: {
+    category: ErrorCode.InUse,
+    message: "Esta página já foi publicada ou autorizada. Tire do ar em vez de excluir.",
+  },
+  publish_checks_failed: {
+    category: ErrorCode.Invalid,
+    message: "Corrija os itens destacados antes de publicar.",
+  },
+  draft_changed: {
+    category: ErrorCode.Conflict,
+    message: "O conteúdo mudou desde a revisão. Revise de novo antes de publicar.",
+  },
+  nothing_to_publish: {
+    category: ErrorCode.Invalid,
+    message: "Não há alterações para publicar.",
+  },
+  case_study_not_authorized: {
+    category: ErrorCode.Invalid,
+    message: "Este case não tem autorização para ser publicado.",
+  },
+  redirect_invalid: {
+    category: ErrorCode.Invalid,
+    message: "Redirecionamento inválido (ciclo, endereço reservado ou destino inválido).",
+  },
+  contact_consent_required: {
+    category: ErrorCode.Invalid,
+    message: "É preciso aceitar o consentimento para enviar a mensagem.",
+  },
+  media_not_published: {
+    category: ErrorCode.Invalid,
+    message: "Há imagens que ainda não foram publicadas para o site.",
+  },
+  contact_unavailable: {
+    category: ErrorCode.Unavailable,
+    message: "O envio de mensagens está indisponível agora. Tente de novo mais tarde.",
+  },
+  captcha_failed: {
+    category: ErrorCode.Invalid,
+    message: "Não foi possível confirmar que você não é um robô. Tente de novo.",
+  },
   upload_too_large: {
     category: ErrorCode.Invalid,
     message: "O arquivo é maior que o limite permitido.",

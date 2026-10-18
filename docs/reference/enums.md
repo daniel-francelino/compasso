@@ -53,6 +53,10 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 | `SectionBackground` | `ivory`, `cream`, `peach` | zod (appearance) | "Marfim", "Creme", "Pêssego" | cms-dynamic-architecture |
 | `SectionSpacing` | `s`, `m`, `l` | zod (appearance) | "Compacto", "Médio", "Amplo" | cms-dynamic-architecture |
 | `SectionAccent` | `violet`, `coral`, `orchid` | zod (appearance) | "Violeta", "Coral", "Orquídea" | cms-dynamic-architecture |
+| `PortfolioSource` | `all`, `manual` | zod (`portfolio_grid`) | "Todos os cases autorizados", "Escolher à mão" | cms-dynamic-architecture |
+| `ImageSide` | `left`, `right` | zod (`image_text`) | "Esquerda", "Direita" | cms-dynamic-architecture |
+| `PublicSiteState` | `none`, `ok`, `redirect`, `not_found` | `site_published_page` answer (not stored) | — | public-site-delivery |
+| `ProblemSeverity` | `error`, `warning` | publish checks (not stored) | "Corrigir", "Atenção" | cms-site |
 | `ContactMessageStatus` | `new`, `answered`, `discarded` | `contact_messages.status` | "Nova", "Respondida", "Descartada" | cms-site |
 
 ## 5. Notifications, audit and system

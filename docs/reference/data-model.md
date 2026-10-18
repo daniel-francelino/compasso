@@ -163,7 +163,7 @@ create table client_contacts (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null references clients(id) on delete cascade,
   name text not null,
-  email citext,
+  email text check (email is null or email = lower(email)),
   phone text,
   role_title text,
   is_primary boolean not null default false,
@@ -542,7 +542,7 @@ create table contact_messages (
   id uuid primary key default gen_random_uuid(),
   site_id uuid not null references sites(id),
   name text not null,
-  email citext,
+  email text check (email is null or email = lower(email)),
   phone text,
   message text not null check (char_length(message) between 1 and 4000),
   source_slug text,
@@ -556,7 +556,7 @@ create table contact_messages (
 create index on contact_messages (site_id, status, created_at desc);
 ```
 
-`draft_content` and `content` share the shape described in [../spaces/cms-dynamic-architecture.md](../spaces/cms-dynamic-architecture.md) section 5.1; `sites.settings` groups: `contacts`, `social`, `languages`, `seo_defaults`, `navigation`, `message_templates`, `announcement`. A case study page can only be published while it has an active authorization row.
+`draft_content` and `content` share the shape described in [../spaces/cms-dynamic-architecture.md](../spaces/cms-dynamic-architecture.md) section 5.1; `sites.settings` groups: `contacts`, `social`, `languages`, `seo_defaults`, `navigation`, `message_templates`, `announcement`. A case study page can only be published while it has an active authorization row. Phase 5 notes (migrations `20261018101100_site_cms.sql` and `…101110_site_functions.sql`): there is one `sites` row per organization (`site_ensure()` creates it with the system home page); `site_page_revisions.content` stores the resolved page (`format`, `draft_hash`, `page`, `media`) plus a `draft` copy used by rollback, and the public read strips `draft`; the revisions are immutable (trigger); `site_pages` cannot change `kind`, and the system page cannot change address or be deleted; scheduling (`live_from`, `cancelled_at`) is not implemented yet; `contact_messages.email` is `text` stored in lower case (the extension `citext` is not used).
 
 ## 8. Notifications, email and audit
 
@@ -662,5 +662,7 @@ Applies to **every** table above when the migration is written (base.md section 
 | 11 | `dashboard` | dashboard functions and supporting indexes |
 
 Files created so far (chronological): `20261018100000_core_extensions_and_organization`, `…100100_auth_roles_profiles`, `…100200_audit_events`, `…100300_clients_brands_channels` and `…100310_clients_brands_channels_functions`, `…100400_notifications`, `…100500_auth_invitations`, `…100600_access_and_settings_functions` (dated in dependency order: invitations come after clients/brands and notifications because `accept_invitation` links brands and notifies).
+
+Phase 4 and 5 files: `…101000_calendar`, `…101100_site_cms`, `…101110_site_functions` (the public read, publish and media publish functions) and `…101120_site_overview`.
 
 Each migration is accompanied by its pgTAP test file, its `db:types` regeneration and the registry updates (actions, kinds, error codes, audit actions).

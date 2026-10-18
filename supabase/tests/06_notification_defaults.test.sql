@@ -29,6 +29,9 @@ select throws_ok(
 );
 reset role;
 
+insert into public.notification_kinds (kind, title, required_action, severity, available)
+values ('test.hidden', 'Hidden kind', 'site.view', 'info', false);
+
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
 select lives_ok(
   $$select public.notification_kind_save('invitation.expiring', '{3,1}', false)$$,
@@ -50,7 +53,7 @@ select throws_ok(
   'lead days above 30 are refused'
 );
 select throws_ok(
-  $$select public.notification_kind_save('site.published', null, true)$$,
+  $$select public.notification_kind_save('test.hidden', null, true)$$,
   'not_found',
   'a kind that is not available yet is refused'
 );

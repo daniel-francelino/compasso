@@ -29,6 +29,7 @@ import {
   trashMedia,
   updateMedia,
 } from "@/lib/shared/media/media.functions";
+import { publishMedia, withdrawMedia } from "@/lib/shared/media/publish.functions";
 import { updateMediaSchema } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -164,6 +165,7 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
   const detail = query.data;
   const canUpdate = can(auth, Action.Media.Update);
   const canDelete = can(auth, Action.Media.Delete);
+  const canPublish = can(auth, Action.Media.Publish);
   const invalidate = [QueryKey.Media.all()];
   const refresh = () => query.refetch();
   const scope = detail.asset.scope;
@@ -246,6 +248,31 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
                   <StatusBadge tone="info" icon={Download}>
                     Publicada no site
                   </StatusBadge>
+                ) : null}
+                {detail.asset.kind === MediaKind.Image &&
+                canPublish &&
+                version.status === "available" ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={() =>
+                      void run(
+                        () =>
+                          version.published
+                            ? withdrawMedia({ data: { versionId: version.id } })
+                            : publishMedia({ data: { versionId: version.id } }),
+                        {
+                          success: version.published
+                            ? "A imagem saiu do espaço público."
+                            : "A imagem foi publicada para o site.",
+                          invalidate,
+                        },
+                      ).then(refresh)
+                    }
+                  >
+                    {version.published ? "Retirar do site" : "Publicar para o site"}
+                  </Button>
                 ) : null}
                 {!version.current && canUpdate && version.status === "available" ? (
                   <Button

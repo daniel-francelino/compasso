@@ -47,6 +47,8 @@ const fakeStorage = (
   sha256: async () => checksum,
   list: async () => ({ objects: [], truncated: false }),
   remove: async () => ({ ok: true }),
+  copyToPublic: async () => ({ ok: true }),
+  removePublic: async () => ({ ok: true }),
 });
 
 const imageVersion = (original: Uint8Array) => ({

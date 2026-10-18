@@ -17,6 +17,10 @@
 | Approval (action/result) | Aprovação | |
 | Approver | Aprovador(a) | |
 | Briefing | Briefing | |
+| Site / page / section | Site / Página / Seção | Menu of the space: "Páginas", "Serviços", "Depoimentos", "Portfólio", "Mensagens", "Menu e rodapé", "Configurações", "SEO", "Redirecionamentos", "Publicações" |
+| Publish (site) | Publicar | "Publicar…", "Tirar do ar", "Voltar para esta versão"; states "Fora do site", "No ar", "Despublicada", "Sai na próxima publicação" |
+| Anchor | Âncora | Name of a section used in links such as /pagina#ancora |
+| Case authorization | Autorização do cliente | "Registrar autorização", "Retirar autorização" |
 | Calendar | Calendário | Views: "Mês", "Semana", "Lista"; button "Hoje"; filter "Somente prazos" |
 | Items without a date | Sem data | Side list of the calendar; button "Planejar…" |
 | Change the date | Alterar data… | Opens the confirmation dialog; confirm with "Confirmar nova data" |

@@ -169,21 +169,30 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | SQL function | Server function | Act. | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
 | `site_page_save(p_page jsonb, p_expected_version int)` | `saveSitePage` | `site.edit` (structure fields: `site.structure`) | — | — | `slug_taken`, `slug_reserved`, `conflict`, `page_system_protected` |
-| `site_page_delete(p_page)` | `deleteSitePage` | `site.structure` | — | — | `page_system_protected` |
+| `site_ensure()` | `ensureSite` (called by the overview) | `site.view` | — | — | `denied` |
+| `site_page_delete(p_page)` | `deleteSitePage` | `site.structure` | — | — | `page_system_protected`, `page_has_history` |
 | `site_entry_save(p_entry jsonb)` / `site_entry_delete(p_entry)` | `saveSiteEntry`, `deleteSiteEntry` | `site.edit` | — | — | `conflict` |
 | `site_settings_save(p_group text, p_value jsonb, p_expected_version int)` | `saveSiteSettings` | `site.settings` | `site.settings_changed` | — | `conflict`, `invalid_input` |
 | `site_case_study_authorize(p_page, p_brand, p_consent_note)` | `authorizeCaseStudy` | `site.edit` + `brands.view` with link | `site.case_study_authorized` | — | `denied` |
 | `site_case_study_withdraw(p_page)` | `withdrawCaseStudy` | `site.edit` | `site.case_study_withdrawn` | `site.published`-type warning (none) | — |
-| `publish_site_page(p_page, p_note, p_live_from, p_expected_hash)` | `publishSitePage` | `site.publish` | `site.page_published` | `site.published` | `publish_checks_failed`, `draft_changed`, `nothing_to_publish`, `schedule_pending`, `media_not_published`, `case_study_not_authorized` |
+| `publish_site_settings(p_resolved, p_expected_version)` | `publishSiteSettings` | `site.publish` | `site.settings_changed` | `site.published` | `draft_changed`, `media_not_published`, `invalid_input` |
+| `publish_site_page(p_page, p_note, p_resolved, p_expected_hash)` | `publishSitePage` (resolves links and images in TypeScript, runs the checks, then calls this) | `site.publish` | `site.page_published` | `site.published` | `publish_checks_failed` (TypeScript), `draft_changed`, `nothing_to_publish`, `media_not_published`, `case_study_not_authorized` |
 | `unpublish_site_page(p_page)` | `unpublishSitePage` | `site.publish` | `site.page_unpublished` | — | `page_system_protected` |
-| `site_rollback(p_page, p_revision)` | `rollbackSitePage` | `site.publish` | `site.rolled_back` | `site.published` | `schedule_pending` |
+| `site_rollback(p_page, p_revision)` | `rollbackSitePage` | `site.publish` | `site.rolled_back` | `site.published` | `not_found`, `media_not_published`, `case_study_not_authorized` |
 | `site_redirect_save(p_redirect jsonb)` / `site_redirect_delete(p_redirect)` | `saveRedirect`, `deleteRedirect` | `site.settings` | `site.settings_changed` | — | `redirect_invalid` |
 | `site_contact_submit(p_site, p_payload jsonb)` (granted to `anon`) | `submitContactMessage` (rate limit + Turnstile + honeypot) | none (public) | — | `site.contact_message` | `contact_consent_required`, `rate_limited`, `invalid_input` |
 | `site_contact_update(p_message, p_status, p_note)` | `updateContactMessage` | `site.view` | — | — | `not_found` |
 | `site_published_page(p_slug)` (granted to `anon`) | `getPublicPage` | public | — | — | — |
 | `site_published_settings()` (granted to `anon`) | `getPublicSettings` | public | — | — | — |
 | `site_published_sitemap()` (granted to `anon`) | `getPublicSitemap` | public | — | — | — |
-| `site_draft_snapshot(p_page)` | `getDraftSnapshot` (preview) | `site.view` | — | — | `not_found` |
+| `site_draft_snapshot(p_page)` | `getDraftSnapshot` (preview and publish) | `site.view` | — | — | `not_found` |
+| `site_pages_overview()` | `listSitePages` | `site.view` | — | — | — |
+| `site_overview()` | `getSiteOverview` | `site.view` | — | — | — |
+| (typed query) | `listPageOptions`, `getPageEditor`, `getPreview`, `checkPublish`, `listRevisions`, `listEntries`, `listMessages`, `getCaseAuthorization`, `getSettings`, `listRedirects` | `site.view` (`site.settings` for settings and redirects, `site.publish` for revisions) | — | — | `not_found` |
+| `site_media_info(p_ids uuid[])` | `getSiteMediaInfo` (the resolver of images) | `site.view` + visibility of each file | — | — | — |
+| `site_media_ids(p_content)`, `site_media_in_use(p_version)`, `site_redirect_check(p_site, p_from, p_to)`, `site_publish_page_row(...)`, `site_pages_guard()`, `site_page_revisions_guard()` | — | internal helpers (not callable by `authenticated`) | — | — | — |
+
+Notes on section 8: `site_published_page` answers an object with a status of none, ok (with the page kind, its content and the cards of the authorized case studies), redirect (with the destination and whether it is permanent) or not_found; `site_draft_snapshot` returns the draft, its md5 hash, the status and whether a case study is authorized; `site_media_info` returns checksum, size, mime and whether each image is public.
 
 ## 9. Notifications and jobs (modules: notifications, audit)
 

@@ -554,6 +554,66 @@ export type Database = {
           }
         ]
       }
+      contact_messages: {
+        Row: {
+          id: string
+          site_id: string
+          name: string
+          email: string | null
+          phone: string | null
+          message: string
+          source_slug: string | null
+          consent_at: string
+          status: string
+          internal_note: string | null
+          handled_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          site_id: string
+          name: string
+          email?: string | null
+          phone?: string | null
+          message: string
+          source_slug?: string | null
+          consent_at: string
+          status?: string
+          internal_note?: string | null
+          handled_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          site_id?: string
+          name?: string
+          email?: string | null
+          phone?: string | null
+          message?: string
+          source_slug?: string | null
+          consent_at?: string
+          status?: string
+          internal_note?: string | null
+          handled_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_messages_handled_by_fkey"
+            columns: ["handled_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_messages_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       content_items: {
         Row: {
           id: string
@@ -1678,6 +1738,333 @@ export type Database = {
 
         ]
       }
+      site_case_study_authorizations: {
+        Row: {
+          id: string
+          page_id: string
+          brand_id: string
+          authorized_by: string
+          authorized_at: string
+          consent_note: string
+          withdrawn_at: string | null
+          withdrawn_by: string | null
+        }
+        Insert: {
+          id?: string
+          page_id: string
+          brand_id: string
+          authorized_by: string
+          authorized_at?: string
+          consent_note: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Update: {
+          id?: string
+          page_id?: string
+          brand_id?: string
+          authorized_by?: string
+          authorized_at?: string
+          consent_note?: string
+          withdrawn_at?: string | null
+          withdrawn_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_case_study_authorizations_authorized_by_fkey"
+            columns: ["authorized_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_case_study_authorizations_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_case_study_authorizations_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_case_study_authorizations_withdrawn_by_fkey"
+            columns: ["withdrawn_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      site_entries: {
+        Row: {
+          id: string
+          site_id: string
+          kind: string
+          content: Json
+          sort_order: number
+          visible: boolean
+          version: number
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          site_id: string
+          kind: string
+          content: Json
+          sort_order?: number
+          visible?: boolean
+          version?: number
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          site_id?: string
+          kind?: string
+          content?: Json
+          sort_order?: number
+          visible?: boolean
+          version?: number
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_entries_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_entries_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      site_page_revisions: {
+        Row: {
+          id: string
+          page_id: string
+          revision_no: number
+          content: Json
+          note: string | null
+          published_by: string | null
+          published_at: string
+          live_from: string | null
+          cancelled_at: string | null
+          source_revision_id: string | null
+        }
+        Insert: {
+          id?: string
+          page_id: string
+          revision_no: number
+          content: Json
+          note?: string | null
+          published_by?: string | null
+          published_at?: string
+          live_from?: string | null
+          cancelled_at?: string | null
+          source_revision_id?: string | null
+        }
+        Update: {
+          id?: string
+          page_id?: string
+          revision_no?: number
+          content?: Json
+          note?: string | null
+          published_by?: string | null
+          published_at?: string
+          live_from?: string | null
+          cancelled_at?: string | null
+          source_revision_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_page_revisions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "site_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_page_revisions_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_page_revisions_source_revision_id_fkey"
+            columns: ["source_revision_id"]
+            isOneToOne: false
+            referencedRelation: "site_page_revisions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      site_pages: {
+        Row: {
+          id: string
+          site_id: string
+          kind: string
+          slug: string
+          status: string
+          draft_content: Json
+          published_revision_id: string | null
+          is_system: boolean
+          version: number
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          site_id: string
+          kind: string
+          slug: string
+          status?: string
+          draft_content?: Json
+          published_revision_id?: string | null
+          is_system?: boolean
+          version?: number
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          site_id?: string
+          kind?: string
+          slug?: string
+          status?: string
+          draft_content?: Json
+          published_revision_id?: string | null
+          is_system?: boolean
+          version?: number
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_pages_published_revision_id_fkey"
+            columns: ["published_revision_id"]
+            isOneToOne: false
+            referencedRelation: "site_page_revisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_pages_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_pages_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      site_redirects: {
+        Row: {
+          id: string
+          site_id: string
+          from_path: string
+          to_path: string
+          permanent: boolean
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          site_id: string
+          from_path: string
+          to_path: string
+          permanent?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          site_id?: string
+          from_path?: string
+          to_path?: string
+          permanent?: boolean
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_redirects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "site_redirects_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      sites: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          settings: Json
+          settings_version: number
+          published_settings: Json | null
+          published_settings_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          settings?: Json
+          settings_version?: number
+          published_settings?: Json | null
+          published_settings_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          settings?: Json
+          settings_version?: number
+          published_settings?: Json | null
+          published_settings_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: { [_ in never]: never }
     Functions: {
@@ -1929,6 +2316,10 @@ export type Database = {
         Args: { p_name: string | null; p_default: number | null }
         Returns: number
       }
+      media_publish_derivative: {
+        Args: { p_version: string | null }
+        Returns: Json
+      }
       media_replace_version: {
         Args: { p_asset: string | null; p_version: string | null }
         Returns: Json
@@ -1960,6 +2351,10 @@ export type Database = {
       media_version_in_use: {
         Args: { p_version: string | null }
         Returns: boolean
+      }
+      media_withdraw_derivative: {
+        Args: { p_version: string | null }
+        Returns: Json
       }
       my_actions: {
         Args: never
@@ -2053,6 +2448,14 @@ export type Database = {
         Args: { p_profile: string | null; p_status: string | null; p_role?: string | null }
         Returns: undefined
       }
+      publish_site_page: {
+        Args: { p_page: string | null; p_note: string | null; p_resolved: Json | null; p_expected_hash: string | null }
+        Returns: Json
+      }
+      publish_site_settings: {
+        Args: { p_resolved: Json | null; p_expected_version: number | null }
+        Returns: Json
+      }
       reassign_approver: {
         Args: { p_request: string | null; p_new_approver: string | null }
         Returns: Json
@@ -2085,9 +2488,109 @@ export type Database = {
         Args: { p_request: string | null }
         Returns: undefined
       }
+      site_case_study_authorize: {
+        Args: { p_page: string | null; p_brand: string | null; p_consent_note: string | null }
+        Returns: undefined
+      }
+      site_case_study_withdraw: {
+        Args: { p_page: string | null }
+        Returns: undefined
+      }
+      site_contact_submit: {
+        Args: { p_site: string | null; p_payload: Json | null }
+        Returns: undefined
+      }
+      site_contact_update: {
+        Args: { p_message: string | null; p_status: string | null; p_note: string | null }
+        Returns: undefined
+      }
+      site_draft_snapshot: {
+        Args: { p_page: string | null }
+        Returns: Json
+      }
+      site_ensure: {
+        Args: never
+        Returns: string
+      }
+      site_entry_delete: {
+        Args: { p_entry: string | null }
+        Returns: undefined
+      }
+      site_entry_save: {
+        Args: { p_entry: Json | null }
+        Returns: Json
+      }
+      site_media_ids: {
+        Args: { p_content: Json | null }
+        Returns: string[]
+      }
+      site_media_in_use: {
+        Args: { p_version: string | null }
+        Returns: boolean
+      }
+      site_media_info: {
+        Args: { p_ids: string[] | null }
+        Returns: Json
+      }
+      site_overview: {
+        Args: never
+        Returns: Json
+      }
+      site_page_delete: {
+        Args: { p_page: string | null }
+        Returns: undefined
+      }
+      site_page_save: {
+        Args: { p_page: Json | null; p_expected_version?: number | null }
+        Returns: Json
+      }
+      site_pages_overview: {
+        Args: never
+        Returns: Json
+      }
+      site_publish_page_row: {
+        Args: { p_page: string | null; p_resolved: Json | null; p_note: string | null; p_source: string | null }
+        Returns: number
+      }
+      site_published_page: {
+        Args: { p_slug: string | null }
+        Returns: Json
+      }
+      site_published_settings: {
+        Args: never
+        Returns: Json
+      }
+      site_published_sitemap: {
+        Args: never
+        Returns: Json
+      }
+      site_redirect_check: {
+        Args: { p_site: string | null; p_from: string | null; p_to: string | null }
+        Returns: undefined
+      }
+      site_redirect_delete: {
+        Args: { p_redirect: string | null }
+        Returns: undefined
+      }
+      site_redirect_save: {
+        Args: { p_redirect: Json | null }
+        Returns: Json
+      }
+      site_rollback: {
+        Args: { p_page: string | null; p_revision: string | null }
+        Returns: Json
+      }
+      site_settings_save: {
+        Args: { p_group: string | null; p_value: Json | null; p_expected_version: number | null }
+        Returns: Json
+      }
       submit_for_approval: {
         Args: { p_variant: string | null; p_approver: string | null; p_due_date: string | null; p_message: string | null; p_expected_version: number | null }
         Returns: Json
+      }
+      unpublish_site_page: {
+        Args: { p_page: string | null }
+        Returns: undefined
       }
       user_can_work_on_brand: {
         Args: { p_user: string | null; p_brand: string | null }

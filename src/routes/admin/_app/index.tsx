@@ -11,6 +11,9 @@ export const Route = createFileRoute("/admin/_app/")({
     if (MARKETING_ACTIONS.some((action) => can(context.auth, action))) {
       throw redirect({ to: AppRoute.Marketing });
     }
+    if (can(context.auth, Action.Site.View)) {
+      throw redirect({ to: AppRoute.Site });
+    }
   },
   component: HomePage,
 });

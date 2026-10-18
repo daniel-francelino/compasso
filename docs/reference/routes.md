@@ -6,9 +6,9 @@
 
 | URL | Route file | Action | Notes |
 |---|---|---|---|
-| `/` and any published address (`/servicos`, `/casos/cafe-aurora`…) | `routes/(site)/$.tsx` | none | Resolved by `resolvePublicPath` against published pages; 404/503 per [../spaces/public-site-delivery.md](../spaces/public-site-delivery.md) |
-| `/sitemap.xml` | `routes/(site)/sitemap[.]xml.ts` | none | From published pages |
-| `/robots.txt` | `routes/(site)/robots[.]txt.ts` | none | `Disallow: /` until something is published |
+| `/` and any published address (`/servicos`, `/casos/cafe-aurora`…) | `routes/(site)/index.tsx` and `routes/(site)/$.tsx` | none | Resolved by `resolvePublicPath` against published pages; 404/503 per [../spaces/public-site-delivery.md](../spaces/public-site-delivery.md) |
+| `/sitemap.xml` | `routes/sitemap[.]xml.ts` | none | From published pages |
+| `/robots.txt` | `routes/robots[.]txt.ts` | none | `Disallow: /` until something is published |
 
 Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `assets`, `sitemap.xml`, `robots.txt`.
 

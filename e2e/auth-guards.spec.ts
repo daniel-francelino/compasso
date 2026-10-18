@@ -74,3 +74,46 @@ test("the scheduled notifications job refuses calls without the cron secret", as
   const response = await request.get("/api/cron/due-notifications");
   expect(response.status()).toBe(401);
 });
+
+test("with nothing readable the public site answers 503 and says it is in preparation", async ({
+  request,
+  page,
+}) => {
+  const response = await request.get("/");
+  expect(response.status()).toBe(503);
+  expect(response.headers()["x-robots-tag"]).toContain("noindex");
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Site em preparação" })).toBeVisible();
+});
+
+test("robots.txt blocks everything and the sitemap lists nothing while nothing is published", async ({
+  request,
+}) => {
+  const robots = await request.get("/robots.txt");
+  expect(robots.status()).toBe(200);
+  expect(await robots.text()).toContain("Disallow: /");
+  const sitemap = await request.get("/sitemap.xml");
+  expect(sitemap.status()).toBe(200);
+  expect(await sitemap.text()).not.toContain("<url>");
+});
+
+for (const path of [
+  "/admin/site",
+  "/admin/site/pages",
+  "/admin/site/pages/00000000-0000-0000-0000-000000000001",
+  "/admin/site/services",
+  "/admin/site/testimonials",
+  "/admin/site/portfolio",
+  "/admin/site/navigation",
+  "/admin/site/settings",
+  "/admin/site/seo",
+  "/admin/site/redirects",
+  "/admin/site/publications",
+  "/admin/site/messages",
+  "/admin/site/preview/00000000-0000-0000-0000-000000000001",
+]) {
+  test(`${path} requires a session`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/admin\/login\?redirect=/);
+  });
+}

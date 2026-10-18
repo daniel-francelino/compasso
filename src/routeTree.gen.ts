@@ -9,7 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as siteIndexRouteImport } from './routes/(site)/index'
+import { Route as siteSplatRouteImport } from './routes/(site)/$'
 import { Route as AdminAppRouteImport } from './routes/admin/_app'
 import { Route as AdminAccessDeniedRouteImport } from './routes/admin/access-denied'
 import { Route as AdminCallbackRouteImport } from './routes/admin/callback'
@@ -31,6 +34,16 @@ import { Route as PortalAppNotificationsRouteImport } from './routes/portal/_app
 import { Route as PortalAppProfileRouteImport } from './routes/portal/_app/profile'
 import { Route as AdminAppsharedNotificationsRouteImport } from './routes/admin/_app/(shared)/notifications'
 import { Route as AdminAppsharedProfileRouteImport } from './routes/admin/_app/(shared)/profile'
+import { Route as AdminAppcmsSiteIndexRouteImport } from './routes/admin/_app/(cms)/site/index'
+import { Route as AdminAppcmsSiteMessagesRouteImport } from './routes/admin/_app/(cms)/site/messages'
+import { Route as AdminAppcmsSiteNavigationRouteImport } from './routes/admin/_app/(cms)/site/navigation'
+import { Route as AdminAppcmsSitePortfolioRouteImport } from './routes/admin/_app/(cms)/site/portfolio'
+import { Route as AdminAppcmsSitePublicationsRouteImport } from './routes/admin/_app/(cms)/site/publications'
+import { Route as AdminAppcmsSiteRedirectsRouteImport } from './routes/admin/_app/(cms)/site/redirects'
+import { Route as AdminAppcmsSiteSeoRouteImport } from './routes/admin/_app/(cms)/site/seo'
+import { Route as AdminAppcmsSiteServicesRouteImport } from './routes/admin/_app/(cms)/site/services'
+import { Route as AdminAppcmsSiteSettingsRouteImport } from './routes/admin/_app/(cms)/site/settings'
+import { Route as AdminAppcmsSiteTestimonialsRouteImport } from './routes/admin/_app/(cms)/site/testimonials'
 import { Route as AdminAppmarketingMarketingIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/index'
 import { Route as AdminAppsharedLibraryIndexRouteImport } from './routes/admin/_app/(shared)/library/index'
 import { Route as AdminAppsharedLibraryAssetIdRouteImport } from './routes/admin/_app/(shared)/library/$assetId'
@@ -43,6 +56,9 @@ import { Route as AdminAppsharedSettingsRolesRouteImport } from './routes/admin/
 import { Route as AdminAppsharedSettingsUsersRouteImport } from './routes/admin/_app/(shared)/settings/users'
 import { Route as PortalAppBrandsBrandIdIndexRouteImport } from './routes/portal/_app/brands/$brandId/index'
 import { Route as PortalAppBrandsBrandIdCalendarRouteImport } from './routes/portal/_app/brands/$brandId/calendar'
+import { Route as AdminAppcmsSitePagesIndexRouteImport } from './routes/admin/_app/(cms)/site/pages/index'
+import { Route as AdminAppcmsSitePagesPageIdRouteImport } from './routes/admin/_app/(cms)/site/pages/$pageId'
+import { Route as AdminAppcmsSitePreviewPageIdRouteImport } from './routes/admin/_app/(cms)/site/preview/$pageId'
 import { Route as AdminAppmarketingMarketingApprovalsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/approvals/index'
 import { Route as AdminAppmarketingMarketingApprovalsRequestIdRouteImport } from './routes/admin/_app/(marketing)/marketing/approvals/$requestId'
 import { Route as AdminAppmarketingMarketingBrandsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/index'
@@ -67,9 +83,24 @@ import { Route as AdminAppmarketingMarketingBrandsBrandIdLibraryRouteImport } fr
 import { Route as AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/members'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdSettingsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/settings'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const siteIndexRoute = siteIndexRouteImport.update({
+  id: '/(site)/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const siteSplatRoute = siteSplatRouteImport.update({
+  id: '/(site)/$',
+  path: '/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAppRoute = AdminAppRouteImport.update({
@@ -178,6 +209,61 @@ const AdminAppsharedProfileRoute = AdminAppsharedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AdminAppRoute,
 } as any)
+const AdminAppcmsSiteIndexRoute = AdminAppcmsSiteIndexRouteImport.update({
+  id: '/(cms)/site/',
+  path: '/site/',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppcmsSiteMessagesRoute = AdminAppcmsSiteMessagesRouteImport.update({
+  id: '/(cms)/site/messages',
+  path: '/site/messages',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppcmsSiteNavigationRoute =
+  AdminAppcmsSiteNavigationRouteImport.update({
+    id: '/(cms)/site/navigation',
+    path: '/site/navigation',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppcmsSitePortfolioRoute =
+  AdminAppcmsSitePortfolioRouteImport.update({
+    id: '/(cms)/site/portfolio',
+    path: '/site/portfolio',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppcmsSitePublicationsRoute =
+  AdminAppcmsSitePublicationsRouteImport.update({
+    id: '/(cms)/site/publications',
+    path: '/site/publications',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppcmsSiteRedirectsRoute =
+  AdminAppcmsSiteRedirectsRouteImport.update({
+    id: '/(cms)/site/redirects',
+    path: '/site/redirects',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppcmsSiteSeoRoute = AdminAppcmsSiteSeoRouteImport.update({
+  id: '/(cms)/site/seo',
+  path: '/site/seo',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppcmsSiteServicesRoute = AdminAppcmsSiteServicesRouteImport.update({
+  id: '/(cms)/site/services',
+  path: '/site/services',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppcmsSiteSettingsRoute = AdminAppcmsSiteSettingsRouteImport.update({
+  id: '/(cms)/site/settings',
+  path: '/site/settings',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppcmsSiteTestimonialsRoute =
+  AdminAppcmsSiteTestimonialsRouteImport.update({
+    id: '/(cms)/site/testimonials',
+    path: '/site/testimonials',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
 const AdminAppmarketingMarketingIndexRoute =
   AdminAppmarketingMarketingIndexRouteImport.update({
     id: '/(marketing)/marketing/',
@@ -249,6 +335,24 @@ const PortalAppBrandsBrandIdCalendarRoute =
     id: '/brands/$brandId/calendar',
     path: '/brands/$brandId/calendar',
     getParentRoute: () => PortalAppRoute,
+  } as any)
+const AdminAppcmsSitePagesIndexRoute =
+  AdminAppcmsSitePagesIndexRouteImport.update({
+    id: '/(cms)/site/pages/',
+    path: '/site/pages/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppcmsSitePagesPageIdRoute =
+  AdminAppcmsSitePagesPageIdRouteImport.update({
+    id: '/(cms)/site/pages/$pageId',
+    path: '/site/pages/$pageId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppcmsSitePreviewPageIdRoute =
+  AdminAppcmsSitePreviewPageIdRouteImport.update({
+    id: '/(cms)/site/preview/$pageId',
+    path: '/site/preview/$pageId',
+    getParentRoute: () => AdminAppRoute,
   } as any)
 const AdminAppmarketingMarketingApprovalsIndexRoute =
   AdminAppmarketingMarketingApprovalsIndexRouteImport.update({
@@ -390,7 +494,9 @@ const AdminAppmarketingMarketingBrandsBrandIdSettingsRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/$': typeof siteSplatRoute
   '/admin': typeof AdminAppRouteWithChildren
   '/admin/access-denied': typeof AdminAccessDeniedRoute
   '/admin/callback': typeof AdminCallbackRoute
@@ -400,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/admin/recover-password': typeof AdminRecoverPasswordRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/portal': typeof PortalAppRouteWithChildren
+  '/': typeof siteIndexRoute
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -412,6 +519,15 @@ export interface FileRoutesByFullPath {
   '/portal/': typeof PortalAppIndexRoute
   '/admin/notifications': typeof AdminAppsharedNotificationsRoute
   '/admin/profile': typeof AdminAppsharedProfileRoute
+  '/admin/site/messages': typeof AdminAppcmsSiteMessagesRoute
+  '/admin/site/navigation': typeof AdminAppcmsSiteNavigationRoute
+  '/admin/site/portfolio': typeof AdminAppcmsSitePortfolioRoute
+  '/admin/site/publications': typeof AdminAppcmsSitePublicationsRoute
+  '/admin/site/redirects': typeof AdminAppcmsSiteRedirectsRoute
+  '/admin/site/seo': typeof AdminAppcmsSiteSeoRoute
+  '/admin/site/services': typeof AdminAppcmsSiteServicesRoute
+  '/admin/site/settings': typeof AdminAppcmsSiteSettingsRoute
+  '/admin/site/testimonials': typeof AdminAppcmsSiteTestimonialsRoute
   '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
@@ -420,10 +536,13 @@ export interface FileRoutesByFullPath {
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
   '/portal/brands/$brandId/calendar': typeof PortalAppBrandsBrandIdCalendarRoute
+  '/admin/site/': typeof AdminAppcmsSiteIndexRoute
   '/admin/marketing/': typeof AdminAppmarketingMarketingIndexRoute
   '/admin/library/': typeof AdminAppsharedLibraryIndexRoute
   '/admin/settings/': typeof AdminAppsharedSettingsIndexRoute
   '/portal/brands/$brandId/': typeof PortalAppBrandsBrandIdIndexRoute
+  '/admin/site/pages/$pageId': typeof AdminAppcmsSitePagesPageIdRoute
+  '/admin/site/preview/$pageId': typeof AdminAppcmsSitePreviewPageIdRoute
   '/admin/marketing/approvals/$requestId': typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   '/admin/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
@@ -432,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
   '/admin/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
   '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  '/admin/site/pages/': typeof AdminAppcmsSitePagesIndexRoute
   '/admin/marketing/approvals/': typeof AdminAppmarketingMarketingApprovalsIndexRoute
   '/admin/marketing/brands/': typeof AdminAppmarketingMarketingBrandsIndexRoute
   '/admin/marketing/calendar/': typeof AdminAppmarketingMarketingCalendarIndexRoute
@@ -449,7 +569,9 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/brands/$brandId/': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/$': typeof siteSplatRoute
   '/admin/access-denied': typeof AdminAccessDeniedRoute
   '/admin/callback': typeof AdminCallbackRoute
   '/admin/confirm-email': typeof AdminConfirmEmailRoute
@@ -457,6 +579,7 @@ export interface FileRoutesByTo {
   '/admin/pending': typeof AdminPendingRoute
   '/admin/recover-password': typeof AdminRecoverPasswordRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
+  '/': typeof siteIndexRoute
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -469,6 +592,15 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalAppIndexRoute
   '/admin/notifications': typeof AdminAppsharedNotificationsRoute
   '/admin/profile': typeof AdminAppsharedProfileRoute
+  '/admin/site/messages': typeof AdminAppcmsSiteMessagesRoute
+  '/admin/site/navigation': typeof AdminAppcmsSiteNavigationRoute
+  '/admin/site/portfolio': typeof AdminAppcmsSitePortfolioRoute
+  '/admin/site/publications': typeof AdminAppcmsSitePublicationsRoute
+  '/admin/site/redirects': typeof AdminAppcmsSiteRedirectsRoute
+  '/admin/site/seo': typeof AdminAppcmsSiteSeoRoute
+  '/admin/site/services': typeof AdminAppcmsSiteServicesRoute
+  '/admin/site/settings': typeof AdminAppcmsSiteSettingsRoute
+  '/admin/site/testimonials': typeof AdminAppcmsSiteTestimonialsRoute
   '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
@@ -477,10 +609,13 @@ export interface FileRoutesByTo {
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
   '/portal/brands/$brandId/calendar': typeof PortalAppBrandsBrandIdCalendarRoute
+  '/admin/site': typeof AdminAppcmsSiteIndexRoute
   '/admin/marketing': typeof AdminAppmarketingMarketingIndexRoute
   '/admin/library': typeof AdminAppsharedLibraryIndexRoute
   '/admin/settings': typeof AdminAppsharedSettingsIndexRoute
   '/portal/brands/$brandId': typeof PortalAppBrandsBrandIdIndexRoute
+  '/admin/site/pages/$pageId': typeof AdminAppcmsSitePagesPageIdRoute
+  '/admin/site/preview/$pageId': typeof AdminAppcmsSitePreviewPageIdRoute
   '/admin/marketing/approvals/$requestId': typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
   '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
@@ -488,6 +623,7 @@ export interface FileRoutesByTo {
   '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
   '/admin/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
   '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  '/admin/site/pages': typeof AdminAppcmsSitePagesIndexRoute
   '/admin/marketing/approvals': typeof AdminAppmarketingMarketingApprovalsIndexRoute
   '/admin/marketing/brands': typeof AdminAppmarketingMarketingBrandsIndexRoute
   '/admin/marketing/calendar': typeof AdminAppmarketingMarketingCalendarIndexRoute
@@ -506,7 +642,9 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/(site)/$': typeof siteSplatRoute
   '/admin/_app': typeof AdminAppRouteWithChildren
   '/admin/access-denied': typeof AdminAccessDeniedRoute
   '/admin/callback': typeof AdminCallbackRoute
@@ -516,6 +654,7 @@ export interface FileRoutesById {
   '/admin/recover-password': typeof AdminRecoverPasswordRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/portal/_app': typeof PortalAppRouteWithChildren
+  '/(site)/': typeof siteIndexRoute
   '/admin/_app/design': typeof AdminAppDesignRoute
   '/admin/_app/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
@@ -528,6 +667,15 @@ export interface FileRoutesById {
   '/portal/_app/': typeof PortalAppIndexRoute
   '/admin/_app/(shared)/notifications': typeof AdminAppsharedNotificationsRoute
   '/admin/_app/(shared)/profile': typeof AdminAppsharedProfileRoute
+  '/admin/_app/(cms)/site/messages': typeof AdminAppcmsSiteMessagesRoute
+  '/admin/_app/(cms)/site/navigation': typeof AdminAppcmsSiteNavigationRoute
+  '/admin/_app/(cms)/site/portfolio': typeof AdminAppcmsSitePortfolioRoute
+  '/admin/_app/(cms)/site/publications': typeof AdminAppcmsSitePublicationsRoute
+  '/admin/_app/(cms)/site/redirects': typeof AdminAppcmsSiteRedirectsRoute
+  '/admin/_app/(cms)/site/seo': typeof AdminAppcmsSiteSeoRoute
+  '/admin/_app/(cms)/site/services': typeof AdminAppcmsSiteServicesRoute
+  '/admin/_app/(cms)/site/settings': typeof AdminAppcmsSiteSettingsRoute
+  '/admin/_app/(cms)/site/testimonials': typeof AdminAppcmsSiteTestimonialsRoute
   '/admin/_app/(shared)/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/_app/(shared)/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/_app/(shared)/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
@@ -536,10 +684,13 @@ export interface FileRoutesById {
   '/admin/_app/(shared)/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/_app/(shared)/settings/users': typeof AdminAppsharedSettingsUsersRoute
   '/portal/_app/brands/$brandId/calendar': typeof PortalAppBrandsBrandIdCalendarRoute
+  '/admin/_app/(cms)/site/': typeof AdminAppcmsSiteIndexRoute
   '/admin/_app/(marketing)/marketing/': typeof AdminAppmarketingMarketingIndexRoute
   '/admin/_app/(shared)/library/': typeof AdminAppsharedLibraryIndexRoute
   '/admin/_app/(shared)/settings/': typeof AdminAppsharedSettingsIndexRoute
   '/portal/_app/brands/$brandId/': typeof PortalAppBrandsBrandIdIndexRoute
+  '/admin/_app/(cms)/site/pages/$pageId': typeof AdminAppcmsSitePagesPageIdRoute
+  '/admin/_app/(cms)/site/preview/$pageId': typeof AdminAppcmsSitePreviewPageIdRoute
   '/admin/_app/(marketing)/marketing/approvals/$requestId': typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   '/admin/_app/(marketing)/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
@@ -548,6 +699,7 @@ export interface FileRoutesById {
   '/admin/_app/(marketing)/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
   '/admin/_app/(marketing)/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
   '/portal/_app/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  '/admin/_app/(cms)/site/pages/': typeof AdminAppcmsSitePagesIndexRoute
   '/admin/_app/(marketing)/marketing/approvals/': typeof AdminAppmarketingMarketingApprovalsIndexRoute
   '/admin/_app/(marketing)/marketing/brands/': typeof AdminAppmarketingMarketingBrandsIndexRoute
   '/admin/_app/(marketing)/marketing/calendar/': typeof AdminAppmarketingMarketingCalendarIndexRoute
@@ -567,7 +719,9 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/$'
     | '/admin'
     | '/admin/access-denied'
     | '/admin/callback'
@@ -577,6 +731,7 @@ export interface FileRouteTypes {
     | '/admin/recover-password'
     | '/admin/reset-password'
     | '/portal'
+    | '/'
     | '/admin/design'
     | '/admin/forbidden'
     | '/admin/invite/$token'
@@ -589,6 +744,15 @@ export interface FileRouteTypes {
     | '/portal/'
     | '/admin/notifications'
     | '/admin/profile'
+    | '/admin/site/messages'
+    | '/admin/site/navigation'
+    | '/admin/site/portfolio'
+    | '/admin/site/publications'
+    | '/admin/site/redirects'
+    | '/admin/site/seo'
+    | '/admin/site/services'
+    | '/admin/site/settings'
+    | '/admin/site/testimonials'
     | '/admin/library/$assetId'
     | '/admin/settings/audit'
     | '/admin/settings/notifications'
@@ -597,10 +761,13 @@ export interface FileRouteTypes {
     | '/admin/settings/roles'
     | '/admin/settings/users'
     | '/portal/brands/$brandId/calendar'
+    | '/admin/site/'
     | '/admin/marketing/'
     | '/admin/library/'
     | '/admin/settings/'
     | '/portal/brands/$brandId/'
+    | '/admin/site/pages/$pageId'
+    | '/admin/site/preview/$pageId'
     | '/admin/marketing/approvals/$requestId'
     | '/admin/marketing/brands/$brandId'
     | '/admin/marketing/brands/new'
@@ -609,6 +776,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/content/$itemId'
     | '/admin/marketing/variants/$variantId'
     | '/portal/brands/$brandId/approvals/$requestId'
+    | '/admin/site/pages/'
     | '/admin/marketing/approvals/'
     | '/admin/marketing/brands/'
     | '/admin/marketing/calendar/'
@@ -626,7 +794,9 @@ export interface FileRouteTypes {
     | '/admin/marketing/brands/$brandId/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/$'
     | '/admin/access-denied'
     | '/admin/callback'
     | '/admin/confirm-email'
@@ -634,6 +804,7 @@ export interface FileRouteTypes {
     | '/admin/pending'
     | '/admin/recover-password'
     | '/admin/reset-password'
+    | '/'
     | '/admin/design'
     | '/admin/forbidden'
     | '/admin/invite/$token'
@@ -646,6 +817,15 @@ export interface FileRouteTypes {
     | '/portal'
     | '/admin/notifications'
     | '/admin/profile'
+    | '/admin/site/messages'
+    | '/admin/site/navigation'
+    | '/admin/site/portfolio'
+    | '/admin/site/publications'
+    | '/admin/site/redirects'
+    | '/admin/site/seo'
+    | '/admin/site/services'
+    | '/admin/site/settings'
+    | '/admin/site/testimonials'
     | '/admin/library/$assetId'
     | '/admin/settings/audit'
     | '/admin/settings/notifications'
@@ -654,10 +834,13 @@ export interface FileRouteTypes {
     | '/admin/settings/roles'
     | '/admin/settings/users'
     | '/portal/brands/$brandId/calendar'
+    | '/admin/site'
     | '/admin/marketing'
     | '/admin/library'
     | '/admin/settings'
     | '/portal/brands/$brandId'
+    | '/admin/site/pages/$pageId'
+    | '/admin/site/preview/$pageId'
     | '/admin/marketing/approvals/$requestId'
     | '/admin/marketing/brands/new'
     | '/admin/marketing/clients/$clientId'
@@ -665,6 +848,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/content/$itemId'
     | '/admin/marketing/variants/$variantId'
     | '/portal/brands/$brandId/approvals/$requestId'
+    | '/admin/site/pages'
     | '/admin/marketing/approvals'
     | '/admin/marketing/brands'
     | '/admin/marketing/calendar'
@@ -682,7 +866,9 @@ export interface FileRouteTypes {
     | '/admin/marketing/brands/$brandId'
   id:
     | '__root__'
-    | '/'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/(site)/$'
     | '/admin/_app'
     | '/admin/access-denied'
     | '/admin/callback'
@@ -692,6 +878,7 @@ export interface FileRouteTypes {
     | '/admin/recover-password'
     | '/admin/reset-password'
     | '/portal/_app'
+    | '/(site)/'
     | '/admin/_app/design'
     | '/admin/_app/forbidden'
     | '/admin/invite/$token'
@@ -704,6 +891,15 @@ export interface FileRouteTypes {
     | '/portal/_app/'
     | '/admin/_app/(shared)/notifications'
     | '/admin/_app/(shared)/profile'
+    | '/admin/_app/(cms)/site/messages'
+    | '/admin/_app/(cms)/site/navigation'
+    | '/admin/_app/(cms)/site/portfolio'
+    | '/admin/_app/(cms)/site/publications'
+    | '/admin/_app/(cms)/site/redirects'
+    | '/admin/_app/(cms)/site/seo'
+    | '/admin/_app/(cms)/site/services'
+    | '/admin/_app/(cms)/site/settings'
+    | '/admin/_app/(cms)/site/testimonials'
     | '/admin/_app/(shared)/library/$assetId'
     | '/admin/_app/(shared)/settings/audit'
     | '/admin/_app/(shared)/settings/notifications'
@@ -712,10 +908,13 @@ export interface FileRouteTypes {
     | '/admin/_app/(shared)/settings/roles'
     | '/admin/_app/(shared)/settings/users'
     | '/portal/_app/brands/$brandId/calendar'
+    | '/admin/_app/(cms)/site/'
     | '/admin/_app/(marketing)/marketing/'
     | '/admin/_app/(shared)/library/'
     | '/admin/_app/(shared)/settings/'
     | '/portal/_app/brands/$brandId/'
+    | '/admin/_app/(cms)/site/pages/$pageId'
+    | '/admin/_app/(cms)/site/preview/$pageId'
     | '/admin/_app/(marketing)/marketing/approvals/$requestId'
     | '/admin/_app/(marketing)/marketing/brands/$brandId'
     | '/admin/_app/(marketing)/marketing/brands/new'
@@ -724,6 +923,7 @@ export interface FileRouteTypes {
     | '/admin/_app/(marketing)/marketing/content/$itemId'
     | '/admin/_app/(marketing)/marketing/variants/$variantId'
     | '/portal/_app/brands/$brandId/approvals/$requestId'
+    | '/admin/_app/(cms)/site/pages/'
     | '/admin/_app/(marketing)/marketing/approvals/'
     | '/admin/_app/(marketing)/marketing/brands/'
     | '/admin/_app/(marketing)/marketing/calendar/'
@@ -742,7 +942,9 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  siteSplatRoute: typeof siteSplatRoute
   AdminAppRoute: typeof AdminAppRouteWithChildren
   AdminAccessDeniedRoute: typeof AdminAccessDeniedRoute
   AdminCallbackRoute: typeof AdminCallbackRoute
@@ -752,6 +954,7 @@ export interface RootRouteChildren {
   AdminRecoverPasswordRoute: typeof AdminRecoverPasswordRoute
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   PortalAppRoute: typeof PortalAppRouteWithChildren
+  siteIndexRoute: typeof siteIndexRoute
   AdminInviteTokenRoute: typeof AdminInviteTokenRoute
   ApiCronDueNotificationsRoute: typeof ApiCronDueNotificationsRoute
   ApiCronEmailOutboxRoute: typeof ApiCronEmailOutboxRoute
@@ -760,11 +963,32 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(site)/': {
+      id: '/(site)/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof siteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(site)/$': {
+      id: '/(site)/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof siteSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/_app': {
@@ -914,6 +1138,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsharedProfileRouteImport
       parentRoute: typeof AdminAppRoute
     }
+    '/admin/_app/(cms)/site/': {
+      id: '/admin/_app/(cms)/site/'
+      path: '/site'
+      fullPath: '/admin/site/'
+      preLoaderRoute: typeof AdminAppcmsSiteIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/messages': {
+      id: '/admin/_app/(cms)/site/messages'
+      path: '/site/messages'
+      fullPath: '/admin/site/messages'
+      preLoaderRoute: typeof AdminAppcmsSiteMessagesRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/navigation': {
+      id: '/admin/_app/(cms)/site/navigation'
+      path: '/site/navigation'
+      fullPath: '/admin/site/navigation'
+      preLoaderRoute: typeof AdminAppcmsSiteNavigationRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/portfolio': {
+      id: '/admin/_app/(cms)/site/portfolio'
+      path: '/site/portfolio'
+      fullPath: '/admin/site/portfolio'
+      preLoaderRoute: typeof AdminAppcmsSitePortfolioRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/publications': {
+      id: '/admin/_app/(cms)/site/publications'
+      path: '/site/publications'
+      fullPath: '/admin/site/publications'
+      preLoaderRoute: typeof AdminAppcmsSitePublicationsRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/redirects': {
+      id: '/admin/_app/(cms)/site/redirects'
+      path: '/site/redirects'
+      fullPath: '/admin/site/redirects'
+      preLoaderRoute: typeof AdminAppcmsSiteRedirectsRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/seo': {
+      id: '/admin/_app/(cms)/site/seo'
+      path: '/site/seo'
+      fullPath: '/admin/site/seo'
+      preLoaderRoute: typeof AdminAppcmsSiteSeoRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/services': {
+      id: '/admin/_app/(cms)/site/services'
+      path: '/site/services'
+      fullPath: '/admin/site/services'
+      preLoaderRoute: typeof AdminAppcmsSiteServicesRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/settings': {
+      id: '/admin/_app/(cms)/site/settings'
+      path: '/site/settings'
+      fullPath: '/admin/site/settings'
+      preLoaderRoute: typeof AdminAppcmsSiteSettingsRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/testimonials': {
+      id: '/admin/_app/(cms)/site/testimonials'
+      path: '/site/testimonials'
+      fullPath: '/admin/site/testimonials'
+      preLoaderRoute: typeof AdminAppcmsSiteTestimonialsRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
     '/admin/_app/(marketing)/marketing/': {
       id: '/admin/_app/(marketing)/marketing/'
       path: '/marketing'
@@ -997,6 +1291,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/brands/$brandId/calendar'
       preLoaderRoute: typeof PortalAppBrandsBrandIdCalendarRouteImport
       parentRoute: typeof PortalAppRoute
+    }
+    '/admin/_app/(cms)/site/pages/': {
+      id: '/admin/_app/(cms)/site/pages/'
+      path: '/site/pages'
+      fullPath: '/admin/site/pages/'
+      preLoaderRoute: typeof AdminAppcmsSitePagesIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/pages/$pageId': {
+      id: '/admin/_app/(cms)/site/pages/$pageId'
+      path: '/site/pages/$pageId'
+      fullPath: '/admin/site/pages/$pageId'
+      preLoaderRoute: typeof AdminAppcmsSitePagesPageIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(cms)/site/preview/$pageId': {
+      id: '/admin/_app/(cms)/site/preview/$pageId'
+      path: '/site/preview/$pageId'
+      fullPath: '/admin/site/preview/$pageId'
+      preLoaderRoute: typeof AdminAppcmsSitePreviewPageIdRouteImport
+      parentRoute: typeof AdminAppRoute
     }
     '/admin/_app/(marketing)/marketing/approvals/': {
       id: '/admin/_app/(marketing)/marketing/approvals/'
@@ -1207,6 +1522,15 @@ interface AdminAppRouteChildren {
   AdminAppIndexRoute: typeof AdminAppIndexRoute
   AdminAppsharedNotificationsRoute: typeof AdminAppsharedNotificationsRoute
   AdminAppsharedProfileRoute: typeof AdminAppsharedProfileRoute
+  AdminAppcmsSiteMessagesRoute: typeof AdminAppcmsSiteMessagesRoute
+  AdminAppcmsSiteNavigationRoute: typeof AdminAppcmsSiteNavigationRoute
+  AdminAppcmsSitePortfolioRoute: typeof AdminAppcmsSitePortfolioRoute
+  AdminAppcmsSitePublicationsRoute: typeof AdminAppcmsSitePublicationsRoute
+  AdminAppcmsSiteRedirectsRoute: typeof AdminAppcmsSiteRedirectsRoute
+  AdminAppcmsSiteSeoRoute: typeof AdminAppcmsSiteSeoRoute
+  AdminAppcmsSiteServicesRoute: typeof AdminAppcmsSiteServicesRoute
+  AdminAppcmsSiteSettingsRoute: typeof AdminAppcmsSiteSettingsRoute
+  AdminAppcmsSiteTestimonialsRoute: typeof AdminAppcmsSiteTestimonialsRoute
   AdminAppsharedLibraryAssetIdRoute: typeof AdminAppsharedLibraryAssetIdRoute
   AdminAppsharedSettingsAuditRoute: typeof AdminAppsharedSettingsAuditRoute
   AdminAppsharedSettingsNotificationsRoute: typeof AdminAppsharedSettingsNotificationsRoute
@@ -1214,9 +1538,12 @@ interface AdminAppRouteChildren {
   AdminAppsharedSettingsPoliciesRoute: typeof AdminAppsharedSettingsPoliciesRoute
   AdminAppsharedSettingsRolesRoute: typeof AdminAppsharedSettingsRolesRoute
   AdminAppsharedSettingsUsersRoute: typeof AdminAppsharedSettingsUsersRoute
+  AdminAppcmsSiteIndexRoute: typeof AdminAppcmsSiteIndexRoute
   AdminAppmarketingMarketingIndexRoute: typeof AdminAppmarketingMarketingIndexRoute
   AdminAppsharedLibraryIndexRoute: typeof AdminAppsharedLibraryIndexRoute
   AdminAppsharedSettingsIndexRoute: typeof AdminAppsharedSettingsIndexRoute
+  AdminAppcmsSitePagesPageIdRoute: typeof AdminAppcmsSitePagesPageIdRoute
+  AdminAppcmsSitePreviewPageIdRoute: typeof AdminAppcmsSitePreviewPageIdRoute
   AdminAppmarketingMarketingApprovalsRequestIdRoute: typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   AdminAppmarketingMarketingBrandsBrandIdRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   AdminAppmarketingMarketingBrandsNewRoute: typeof AdminAppmarketingMarketingBrandsNewRoute
@@ -1224,6 +1551,7 @@ interface AdminAppRouteChildren {
   AdminAppmarketingMarketingClientsNewRoute: typeof AdminAppmarketingMarketingClientsNewRoute
   AdminAppmarketingMarketingContentItemIdRoute: typeof AdminAppmarketingMarketingContentItemIdRoute
   AdminAppmarketingMarketingVariantsVariantIdRoute: typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  AdminAppcmsSitePagesIndexRoute: typeof AdminAppcmsSitePagesIndexRoute
   AdminAppmarketingMarketingApprovalsIndexRoute: typeof AdminAppmarketingMarketingApprovalsIndexRoute
   AdminAppmarketingMarketingBrandsIndexRoute: typeof AdminAppmarketingMarketingBrandsIndexRoute
   AdminAppmarketingMarketingCalendarIndexRoute: typeof AdminAppmarketingMarketingCalendarIndexRoute
@@ -1237,6 +1565,15 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppIndexRoute: AdminAppIndexRoute,
   AdminAppsharedNotificationsRoute: AdminAppsharedNotificationsRoute,
   AdminAppsharedProfileRoute: AdminAppsharedProfileRoute,
+  AdminAppcmsSiteMessagesRoute: AdminAppcmsSiteMessagesRoute,
+  AdminAppcmsSiteNavigationRoute: AdminAppcmsSiteNavigationRoute,
+  AdminAppcmsSitePortfolioRoute: AdminAppcmsSitePortfolioRoute,
+  AdminAppcmsSitePublicationsRoute: AdminAppcmsSitePublicationsRoute,
+  AdminAppcmsSiteRedirectsRoute: AdminAppcmsSiteRedirectsRoute,
+  AdminAppcmsSiteSeoRoute: AdminAppcmsSiteSeoRoute,
+  AdminAppcmsSiteServicesRoute: AdminAppcmsSiteServicesRoute,
+  AdminAppcmsSiteSettingsRoute: AdminAppcmsSiteSettingsRoute,
+  AdminAppcmsSiteTestimonialsRoute: AdminAppcmsSiteTestimonialsRoute,
   AdminAppsharedLibraryAssetIdRoute: AdminAppsharedLibraryAssetIdRoute,
   AdminAppsharedSettingsAuditRoute: AdminAppsharedSettingsAuditRoute,
   AdminAppsharedSettingsNotificationsRoute:
@@ -1246,9 +1583,12 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,
   AdminAppsharedSettingsRolesRoute: AdminAppsharedSettingsRolesRoute,
   AdminAppsharedSettingsUsersRoute: AdminAppsharedSettingsUsersRoute,
+  AdminAppcmsSiteIndexRoute: AdminAppcmsSiteIndexRoute,
   AdminAppmarketingMarketingIndexRoute: AdminAppmarketingMarketingIndexRoute,
   AdminAppsharedLibraryIndexRoute: AdminAppsharedLibraryIndexRoute,
   AdminAppsharedSettingsIndexRoute: AdminAppsharedSettingsIndexRoute,
+  AdminAppcmsSitePagesPageIdRoute: AdminAppcmsSitePagesPageIdRoute,
+  AdminAppcmsSitePreviewPageIdRoute: AdminAppcmsSitePreviewPageIdRoute,
   AdminAppmarketingMarketingApprovalsRequestIdRoute:
     AdminAppmarketingMarketingApprovalsRequestIdRoute,
   AdminAppmarketingMarketingBrandsBrandIdRoute:
@@ -1263,6 +1603,7 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
     AdminAppmarketingMarketingContentItemIdRoute,
   AdminAppmarketingMarketingVariantsVariantIdRoute:
     AdminAppmarketingMarketingVariantsVariantIdRoute,
+  AdminAppcmsSitePagesIndexRoute: AdminAppcmsSitePagesIndexRoute,
   AdminAppmarketingMarketingApprovalsIndexRoute:
     AdminAppmarketingMarketingApprovalsIndexRoute,
   AdminAppmarketingMarketingBrandsIndexRoute:
@@ -1306,7 +1647,9 @@ const PortalAppRouteWithChildren = PortalAppRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  siteSplatRoute: siteSplatRoute,
   AdminAppRoute: AdminAppRouteWithChildren,
   AdminAccessDeniedRoute: AdminAccessDeniedRoute,
   AdminCallbackRoute: AdminCallbackRoute,
@@ -1316,6 +1659,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRecoverPasswordRoute: AdminRecoverPasswordRoute,
   AdminResetPasswordRoute: AdminResetPasswordRoute,
   PortalAppRoute: PortalAppRouteWithChildren,
+  siteIndexRoute: siteIndexRoute,
   AdminInviteTokenRoute: AdminInviteTokenRoute,
   ApiCronDueNotificationsRoute: ApiCronDueNotificationsRoute,
   ApiCronEmailOutboxRoute: ApiCronEmailOutboxRoute,

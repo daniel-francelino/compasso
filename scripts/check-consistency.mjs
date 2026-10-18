@@ -92,6 +92,10 @@ checkValues(
 checkValues("approval_requests", "status", "ApprovalRequestStatus", "src/lib/shared/enums.ts");
 checkValues("approval_decisions", "outcome", "ApprovalOutcome", "src/lib/shared/enums.ts");
 checkValues("comments", "visibility", "CommentVisibility", "src/lib/shared/enums.ts");
+checkValues("site_pages", "kind", "SitePageKind", "src/lib/shared/enums.ts");
+checkValues("site_pages", "status", "SitePageStatus", "src/lib/shared/enums.ts");
+checkValues("site_entries", "kind", "SiteEntryKind", "src/lib/shared/enums.ts");
+checkValues("contact_messages", "status", "ContactMessageStatus", "src/lib/shared/enums.ts");
 
 if (problems.length > 0) {
   console.error(`\ncheck:consistency found ${problems.length} problem(s):`);
@@ -99,5 +103,5 @@ if (problems.length > 0) {
   process.exit(1);
 }
 console.log(
-  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 9 CHECK lists.`,
+  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 13 CHECK lists.`,
 );

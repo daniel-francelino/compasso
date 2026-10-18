@@ -18,6 +18,8 @@ export interface ServerStorage {
     prefix: string,
   ): Promise<{ objects: { key: string; size: number }[]; truncated: boolean } | null>;
   remove(paths: (string | null | undefined)[]): Promise<StorageResult>;
+  copyToPublic(fromKey: string, toKey: string): Promise<StorageResult>;
+  removePublic(keys: string[]): Promise<StorageResult>;
 }
 
 export interface BrowserStorage {

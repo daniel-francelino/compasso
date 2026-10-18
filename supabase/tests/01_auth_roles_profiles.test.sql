@@ -39,7 +39,7 @@ join public.roles r on r.key = u.role_key;
 insert into public.profiles (id, full_name, email, status)
 values ('00000000-0000-0000-0000-0000000000f1', 'Pending', 'pending@example.test', 'pending');
 
-select is((select count(*)::int from public.roles), 5, 'five roles are seeded');
+select is((select count(*)::int from public.roles), 6, 'six roles are seeded');
 select is((select count(*)::int from public.actions), 46, 'the action catalog is seeded');
 select is((select is_system from public.roles where key = 'owner'), true, 'owner is a system role');
 select is(
@@ -96,7 +96,7 @@ reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
 select is((select count(*)::int from public.profiles), 1, 'a collaborator sees only the own profile');
-select is((select count(*)::int from public.roles), 5, 'an approved account reads the roles');
+select is((select count(*)::int from public.roles), 6, 'an approved account reads the roles');
 select is((select count(*)::int from public.organizations), 1, 'an approved account reads the organization');
 select is((select count(*)::int from public.organization_settings), 0, 'settings need settings.manage');
 reset role;
@@ -213,7 +213,7 @@ select throws_ok($$delete from public.roles where key = 'owner'$$, 'role_system_
 select throws_ok($$update public.roles set name = 'Boss' where key = 'owner'$$, 'role_system_protected', 'the owner role cannot be edited');
 select throws_ok($$delete from public.roles where key = 'manager'$$, 'role_in_use', 'a role in use cannot be deleted');
 select lives_ok(
-  $$insert into public.roles (key, name) values ('site_editor', 'Editor do site'); delete from public.roles where key = 'site_editor'$$,
+  $$insert into public.roles (key, name) values ('temp_role', 'Temporary role'); delete from public.roles where key = 'temp_role'$$,
   'an unused role can be created and deleted'
 );
 

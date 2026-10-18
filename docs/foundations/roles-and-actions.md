@@ -97,6 +97,8 @@ Only the system role `owner` has them; they **do not appear as an option** when 
 
 ## 7. Starting roles
 
+> Phase 5 adds the pre-created role `site_editor` ("Editor do site") with `site.view`, `site.edit`, `media.view` and `media.upload`, in migration `20261018101100_site_cms.sql`.
+
 | Role | Type | Actions |
 |---|---|---|
 | `owner` ("Proprietário") | System, protected | All (implicit) |

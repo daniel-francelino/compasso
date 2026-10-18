@@ -188,3 +188,117 @@ export const CalendarAlert = {
   DatePassed: "date_passed",
 } as const;
 export type CalendarAlert = ValueOf<typeof CalendarAlert>;
+
+export const SectionKind = {
+  Hero: "hero",
+  ServicesGrid: "services_grid",
+  PortfolioGrid: "portfolio_grid",
+  Testimonials: "testimonials",
+  RichText: "rich_text",
+  ImageText: "image_text",
+  Gallery: "gallery",
+  Faq: "faq",
+  ContactForm: "contact_form",
+} as const;
+export type SectionKind = ValueOf<typeof SectionKind>;
+
+export const LinkKind = {
+  Page: "page",
+  Anchor: "anchor",
+  CaseStudy: "case_study",
+  Url: "url",
+  Whatsapp: "whatsapp",
+  Email: "email",
+  Phone: "phone",
+} as const;
+export type LinkKind = ValueOf<typeof LinkKind>;
+
+export const SitePageKind = {
+  Home: "home",
+  About: "about",
+  Services: "services",
+  Portfolio: "portfolio",
+  CaseStudy: "case_study",
+  Contact: "contact",
+  BlogPost: "blog_post",
+  Generic: "generic",
+} as const;
+export type SitePageKind = ValueOf<typeof SitePageKind>;
+
+export const SitePageStatus = {
+  Draft: "draft",
+  Published: "published",
+  Unpublished: "unpublished",
+} as const;
+export type SitePageStatus = ValueOf<typeof SitePageStatus>;
+
+export const SiteEntryKind = {
+  Service: "service",
+  Testimonial: "testimonial",
+} as const;
+export type SiteEntryKind = ValueOf<typeof SiteEntryKind>;
+
+export const SiteSettingsGroup = {
+  Contacts: "contacts",
+  Social: "social",
+  Languages: "languages",
+  SeoDefaults: "seo_defaults",
+  Navigation: "navigation",
+  MessageTemplates: "message_templates",
+  Announcement: "announcement",
+} as const;
+export type SiteSettingsGroup = ValueOf<typeof SiteSettingsGroup>;
+
+export const ContactMessageStatus = {
+  New: "new",
+  Answered: "answered",
+  Discarded: "discarded",
+} as const;
+export type ContactMessageStatus = ValueOf<typeof ContactMessageStatus>;
+
+export const SectionBackground = {
+  Ivory: "ivory",
+  Cream: "cream",
+  Peach: "peach",
+} as const;
+export type SectionBackground = ValueOf<typeof SectionBackground>;
+
+export const SectionSpacing = {
+  Small: "s",
+  Medium: "m",
+  Large: "l",
+} as const;
+export type SectionSpacing = ValueOf<typeof SectionSpacing>;
+
+export const SectionAccent = {
+  Violet: "violet",
+  Coral: "coral",
+  Orchid: "orchid",
+} as const;
+export type SectionAccent = ValueOf<typeof SectionAccent>;
+
+export const PublicSiteState = {
+  None: "none",
+  Ok: "ok",
+  Redirect: "redirect",
+  NotFound: "not_found",
+} as const;
+export type PublicSiteState = ValueOf<typeof PublicSiteState>;
+
+export const ProblemSeverity = {
+  Error: "error",
+  Warning: "warning",
+} as const;
+export type ProblemSeverity = ValueOf<typeof ProblemSeverity>;
+
+export const PortfolioSource = {
+  All: "all",
+  Manual: "manual",
+} as const;
+export type PortfolioSource = ValueOf<typeof PortfolioSource>;
+
+export const ImageSide = {
+  Left: "left",
+  Right: "right",
+} as const;
+export type ImageSide = ValueOf<typeof ImageSide>;

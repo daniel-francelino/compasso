@@ -6,14 +6,21 @@ import {
   CalendarEntryKind,
   CalendarView,
   CommentVisibility,
+  ContactMessageStatus,
   ContentFormat,
   DashboardReason,
   EditorialStatus,
   InvitationStatus,
+  LinkKind,
   Platform,
   ProfileKind,
   ProfileStatus,
   PublicationStatus,
+  SectionAccent,
+  SectionBackground,
+  SectionSpacing,
+  SitePageKind,
+  SitePageStatus,
 } from "@/lib/shared/enums";
 
 export const profileStatusLabels: Record<ProfileStatus, string> = {
@@ -126,4 +133,55 @@ export const calendarAlertLabels: Record<CalendarAlert, string> = {
   [CalendarAlert.TooClose]: "Outra publicação neste canal em menos de 30 minutos",
   [CalendarAlert.NotApprovedYet]: "Ainda não aprovado",
   [CalendarAlert.DatePassed]: "A data já passou e a publicação não foi registrada",
+};
+
+export const sitePageKindLabels: Record<SitePageKind, string> = {
+  [SitePageKind.Home]: "Início",
+  [SitePageKind.About]: "Sobre",
+  [SitePageKind.Services]: "Serviços",
+  [SitePageKind.Portfolio]: "Portfólio",
+  [SitePageKind.CaseStudy]: "Case",
+  [SitePageKind.Contact]: "Contato",
+  [SitePageKind.BlogPost]: "Artigo",
+  [SitePageKind.Generic]: "Página livre",
+};
+
+export const linkKindLabels: Record<LinkKind, string> = {
+  [LinkKind.Page]: "Uma página do site",
+  [LinkKind.Anchor]: "Uma seção de uma página",
+  [LinkKind.CaseStudy]: "Um case",
+  [LinkKind.Url]: "Um endereço",
+  [LinkKind.Whatsapp]: "WhatsApp",
+  [LinkKind.Email]: "E-mail",
+  [LinkKind.Phone]: "Telefone",
+};
+
+export const contactMessageStatusLabels: Record<ContactMessageStatus, string> = {
+  [ContactMessageStatus.New]: "Nova",
+  [ContactMessageStatus.Answered]: "Respondida",
+  [ContactMessageStatus.Discarded]: "Descartada",
+};
+
+export const sectionBackgroundLabels: Record<SectionBackground, string> = {
+  [SectionBackground.Ivory]: "Marfim",
+  [SectionBackground.Cream]: "Creme",
+  [SectionBackground.Peach]: "Pêssego",
+};
+
+export const sectionSpacingLabels: Record<SectionSpacing, string> = {
+  [SectionSpacing.Small]: "Compacto",
+  [SectionSpacing.Medium]: "Médio",
+  [SectionSpacing.Large]: "Amplo",
+};
+
+export const sectionAccentLabels: Record<SectionAccent, string> = {
+  [SectionAccent.Violet]: "Violeta",
+  [SectionAccent.Coral]: "Coral",
+  [SectionAccent.Orchid]: "Orquídea",
+};
+
+export const sitePageStatusLabels: Record<SitePageStatus, string> = {
+  [SitePageStatus.Draft]: "Fora do site",
+  [SitePageStatus.Published]: "No ar",
+  [SitePageStatus.Unpublished]: "Despublicada",
 };
