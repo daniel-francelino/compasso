@@ -361,6 +361,15 @@ create index on comments (variant_id, created_at);
 
 Triggers: `content_revisions`, `content_revision_media`, `approval_decisions` → refuse `update` and `delete`; `content_variants` → a planned/submitted variant requires an active channel; `approval_requests` → block `status` changes except through the functions; `comments` → `deleted_at` is the only mutable column and only by the author (audited).
 
+Implemented in `20261018100900_content.sql`, `…100910_content_functions.sql` and `…100920_portal_functions.sql`. Differences from the sketch above, all decided while implementing:
+
+- `caption` and `briefing` are `jsonb` objects. In the MVP the caption is `{ "text": string }` and the briefing `{ "text": string }` (plain text); the object leaves room for rich text later without a migration (decision D12 in [../pending-external-setup.md](../pending-external-setup.md)).
+- `working_media` is an ordered array of `{ "media_version_id": uuid, "alt_text": string | null }` (at most 20); `submit_for_approval` copies it into `content_revision_media` and `media_usages` (`content_revision`).
+- `content_variants` also has composite foreign keys `(current_revision_id, id)` and `(approved_revision_id, id)` to `content_revisions (id, variant_id)`, so a variant can only point to its own revisions; `comments (revision_id, variant_id)` likewise.
+- Trigger `content_variants_guard` refuses a change of brand or item and any editorial transition outside the map of [enums.md](enums.md) (`transition_not_allowed`); `content_items_guard` refuses a change of brand; `approval_requests_guard` freezes revision, variant, approver, requester, due date and message and makes a decided request final (`record_immutable`, `request_not_pending`); `comments_guard` allows only `deleted_at` to be set once.
+- `content_revisions.snapshot` keys: `title`, `format`, `caption`, `call_to_action`, `planned_at`, `planned_timezone`, `brand_timezone`, `channel { id, platform, profile_name }`. The ordered files are the `content_revision_media` rows.
+- Policies: items and variants `content.view` + brand; revisions `content.view` or `approvals.view` + brand; requests and decisions `approvals.view` + brand; comments (not deleted) `content.view` for internal ones and `content.view` or `approvals.view` for external ones. No policy for external roles on any of these tables; `authenticated` has `select` only.
+
 ## 6. Media
 
 ```sql

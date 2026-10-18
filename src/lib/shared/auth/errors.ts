@@ -151,6 +151,52 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Unavailable,
     message: "Não foi possível acessar o armazenamento. Tente novamente.",
   },
+  transition_not_allowed: {
+    category: ErrorCode.Invalid,
+    message: "Esta mudança de estado não é permitida.",
+  },
+  approver_required: { category: ErrorCode.Invalid, message: "Escolha quem vai aprovar." },
+  not_approved: {
+    category: ErrorCode.Invalid,
+    message: "Só é possível registrar a publicação de uma versão aprovada.",
+  },
+  requires_new_revision: {
+    category: ErrorCode.Invalid,
+    message: "Alterar isto exige uma nova versão e nova aprovação.",
+  },
+  reason_required: { category: ErrorCode.Invalid, message: "Informe o motivo." },
+  request_not_pending: {
+    category: ErrorCode.Conflict,
+    message: "Este pedido não está mais pendente.",
+  },
+  revision_superseded: {
+    category: ErrorCode.Conflict,
+    message: "Esta versão foi atualizada. Veja a versão atual.",
+  },
+  comment_required: {
+    category: ErrorCode.Invalid,
+    message: "Escreva um comentário para pedir alterações.",
+  },
+  not_designated_approver: {
+    category: ErrorCode.Denied,
+    message: "A decisão é de outra pessoa. Você pode comentar.",
+  },
+  channel_brand_mismatch: {
+    category: ErrorCode.Invalid,
+    message: "O canal pertence a outra marca.",
+  },
+  brand_archived: {
+    category: ErrorCode.Invalid,
+    message: "Esta marca está arquivada e não aceita novos conteúdos.",
+  },
+  record_immutable: {
+    category: ErrorCode.Denied,
+    message: "Este registro não pode ser alterado.",
+  },
+  content_has_history: {
+    category: ErrorCode.InUse,
+    message: "Este conteúdo já tem versões ou comentários. Cancele em vez de excluir.",
+  },
   audit_immutable: {
     category: ErrorCode.Denied,
     message: "Registros de auditoria não podem ser alterados.",

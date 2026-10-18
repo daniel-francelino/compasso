@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  addDaysToDate,
   formatBytes,
   formatDate,
   formatDateOnly,
   formatInZone,
   formatNumber,
+  instantToLocalInput,
+  localInputToInstant,
+  todayInZone,
 } from "@/lib/shared/format";
 
 describe("formatDate", () => {
@@ -49,5 +53,44 @@ describe("formatNumber and formatBytes", () => {
     expect(formatBytes(512)).toBe("512 B");
     expect(formatBytes(1536)).toBe("1,5 KB");
     expect(formatBytes(5 * 1024 * 1024)).toBe("5,0 MB");
+  });
+});
+
+describe("zone-aware local time", () => {
+  it("converts a local input to the right instant and back", () => {
+    const instant = localInputToInstant("2026-07-01T10:00", "America/Sao_Paulo");
+    expect(instant?.toISOString()).toBe("2026-07-01T13:00:00.000Z");
+    expect(instantToLocalInput(instant ?? new Date(), "America/Sao_Paulo")).toBe(
+      "2026-07-01T10:00",
+    );
+  });
+
+  it("follows daylight saving time", () => {
+    expect(localInputToInstant("2026-01-15T09:00", "America/New_York")?.toISOString()).toBe(
+      "2026-01-15T14:00:00.000Z",
+    );
+    expect(localInputToInstant("2026-07-15T09:00", "America/New_York")?.toISOString()).toBe(
+      "2026-07-15T13:00:00.000Z",
+    );
+  });
+
+  it("refuses a time that does not exist", () => {
+    expect(localInputToInstant("2026-03-08T02:30", "America/New_York")).toBeNull();
+  });
+
+  it("refuses malformed input", () => {
+    expect(localInputToInstant("tomorrow", "UTC")).toBeNull();
+  });
+
+  it("reads today's date in a zone", () => {
+    expect(todayInZone("America/Sao_Paulo", new Date("2026-03-01T01:30:00Z"))).toBe("2026-02-28");
+    expect(todayInZone("UTC", new Date("2026-03-01T01:30:00Z"))).toBe("2026-03-01");
+  });
+});
+
+describe("addDaysToDate", () => {
+  it("moves a date-only value across months without time zone shifts", () => {
+    expect(addDaysToDate("2026-10-30", 3)).toBe("2026-11-02");
+    expect(addDaysToDate("2026-03-01", -1)).toBe("2026-02-28");
   });
 });

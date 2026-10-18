@@ -81,6 +81,9 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `date_in_past` | invalid | "A data escolhida já passou." | `reschedule_variant` (as warning) |
 | `local_time_nonexistent` | invalid | "Este horário não existe nesse dia (mudança de horário de verão)." | date conversion |
 | `local_time_ambiguous` | invalid | "Este horário acontece duas vezes nesse dia. Escolha qual." | date conversion |
+| `brand_archived` | invalid | "Esta marca está arquivada e não aceita novos conteúdos." | `content_item_save`, `content_variant_save` |
+| `record_immutable` | denied | "Este registro não pode ser alterado." | revision, decision, comment and request triggers |
+| `content_has_history` | in_use | "Este conteúdo já tem versões ou comentários. Cancele em vez de excluir." | `content_item_delete` |
 
 ### Media
 

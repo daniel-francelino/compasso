@@ -44,6 +44,39 @@ export const QueryKey = {
     all: (brandId: string) => ["channels", brandId] as const,
     list: (brandId: string, filters: Filters) => ["channels", brandId, filters] as const,
   },
+  Content: {
+    all: () => ["content"] as const,
+    list: (filters: Filters) => ["content", "list", filters] as const,
+    board: (filters: Filters) => ["content", "board", filters] as const,
+    item: (id: string) => ["content", "item", id] as const,
+    variant: (id: string) => ["content", "variant", id] as const,
+    comments: (variantId: string) => ["content", "comments", variantId] as const,
+    approvers: (brandId: string) => ["content", "approvers", brandId] as const,
+    assignees: (brandId: string) => ["content", "assignees", brandId] as const,
+  },
+  Approvals: {
+    all: () => ["approvals"] as const,
+    list: (filters: Filters) => ["approvals", "list", filters] as const,
+    detail: (id: string) => ["approvals", "detail", id] as const,
+  },
+  Portal: {
+    all: () => ["portal"] as const,
+    brands: () => ["portal", "brands"] as const,
+    pending: (brandId: string) => ["portal", "pending", brandId] as const,
+    approvals: (brandId: string, filters: Filters) =>
+      ["portal", "approvals", brandId, filters] as const,
+    approval: (id: string) => ["portal", "approval", id] as const,
+    comments: (variantId: string) => ["portal", "comments", variantId] as const,
+    urls: (revisionId: string, variant: string, versionIds: readonly string[]) =>
+      ["portal", "urls", revisionId, variant, versionIds] as const,
+  },
+  Dashboard: {
+    all: () => ["dashboard"] as const,
+    attention: (brand: string | undefined) => ["dashboard", "attention", brand ?? null] as const,
+    pending: (brand: string | undefined) => ["dashboard", "pending", brand ?? null] as const,
+    counts: (brand: string | undefined) => ["dashboard", "counts", brand ?? null] as const,
+    mine: () => ["dashboard", "mine"] as const,
+  },
   Media: {
     all: () => ["media"] as const,
     list: (filters: Filters) => ["media", "list", filters] as const,
@@ -52,6 +85,8 @@ export const QueryKey = {
       ["media", "collections", scope, brandId ?? null] as const,
     storage: () => ["media", "storage"] as const,
     check: () => ["media", "check"] as const,
+    signed: (versionIds: readonly string[], variant: string) =>
+      ["media", "signed", versionIds, variant] as const,
   },
   Notifications: {
     all: () => ["notifications"] as const,

@@ -22,9 +22,10 @@
 | `ApprovalRequestStatus` | `pending`, `approved`, `changes_requested`, `superseded`, `cancelled` | `approval_requests.status` | "Pendente", "Aprovada", "Alterações solicitadas", "Substituída", "Cancelada" | approvals |
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |
 | `CommentVisibility` | `internal`, `external` | `comments.visibility` | "Interno", "Externo" | content |
+| `DashboardReason` | `approval_overdue`, `changes_requested`, `production_overdue`, `planned_date_passed`, `approver_without_access` | `dashboard_attention` output (`reasons`, not stored) | "Aprovação atrasada", "Alterações solicitadas", "Prazo de produção vencido", "Data prevista ultrapassada", "Aprovador sem acesso" | dashboard |
 | `Platform` | `instagram`, `facebook`, `linkedin`, `tiktok`, `youtube`, `x`, `pinterest`, `threads`, `email`, `blog`, `other` | `channels.platform` | "Instagram", "Facebook", "LinkedIn", "TikTok", "YouTube", "X", "Pinterest", "Threads", "E-mail", "Blog", "Outro" | channels |
 
-Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → in_production`; `in_production → internal_review | awaiting_approval | cancelled`; `internal_review → awaiting_approval | in_production | cancelled`; `awaiting_approval → approved | changes_requested | in_production (reopen) | cancelled`; `changes_requested → in_production | cancelled`; `approved → in_production (reopen) | cancelled`; `cancelled → ∅`. Only the transactional functions perform a transition; the map is shared by the editor, the board and tests.
+Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → in_production | cancelled`; `in_production → internal_review | awaiting_approval | cancelled`; `internal_review → awaiting_approval | in_production | cancelled`; `awaiting_approval → approved | changes_requested | in_production (reopen) | cancelled`; `changes_requested → in_production | cancelled`; `approved → in_production (reopen) | cancelled`; `cancelled → ∅`. Only the transactional functions perform a transition; the map is shared by the editor, the board and tests.
 
 ## 3. Media
 

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { cleanupExpiredUploads, isAuthorizedCron } from "@/lib/shared/media/cleanup.server";
+import { isAuthorizedCron } from "@/lib/shared/jobs/cron-auth.server";
+import { cleanupExpiredUploads } from "@/lib/shared/media/cleanup.server";
 
 export const Route = createFileRoute("/api/cron/media-cleanup")({
   server: {

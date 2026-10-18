@@ -39,7 +39,8 @@ if (isSource && !generated) {
   const segmentNames = relativePath.split("/").slice(1);
   const fileName = segmentNames[segmentNames.length - 1] ?? "";
   const bareName = fileName.replace(/\.(functions|server|test)?\.?(ts|tsx)$/, "");
-  if (/[A-Z]/.test(bareName) && !/^__root$/.test(bareName)) {
+  const routeParam = relativePath.startsWith("src/routes/") && /^\$[a-z][A-Za-z]*$/.test(bareName);
+  if (/[A-Z]/.test(bareName) && !/^__root$/.test(bareName) && !routeParam) {
     deny(`CODE-8: file names are kebab-case (found "${fileName}").`);
   }
 

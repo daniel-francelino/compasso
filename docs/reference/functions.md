@@ -16,7 +16,13 @@
 | `can_view_client(p_client uuid)` | boolean | Owner, creator/owner of the client, or access to one of its brands (clients with no brand yet stay visible to their creator) |
 | `current_organization_id()` | uuid | the single organization (internal helper) |
 | `assert_action(p_action text)` / `assert_brand_access(p_brand uuid)` | void | raise `denied` / `not_found` (internal helpers used at the start of every write function) |
-| `channel_is_used(p_channel uuid)` / `brand_has_history(p_brand uuid)` | boolean | internal checks, return `false` until the content migration redefines them |
+| `channel_is_used(p_channel uuid)` / `brand_has_history(p_brand uuid)` | boolean | internal checks; the content migration redefines them (a channel is used once a variant points to it; a brand has history once it has content items or media) |
+| `editorial_transition_allowed(p_from text, p_to text)` | boolean | the transition map of [enums.md](enums.md), enforced by the `content_variants_guard` trigger |
+| `user_can_work_on_brand(p_user uuid, p_brand uuid)` | boolean | internal: approved internal account that is the Owner or an active internal member (used to validate an item owner) |
+| `approver_is_valid(p_brand uuid, p_user uuid)` | boolean | internal: active external member of the brand with `can_decide`, approved account and a role that holds `approvals.decide` |
+| `content_check_media(p_brand uuid, p_media jsonb)` / `content_normalize_media(p_media jsonb)` / `content_check_channel(p_brand uuid, p_channel uuid)` | void / jsonb / void | internal: raise `media_not_available`, `invalid_input`, `channel_brand_mismatch`, `channel_archived` |
+| `content_cancel_variant_row(p_variant uuid, p_reason text)` | void | internal: cancels one variant and its pending requests (used by the item and variant cancel functions) |
+| `portal_assert_member(p_brand uuid)` / `portal_request_row(p_request approval_requests)` | void / jsonb | internal helpers of the portal functions (not callable by `authenticated`) |
 | `notification_lead_days(p_user uuid, p_kind text)` | int[] | the person's lead days or the kind default (used by scanners) |
 | `generate_due_notifications()` | jsonb | runs every `notify_scan_*` function and cleans old notifications (`pg_cron`); `notify_scan_invitations()` expires invitations and creates `invitation.expiring` |
 | `audit_write(p_org uuid, p_brand uuid, p_action text, p_entity_type text, p_entity_id uuid, p_metadata jsonb)` | void | single audit writer; validates `p_action` against the catalog |
@@ -86,16 +92,22 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `content_variant_save(p_variant jsonb, p_expected_version int)` | `saveVariant` | `content.create` / `content.update` | `variant.created`, `variant.updated` | — | `conflict`, `channel_archived`, `channel_brand_mismatch` |
 | `content_variant_move(p_variant, p_to_status, p_expected_version)` | `moveVariant` (board) | `content.update` | `variant.updated` | — | `transition_not_allowed`, `conflict` |
 | `submit_for_approval(p_variant, p_approver, p_due_date, p_message, p_expected_version)` | `submitForApproval` | `content.submit` | `variant.submitted`, `approval.requested`, `approval.superseded` (when replacing) | `approval.requested`, `approval.superseded` | `conflict`, `media_not_available`, `approver_required`, `approver_without_access`, `channel_archived` |
-| `reopen_variant(p_variant, p_reason)` | `reopenVariant` | `content.reopen` | `variant.reopened` | `approval.superseded` | `reason_required`, `transition_not_allowed` |
+| `reopen_variant(p_variant, p_reason)` | `reopenVariant` | `content.reopen` | `variant.reopened`, `approval.superseded` (when a request was pending) | `approval.superseded` | `reason_required`, `transition_not_allowed` |
 | `reschedule_variant(p_variant, p_planned_at, p_timezone, p_expected_version)` | `rescheduleVariant` | `calendar.manage` + `content.update` | `variant.rescheduled` | `approval.superseded` | `requires_new_revision`, `local_time_nonexistent`, `local_time_ambiguous`, `date_in_past`, `conflict` |
 | `mark_published(p_variant, p_published_at, p_url, p_evidence_media_version, p_note)` | `markPublished` | `content.publish_manual` | `variant.published_manually` | — | `not_approved` |
 | `content_variant_cancel(p_variant, p_reason)` | `cancelVariant` | `content.cancel` | `variant.cancelled` | — | `reason_required` |
-| `comment_add(p_variant, p_visibility, p_body)` | `addComment` | `comments.create_internal` (internal) | `comment.created` | `comment.created` | `invalid_input` |
+| `comment_add(p_variant, p_visibility, p_body)` | `addComment` | `comments.create_internal` for an internal comment, `comments.create_external` for an external one written by the team | `comment.created` | — (only `portal_add_comment` notifies the team) | `invalid_input` |
 | `comment_delete(p_comment)` | `deleteComment` | author | `comment.deleted` | — | `denied` |
 | `reassign_approver(p_request, p_new_approver)` | `reassignApprover` | `content.submit` | `approval.approver_reassigned` | `approval.requested`, `approval.superseded` | `approver_without_access`, `request_not_pending` |
 | `cancel_request(p_request, p_reason)` | `cancelApprovalRequest` | `content.submit` | `approval.cancelled` | — | `reason_required`, `request_not_pending` |
 | `send_approval_reminder(p_request)` | `remindApprover` | `content.submit` | `approval.reminder_sent` | `approval.requested` (reminder) | `request_not_pending` |
-| typed queries | `listContentItems`, `getContentItem`, `getVariant`, `listApprovals`, `getApprovalRequest` | `content.view` / `approvals.view` | — | — | `not_found` |
+| `comment_list(p_variant)` | `listComments` | `content.view` or `approvals.view` + brand | — | — | `not_found` |
+| `approver_options(p_brand)` | `listApproverOptions` | `content.submit` + brand | — | — | `not_found` |
+| `person_names(p_ids uuid[])` | (internal helper `personNames`, not a server function) | `content.view` or `approvals.view` | — | — | `denied` |
+| (typed query) | `listAssigneeOptions` | `content.view` + brand | — | — | `not_found` |
+| typed queries | `listContentItems`, `listVariants`, `getContentItem`, `getVariant`, `listApprovals`, `getApprovalRequest` | `content.view` / `approvals.view` | — | — | `not_found` |
+
+Implemented in `20261018100900_content.sql` (tables, triggers, RLS) and `…100910_content_functions.sql`. Notes: `content_variant_move` only performs the transitions that need no side effect (`draft → in_production`, `in_production ↔ internal_review`, `changes_requested → in_production`); sending, deciding, reopening and cancelling have their own functions. Editing a variant that is `approved` is refused with `requires_new_revision` (reopen first); a `published_manually` variant is read-only. `content_item_delete` is allowed only while no revision or comment exists (`content_has_history`). `reschedule_variant` belongs to phase 4.
 
 ## 5. Portal (module: portal) — the only functions external users can call
 
@@ -105,12 +117,13 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 |---|---|---|---|---|---|
 | `portal_list_brands()` | `listPortalBrands` | — | — | — | — |
 | `portal_list_pending(p_brand)` | `listPortalPending` | link to brand | — | — | `not_found` |
+| `portal_list_approvals(p_brand, p_status, p_page, p_page_size)` | `listPortalApprovals` | link to brand; status filter `pending`, `approved`, `changes_requested`, `superseded` (cancelled requests never appear) | — | — | `not_found`, `invalid_input` |
 | `portal_get_approval(p_request)` | `getPortalApproval` | link to the request's brand; request shared with the person | — | — | `not_found` |
 | `portal_record_view(p_request)` | `recordPortalView` | — | — | — | — |
 | `portal_decide_approval(p_request, p_outcome, p_comment)` | `decidePortalApproval` | `approvals.decide`; designated approver; `can_decide` | `approval.decided` | `approval.decided` | `not_designated_approver`, `request_not_pending`, `revision_superseded`, `comment_required`, `approver_without_access` |
 | `portal_list_comments(p_variant)` | `listPortalComments` | link | — | — | `not_found` |
 | `portal_add_comment(p_variant, p_body)` | `addPortalComment` | `comments.create_external` | `comment.created` | `comment.created` | `invalid_input` |
-| `portal_list_calendar(p_brand, p_from, p_to)` | `listPortalCalendar` | link; shared variants only | — | — | `invalid_input` |
+| `portal_list_calendar(p_brand, p_from, p_to)` | `listPortalCalendar` | link; shared variants only (phase 4) | — | — | `invalid_input` |
 | `portal_media_urls(p_revision, p_version_ids uuid[])` (checks, then the server signs) | `signPortalMedia` | revision shared with the person | — | — | `denied` |
 
 ## 6. Calendar and dashboard (modules: calendar, dashboard)
@@ -118,10 +131,11 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | SQL function | Server function | Act. | Notes |
 |---|---|---|---|
 | `list_calendar_entries(p_from, p_to, p_brands uuid[], p_channels uuid[], p_assignee uuid, p_editorial text[], p_publication text[])` | `listCalendarEntries` | `calendar.view` | max 100 days, paginated |
-| `dashboard_attention(p_brands uuid[])` | `getAttention` | `content.view` / `approvals.view` | single definition of "needs attention" |
+| `dashboard_attention(p_brands uuid[])` | `getAttention` | `content.view` / `approvals.view` | single definition of "needs attention"; returns each variant once with its `DashboardReason` list (approval reasons only with `approvals.view`); at most 50 rows; implemented in `20261018100930_dashboard.sql` |
 | `dashboard_upcoming(p_brands uuid[], p_days int)` | `getUpcoming` | `calendar.view` | |
-| `dashboard_status_counts(p_brands uuid[])` | `getStatusCounts` | `content.view` | |
-| `dashboard_my_items()` | `getMyItems` | `content.view` | |
+| `dashboard_status_counts(p_brands uuid[])` | `getStatusCounts` | `content.view` | counts variants (not items) by editorial status, cancelled items excluded |
+| `dashboard_my_items()` | `getMyItems` | `content.view` | items assigned to the caller with open variants, at most 20 |
+| (typed query `listApprovals`) | `getPendingApprovals` | `approvals.view` | the "Aprovações pendentes" block reuses the approvals list filtered by `pending` |
 | `dashboard_recent_activity(p_brands uuid[], p_limit int)` | `getRecentActivity` | `audit.view` or `approvals.view` | |
 
 ## 7. Media (module: media-library)

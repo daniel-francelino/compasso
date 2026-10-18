@@ -3,6 +3,8 @@ import {
   BellRing,
   Building2,
   Building,
+  ClipboardCheck,
+  FileText,
   Images,
   LayoutDashboard,
   Palette,
@@ -62,6 +64,19 @@ export const navGroups: NavGroup[] = [
     items: [
       { title: "Clientes", icon: Building2, to: AppRoute.Clients, action: Action.Clients.View },
       { title: "Marcas", icon: Tag, to: AppRoute.Brands, action: Action.Brands.View },
+    ],
+  },
+  {
+    space: Space.Marketing,
+    label: "Produção",
+    items: [
+      { title: "Conteúdos", icon: FileText, to: AppRoute.Content, action: Action.Content.View },
+      {
+        title: "Aprovações",
+        icon: ClipboardCheck,
+        to: AppRoute.Approvals,
+        action: Action.Approvals.View,
+      },
     ],
   },
   {

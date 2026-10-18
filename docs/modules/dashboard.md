@@ -56,4 +56,6 @@ The dashboard itself requires an approved account with at least one marketing ac
 
 ## Implementation status
 
-Not started (grows with each phase: attention and pending approvals in phase 3, upcoming schedule in phase 4).
+Phase 3 (task P3-07, 2026-10-18). Done: migration `20261018100930_dashboard.sql` (`dashboard_attention`, `dashboard_status_counts`, `dashboard_my_items`); `src/lib/marketing/dashboard/dashboard.functions.ts`; the page `/admin/marketing` ("Visão geral", reached from `/admin` for people with a marketing action) with the blocks "Precisa de atenção" (each variant once with all its reasons), "Aprovações pendentes" (reuses the approvals list), "Conteúdos por estado" (links to the filtered list) and "Minhas tarefas", each with its own skeleton and retry, a brand filter in the URL and blocks hidden without the action.
+
+Validation performed: 18 pgTAP assertions on PGlite (every reason, a variant with two reasons listed once, brand isolation, external user refused, anon refused); typecheck, lint, build. **Not tested**: the page in a browser. **Not done**: "Próximos prazos e publicações" (phase 4), "Atividade recente", "Acessos" and "Armazenamento" blocks, live update through the notification subscription (the blocks refetch after the 30-second stale time and after mutations).

@@ -69,6 +69,24 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             Canais
           </Link>
         ) : null}
+        {can(auth, Action.Content.View) ? (
+          <Link
+            to="/admin/marketing/brands/$brandId/content"
+            params={{ brandId }}
+            className={tabClass}
+          >
+            Conteúdos
+          </Link>
+        ) : null}
+        {can(auth, Action.Approvals.View) ? (
+          <Link
+            to="/admin/marketing/brands/$brandId/approvals"
+            params={{ brandId }}
+            className={tabClass}
+          >
+            Aprovações
+          </Link>
+        ) : null}
         {can(auth, Action.Media.View) ? (
           <Link
             to="/admin/marketing/brands/$brandId/library"

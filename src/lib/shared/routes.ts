@@ -22,4 +22,7 @@ export const AppRoute = {
   Audit: "/admin/settings/audit",
   Clients: "/admin/marketing/clients",
   Brands: "/admin/marketing/brands",
+  Marketing: "/admin/marketing",
+  Content: "/admin/marketing/content",
+  Approvals: "/admin/marketing/approvals",
 } as const;

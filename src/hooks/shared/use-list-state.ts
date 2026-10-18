@@ -50,10 +50,26 @@ export const useListState = <S extends string>(initialStatus: S) => {
       tag: search.tag,
       client: search.client,
       platform: search.platform,
+      editorial: search.editorial,
+      channel: search.channel,
+      publication: search.publication,
+      view: search.view,
     },
     setFilter: (
       key:
-        "owner" | "tag" | "client" | "platform" | "scope" | "brand" | "kind" | "folder" | "order",
+        | "owner"
+        | "tag"
+        | "client"
+        | "platform"
+        | "scope"
+        | "brand"
+        | "kind"
+        | "folder"
+        | "order"
+        | "editorial"
+        | "channel"
+        | "publication"
+        | "view",
       value: string | undefined,
     ) => update({ [key]: value === "" ? undefined : value, page: undefined }),
     toggleSort: (key: string) => {

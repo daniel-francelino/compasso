@@ -38,6 +38,9 @@
 | Notification | Notificação / Notificações | Preferences: "Avisos" |
 | Audit | Auditoria | |
 | Dashboard | Visão geral | Home of a space |
+| Board (content by status) | Quadro | Alternative view of the content list; the list is "Lista" |
+| Portal dashboard | Painel | Home of a brand in the client portal |
+| Waiting for the client's decision | Aguardando aprovação (team) / Aguardando você (portal) | |
 | Team (internal users) | Equipe | |
 | External user | Cliente (usuário externo) | In Settings: "Externo" badge |
 
@@ -61,6 +64,9 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Approve | "Aprovar" |
 | Request changes | "Pedir alterações" |
 | Reopen | "Reabrir" |
+| Move between statuses | "Mover para…" (menu), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
+| Add a variant | "Adicionar variante" |
+| Remind / reassign the approver | "Reenviar lembrete" / "Reatribuir aprovador" |
 | Cancel an item | "Cancelar conteúdo" / "Cancelar pedido" |
 | Resend | "Reenviar" |
 | Invite | "Convidar" |

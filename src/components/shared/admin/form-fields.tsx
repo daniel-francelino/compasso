@@ -12,7 +12,7 @@ import {
 import { Textarea } from "@/components/shared/ui/textarea";
 import { cn } from "@/lib/shared/utils";
 
-function FieldLabel({
+export function FieldLabel({
   htmlFor,
   required,
   tip,
@@ -41,7 +41,7 @@ function FieldLabel({
   );
 }
 
-function FieldMessage({
+export function FieldMessage({
   error,
   hint,
 }: {
@@ -274,6 +274,49 @@ export function SelectField({
         </SelectContent>
       </Select>
       <FieldMessage error={error} />
+    </div>
+  );
+}
+
+export function DateField({
+  id,
+  label,
+  required,
+  value,
+  onValueChange,
+  error,
+  hint,
+  disabled,
+  min,
+}: {
+  id: string;
+  label: string;
+  required?: boolean;
+  value: string;
+  onValueChange: (value: string) => void;
+  error?: string | undefined;
+  hint?: string | undefined;
+  disabled?: boolean;
+  min?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <FieldLabel htmlFor={id} required={required}>
+        {label}
+      </FieldLabel>
+      <Input
+        id={id}
+        name={id}
+        type="date"
+        className="h-11 md:h-10"
+        value={value}
+        min={min}
+        disabled={disabled}
+        aria-invalid={error ? true : undefined}
+        aria-required={required}
+        onChange={(event) => onValueChange(event.target.value)}
+      />
+      <FieldMessage error={error} hint={hint} />
     </div>
   );
 }

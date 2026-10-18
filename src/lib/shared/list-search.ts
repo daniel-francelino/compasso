@@ -18,6 +18,10 @@ export const listSearchSchema = z.object({
   kind: z.string().max(10).optional().catch(undefined),
   folder: z.string().uuid().optional().catch(undefined),
   order: z.string().max(10).optional().catch(undefined),
+  editorial: z.string().max(30).optional().catch(undefined),
+  channel: z.string().uuid().optional().catch(undefined),
+  publication: z.string().max(30).optional().catch(undefined),
+  view: z.string().max(10).optional().catch(undefined),
 });
 
 export type ListSearch = z.infer<typeof listSearchSchema>;

@@ -104,3 +104,64 @@ export const MediaVersionStatus = {
   Failed: "failed",
 } as const;
 export type MediaVersionStatus = ValueOf<typeof MediaVersionStatus>;
+
+export const EditorialStatus = {
+  Draft: "draft",
+  InProduction: "in_production",
+  InternalReview: "internal_review",
+  AwaitingApproval: "awaiting_approval",
+  ChangesRequested: "changes_requested",
+  Approved: "approved",
+  Cancelled: "cancelled",
+} as const;
+export type EditorialStatus = ValueOf<typeof EditorialStatus>;
+
+export const PublicationStatus = {
+  Unplanned: "unplanned",
+  Planned: "planned",
+  PublishedManually: "published_manually",
+  Cancelled: "cancelled",
+} as const;
+export type PublicationStatus = ValueOf<typeof PublicationStatus>;
+
+export const ContentFormat = {
+  Image: "image",
+  Carousel: "carousel",
+  Video: "video",
+  Text: "text",
+  Story: "story",
+  Reel: "reel",
+  Article: "article",
+  Other: "other",
+} as const;
+export type ContentFormat = ValueOf<typeof ContentFormat>;
+
+export const ApprovalRequestStatus = {
+  Pending: "pending",
+  Approved: "approved",
+  ChangesRequested: "changes_requested",
+  Superseded: "superseded",
+  Cancelled: "cancelled",
+} as const;
+export type ApprovalRequestStatus = ValueOf<typeof ApprovalRequestStatus>;
+
+export const ApprovalOutcome = {
+  Approved: "approved",
+  ChangesRequested: "changes_requested",
+} as const;
+export type ApprovalOutcome = ValueOf<typeof ApprovalOutcome>;
+
+export const CommentVisibility = {
+  Internal: "internal",
+  External: "external",
+} as const;
+export type CommentVisibility = ValueOf<typeof CommentVisibility>;
+
+export const DashboardReason = {
+  ApprovalOverdue: "approval_overdue",
+  ChangesRequested: "changes_requested",
+  ProductionOverdue: "production_overdue",
+  PlannedDatePassed: "planned_date_passed",
+  ApproverWithoutAccess: "approver_without_access",
+} as const;
+export type DashboardReason = ValueOf<typeof DashboardReason>;

@@ -7,3 +7,9 @@ import { AppRoute } from "@/lib/shared/routes";
 export const requireAction = (context: { auth: AuthState }, action: ActionKey) => {
   if (!can(context.auth, action)) throw redirect({ to: AppRoute.Forbidden });
 };
+
+export const requireAnyAction = (context: { auth: AuthState }, actions: readonly ActionKey[]) => {
+  if (!actions.some((action) => can(context.auth, action))) {
+    throw redirect({ to: AppRoute.Forbidden });
+  }
+};

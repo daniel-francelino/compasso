@@ -23,10 +23,14 @@ import { Route as AdminAppIndexRouteImport } from './routes/admin/_app/index'
 import { Route as AdminAppDesignRouteImport } from './routes/admin/_app/design'
 import { Route as AdminAppForbiddenRouteImport } from './routes/admin/_app/forbidden'
 import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
+import { Route as ApiCronEmailOutboxRouteImport } from './routes/api/cron/email-outbox'
 import { Route as ApiCronMediaCleanupRouteImport } from './routes/api/cron/media-cleanup'
 import { Route as PortalAppIndexRouteImport } from './routes/portal/_app/index'
+import { Route as PortalAppNotificationsRouteImport } from './routes/portal/_app/notifications'
+import { Route as PortalAppProfileRouteImport } from './routes/portal/_app/profile'
 import { Route as AdminAppsharedNotificationsRouteImport } from './routes/admin/_app/(shared)/notifications'
 import { Route as AdminAppsharedProfileRouteImport } from './routes/admin/_app/(shared)/profile'
+import { Route as AdminAppmarketingMarketingIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/index'
 import { Route as AdminAppsharedLibraryIndexRouteImport } from './routes/admin/_app/(shared)/library/index'
 import { Route as AdminAppsharedLibraryAssetIdRouteImport } from './routes/admin/_app/(shared)/library/$assetId'
 import { Route as AdminAppsharedSettingsIndexRouteImport } from './routes/admin/_app/(shared)/settings/index'
@@ -36,14 +40,24 @@ import { Route as AdminAppsharedSettingsOrganizationRouteImport } from './routes
 import { Route as AdminAppsharedSettingsPoliciesRouteImport } from './routes/admin/_app/(shared)/settings/policies'
 import { Route as AdminAppsharedSettingsRolesRouteImport } from './routes/admin/_app/(shared)/settings/roles'
 import { Route as AdminAppsharedSettingsUsersRouteImport } from './routes/admin/_app/(shared)/settings/users'
+import { Route as PortalAppBrandsBrandIdIndexRouteImport } from './routes/portal/_app/brands/$brandId/index'
+import { Route as AdminAppmarketingMarketingApprovalsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/approvals/index'
+import { Route as AdminAppmarketingMarketingApprovalsRequestIdRouteImport } from './routes/admin/_app/(marketing)/marketing/approvals/$requestId'
 import { Route as AdminAppmarketingMarketingBrandsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/index'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId'
 import { Route as AdminAppmarketingMarketingBrandsNewRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/new'
 import { Route as AdminAppmarketingMarketingClientsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/index'
 import { Route as AdminAppmarketingMarketingClientsClientIdRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/$clientId'
 import { Route as AdminAppmarketingMarketingClientsNewRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/new'
+import { Route as AdminAppmarketingMarketingContentIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/content/index'
+import { Route as AdminAppmarketingMarketingContentItemIdRouteImport } from './routes/admin/_app/(marketing)/marketing/content/$itemId'
+import { Route as AdminAppmarketingMarketingVariantsVariantIdRouteImport } from './routes/admin/_app/(marketing)/marketing/variants/$variantId'
+import { Route as PortalAppBrandsBrandIdApprovalsIndexRouteImport } from './routes/portal/_app/brands/$brandId/approvals/index'
+import { Route as PortalAppBrandsBrandIdApprovalsRequestIdRouteImport } from './routes/portal/_app/brands/$brandId/approvals/$requestId'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/index'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdApprovalsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/approvals'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/channels'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdContentRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/content'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdIdentityRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/identity'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdLibraryRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/library'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/members'
@@ -119,6 +133,11 @@ const AdminInviteTokenRoute = AdminInviteTokenRouteImport.update({
   path: '/admin/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronEmailOutboxRoute = ApiCronEmailOutboxRouteImport.update({
+  id: '/api/cron/email-outbox',
+  path: '/api/cron/email-outbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronMediaCleanupRoute = ApiCronMediaCleanupRouteImport.update({
   id: '/api/cron/media-cleanup',
   path: '/api/cron/media-cleanup',
@@ -127,6 +146,16 @@ const ApiCronMediaCleanupRoute = ApiCronMediaCleanupRouteImport.update({
 const PortalAppIndexRoute = PortalAppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => PortalAppRoute,
+} as any)
+const PortalAppNotificationsRoute = PortalAppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => PortalAppRoute,
+} as any)
+const PortalAppProfileRoute = PortalAppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => PortalAppRoute,
 } as any)
 const AdminAppsharedNotificationsRoute =
@@ -140,6 +169,12 @@ const AdminAppsharedProfileRoute = AdminAppsharedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AdminAppRoute,
 } as any)
+const AdminAppmarketingMarketingIndexRoute =
+  AdminAppmarketingMarketingIndexRouteImport.update({
+    id: '/(marketing)/marketing/',
+    path: '/marketing/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
 const AdminAppsharedLibraryIndexRoute =
   AdminAppsharedLibraryIndexRouteImport.update({
     id: '/(shared)/library/',
@@ -194,6 +229,24 @@ const AdminAppsharedSettingsUsersRoute =
     path: '/settings/users',
     getParentRoute: () => AdminAppRoute,
   } as any)
+const PortalAppBrandsBrandIdIndexRoute =
+  PortalAppBrandsBrandIdIndexRouteImport.update({
+    id: '/brands/$brandId/',
+    path: '/brands/$brandId/',
+    getParentRoute: () => PortalAppRoute,
+  } as any)
+const AdminAppmarketingMarketingApprovalsIndexRoute =
+  AdminAppmarketingMarketingApprovalsIndexRouteImport.update({
+    id: '/(marketing)/marketing/approvals/',
+    path: '/marketing/approvals/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingApprovalsRequestIdRoute =
+  AdminAppmarketingMarketingApprovalsRequestIdRouteImport.update({
+    id: '/(marketing)/marketing/approvals/$requestId',
+    path: '/marketing/approvals/$requestId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
 const AdminAppmarketingMarketingBrandsIndexRoute =
   AdminAppmarketingMarketingBrandsIndexRouteImport.update({
     id: '/(marketing)/marketing/brands/',
@@ -230,16 +283,58 @@ const AdminAppmarketingMarketingClientsNewRoute =
     path: '/marketing/clients/new',
     getParentRoute: () => AdminAppRoute,
   } as any)
+const AdminAppmarketingMarketingContentIndexRoute =
+  AdminAppmarketingMarketingContentIndexRouteImport.update({
+    id: '/(marketing)/marketing/content/',
+    path: '/marketing/content/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingContentItemIdRoute =
+  AdminAppmarketingMarketingContentItemIdRouteImport.update({
+    id: '/(marketing)/marketing/content/$itemId',
+    path: '/marketing/content/$itemId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingVariantsVariantIdRoute =
+  AdminAppmarketingMarketingVariantsVariantIdRouteImport.update({
+    id: '/(marketing)/marketing/variants/$variantId',
+    path: '/marketing/variants/$variantId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const PortalAppBrandsBrandIdApprovalsIndexRoute =
+  PortalAppBrandsBrandIdApprovalsIndexRouteImport.update({
+    id: '/brands/$brandId/approvals/',
+    path: '/brands/$brandId/approvals/',
+    getParentRoute: () => PortalAppRoute,
+  } as any)
+const PortalAppBrandsBrandIdApprovalsRequestIdRoute =
+  PortalAppBrandsBrandIdApprovalsRequestIdRouteImport.update({
+    id: '/brands/$brandId/approvals/$requestId',
+    path: '/brands/$brandId/approvals/$requestId',
+    getParentRoute: () => PortalAppRoute,
+  } as any)
 const AdminAppmarketingMarketingBrandsBrandIdIndexRoute =
   AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
   } as any)
+const AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute =
+  AdminAppmarketingMarketingBrandsBrandIdApprovalsRouteImport.update({
+    id: '/approvals',
+    path: '/approvals',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
 const AdminAppmarketingMarketingBrandsBrandIdChannelsRoute =
   AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport.update({
     id: '/channels',
     path: '/channels',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdContentRoute =
+  AdminAppmarketingMarketingBrandsBrandIdContentRouteImport.update({
+    id: '/content',
+    path: '/content',
     getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
   } as any)
 const AdminAppmarketingMarketingBrandsBrandIdIdentityRoute =
@@ -281,7 +376,10 @@ export interface FileRoutesByFullPath {
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/email-outbox': typeof ApiCronEmailOutboxRoute
   '/api/cron/media-cleanup': typeof ApiCronMediaCleanupRoute
+  '/portal/notifications': typeof PortalAppNotificationsRoute
+  '/portal/profile': typeof PortalAppProfileRoute
   '/admin/': typeof AdminAppIndexRoute
   '/portal/': typeof PortalAppIndexRoute
   '/admin/notifications': typeof AdminAppsharedNotificationsRoute
@@ -293,15 +391,26 @@ export interface FileRoutesByFullPath {
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/marketing/': typeof AdminAppmarketingMarketingIndexRoute
   '/admin/library/': typeof AdminAppsharedLibraryIndexRoute
   '/admin/settings/': typeof AdminAppsharedSettingsIndexRoute
+  '/portal/brands/$brandId/': typeof PortalAppBrandsBrandIdIndexRoute
+  '/admin/marketing/approvals/$requestId': typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   '/admin/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
   '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
   '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
+  '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
+  '/admin/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  '/admin/marketing/approvals/': typeof AdminAppmarketingMarketingApprovalsIndexRoute
   '/admin/marketing/brands/': typeof AdminAppmarketingMarketingBrandsIndexRoute
   '/admin/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
+  '/admin/marketing/content/': typeof AdminAppmarketingMarketingContentIndexRoute
+  '/portal/brands/$brandId/approvals/': typeof PortalAppBrandsBrandIdApprovalsIndexRoute
+  '/admin/marketing/brands/$brandId/approvals': typeof AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute
   '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  '/admin/marketing/brands/$brandId/content': typeof AdminAppmarketingMarketingBrandsBrandIdContentRoute
   '/admin/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
   '/admin/marketing/brands/$brandId/library': typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   '/admin/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
@@ -320,7 +429,10 @@ export interface FileRoutesByTo {
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/email-outbox': typeof ApiCronEmailOutboxRoute
   '/api/cron/media-cleanup': typeof ApiCronMediaCleanupRoute
+  '/portal/notifications': typeof PortalAppNotificationsRoute
+  '/portal/profile': typeof PortalAppProfileRoute
   '/admin': typeof AdminAppIndexRoute
   '/portal': typeof PortalAppIndexRoute
   '/admin/notifications': typeof AdminAppsharedNotificationsRoute
@@ -332,14 +444,25 @@ export interface FileRoutesByTo {
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/marketing': typeof AdminAppmarketingMarketingIndexRoute
   '/admin/library': typeof AdminAppsharedLibraryIndexRoute
   '/admin/settings': typeof AdminAppsharedSettingsIndexRoute
+  '/portal/brands/$brandId': typeof PortalAppBrandsBrandIdIndexRoute
+  '/admin/marketing/approvals/$requestId': typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
   '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
   '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
+  '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
+  '/admin/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  '/admin/marketing/approvals': typeof AdminAppmarketingMarketingApprovalsIndexRoute
   '/admin/marketing/brands': typeof AdminAppmarketingMarketingBrandsIndexRoute
   '/admin/marketing/clients': typeof AdminAppmarketingMarketingClientsIndexRoute
+  '/admin/marketing/content': typeof AdminAppmarketingMarketingContentIndexRoute
+  '/portal/brands/$brandId/approvals': typeof PortalAppBrandsBrandIdApprovalsIndexRoute
+  '/admin/marketing/brands/$brandId/approvals': typeof AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute
   '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  '/admin/marketing/brands/$brandId/content': typeof AdminAppmarketingMarketingBrandsBrandIdContentRoute
   '/admin/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
   '/admin/marketing/brands/$brandId/library': typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   '/admin/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
@@ -361,7 +484,10 @@ export interface FileRoutesById {
   '/admin/_app/design': typeof AdminAppDesignRoute
   '/admin/_app/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/email-outbox': typeof ApiCronEmailOutboxRoute
   '/api/cron/media-cleanup': typeof ApiCronMediaCleanupRoute
+  '/portal/_app/notifications': typeof PortalAppNotificationsRoute
+  '/portal/_app/profile': typeof PortalAppProfileRoute
   '/admin/_app/': typeof AdminAppIndexRoute
   '/portal/_app/': typeof PortalAppIndexRoute
   '/admin/_app/(shared)/notifications': typeof AdminAppsharedNotificationsRoute
@@ -373,15 +499,26 @@ export interface FileRoutesById {
   '/admin/_app/(shared)/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/_app/(shared)/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/_app/(shared)/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/_app/(marketing)/marketing/': typeof AdminAppmarketingMarketingIndexRoute
   '/admin/_app/(shared)/library/': typeof AdminAppsharedLibraryIndexRoute
   '/admin/_app/(shared)/settings/': typeof AdminAppsharedSettingsIndexRoute
+  '/portal/_app/brands/$brandId/': typeof PortalAppBrandsBrandIdIndexRoute
+  '/admin/_app/(marketing)/marketing/approvals/$requestId': typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   '/admin/_app/(marketing)/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
   '/admin/_app/(marketing)/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
   '/admin/_app/(marketing)/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
+  '/admin/_app/(marketing)/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
+  '/admin/_app/(marketing)/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  '/portal/_app/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  '/admin/_app/(marketing)/marketing/approvals/': typeof AdminAppmarketingMarketingApprovalsIndexRoute
   '/admin/_app/(marketing)/marketing/brands/': typeof AdminAppmarketingMarketingBrandsIndexRoute
   '/admin/_app/(marketing)/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
+  '/admin/_app/(marketing)/marketing/content/': typeof AdminAppmarketingMarketingContentIndexRoute
+  '/portal/_app/brands/$brandId/approvals/': typeof PortalAppBrandsBrandIdApprovalsIndexRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/approvals': typeof AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/content': typeof AdminAppmarketingMarketingBrandsBrandIdContentRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/library': typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
@@ -404,7 +541,10 @@ export interface FileRouteTypes {
     | '/admin/design'
     | '/admin/forbidden'
     | '/admin/invite/$token'
+    | '/api/cron/email-outbox'
     | '/api/cron/media-cleanup'
+    | '/portal/notifications'
+    | '/portal/profile'
     | '/admin/'
     | '/portal/'
     | '/admin/notifications'
@@ -416,15 +556,26 @@ export interface FileRouteTypes {
     | '/admin/settings/policies'
     | '/admin/settings/roles'
     | '/admin/settings/users'
+    | '/admin/marketing/'
     | '/admin/library/'
     | '/admin/settings/'
+    | '/portal/brands/$brandId/'
+    | '/admin/marketing/approvals/$requestId'
     | '/admin/marketing/brands/$brandId'
     | '/admin/marketing/brands/new'
     | '/admin/marketing/clients/$clientId'
     | '/admin/marketing/clients/new'
+    | '/admin/marketing/content/$itemId'
+    | '/admin/marketing/variants/$variantId'
+    | '/portal/brands/$brandId/approvals/$requestId'
+    | '/admin/marketing/approvals/'
     | '/admin/marketing/brands/'
     | '/admin/marketing/clients/'
+    | '/admin/marketing/content/'
+    | '/portal/brands/$brandId/approvals/'
+    | '/admin/marketing/brands/$brandId/approvals'
     | '/admin/marketing/brands/$brandId/channels'
+    | '/admin/marketing/brands/$brandId/content'
     | '/admin/marketing/brands/$brandId/identity'
     | '/admin/marketing/brands/$brandId/library'
     | '/admin/marketing/brands/$brandId/members'
@@ -443,7 +594,10 @@ export interface FileRouteTypes {
     | '/admin/design'
     | '/admin/forbidden'
     | '/admin/invite/$token'
+    | '/api/cron/email-outbox'
     | '/api/cron/media-cleanup'
+    | '/portal/notifications'
+    | '/portal/profile'
     | '/admin'
     | '/portal'
     | '/admin/notifications'
@@ -455,14 +609,25 @@ export interface FileRouteTypes {
     | '/admin/settings/policies'
     | '/admin/settings/roles'
     | '/admin/settings/users'
+    | '/admin/marketing'
     | '/admin/library'
     | '/admin/settings'
+    | '/portal/brands/$brandId'
+    | '/admin/marketing/approvals/$requestId'
     | '/admin/marketing/brands/new'
     | '/admin/marketing/clients/$clientId'
     | '/admin/marketing/clients/new'
+    | '/admin/marketing/content/$itemId'
+    | '/admin/marketing/variants/$variantId'
+    | '/portal/brands/$brandId/approvals/$requestId'
+    | '/admin/marketing/approvals'
     | '/admin/marketing/brands'
     | '/admin/marketing/clients'
+    | '/admin/marketing/content'
+    | '/portal/brands/$brandId/approvals'
+    | '/admin/marketing/brands/$brandId/approvals'
     | '/admin/marketing/brands/$brandId/channels'
+    | '/admin/marketing/brands/$brandId/content'
     | '/admin/marketing/brands/$brandId/identity'
     | '/admin/marketing/brands/$brandId/library'
     | '/admin/marketing/brands/$brandId/members'
@@ -483,7 +648,10 @@ export interface FileRouteTypes {
     | '/admin/_app/design'
     | '/admin/_app/forbidden'
     | '/admin/invite/$token'
+    | '/api/cron/email-outbox'
     | '/api/cron/media-cleanup'
+    | '/portal/_app/notifications'
+    | '/portal/_app/profile'
     | '/admin/_app/'
     | '/portal/_app/'
     | '/admin/_app/(shared)/notifications'
@@ -495,15 +663,26 @@ export interface FileRouteTypes {
     | '/admin/_app/(shared)/settings/policies'
     | '/admin/_app/(shared)/settings/roles'
     | '/admin/_app/(shared)/settings/users'
+    | '/admin/_app/(marketing)/marketing/'
     | '/admin/_app/(shared)/library/'
     | '/admin/_app/(shared)/settings/'
+    | '/portal/_app/brands/$brandId/'
+    | '/admin/_app/(marketing)/marketing/approvals/$requestId'
     | '/admin/_app/(marketing)/marketing/brands/$brandId'
     | '/admin/_app/(marketing)/marketing/brands/new'
     | '/admin/_app/(marketing)/marketing/clients/$clientId'
     | '/admin/_app/(marketing)/marketing/clients/new'
+    | '/admin/_app/(marketing)/marketing/content/$itemId'
+    | '/admin/_app/(marketing)/marketing/variants/$variantId'
+    | '/portal/_app/brands/$brandId/approvals/$requestId'
+    | '/admin/_app/(marketing)/marketing/approvals/'
     | '/admin/_app/(marketing)/marketing/brands/'
     | '/admin/_app/(marketing)/marketing/clients/'
+    | '/admin/_app/(marketing)/marketing/content/'
+    | '/portal/_app/brands/$brandId/approvals/'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/approvals'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/channels'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/content'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/identity'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/library'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/members'
@@ -523,6 +702,7 @@ export interface RootRouteChildren {
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   PortalAppRoute: typeof PortalAppRouteWithChildren
   AdminInviteTokenRoute: typeof AdminInviteTokenRoute
+  ApiCronEmailOutboxRoute: typeof ApiCronEmailOutboxRoute
   ApiCronMediaCleanupRoute: typeof ApiCronMediaCleanupRoute
 }
 
@@ -626,6 +806,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/email-outbox': {
+      id: '/api/cron/email-outbox'
+      path: '/api/cron/email-outbox'
+      fullPath: '/api/cron/email-outbox'
+      preLoaderRoute: typeof ApiCronEmailOutboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/media-cleanup': {
       id: '/api/cron/media-cleanup'
       path: '/api/cron/media-cleanup'
@@ -640,6 +827,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAppIndexRouteImport
       parentRoute: typeof PortalAppRoute
     }
+    '/portal/_app/notifications': {
+      id: '/portal/_app/notifications'
+      path: '/notifications'
+      fullPath: '/portal/notifications'
+      preLoaderRoute: typeof PortalAppNotificationsRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/profile': {
+      id: '/portal/_app/profile'
+      path: '/profile'
+      fullPath: '/portal/profile'
+      preLoaderRoute: typeof PortalAppProfileRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
     '/admin/_app/(shared)/notifications': {
       id: '/admin/_app/(shared)/notifications'
       path: '/notifications'
@@ -652,6 +853,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/admin/profile'
       preLoaderRoute: typeof AdminAppsharedProfileRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/': {
+      id: '/admin/_app/(marketing)/marketing/'
+      path: '/marketing'
+      fullPath: '/admin/marketing/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingIndexRouteImport
       parentRoute: typeof AdminAppRoute
     }
     '/admin/_app/(shared)/library/': {
@@ -717,6 +925,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsharedSettingsUsersRouteImport
       parentRoute: typeof AdminAppRoute
     }
+    '/portal/_app/brands/$brandId/': {
+      id: '/portal/_app/brands/$brandId/'
+      path: '/brands/$brandId'
+      fullPath: '/portal/brands/$brandId/'
+      preLoaderRoute: typeof PortalAppBrandsBrandIdIndexRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/approvals/': {
+      id: '/admin/_app/(marketing)/marketing/approvals/'
+      path: '/marketing/approvals'
+      fullPath: '/admin/marketing/approvals/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingApprovalsIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/approvals/$requestId': {
+      id: '/admin/_app/(marketing)/marketing/approvals/$requestId'
+      path: '/marketing/approvals/$requestId'
+      fullPath: '/admin/marketing/approvals/$requestId'
+      preLoaderRoute: typeof AdminAppmarketingMarketingApprovalsRequestIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
     '/admin/_app/(marketing)/marketing/brands/': {
       id: '/admin/_app/(marketing)/marketing/brands/'
       path: '/marketing/brands'
@@ -759,6 +988,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppmarketingMarketingClientsNewRouteImport
       parentRoute: typeof AdminAppRoute
     }
+    '/admin/_app/(marketing)/marketing/content/': {
+      id: '/admin/_app/(marketing)/marketing/content/'
+      path: '/marketing/content'
+      fullPath: '/admin/marketing/content/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingContentIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/content/$itemId': {
+      id: '/admin/_app/(marketing)/marketing/content/$itemId'
+      path: '/marketing/content/$itemId'
+      fullPath: '/admin/marketing/content/$itemId'
+      preLoaderRoute: typeof AdminAppmarketingMarketingContentItemIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/variants/$variantId': {
+      id: '/admin/_app/(marketing)/marketing/variants/$variantId'
+      path: '/marketing/variants/$variantId'
+      fullPath: '/admin/marketing/variants/$variantId'
+      preLoaderRoute: typeof AdminAppmarketingMarketingVariantsVariantIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/portal/_app/brands/$brandId/approvals/': {
+      id: '/portal/_app/brands/$brandId/approvals/'
+      path: '/brands/$brandId/approvals'
+      fullPath: '/portal/brands/$brandId/approvals/'
+      preLoaderRoute: typeof PortalAppBrandsBrandIdApprovalsIndexRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
+    '/portal/_app/brands/$brandId/approvals/$requestId': {
+      id: '/portal/_app/brands/$brandId/approvals/$requestId'
+      path: '/brands/$brandId/approvals/$requestId'
+      fullPath: '/portal/brands/$brandId/approvals/$requestId'
+      preLoaderRoute: typeof PortalAppBrandsBrandIdApprovalsRequestIdRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
     '/admin/_app/(marketing)/marketing/brands/$brandId/': {
       id: '/admin/_app/(marketing)/marketing/brands/$brandId/'
       path: '/'
@@ -766,11 +1030,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport
       parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
     }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/approvals': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/approvals'
+      path: '/approvals'
+      fullPath: '/admin/marketing/brands/$brandId/approvals'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdApprovalsRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
     '/admin/_app/(marketing)/marketing/brands/$brandId/channels': {
       id: '/admin/_app/(marketing)/marketing/brands/$brandId/channels'
       path: '/channels'
       fullPath: '/admin/marketing/brands/$brandId/channels'
       preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/content': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/content'
+      path: '/content'
+      fullPath: '/admin/marketing/brands/$brandId/content'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdContentRouteImport
       parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
     }
     '/admin/_app/(marketing)/marketing/brands/$brandId/identity': {
@@ -805,7 +1083,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminAppmarketingMarketingBrandsBrandIdRouteChildren {
+  AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute: typeof AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute
   AdminAppmarketingMarketingBrandsBrandIdChannelsRoute: typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  AdminAppmarketingMarketingBrandsBrandIdContentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdContentRoute
   AdminAppmarketingMarketingBrandsBrandIdIdentityRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
   AdminAppmarketingMarketingBrandsBrandIdLibraryRoute: typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   AdminAppmarketingMarketingBrandsBrandIdMembersRoute: typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
@@ -815,8 +1095,12 @@ interface AdminAppmarketingMarketingBrandsBrandIdRouteChildren {
 
 const AdminAppmarketingMarketingBrandsBrandIdRouteChildren: AdminAppmarketingMarketingBrandsBrandIdRouteChildren =
   {
+    AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute:
+      AdminAppmarketingMarketingBrandsBrandIdApprovalsRoute,
     AdminAppmarketingMarketingBrandsBrandIdChannelsRoute:
       AdminAppmarketingMarketingBrandsBrandIdChannelsRoute,
+    AdminAppmarketingMarketingBrandsBrandIdContentRoute:
+      AdminAppmarketingMarketingBrandsBrandIdContentRoute,
     AdminAppmarketingMarketingBrandsBrandIdIdentityRoute:
       AdminAppmarketingMarketingBrandsBrandIdIdentityRoute,
     AdminAppmarketingMarketingBrandsBrandIdLibraryRoute:
@@ -847,14 +1131,20 @@ interface AdminAppRouteChildren {
   AdminAppsharedSettingsPoliciesRoute: typeof AdminAppsharedSettingsPoliciesRoute
   AdminAppsharedSettingsRolesRoute: typeof AdminAppsharedSettingsRolesRoute
   AdminAppsharedSettingsUsersRoute: typeof AdminAppsharedSettingsUsersRoute
+  AdminAppmarketingMarketingIndexRoute: typeof AdminAppmarketingMarketingIndexRoute
   AdminAppsharedLibraryIndexRoute: typeof AdminAppsharedLibraryIndexRoute
   AdminAppsharedSettingsIndexRoute: typeof AdminAppsharedSettingsIndexRoute
+  AdminAppmarketingMarketingApprovalsRequestIdRoute: typeof AdminAppmarketingMarketingApprovalsRequestIdRoute
   AdminAppmarketingMarketingBrandsBrandIdRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   AdminAppmarketingMarketingBrandsNewRoute: typeof AdminAppmarketingMarketingBrandsNewRoute
   AdminAppmarketingMarketingClientsClientIdRoute: typeof AdminAppmarketingMarketingClientsClientIdRoute
   AdminAppmarketingMarketingClientsNewRoute: typeof AdminAppmarketingMarketingClientsNewRoute
+  AdminAppmarketingMarketingContentItemIdRoute: typeof AdminAppmarketingMarketingContentItemIdRoute
+  AdminAppmarketingMarketingVariantsVariantIdRoute: typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  AdminAppmarketingMarketingApprovalsIndexRoute: typeof AdminAppmarketingMarketingApprovalsIndexRoute
   AdminAppmarketingMarketingBrandsIndexRoute: typeof AdminAppmarketingMarketingBrandsIndexRoute
   AdminAppmarketingMarketingClientsIndexRoute: typeof AdminAppmarketingMarketingClientsIndexRoute
+  AdminAppmarketingMarketingContentIndexRoute: typeof AdminAppmarketingMarketingContentIndexRoute
 }
 
 const AdminAppRouteChildren: AdminAppRouteChildren = {
@@ -872,8 +1162,11 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,
   AdminAppsharedSettingsRolesRoute: AdminAppsharedSettingsRolesRoute,
   AdminAppsharedSettingsUsersRoute: AdminAppsharedSettingsUsersRoute,
+  AdminAppmarketingMarketingIndexRoute: AdminAppmarketingMarketingIndexRoute,
   AdminAppsharedLibraryIndexRoute: AdminAppsharedLibraryIndexRoute,
   AdminAppsharedSettingsIndexRoute: AdminAppsharedSettingsIndexRoute,
+  AdminAppmarketingMarketingApprovalsRequestIdRoute:
+    AdminAppmarketingMarketingApprovalsRequestIdRoute,
   AdminAppmarketingMarketingBrandsBrandIdRoute:
     AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren,
   AdminAppmarketingMarketingBrandsNewRoute:
@@ -882,10 +1175,18 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
     AdminAppmarketingMarketingClientsClientIdRoute,
   AdminAppmarketingMarketingClientsNewRoute:
     AdminAppmarketingMarketingClientsNewRoute,
+  AdminAppmarketingMarketingContentItemIdRoute:
+    AdminAppmarketingMarketingContentItemIdRoute,
+  AdminAppmarketingMarketingVariantsVariantIdRoute:
+    AdminAppmarketingMarketingVariantsVariantIdRoute,
+  AdminAppmarketingMarketingApprovalsIndexRoute:
+    AdminAppmarketingMarketingApprovalsIndexRoute,
   AdminAppmarketingMarketingBrandsIndexRoute:
     AdminAppmarketingMarketingBrandsIndexRoute,
   AdminAppmarketingMarketingClientsIndexRoute:
     AdminAppmarketingMarketingClientsIndexRoute,
+  AdminAppmarketingMarketingContentIndexRoute:
+    AdminAppmarketingMarketingContentIndexRoute,
 }
 
 const AdminAppRouteWithChildren = AdminAppRoute._addFileChildren(
@@ -893,11 +1194,23 @@ const AdminAppRouteWithChildren = AdminAppRoute._addFileChildren(
 )
 
 interface PortalAppRouteChildren {
+  PortalAppNotificationsRoute: typeof PortalAppNotificationsRoute
+  PortalAppProfileRoute: typeof PortalAppProfileRoute
   PortalAppIndexRoute: typeof PortalAppIndexRoute
+  PortalAppBrandsBrandIdIndexRoute: typeof PortalAppBrandsBrandIdIndexRoute
+  PortalAppBrandsBrandIdApprovalsRequestIdRoute: typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
+  PortalAppBrandsBrandIdApprovalsIndexRoute: typeof PortalAppBrandsBrandIdApprovalsIndexRoute
 }
 
 const PortalAppRouteChildren: PortalAppRouteChildren = {
+  PortalAppNotificationsRoute: PortalAppNotificationsRoute,
+  PortalAppProfileRoute: PortalAppProfileRoute,
   PortalAppIndexRoute: PortalAppIndexRoute,
+  PortalAppBrandsBrandIdIndexRoute: PortalAppBrandsBrandIdIndexRoute,
+  PortalAppBrandsBrandIdApprovalsRequestIdRoute:
+    PortalAppBrandsBrandIdApprovalsRequestIdRoute,
+  PortalAppBrandsBrandIdApprovalsIndexRoute:
+    PortalAppBrandsBrandIdApprovalsIndexRoute,
 }
 
 const PortalAppRouteWithChildren = PortalAppRoute._addFileChildren(
@@ -916,6 +1229,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminResetPasswordRoute: AdminResetPasswordRoute,
   PortalAppRoute: PortalAppRouteWithChildren,
   AdminInviteTokenRoute: AdminInviteTokenRoute,
+  ApiCronEmailOutboxRoute: ApiCronEmailOutboxRoute,
   ApiCronMediaCleanupRoute: ApiCronMediaCleanupRoute,
 }
 export const routeTree = rootRouteImport

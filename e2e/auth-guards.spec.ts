@@ -29,6 +29,12 @@ for (const path of [
   "/admin/settings/audit",
   "/admin/notifications",
   "/admin/library",
+  "/admin/marketing",
+  "/admin/marketing/content",
+  "/admin/marketing/approvals",
+  "/admin/marketing/content/00000000-0000-0000-0000-000000000001",
+  "/admin/marketing/variants/00000000-0000-0000-0000-000000000001",
+  "/admin/marketing/approvals/00000000-0000-0000-0000-000000000001",
 ]) {
   test(`${path} requires a session`, async ({ page }) => {
     await page.goto(path);
@@ -38,5 +44,23 @@ for (const path of [
 
 test("the media cleanup job refuses calls without the cron secret", async ({ request }) => {
   const response = await request.get("/api/cron/media-cleanup");
+  expect(response.status()).toBe(401);
+});
+
+for (const path of [
+  "/portal/brands/00000000-0000-0000-0000-000000000001",
+  "/portal/brands/00000000-0000-0000-0000-000000000001/approvals",
+  "/portal/brands/00000000-0000-0000-0000-000000000001/approvals/00000000-0000-0000-0000-000000000002",
+  "/portal/notifications",
+  "/portal/profile",
+]) {
+  test(`${path} requires a session and keeps the destination`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/admin\/login\?redirect=%2Fportal/);
+  });
+}
+
+test("the email outbox job refuses calls without the cron secret", async ({ request }) => {
+  const response = await request.get("/api/cron/email-outbox");
   expect(response.status()).toBe(401);
 });

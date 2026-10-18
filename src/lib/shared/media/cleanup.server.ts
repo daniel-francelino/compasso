@@ -1,18 +1,9 @@
-import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { logError } from "@/lib/shared/logger";
 import { serverStorage } from "@/lib/shared/storage/server-storage.server";
 import { adminClient } from "@/lib/shared/supabase/admin.server";
 
 const keysSchema = z.object({ keys: z.array(z.string()) });
-
-export const isAuthorizedCron = (header: string | null): boolean => {
-  const secret = process.env["CRON_SECRET"];
-  if (!secret || header === null) return false;
-  const expected = Buffer.from(`Bearer ${secret}`);
-  const received = Buffer.from(header);
-  return expected.length === received.length && timingSafeEqual(expected, received);
-};
 
 export const cleanupExpiredUploads = async (): Promise<{ expiredObjects: number; ok: boolean }> => {
   const storage = serverStorage();

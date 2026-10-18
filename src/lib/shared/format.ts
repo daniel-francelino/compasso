@@ -60,3 +60,73 @@ export function formatBytes(bytes: number): string {
   }
   return `${formatNumber(value, unit === 0 ? 0 : 1)} ${units[unit]}`;
 }
+
+const LOCAL_INPUT = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+const partsInZone = (instant: Date, timeZone: string) => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(instant);
+  const read = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "00";
+  return {
+    year: read("year"),
+    month: read("month"),
+    day: read("day"),
+    hour: read("hour"),
+    minute: read("minute"),
+    second: read("second"),
+  };
+};
+
+const offsetMinutes = (instantMs: number, timeZone: string): number => {
+  const p = partsInZone(new Date(instantMs), timeZone);
+  const asUtc = Date.UTC(
+    Number(p.year),
+    Number(p.month) - 1,
+    Number(p.day),
+    Number(p.hour),
+    Number(p.minute),
+    Number(p.second),
+  );
+  return Math.round((asUtc - Math.floor(instantMs / 1000) * 1000) / 60000);
+};
+
+export function instantToLocalInput(value: Instant, timeZone: string): string {
+  const p = partsInZone(toDate(value), timeZone);
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+
+export function localInputToInstant(value: string, timeZone: string): Date | null {
+  const match = LOCAL_INPUT.exec(value);
+  if (match === null) return null;
+  const naive = Date.UTC(
+    Number(match[1]),
+    Number(match[2]) - 1,
+    Number(match[3]),
+    Number(match[4]),
+    Number(match[5]),
+  );
+  const first = naive - offsetMinutes(naive, timeZone) * 60000;
+  const result = new Date(naive - offsetMinutes(first, timeZone) * 60000);
+  return instantToLocalInput(result, timeZone) === value ? result : null;
+}
+
+export function todayInZone(timeZone: string, now: Date = new Date()): string {
+  const p = partsInZone(now, timeZone);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+export function addDaysToDate(date: string, days: number): string {
+  const match = DATE_ONLY.exec(date);
+  if (match === null) return date;
+  const moved = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
+  return moved.toISOString().slice(0, 10);
+}

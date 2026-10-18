@@ -1,5 +1,7 @@
-import { getRouteApi } from "@tanstack/react-router";
+import { useRouteContext } from "@tanstack/react-router";
 
-const layoutRoute = getRouteApi("/admin/_app");
-
-export const useAuth = () => layoutRoute.useRouteContext().auth;
+export const useAuth = () => {
+  const { auth } = useRouteContext({ strict: false });
+  if (auth === undefined) throw new Error("useAuth precisa estar dentro de um layout autenticado.");
+  return auth;
+};

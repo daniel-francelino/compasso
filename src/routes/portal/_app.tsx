@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
+import { PortalShell } from "@/components/portal/portal-shell";
 import { Toaster } from "@/components/shared/ui/sonner";
 import { Action } from "@/lib/shared/auth/actions";
 import { blockedDestination } from "@/lib/shared/auth/redirect";
@@ -25,13 +26,9 @@ export const Route = createFileRoute("/portal/_app")({
 function PortalLayout() {
   return (
     <>
-      <main
-        id="main-content"
-        tabIndex={-1}
-        className="mx-auto w-full max-w-5xl px-4 py-8 outline-none"
-      >
+      <PortalShell>
         <Outlet />
-      </main>
+      </PortalShell>
       <Toaster position="top-right" />
     </>
   );
