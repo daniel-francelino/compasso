@@ -100,7 +100,7 @@ Only the system role `owner` has them; they **do not appear as an option** when 
 | Role | Type | Actions |
 |---|---|---|
 | `owner` ("Proprietário") | System, protected | All (implicit) |
-| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update`, `invitations.create`, `users.view` |
+| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update`, `invitations.create`, `users.view` |
 | `collaborator` ("Colaborador") | Pre-created, editable | `clients.view`, `brands.view`, `channels.view`, `content.view/create/update`, `approvals.view`, `comments.create_internal`, `calendar.view`, `media.view/upload` |
 | `external_approver` ("Aprovador externo") | Pre-created, editable, portal only | `portal.view`, `approvals.decide`, `comments.create_external` |
 | `external_commenter` ("Comentarista externo") | Pre-created, editable, portal only | `portal.view`, `comments.create_external` |

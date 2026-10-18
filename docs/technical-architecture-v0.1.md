@@ -992,6 +992,7 @@ Variables (names aligned with Memoria Print):
 
 | Variable | Where | Description |
 |---|---|---|
+| `SITE_URL` | Server | Public origin used in e-mail links (invitations, password reset); when empty the request origin is used, so set it in production to avoid Host-header poisoning |
 | `VITE_SUPABASE_URL` | Client and server | Supabase project URL |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Client and server | Public key; safe because RLS is on |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Server only** | Invitation acceptance, tasks, audit; never with the `VITE_` prefix |

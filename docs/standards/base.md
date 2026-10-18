@@ -53,7 +53,7 @@ Search these locations first. If a row says "forbidden", using that alternative 
 | **Notifications** | `notify_users(...)` / `resolve_notifications(...)` in the same transaction; kinds in `NotificationKind` and `notification_kinds` | Inserting into `notifications`, notifications from the client |
 | **Email** | `lib/shared/email` adapter + outbox | Calling the email provider elsewhere |
 | **Lists** | `useListState` (URL params) + `DataTable` + `PaginationBar` + `ListSkeleton` + `EmptyState` | Own pagination, client-side filtering of paged data |
-| **Forms** | `react-hook-form` + the shared zod schema + `Field` components + `useUnsavedChanges` + `zodFieldErrors` / `focusFirstInvalid` | Uncontrolled ad-hoc forms, validation only on the client |
+| **Forms** | The shared zod schema + `useFormSubmit` (parse on the client, call the server function, field errors, `focusFirstInvalid`) + the field components (`TextField`, `SelectField`, `Field`…) + `useUnsavedChanges`. `react-hook-form` is allowed only for forms with many dynamic fields and needs a written reason | A second submit hook, uncontrolled ad-hoc forms, validation only on the client |
 | **Dialogs** | `ConfirmDialog`, `ReasonDialog`, `FormDialog`, `EditorSheet` | New modal components, `window.confirm` |
 | **Toasts** | Global `Toaster` (`sonner`) | Custom toasts, `alert()` |
 | **Status badges** | `StatusBadge` with a `tone` | Color classes written in modules |
@@ -158,7 +158,7 @@ The route only wires: guard, search params, loader (if any) and the page compone
 
 ### 5.4 Form
 
-zod schema in the module's `schemas.ts`, used by both the form (`zodResolver`) and the server function. Submit button `loading` and disabled; `focusFirstInvalid` on error; `useUnsavedChanges(isDirty)`; success `toast` only after the server confirms; failure keeps the typed data.
+zod schema in the module's `schemas.ts`, used by both the form (`useFormSubmit` parses it before calling) and the server function. Submit button `loading` and disabled; `focusFirstInvalid` on error; `useUnsavedChanges(isDirty)`; success `toast` only after the server confirms; failure keeps the typed data.
 
 ### 5.5 Migration (one concern per file)
 

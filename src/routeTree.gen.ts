@@ -12,13 +12,38 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminAppRouteImport } from './routes/admin/_app'
 import { Route as AdminAccessDeniedRouteImport } from './routes/admin/access-denied'
+import { Route as AdminCallbackRouteImport } from './routes/admin/callback'
+import { Route as AdminConfirmEmailRouteImport } from './routes/admin/confirm-email'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminPendingRouteImport } from './routes/admin/pending'
+import { Route as AdminRecoverPasswordRouteImport } from './routes/admin/recover-password'
+import { Route as AdminResetPasswordRouteImport } from './routes/admin/reset-password'
 import { Route as PortalAppRouteImport } from './routes/portal/_app'
 import { Route as AdminAppIndexRouteImport } from './routes/admin/_app/index'
 import { Route as AdminAppDesignRouteImport } from './routes/admin/_app/design'
 import { Route as AdminAppForbiddenRouteImport } from './routes/admin/_app/forbidden'
+import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
 import { Route as PortalAppIndexRouteImport } from './routes/portal/_app/index'
+import { Route as AdminAppsharedNotificationsRouteImport } from './routes/admin/_app/(shared)/notifications'
+import { Route as AdminAppsharedProfileRouteImport } from './routes/admin/_app/(shared)/profile'
+import { Route as AdminAppsharedSettingsIndexRouteImport } from './routes/admin/_app/(shared)/settings/index'
+import { Route as AdminAppsharedSettingsAuditRouteImport } from './routes/admin/_app/(shared)/settings/audit'
+import { Route as AdminAppsharedSettingsNotificationsRouteImport } from './routes/admin/_app/(shared)/settings/notifications'
+import { Route as AdminAppsharedSettingsOrganizationRouteImport } from './routes/admin/_app/(shared)/settings/organization'
+import { Route as AdminAppsharedSettingsPoliciesRouteImport } from './routes/admin/_app/(shared)/settings/policies'
+import { Route as AdminAppsharedSettingsRolesRouteImport } from './routes/admin/_app/(shared)/settings/roles'
+import { Route as AdminAppsharedSettingsUsersRouteImport } from './routes/admin/_app/(shared)/settings/users'
+import { Route as AdminAppmarketingMarketingBrandsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/index'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId'
+import { Route as AdminAppmarketingMarketingBrandsNewRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/new'
+import { Route as AdminAppmarketingMarketingClientsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/index'
+import { Route as AdminAppmarketingMarketingClientsClientIdRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/$clientId'
+import { Route as AdminAppmarketingMarketingClientsNewRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/new'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/index'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/channels'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdIdentityRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/identity'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/members'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdSettingsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -35,6 +60,16 @@ const AdminAccessDeniedRoute = AdminAccessDeniedRouteImport.update({
   path: '/admin/access-denied',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCallbackRoute = AdminCallbackRouteImport.update({
+  id: '/admin/callback',
+  path: '/admin/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminConfirmEmailRoute = AdminConfirmEmailRouteImport.update({
+  id: '/admin/confirm-email',
+  path: '/admin/confirm-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -43,6 +78,16 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminPendingRoute = AdminPendingRouteImport.update({
   id: '/admin/pending',
   path: '/admin/pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRecoverPasswordRoute = AdminRecoverPasswordRouteImport.update({
+  id: '/admin/recover-password',
+  path: '/admin/recover-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
+  id: '/admin/reset-password',
+  path: '/admin/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PortalAppRoute = PortalAppRouteImport.update({
@@ -65,46 +110,244 @@ const AdminAppForbiddenRoute = AdminAppForbiddenRouteImport.update({
   path: '/forbidden',
   getParentRoute: () => AdminAppRoute,
 } as any)
+const AdminInviteTokenRoute = AdminInviteTokenRouteImport.update({
+  id: '/admin/invite/$token',
+  path: '/admin/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalAppIndexRoute = PortalAppIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalAppRoute,
 } as any)
+const AdminAppsharedNotificationsRoute =
+  AdminAppsharedNotificationsRouteImport.update({
+    id: '/(shared)/notifications',
+    path: '/notifications',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedProfileRoute = AdminAppsharedProfileRouteImport.update({
+  id: '/(shared)/profile',
+  path: '/profile',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppsharedSettingsIndexRoute =
+  AdminAppsharedSettingsIndexRouteImport.update({
+    id: '/(shared)/settings/',
+    path: '/settings/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsAuditRoute =
+  AdminAppsharedSettingsAuditRouteImport.update({
+    id: '/(shared)/settings/audit',
+    path: '/settings/audit',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsNotificationsRoute =
+  AdminAppsharedSettingsNotificationsRouteImport.update({
+    id: '/(shared)/settings/notifications',
+    path: '/settings/notifications',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsOrganizationRoute =
+  AdminAppsharedSettingsOrganizationRouteImport.update({
+    id: '/(shared)/settings/organization',
+    path: '/settings/organization',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsPoliciesRoute =
+  AdminAppsharedSettingsPoliciesRouteImport.update({
+    id: '/(shared)/settings/policies',
+    path: '/settings/policies',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsRolesRoute =
+  AdminAppsharedSettingsRolesRouteImport.update({
+    id: '/(shared)/settings/roles',
+    path: '/settings/roles',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsUsersRoute =
+  AdminAppsharedSettingsUsersRouteImport.update({
+    id: '/(shared)/settings/users',
+    path: '/settings/users',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsIndexRoute =
+  AdminAppmarketingMarketingBrandsIndexRouteImport.update({
+    id: '/(marketing)/marketing/brands/',
+    path: '/marketing/brands/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdRoute =
+  AdminAppmarketingMarketingBrandsBrandIdRouteImport.update({
+    id: '/(marketing)/marketing/brands/$brandId',
+    path: '/marketing/brands/$brandId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsNewRoute =
+  AdminAppmarketingMarketingBrandsNewRouteImport.update({
+    id: '/(marketing)/marketing/brands/new',
+    path: '/marketing/brands/new',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingClientsIndexRoute =
+  AdminAppmarketingMarketingClientsIndexRouteImport.update({
+    id: '/(marketing)/marketing/clients/',
+    path: '/marketing/clients/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingClientsClientIdRoute =
+  AdminAppmarketingMarketingClientsClientIdRouteImport.update({
+    id: '/(marketing)/marketing/clients/$clientId',
+    path: '/marketing/clients/$clientId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingClientsNewRoute =
+  AdminAppmarketingMarketingClientsNewRouteImport.update({
+    id: '/(marketing)/marketing/clients/new',
+    path: '/marketing/clients/new',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdIndexRoute =
+  AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdChannelsRoute =
+  AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport.update({
+    id: '/channels',
+    path: '/channels',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdIdentityRoute =
+  AdminAppmarketingMarketingBrandsBrandIdIdentityRouteImport.update({
+    id: '/identity',
+    path: '/identity',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdMembersRoute =
+  AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport.update({
+    id: '/members',
+    path: '/members',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
+const AdminAppmarketingMarketingBrandsBrandIdSettingsRoute =
+  AdminAppmarketingMarketingBrandsBrandIdSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminAppRouteWithChildren
   '/admin/access-denied': typeof AdminAccessDeniedRoute
+  '/admin/callback': typeof AdminCallbackRoute
+  '/admin/confirm-email': typeof AdminConfirmEmailRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pending': typeof AdminPendingRoute
+  '/admin/recover-password': typeof AdminRecoverPasswordRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/portal': typeof PortalAppRouteWithChildren
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
+  '/admin/invite/$token': typeof AdminInviteTokenRoute
   '/admin/': typeof AdminAppIndexRoute
   '/portal/': typeof PortalAppIndexRoute
+  '/admin/notifications': typeof AdminAppsharedNotificationsRoute
+  '/admin/profile': typeof AdminAppsharedProfileRoute
+  '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
+  '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
+  '/admin/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
+  '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
+  '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
+  '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/settings/': typeof AdminAppsharedSettingsIndexRoute
+  '/admin/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
+  '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
+  '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
+  '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
+  '/admin/marketing/brands/': typeof AdminAppmarketingMarketingBrandsIndexRoute
+  '/admin/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
+  '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  '/admin/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  '/admin/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
+  '/admin/marketing/brands/$brandId/settings': typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
+  '/admin/marketing/brands/$brandId/': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/access-denied': typeof AdminAccessDeniedRoute
+  '/admin/callback': typeof AdminCallbackRoute
+  '/admin/confirm-email': typeof AdminConfirmEmailRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pending': typeof AdminPendingRoute
+  '/admin/recover-password': typeof AdminRecoverPasswordRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
+  '/admin/invite/$token': typeof AdminInviteTokenRoute
   '/admin': typeof AdminAppIndexRoute
   '/portal': typeof PortalAppIndexRoute
+  '/admin/notifications': typeof AdminAppsharedNotificationsRoute
+  '/admin/profile': typeof AdminAppsharedProfileRoute
+  '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
+  '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
+  '/admin/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
+  '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
+  '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
+  '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/settings': typeof AdminAppsharedSettingsIndexRoute
+  '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
+  '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
+  '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
+  '/admin/marketing/brands': typeof AdminAppmarketingMarketingBrandsIndexRoute
+  '/admin/marketing/clients': typeof AdminAppmarketingMarketingClientsIndexRoute
+  '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  '/admin/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  '/admin/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
+  '/admin/marketing/brands/$brandId/settings': typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
+  '/admin/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin/_app': typeof AdminAppRouteWithChildren
   '/admin/access-denied': typeof AdminAccessDeniedRoute
+  '/admin/callback': typeof AdminCallbackRoute
+  '/admin/confirm-email': typeof AdminConfirmEmailRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/pending': typeof AdminPendingRoute
+  '/admin/recover-password': typeof AdminRecoverPasswordRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/portal/_app': typeof PortalAppRouteWithChildren
   '/admin/_app/design': typeof AdminAppDesignRoute
   '/admin/_app/forbidden': typeof AdminAppForbiddenRoute
+  '/admin/invite/$token': typeof AdminInviteTokenRoute
   '/admin/_app/': typeof AdminAppIndexRoute
   '/portal/_app/': typeof PortalAppIndexRoute
+  '/admin/_app/(shared)/notifications': typeof AdminAppsharedNotificationsRoute
+  '/admin/_app/(shared)/profile': typeof AdminAppsharedProfileRoute
+  '/admin/_app/(shared)/settings/audit': typeof AdminAppsharedSettingsAuditRoute
+  '/admin/_app/(shared)/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
+  '/admin/_app/(shared)/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
+  '/admin/_app/(shared)/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
+  '/admin/_app/(shared)/settings/roles': typeof AdminAppsharedSettingsRolesRoute
+  '/admin/_app/(shared)/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/_app/(shared)/settings/': typeof AdminAppsharedSettingsIndexRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
+  '/admin/_app/(marketing)/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
+  '/admin/_app/(marketing)/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
+  '/admin/_app/(marketing)/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
+  '/admin/_app/(marketing)/marketing/brands/': typeof AdminAppmarketingMarketingBrandsIndexRoute
+  '/admin/_app/(marketing)/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/settings': typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -112,44 +355,123 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/admin/access-denied'
+    | '/admin/callback'
+    | '/admin/confirm-email'
     | '/admin/login'
     | '/admin/pending'
+    | '/admin/recover-password'
+    | '/admin/reset-password'
     | '/portal'
     | '/admin/design'
     | '/admin/forbidden'
+    | '/admin/invite/$token'
     | '/admin/'
     | '/portal/'
+    | '/admin/notifications'
+    | '/admin/profile'
+    | '/admin/settings/audit'
+    | '/admin/settings/notifications'
+    | '/admin/settings/organization'
+    | '/admin/settings/policies'
+    | '/admin/settings/roles'
+    | '/admin/settings/users'
+    | '/admin/settings/'
+    | '/admin/marketing/brands/$brandId'
+    | '/admin/marketing/brands/new'
+    | '/admin/marketing/clients/$clientId'
+    | '/admin/marketing/clients/new'
+    | '/admin/marketing/brands/'
+    | '/admin/marketing/clients/'
+    | '/admin/marketing/brands/$brandId/channels'
+    | '/admin/marketing/brands/$brandId/identity'
+    | '/admin/marketing/brands/$brandId/members'
+    | '/admin/marketing/brands/$brandId/settings'
+    | '/admin/marketing/brands/$brandId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin/access-denied'
+    | '/admin/callback'
+    | '/admin/confirm-email'
     | '/admin/login'
     | '/admin/pending'
+    | '/admin/recover-password'
+    | '/admin/reset-password'
     | '/admin/design'
     | '/admin/forbidden'
+    | '/admin/invite/$token'
     | '/admin'
     | '/portal'
+    | '/admin/notifications'
+    | '/admin/profile'
+    | '/admin/settings/audit'
+    | '/admin/settings/notifications'
+    | '/admin/settings/organization'
+    | '/admin/settings/policies'
+    | '/admin/settings/roles'
+    | '/admin/settings/users'
+    | '/admin/settings'
+    | '/admin/marketing/brands/new'
+    | '/admin/marketing/clients/$clientId'
+    | '/admin/marketing/clients/new'
+    | '/admin/marketing/brands'
+    | '/admin/marketing/clients'
+    | '/admin/marketing/brands/$brandId/channels'
+    | '/admin/marketing/brands/$brandId/identity'
+    | '/admin/marketing/brands/$brandId/members'
+    | '/admin/marketing/brands/$brandId/settings'
+    | '/admin/marketing/brands/$brandId'
   id:
     | '__root__'
     | '/'
     | '/admin/_app'
     | '/admin/access-denied'
+    | '/admin/callback'
+    | '/admin/confirm-email'
     | '/admin/login'
     | '/admin/pending'
+    | '/admin/recover-password'
+    | '/admin/reset-password'
     | '/portal/_app'
     | '/admin/_app/design'
     | '/admin/_app/forbidden'
+    | '/admin/invite/$token'
     | '/admin/_app/'
     | '/portal/_app/'
+    | '/admin/_app/(shared)/notifications'
+    | '/admin/_app/(shared)/profile'
+    | '/admin/_app/(shared)/settings/audit'
+    | '/admin/_app/(shared)/settings/notifications'
+    | '/admin/_app/(shared)/settings/organization'
+    | '/admin/_app/(shared)/settings/policies'
+    | '/admin/_app/(shared)/settings/roles'
+    | '/admin/_app/(shared)/settings/users'
+    | '/admin/_app/(shared)/settings/'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId'
+    | '/admin/_app/(marketing)/marketing/brands/new'
+    | '/admin/_app/(marketing)/marketing/clients/$clientId'
+    | '/admin/_app/(marketing)/marketing/clients/new'
+    | '/admin/_app/(marketing)/marketing/brands/'
+    | '/admin/_app/(marketing)/marketing/clients/'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/channels'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/identity'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/members'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/settings'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminAppRoute: typeof AdminAppRouteWithChildren
   AdminAccessDeniedRoute: typeof AdminAccessDeniedRoute
+  AdminCallbackRoute: typeof AdminCallbackRoute
+  AdminConfirmEmailRoute: typeof AdminConfirmEmailRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPendingRoute: typeof AdminPendingRoute
+  AdminRecoverPasswordRoute: typeof AdminRecoverPasswordRoute
+  AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   PortalAppRoute: typeof PortalAppRouteWithChildren
+  AdminInviteTokenRoute: typeof AdminInviteTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -175,6 +497,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAccessDeniedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/callback': {
+      id: '/admin/callback'
+      path: '/admin/callback'
+      fullPath: '/admin/callback'
+      preLoaderRoute: typeof AdminCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/confirm-email': {
+      id: '/admin/confirm-email'
+      path: '/admin/confirm-email'
+      fullPath: '/admin/confirm-email'
+      preLoaderRoute: typeof AdminConfirmEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -187,6 +523,20 @@ declare module '@tanstack/react-router' {
       path: '/admin/pending'
       fullPath: '/admin/pending'
       preLoaderRoute: typeof AdminPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/recover-password': {
+      id: '/admin/recover-password'
+      path: '/admin/recover-password'
+      fullPath: '/admin/recover-password'
+      preLoaderRoute: typeof AdminRecoverPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reset-password': {
+      id: '/admin/reset-password'
+      path: '/admin/reset-password'
+      fullPath: '/admin/reset-password'
+      preLoaderRoute: typeof AdminResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/portal/_app': {
@@ -217,6 +567,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppForbiddenRouteImport
       parentRoute: typeof AdminAppRoute
     }
+    '/admin/invite/$token': {
+      id: '/admin/invite/$token'
+      path: '/admin/invite/$token'
+      fullPath: '/admin/invite/$token'
+      preLoaderRoute: typeof AdminInviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal/_app/': {
       id: '/portal/_app/'
       path: '/'
@@ -224,19 +581,224 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAppIndexRouteImport
       parentRoute: typeof PortalAppRoute
     }
+    '/admin/_app/(shared)/notifications': {
+      id: '/admin/_app/(shared)/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminAppsharedNotificationsRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/profile': {
+      id: '/admin/_app/(shared)/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AdminAppsharedProfileRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/': {
+      id: '/admin/_app/(shared)/settings/'
+      path: '/settings'
+      fullPath: '/admin/settings/'
+      preLoaderRoute: typeof AdminAppsharedSettingsIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/audit': {
+      id: '/admin/_app/(shared)/settings/audit'
+      path: '/settings/audit'
+      fullPath: '/admin/settings/audit'
+      preLoaderRoute: typeof AdminAppsharedSettingsAuditRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/notifications': {
+      id: '/admin/_app/(shared)/settings/notifications'
+      path: '/settings/notifications'
+      fullPath: '/admin/settings/notifications'
+      preLoaderRoute: typeof AdminAppsharedSettingsNotificationsRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/organization': {
+      id: '/admin/_app/(shared)/settings/organization'
+      path: '/settings/organization'
+      fullPath: '/admin/settings/organization'
+      preLoaderRoute: typeof AdminAppsharedSettingsOrganizationRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/policies': {
+      id: '/admin/_app/(shared)/settings/policies'
+      path: '/settings/policies'
+      fullPath: '/admin/settings/policies'
+      preLoaderRoute: typeof AdminAppsharedSettingsPoliciesRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/roles': {
+      id: '/admin/_app/(shared)/settings/roles'
+      path: '/settings/roles'
+      fullPath: '/admin/settings/roles'
+      preLoaderRoute: typeof AdminAppsharedSettingsRolesRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/settings/users': {
+      id: '/admin/_app/(shared)/settings/users'
+      path: '/settings/users'
+      fullPath: '/admin/settings/users'
+      preLoaderRoute: typeof AdminAppsharedSettingsUsersRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/': {
+      id: '/admin/_app/(marketing)/marketing/brands/'
+      path: '/marketing/brands'
+      fullPath: '/admin/marketing/brands/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId'
+      path: '/marketing/brands/$brandId'
+      fullPath: '/admin/marketing/brands/$brandId'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/new': {
+      id: '/admin/_app/(marketing)/marketing/brands/new'
+      path: '/marketing/brands/new'
+      fullPath: '/admin/marketing/brands/new'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsNewRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/clients/': {
+      id: '/admin/_app/(marketing)/marketing/clients/'
+      path: '/marketing/clients'
+      fullPath: '/admin/marketing/clients/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingClientsIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/clients/$clientId': {
+      id: '/admin/_app/(marketing)/marketing/clients/$clientId'
+      path: '/marketing/clients/$clientId'
+      fullPath: '/admin/marketing/clients/$clientId'
+      preLoaderRoute: typeof AdminAppmarketingMarketingClientsClientIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/clients/new': {
+      id: '/admin/_app/(marketing)/marketing/clients/new'
+      path: '/marketing/clients/new'
+      fullPath: '/admin/marketing/clients/new'
+      preLoaderRoute: typeof AdminAppmarketingMarketingClientsNewRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/'
+      path: '/'
+      fullPath: '/admin/marketing/brands/$brandId/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/channels': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/channels'
+      path: '/channels'
+      fullPath: '/admin/marketing/brands/$brandId/channels'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/identity': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/identity'
+      path: '/identity'
+      fullPath: '/admin/marketing/brands/$brandId/identity'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/members': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/members'
+      path: '/members'
+      fullPath: '/admin/marketing/brands/$brandId/members'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/settings': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/settings'
+      path: '/settings'
+      fullPath: '/admin/marketing/brands/$brandId/settings'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
   }
 }
+
+interface AdminAppmarketingMarketingBrandsBrandIdRouteChildren {
+  AdminAppmarketingMarketingBrandsBrandIdChannelsRoute: typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
+  AdminAppmarketingMarketingBrandsBrandIdIdentityRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  AdminAppmarketingMarketingBrandsBrandIdMembersRoute: typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
+  AdminAppmarketingMarketingBrandsBrandIdSettingsRoute: typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
+  AdminAppmarketingMarketingBrandsBrandIdIndexRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
+}
+
+const AdminAppmarketingMarketingBrandsBrandIdRouteChildren: AdminAppmarketingMarketingBrandsBrandIdRouteChildren =
+  {
+    AdminAppmarketingMarketingBrandsBrandIdChannelsRoute:
+      AdminAppmarketingMarketingBrandsBrandIdChannelsRoute,
+    AdminAppmarketingMarketingBrandsBrandIdIdentityRoute:
+      AdminAppmarketingMarketingBrandsBrandIdIdentityRoute,
+    AdminAppmarketingMarketingBrandsBrandIdMembersRoute:
+      AdminAppmarketingMarketingBrandsBrandIdMembersRoute,
+    AdminAppmarketingMarketingBrandsBrandIdSettingsRoute:
+      AdminAppmarketingMarketingBrandsBrandIdSettingsRoute,
+    AdminAppmarketingMarketingBrandsBrandIdIndexRoute:
+      AdminAppmarketingMarketingBrandsBrandIdIndexRoute,
+  }
+
+const AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren =
+  AdminAppmarketingMarketingBrandsBrandIdRoute._addFileChildren(
+    AdminAppmarketingMarketingBrandsBrandIdRouteChildren,
+  )
 
 interface AdminAppRouteChildren {
   AdminAppDesignRoute: typeof AdminAppDesignRoute
   AdminAppForbiddenRoute: typeof AdminAppForbiddenRoute
   AdminAppIndexRoute: typeof AdminAppIndexRoute
+  AdminAppsharedNotificationsRoute: typeof AdminAppsharedNotificationsRoute
+  AdminAppsharedProfileRoute: typeof AdminAppsharedProfileRoute
+  AdminAppsharedSettingsAuditRoute: typeof AdminAppsharedSettingsAuditRoute
+  AdminAppsharedSettingsNotificationsRoute: typeof AdminAppsharedSettingsNotificationsRoute
+  AdminAppsharedSettingsOrganizationRoute: typeof AdminAppsharedSettingsOrganizationRoute
+  AdminAppsharedSettingsPoliciesRoute: typeof AdminAppsharedSettingsPoliciesRoute
+  AdminAppsharedSettingsRolesRoute: typeof AdminAppsharedSettingsRolesRoute
+  AdminAppsharedSettingsUsersRoute: typeof AdminAppsharedSettingsUsersRoute
+  AdminAppsharedSettingsIndexRoute: typeof AdminAppsharedSettingsIndexRoute
+  AdminAppmarketingMarketingBrandsBrandIdRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
+  AdminAppmarketingMarketingBrandsNewRoute: typeof AdminAppmarketingMarketingBrandsNewRoute
+  AdminAppmarketingMarketingClientsClientIdRoute: typeof AdminAppmarketingMarketingClientsClientIdRoute
+  AdminAppmarketingMarketingClientsNewRoute: typeof AdminAppmarketingMarketingClientsNewRoute
+  AdminAppmarketingMarketingBrandsIndexRoute: typeof AdminAppmarketingMarketingBrandsIndexRoute
+  AdminAppmarketingMarketingClientsIndexRoute: typeof AdminAppmarketingMarketingClientsIndexRoute
 }
 
 const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppDesignRoute: AdminAppDesignRoute,
   AdminAppForbiddenRoute: AdminAppForbiddenRoute,
   AdminAppIndexRoute: AdminAppIndexRoute,
+  AdminAppsharedNotificationsRoute: AdminAppsharedNotificationsRoute,
+  AdminAppsharedProfileRoute: AdminAppsharedProfileRoute,
+  AdminAppsharedSettingsAuditRoute: AdminAppsharedSettingsAuditRoute,
+  AdminAppsharedSettingsNotificationsRoute:
+    AdminAppsharedSettingsNotificationsRoute,
+  AdminAppsharedSettingsOrganizationRoute:
+    AdminAppsharedSettingsOrganizationRoute,
+  AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,
+  AdminAppsharedSettingsRolesRoute: AdminAppsharedSettingsRolesRoute,
+  AdminAppsharedSettingsUsersRoute: AdminAppsharedSettingsUsersRoute,
+  AdminAppsharedSettingsIndexRoute: AdminAppsharedSettingsIndexRoute,
+  AdminAppmarketingMarketingBrandsBrandIdRoute:
+    AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren,
+  AdminAppmarketingMarketingBrandsNewRoute:
+    AdminAppmarketingMarketingBrandsNewRoute,
+  AdminAppmarketingMarketingClientsClientIdRoute:
+    AdminAppmarketingMarketingClientsClientIdRoute,
+  AdminAppmarketingMarketingClientsNewRoute:
+    AdminAppmarketingMarketingClientsNewRoute,
+  AdminAppmarketingMarketingBrandsIndexRoute:
+    AdminAppmarketingMarketingBrandsIndexRoute,
+  AdminAppmarketingMarketingClientsIndexRoute:
+    AdminAppmarketingMarketingClientsIndexRoute,
 }
 
 const AdminAppRouteWithChildren = AdminAppRoute._addFileChildren(
@@ -259,9 +821,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminAppRoute: AdminAppRouteWithChildren,
   AdminAccessDeniedRoute: AdminAccessDeniedRoute,
+  AdminCallbackRoute: AdminCallbackRoute,
+  AdminConfirmEmailRoute: AdminConfirmEmailRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPendingRoute: AdminPendingRoute,
+  AdminRecoverPasswordRoute: AdminRecoverPasswordRoute,
+  AdminResetPasswordRoute: AdminResetPasswordRoute,
   PortalAppRoute: PortalAppRouteWithChildren,
+  AdminInviteTokenRoute: AdminInviteTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

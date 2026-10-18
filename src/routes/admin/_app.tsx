@@ -1,14 +1,18 @@
 import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
 import { AdminErrorPage, AdminNotFoundPage } from "@/components/shared/admin/admin-fallbacks";
+import { BrandSwitcher } from "@/components/shared/admin/brand-switcher";
 import { AppSidebar } from "@/components/shared/admin/app-sidebar";
 import { AppBreadcrumbs, BreadcrumbProvider } from "@/components/shared/admin/page-header";
+import { NotificationBell } from "@/components/shared/notifications/notification-bell";
 import { Separator } from "@/components/shared/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/shared/ui/sidebar";
 import { Toaster } from "@/components/shared/ui/sonner";
 import { useAdminSpace } from "@/hooks/shared/use-admin-space";
 import { blockedDestination, homeFor } from "@/lib/shared/auth/redirect";
 import { getAuthState } from "@/lib/shared/auth/session.functions";
-import { ProfileKind } from "@/lib/shared/enums";
+import { Action } from "@/lib/shared/auth/actions";
+import { can } from "@/lib/shared/auth/permissions";
+import { ProfileKind, Space } from "@/lib/shared/enums";
 import { AppRoute } from "@/lib/shared/routes";
 
 export const Route = createFileRoute("/admin/_app")({
@@ -63,6 +67,8 @@ function AdminLayout() {
             <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
             <Separator orientation="vertical" className="h-5" />
             <AppBreadcrumbs />
+            {space === Space.Marketing && can(auth, Action.Brands.View) ? <BrandSwitcher /> : null}
+            {auth.user ? <NotificationBell userId={auth.user.id} /> : null}
           </header>
           <main
             id="main-content"

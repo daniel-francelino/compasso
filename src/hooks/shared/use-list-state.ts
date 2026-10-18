@@ -1,39 +1,59 @@
-import { useState } from "react";
-import type { ListSort } from "@/lib/shared/list-sort";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { type ListSearch, listSearchSchema } from "@/lib/shared/list-search";
+import { type ListSort, SortDirection } from "@/lib/shared/list-sort";
 import { useDebouncedValue } from "./use-debounced-value";
-import { SortDirection } from "@/lib/shared/list-sort";
 
 export const useListState = <S extends string>(initialStatus: S) => {
-  const [status, setStatusValue] = useState<S>(initialStatus);
-  const [search, setSearchValue] = useState("");
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState<ListSort>(null);
-  const debouncedSearch = useDebouncedValue(search.trim(), 300);
+  const raw = useSearch({ strict: false });
+  const navigate = useNavigate();
+  const search: ListSearch = listSearchSchema.parse(raw);
+
+  const status = (search.status ?? initialStatus) as S;
+  const page = search.page ?? 1;
+  const sort: ListSort =
+    search.sort === undefined ? null : { key: search.sort, dir: search.dir ?? SortDirection.Asc };
+
+  const [text, setText] = useState(search.q ?? "");
+  const debouncedSearch = useDebouncedValue(text.trim(), 300);
+
+  const update = (patch: Partial<ListSearch>) =>
+    navigate({
+      to: ".",
+      search: ((previous: Record<string, unknown>) => ({ ...previous, ...patch })) as never,
+      replace: true,
+    });
+
+  useEffect(() => {
+    if (debouncedSearch === (search.q ?? "")) return;
+    void update({ q: debouncedSearch === "" ? undefined : debouncedSearch, page: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only the debounced text drives the URL
+  }, [debouncedSearch]);
 
   return {
     status,
-    search,
+    search: text,
     page,
     sort,
-    debouncedSearch,
-    setPage,
+    debouncedSearch: search.q ?? "",
+    setPage: (value: number) => update({ page: value === 1 ? undefined : value }),
+    setStatus: (value: S) =>
+      update({ status: value === initialStatus ? undefined : value, page: undefined }),
+    setSearch: setText,
+    filters: {
+      owner: search.owner,
+      tag: search.tag,
+      client: search.client,
+      platform: search.platform,
+    },
+    setFilter: (key: "owner" | "tag" | "client" | "platform", value: string | undefined) =>
+      update({ [key]: value === "" ? undefined : value, page: undefined }),
     toggleSort: (key: string) => {
-      setSort((current) =>
-        current?.key !== key
-          ? { key, dir: SortDirection.Asc }
-          : current.dir === SortDirection.Asc
-            ? { key, dir: SortDirection.Desc }
-            : null,
-      );
-      setPage(1);
-    },
-    setStatus: (value: S) => {
-      setStatusValue(value);
-      setPage(1);
-    },
-    setSearch: (value: string) => {
-      setSearchValue(value);
-      setPage(1);
+      if (sort?.key !== key) return update({ sort: key, dir: SortDirection.Asc, page: undefined });
+      if (sort.dir === SortDirection.Asc) {
+        return update({ sort: key, dir: SortDirection.Desc, page: undefined });
+      }
+      return update({ sort: undefined, dir: undefined, page: undefined });
     },
   };
 };

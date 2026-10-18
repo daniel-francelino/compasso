@@ -448,10 +448,13 @@ create policy actions_read on public.actions for select
   ));
 
 create policy roles_read on public.roles for select
-  using (exists (
-    select 1 from public.profiles p
-    where p.id = auth.uid() and p.status = 'approved' and p.kind = 'internal'
-  ));
+  using (
+    exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid() and p.status = 'approved' and p.kind = 'internal'
+    )
+    or id = (select p.role_id from public.profiles p where p.id = auth.uid())
+  );
 
 create policy role_actions_read on public.role_actions for select
   using (exists (
@@ -550,7 +553,7 @@ select r.id, seed.action_key
 from public.roles r
 join (values
   ('manager', 'clients.view'), ('manager', 'clients.create'), ('manager', 'clients.update'),
-  ('manager', 'clients.delete'), ('manager', 'brands.view'), ('manager', 'brands.update'),
+  ('manager', 'clients.delete'), ('manager', 'brands.view'), ('manager', 'brands.create'), ('manager', 'brands.update'),
   ('manager', 'brands.manage_members'), ('manager', 'channels.view'),
   ('manager', 'channels.create'), ('manager', 'channels.update'), ('manager', 'channels.delete'),
   ('manager', 'content.view'), ('manager', 'content.create'), ('manager', 'content.update'),

@@ -90,6 +90,9 @@ External users never read channels directly; the portal receives only the platfo
 - No channel registration triggers external calls.
 - The portal shows the preview of the variant according to its channel's platform descriptor.
 
+
 ## Implementation status
 
-Not started (phase 1 of the plan; platform descriptors completed with the preview in phase 3).
+Phase 1 (task P1-06, 2026-10-18). Same migrations as [clients.md](clients.md); `src/lib/marketing/channels/*`, `src/lib/shared/preview/platforms.ts` (descriptors: caption limits, @ prefix), `src/components/marketing/channels/*`; route `/admin/marketing/brands/$brandId/channels`.
+
+Done: list by status, create/edit in a sheet, handle normalization (@), duplicate rule among active channels, archive/reactivate, delete. Validation performed: SQL assertions (duplicate, https URL, platform list, archived name reuse). **Not tested**: real Supabase, browser. **Pending (phase 3)**: variant counters, `channel_is_used`, the preview components per platform and the "planned variants" confirmation when archiving.

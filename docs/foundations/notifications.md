@@ -231,3 +231,7 @@ Email complements the in-app alert for what is important or for people who are n
 3. Should the external approver receive reminder emails for pending approvals (and how often)?
 4. Does the contracted Supabase plan include **`pg_cron`**? If not, use Vercel Cron.
 5. Are there missing alert kinds (for example a comment from the client on a variant, a rejected upload)?
+
+## Implementation status (phase 1)
+
+Phase 1 (task P1-09, 2026-10-18). Migration `20261018100400_notifications.sql` (tables, 13 kinds seeded, `notify_users`, `resolve_notifications`, `notification_lead_days`, `generate_due_notifications`, policies, Realtime publication and `pg_cron` schedule when available), `notify_scan_invitations` in the invitations migration, server functions, bell with Realtime and a 60-second poll, `/admin/notifications`, preferences in the profile. Only `invitation.accepted` and `invitation.expiring` are `available`. Validation performed: 44 SQL assertions (dedupe, preferences, action and brand scope, RLS, writer not callable by clients). **Not tested**: Realtime delivery, `pg_cron`, the e-mail outbox sender (rows are queued, nothing sends them yet: task P3-06), the screens in a browser. Also done after the first pass: lead-day editing in the preferences and the defaults screen (`/admin/settings/notifications`, `notification_kind_save`). **Not done**: the portal bell (phase 3).

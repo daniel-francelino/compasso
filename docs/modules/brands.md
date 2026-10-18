@@ -98,6 +98,9 @@ Routes: `/admin/marketing/brands`, `/admin/marketing/brands/new`, `/admin/market
 - Archiving a brand with pending approvals shows them and requires explicit resolution.
 - Members with `kind` different from their profile kind are refused by the database.
 
+
 ## Implementation status
 
-Not started (phase 1 of the plan).
+Phase 1 (task P1-03/P1-05, 2026-10-18). Same migrations and tests as [clients.md](clients.md); `src/lib/marketing/brands/*`, `src/components/marketing/brands/*`; routes `/admin/marketing/brands`, `/new`, `/$brandId` with tabs overview, channels, members, identity, settings.
+
+Done: list, create, overview, members (add existing, invite, decision right, revoke, last-internal-member rule), identity (guidelines text, colors and fonts as data, guidelines link), settings (name, time zone with warning, archive, delete). Validation performed: SQL assertions (isolation between brands, external users read nothing, time zone change audited). **Not tested**: real Supabase, browser. Also done after the first pass: brand switcher in the header (URL-based, "Todas as marcas"), list filters by client and platform. **Not done**: the "pending approvals" and "next planned post" columns and the archive pre-check of pending approvals (they depend on the content and approvals tables of phase 3; `brand_has_history` and the approver check are placeholders until then).

@@ -558,6 +558,7 @@ create table notification_kinds (
   default_lead_days int[],
   schedulable boolean not null default false,
   portal boolean not null default false,
+  default_email boolean not null default false,
   available boolean not null default false
 );
 
@@ -648,5 +649,7 @@ Applies to **every** table above when the migration is written (base.md section 
 | 9 | `calendar` | `list_calendar_entries`, `portal_list_calendar` |
 | 10 | `site_cms` | tables of section 7, publish and public read functions |
 | 11 | `dashboard` | dashboard functions and supporting indexes |
+
+Files created so far (chronological): `20261018100000_core_extensions_and_organization`, `…100100_auth_roles_profiles`, `…100200_audit_events`, `…100300_clients_brands_channels` and `…100310_clients_brands_channels_functions`, `…100400_notifications`, `…100500_auth_invitations`, `…100600_access_and_settings_functions` (dated in dependency order: invitations come after clients/brands and notifications because `accept_invitation` links brands and notifies).
 
 Each migration is accompanied by its pgTAP test file, its `db:types` regeneration and the registry updates (actions, kinds, error codes, audit actions).

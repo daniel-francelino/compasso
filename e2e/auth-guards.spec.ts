@@ -20,3 +20,17 @@ test("the login form validates on the client before calling the server", async (
   await expect(page.getByText("Informe o e-mail.")).toBeVisible();
   await expect(page.getByText("Informe a senha.")).toBeVisible();
 });
+
+for (const path of [
+  "/admin/marketing/clients",
+  "/admin/marketing/brands",
+  "/admin/settings/users",
+  "/admin/settings/roles",
+  "/admin/settings/audit",
+  "/admin/notifications",
+]) {
+  test(`${path} requires a session`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/admin\/login\?redirect=/);
+  });
+}

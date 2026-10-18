@@ -101,6 +101,9 @@ Audit events: `client.created`, `client.updated`, `client.owner_changed`, `clien
 - A client with brands cannot be deleted.
 - Duplicate warnings show similar names and contacts without blocking creation.
 
+
 ## Implementation status
 
-Not started (phase 1 of the plan).
+Phase 1 (task P1-03/P1-04, 2026-10-18). Files: migrations `20261018100300_clients_brands_channels.sql` and `20261018100310_clients_brands_channels_functions.sql`; tests `supabase/tests/03_clients_brands_channels.test.sql`; `src/lib/marketing/clients/*`; `src/components/marketing/clients/*`; routes `/admin/marketing/clients`, `/new`, `/$clientId`.
+
+Done: list (status tabs, search, server pagination), create with optional first brand, duplicate-name warning, record with tabs (brands, contacts, activity for `audit.view`, notes), contacts (primary rule, e-mail validation), archive with the option to archive brands, delete, invite a contact to the portal. Validation performed: 58 SQL assertions on PGlite; typecheck, lint; guard redirects in Playwright. **Not tested**: real Supabase, the screens in a browser with data. Also done after the first pass: filters by owner and tag in the URL, the portal-access badge of each contact ("Sem acesso", "Convite pendente", "Com acesso a N marcas", shown only to people with `users.view`). **Not done**: the quick client picker inside the brand form (a plain select is used), a "last activity" column (the list shows the update date).

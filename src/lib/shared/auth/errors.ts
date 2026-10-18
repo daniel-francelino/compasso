@@ -59,6 +59,62 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Denied,
     message: "Esta ação é exclusiva do Proprietário.",
   },
+  client_has_brands: {
+    category: ErrorCode.InUse,
+    message: "Este cliente tem marcas. Arquive em vez de excluir.",
+  },
+  contact_email_invalid: {
+    category: ErrorCode.Invalid,
+    message: "E-mail do contato inválido.",
+  },
+  brand_name_taken: {
+    category: ErrorCode.Invalid,
+    message: "Já existe uma marca com este nome neste cliente.",
+  },
+  brand_not_empty: {
+    category: ErrorCode.InUse,
+    message: "Esta marca tem histórico. Arquive em vez de excluir.",
+  },
+  member_kind_mismatch: {
+    category: ErrorCode.Invalid,
+    message: "O tipo do vínculo não corresponde ao tipo do usuário.",
+  },
+  last_internal_member: {
+    category: ErrorCode.Invalid,
+    message: "A marca precisa manter ao menos um membro interno.",
+  },
+  channel_duplicate: {
+    category: ErrorCode.Invalid,
+    message: "Este perfil já está cadastrado nesta marca.",
+  },
+  channel_in_use: {
+    category: ErrorCode.InUse,
+    message: "Este canal já foi usado. Arquive em vez de excluir.",
+  },
+  platform_change_forbidden: {
+    category: ErrorCode.Invalid,
+    message: "A plataforma de um canal em uso não pode ser alterada.",
+  },
+  auth_link_invalid: {
+    category: ErrorCode.Invalid,
+    message: "Este link não vale mais. Peça um novo.",
+  },
+  invitation_invalid: {
+    category: ErrorCode.Invalid,
+    message: "Este convite expirou ou já foi usado. Peça um novo convite.",
+  },
+  invitation_email_mismatch: {
+    category: ErrorCode.Invalid,
+    message: "O e-mail desta conta não é o do convite.",
+  },
+  approver_without_access: {
+    category: ErrorCode.Invalid,
+    message: "O aprovador designado não tem mais acesso. Escolha outro.",
+  },
+  channel_archived: {
+    category: ErrorCode.Invalid,
+    message: "Este canal está arquivado e não aceita novos itens.",
+  },
   audit_immutable: {
     category: ErrorCode.Denied,
     message: "Registros de auditoria não podem ser alterados.",

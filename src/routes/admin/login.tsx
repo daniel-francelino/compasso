@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { AuthShell, Field, FormError, PasswordField } from "@/components/shared/admin/auth-shell";
@@ -27,7 +27,18 @@ function LoginPage() {
   const [password, setPassword] = useState("");
 
   return (
-    <AuthShell title="Entrar" description="Use o e-mail do seu convite para acessar o Compasso.">
+    <AuthShell
+      title="Entrar"
+      description="Use o e-mail do seu convite para acessar o Compasso."
+      footer={
+        <Link
+          to={AppRoute.RecoverPassword}
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          Esqueci minha senha
+        </Link>
+      }
+    >
       <form
         ref={formRef}
         noValidate

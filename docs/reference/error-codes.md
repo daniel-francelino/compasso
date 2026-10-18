@@ -35,6 +35,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | Code | Category | Message (pt-BR) | Raised by |
 |---|---|---|---|
 | `invalid_credentials` | denied | "E-mail ou senha incorretos." | login |
+| `auth_link_invalid` | invalid | "Este link não vale mais. Peça um novo." | `exchangeAuthCode`, `resetPassword` |
 | `invitation_invalid` | invalid | "Este convite expirou ou já foi usado. Peça um novo convite." | `accept_invitation` |
 | `invitation_email_mismatch` | invalid | "O e-mail desta conta não é o do convite." | `accept_invitation` |
 | `role_not_assignable` | denied | "Você não pode atribuir este perfil." | invite / role change |

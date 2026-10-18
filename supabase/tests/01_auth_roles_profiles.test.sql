@@ -219,7 +219,7 @@ select lives_ok(
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
 select is((select count(*)::int from public.organizations), 0, 'an external user does not read the organization');
-select is((select count(*)::int from public.roles), 0, 'an external user does not read roles');
+select is((select count(*)::int from public.roles), 1, 'an external user reads only its own role');
 select is((select count(*)::int from public.actions), 0, 'an external user does not read the action catalog');
 select is((select count(*)::int from public.role_actions), 0, 'an external user does not read role actions');
 reset role;

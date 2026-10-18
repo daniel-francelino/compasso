@@ -13,6 +13,12 @@
 | `my_actions()` | text[] | for the UI (`getAuthState`) |
 | `can_access_brand(p_brand uuid)` | boolean | Owner, or active internal link (approved profile) |
 | `is_external_brand_member(p_brand uuid, p_must_decide boolean default false)` | boolean | active external link, optionally with `can_decide` |
+| `can_view_client(p_client uuid)` | boolean | Owner, creator/owner of the client, or access to one of its brands (clients with no brand yet stay visible to their creator) |
+| `current_organization_id()` | uuid | the single organization (internal helper) |
+| `assert_action(p_action text)` / `assert_brand_access(p_brand uuid)` | void | raise `denied` / `not_found` (internal helpers used at the start of every write function) |
+| `channel_is_used(p_channel uuid)` / `brand_has_history(p_brand uuid)` | boolean | internal checks, return `false` until the content migration redefines them |
+| `notification_lead_days(p_user uuid, p_kind text)` | int[] | the person's lead days or the kind default (used by scanners) |
+| `generate_due_notifications()` | jsonb | runs every `notify_scan_*` function and cleans old notifications (`pg_cron`); `notify_scan_invitations()` expires invitations and creates `invitation.expiring` |
 | `audit_write(p_org uuid, p_brand uuid, p_action text, p_entity_type text, p_entity_id uuid, p_metadata jsonb)` | void | single audit writer; validates `p_action` against the catalog |
 | `notify_users(...)` / `resolve_notifications(p_ref_type text, p_ref_id uuid)` | void | single notification writer ([../foundations/notifications.md](../foundations/notifications.md)) |
 
@@ -25,7 +31,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `invitation_create(p_email, p_role, p_grants jsonb, p_token_hash, p_expires_at)` | `createInvitation` (generates token, sends email) | `invitations.create` (+ role assignable) | `invitation.created` | `role_not_assignable`, `invalid_input` |
 | `invitation_revoke(p_invitation)` | `revokeInvitation` | `invitations.create` | `invitation.revoked` | `not_found` |
 | `accept_invitation(p_token_hash text)` | `acceptInvitation` (service role; creates the auth user) | none (token) | `invitation.accepted`; Notif. `invitation.accepted` | `invitation_invalid`, `invitation_email_mismatch` |
-| `profile_set_access(p_profile, p_status, p_role)` | `setUserAccess` | `users.manage` / `users.approve` | `profile_audit` | `last_owner`, `self_change_forbidden`, `role_not_assignable` |
+| `profile_set_access(p_profile, p_status, p_role default null)` | `setUserAccess` | `users.manage` / `users.approve` | `profile_audit` | `last_owner`, `self_change_forbidden`, `role_not_assignable` |
 | `role_save(p_role jsonb)` / `role_delete(p_role)` | `saveRole`, `deleteRole` | `roles.manage` | `role_audit` | `role_system_protected`, `role_in_use`, `action_requires_read`, `portal_role_internal_action` |
 | — | `getAuthState`, `signIn` (generic errors, no enumeration), `signOut`, `updateProfile` | approved | — | — |
 
@@ -35,8 +41,23 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 |---|---|---|---|---|
 | `organization_save(p_organization jsonb)` | `saveOrganization` | `settings.manage` | `organization.updated` | `conflict`, `invalid_input` |
 | `organization_setting_save(p_key text, p_value jsonb, p_expected_version int)` | `saveOrganizationSetting` | `settings.manage` | `settings.policy_changed` | `conflict`, `invalid_input` |
-| `audit_list(p_filters jsonb, p_page int)` (RLS: action + brand scope) | `listAuditEvents` | `audit.view` | — | `denied` |
-| — | `exportAudit` (CSV, row limit) | `audit.view` | `audit.exported` | `denied` |
+| `audit_list(p_filters jsonb, p_page int, p_export boolean default false)` (checks `audit.view` and brand scope itself; with `p_export` returns up to 5000 rows and writes `audit.exported`) | `listAuditEvents` | `audit.view` | — | `denied` |
+| (same `audit_list` with `p_export`) | `exportAudit` (CSV, row limit) | `audit.view` | `audit.exported` | `denied` |
+
+### 2c. Support server functions (reads and small writes, no SQL function of their own)
+
+| Server function | Act. | Notes |
+|---|---|---|
+| `listUsers`, `listInvitations` | `users.view` | paginated, filtered on the server (RLS) |
+| `listRoles` (with the action catalog), `listAssignableRoles` | `roles.manage` / `invitations.create` | assignable roles hide the owner role and administration-only roles for non-owners |
+| `previewInvitation`, `resendInvitation` | none (token) / `invitations.create` | preview uses the service role and reveals only the invited e-mail and role name; resend creates a new invitation (revokes the pending one) |
+| `getOrganization`, `listSettings`, `saveSetting` | `settings.manage` | `saveSetting` validates each policy group with zod before `organization_setting_save` |
+| `listAuditEvents` | `audit.view` | calls `audit_list`; filters: domain, period, actor, brand, entity |
+| `listNotifications`, `countUnread`, `markRead`, `markAllRead`, `snoozeNotification`, `listPreferences`, `savePreference` | approved account | own rows only; RLS applies (update limited to `read_at` and `snoozed_until`) |
+| `changePassword` | approved account | Supabase Auth `updateUser` |
+| `listBrandOptions` | `brands.view` | lightweight picker list (shared space) |
+| `listBrandMembers`, `listMemberCandidates` | `brands.view` / `brands.manage_members` | |
+| `findSimilarClients`, `listOwnerOptions` | `clients.view` | duplicate warning and owner select |
 
 ## 3. Clients, brands, channels (module: clients, brands, channels)
 
@@ -148,6 +169,7 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `notify_users(p_kind, p_brand, p_title, p_body, p_link, p_ref_type, p_ref_id, p_dedupe_key, p_recipients uuid[])` | — (called by other functions) | — | single writer; checks recipients' action and brand scope |
 | `resolve_notifications(p_ref_type, p_ref_id)` | — | — | |
 | `notification_lead_days(p_user, p_kind)` | — | — | |
+| `notification_kind_save(p_kind, p_default_lead_days int[], p_default_email boolean)` | `listKindDefaults`, `saveKindDefaults` | `notifications.configure` | audit `settings.policy_changed` with key `notifications.<kind>`; errors `invalid_input`, `not_found` |
 | `generate_due_notifications()` | `pg_cron` daily/hourly | — | discovers `notify_scan_*` |
 | `notify_scan_approvals()`, `notify_scan_content()`, `notify_scan_invitations()`, `notify_scan_publications()` | — | — | one per module |
 | `notifications_cleanup()` | `pg_cron` | — | 90-day cleanup |
