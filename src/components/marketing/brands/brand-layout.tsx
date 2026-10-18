@@ -69,6 +69,15 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             Canais
           </Link>
         ) : null}
+        {can(auth, Action.Media.View) ? (
+          <Link
+            to="/admin/marketing/brands/$brandId/library"
+            params={{ brandId }}
+            className={tabClass}
+          >
+            Biblioteca
+          </Link>
+        ) : null}
         <Link
           to="/admin/marketing/brands/$brandId/members"
           params={{ brandId }}

@@ -44,6 +44,15 @@ export const QueryKey = {
     all: (brandId: string) => ["channels", brandId] as const,
     list: (brandId: string, filters: Filters) => ["channels", brandId, filters] as const,
   },
+  Media: {
+    all: () => ["media"] as const,
+    list: (filters: Filters) => ["media", "list", filters] as const,
+    detail: (id: string) => ["media", "detail", id] as const,
+    collections: (scope: string, brandId: string | undefined) =>
+      ["media", "collections", scope, brandId ?? null] as const,
+    storage: () => ["media", "storage"] as const,
+    check: () => ["media", "check"] as const,
+  },
   Notifications: {
     all: () => ["notifications"] as const,
     list: (filters: Filters) => ["notifications", "list", filters] as const,

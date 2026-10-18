@@ -23,6 +23,7 @@ export const policyFields: Record<SettingKey, PolicyField[]> = {
     { name: "maxImageMb", label: "Tamanho máximo de imagem (MB)", type: "number" },
     { name: "maxVideoMb", label: "Tamanho máximo de vídeo (MB)", type: "number" },
     { name: "maxDocumentMb", label: "Tamanho máximo de documento (MB)", type: "number" },
+    { name: "quotaMb", label: "Espaço total de armazenamento (MB)", type: "number" },
   ],
   [SettingKey.Urls]: [{ name: "httpsOnly", label: "Aceitar apenas links https", type: "boolean" }],
   [SettingKey.Retention]: [

@@ -15,6 +15,9 @@
 | S7 | **Git remote and branch protection** (the repository has no remote yet), requiring the `ci` checks | P0-11 | Create the repository on GitHub and push | CI runs |
 | S8 | **Brand material**: confirm colors and fonts against the original brand files ([standards/color-palette.md](standards/color-palette.md) section 9) | P0-03 | Send the files or confirm the estimated values | Final tokens |
 
+| S11 | **Cloudflare R2** (needed from Phase 2): create the private bucket (and later the public one), an API token limited to them, the CORS rule of [spaces/r2-storage.md](spaces/r2-storage.md) section 6 with the real domains, and add a transform rule that sends `X-Content-Type-Options: nosniff` on the bucket domain, and set `R2_ACCOUNT_ID` (or `R2_ENDPOINT`), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` in `.env.local` and Vercel | P2-01 to P2-04 | Cloudflare dashboard | Any upload, preview or download |
+| S12 | **`CRON_SECRET`** in Vercel (Vercel sends it as a bearer token to the cron route); confirm the plan allows the daily cron in `vercel.json` | P2-02 | Vercel dashboard | Cleanup of abandoned uploads |
+
 Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 buckets and CORS (P2), Resend sender domain (P1-01), Cloudflare Turnstile keys (P5-05), `pg_cron` on the Supabase plan (P1-09).
 
 ## 2. Written but not verified against the real service
@@ -32,6 +35,8 @@ Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 b
 | V10 | Notifications: Realtime subscription, 60-second poll, `pg_cron` schedule (the migration enables `pg_cron` only if the extension is available) | SQL logic on PGlite | Enable the extension in the Supabase dashboard (or use Vercel Cron with `CRON_SECRET`), confirm `notifications` is in the `supabase_realtime` publication |
 | V11 | Every phase 1 screen (users, roles, organization, policies, audit, profile, notifications, clients, brands, channels) | Typecheck, lint, build; only the unauthenticated redirects were exercised in a browser | Click through each screen with real data at 360 px, tablet and desktop; keyboard and contrast |
 | V12 | Password recovery (`requestPasswordReset`, `/admin/callback`, `/admin/reset-password`): the PKCE code only works in the browser that asked for it; Supabase must list the callback URL under allowed redirect URLs | Typecheck and build only | Run the flow against a real project (S2, S3) |
+| V13 | Storage layer against a real R2 bucket: presigned PUT from a browser, signed GET with `response-content-disposition`, HEAD and Range, CORS, behavior of a 50 MiB PDF in a Vercel function | Presigning offline; the real `aws4fetch` calls against a fake S3 server | Run with the rehearsal bucket (S11) |
+| V14 | Upload UI: canvas thumbnails and display copies, video cover, progress, retry of failed files, folders, trash, replace version, picker | Typecheck, lint, build only | Use it with real files at 360 px, tablet and desktop |
 | V7 | Visual result of the tokens, fonts and the shell | Build compiles; no visual review | Open `/admin/design` in the browser (development only) and compare with the palette |
 
 ## 3. Decisions for you
@@ -43,6 +48,9 @@ Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 b
 | D6 | Forms use `useFormSubmit` + zod (the pattern of Memoria Print) instead of `react-hook-form`; base.md section 2 and 5.4 now say so | Keep: one submit hook for the whole app |
 | D7 | Public acceptance of invitations (`previewInvitation`, `acceptInvitation`) has no rate limit of its own (SEC-10); the token has 256 bits and Supabase limits Auth calls | Add a Turnstile or an edge rate limit before production (phase 6) |
 | D8 | `can_view_client` also lets the creator and the owner of a client see and edit it after being unlinked from all its brands (needed so a client created without a brand is visible to its creator) | Keep for the MVP; revisit if clients without brands become rare |
+| D9 | Archiving (trash) a media file is always allowed, even when it is used (the doc says it only hides it from new selections); permanent deletion refuses used or published files. The function list had an error `media_in_use` for archiving, which is not raised | Keep |
+| D10 | Permanent deletion removes the rows first and the objects afterwards: if the storage call fails the objects stay as orphans (reported by "Verificar com o bucket") | Keep for the MVP; add the reconciliation delete with the 48-hour margin later |
+| D11 | The upload limits default to 25 MB image, 100 MB video, 50 MB PDF and 5 GiB total (policy `policies.uploads`, including the new `quotaMb`) | Confirm the quota against the Cloudflare plan |
 | D2 | `audit_write` raises `invalid_input` for an action outside the catalog (no dedicated code) | Keep: it is a programming error, not a user-facing one |
 | D3 | The audit read policy is organization-level only until migration 6 (`can_access_brand`) replaces it | Keep; P1-03 must replace it (noted in [reference/data-model.md](reference/data-model.md)) |
 | D4 | Migration "3 invitations" is built in P1-01, so its file will be dated after migration 4 | Keep; the order in the registry is logical, the filename order is chronological |

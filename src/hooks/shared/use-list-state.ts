@@ -41,13 +41,21 @@ export const useListState = <S extends string>(initialStatus: S) => {
       update({ status: value === initialStatus ? undefined : value, page: undefined }),
     setSearch: setText,
     filters: {
+      scope: search.scope,
+      brand: search.brand,
+      kind: search.kind,
+      folder: search.folder,
+      order: search.order,
       owner: search.owner,
       tag: search.tag,
       client: search.client,
       platform: search.platform,
     },
-    setFilter: (key: "owner" | "tag" | "client" | "platform", value: string | undefined) =>
-      update({ [key]: value === "" ? undefined : value, page: undefined }),
+    setFilter: (
+      key:
+        "owner" | "tag" | "client" | "platform" | "scope" | "brand" | "kind" | "folder" | "order",
+      value: string | undefined,
+    ) => update({ [key]: value === "" ? undefined : value, page: undefined }),
     toggleSort: (key: string) => {
       if (sort?.key !== key) return update({ sort: key, dir: SortDirection.Asc, page: undefined });
       if (sort.dir === SortDirection.Asc) {

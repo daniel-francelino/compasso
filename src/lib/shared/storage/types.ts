@@ -1,0 +1,25 @@
+export type UploadTarget = { path: string; url: string };
+
+export type StorageResult = { ok: true } | { ok: false; message: string };
+
+export type ObjectInfo = { size: number; contentType: string | null };
+
+export interface ServerStorage {
+  createUploadTarget(path: string): Promise<UploadTarget | null>;
+  signUrls(
+    paths: (string | null | undefined)[],
+    seconds: number,
+    downloadName?: string,
+  ): Promise<Map<string, string>>;
+  stat(path: string): Promise<ObjectInfo | null>;
+  sha256(path: string): Promise<string | null>;
+  readRange(path: string, start: number, end: number): Promise<Uint8Array | null>;
+  list(
+    prefix: string,
+  ): Promise<{ objects: { key: string; size: number }[]; truncated: boolean } | null>;
+  remove(paths: (string | null | undefined)[]): Promise<StorageResult>;
+}
+
+export interface BrowserStorage {
+  upload(target: UploadTarget, body: Blob, contentType: string): Promise<boolean>;
+}

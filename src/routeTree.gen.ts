@@ -23,9 +23,12 @@ import { Route as AdminAppIndexRouteImport } from './routes/admin/_app/index'
 import { Route as AdminAppDesignRouteImport } from './routes/admin/_app/design'
 import { Route as AdminAppForbiddenRouteImport } from './routes/admin/_app/forbidden'
 import { Route as AdminInviteTokenRouteImport } from './routes/admin/invite.$token'
+import { Route as ApiCronMediaCleanupRouteImport } from './routes/api/cron/media-cleanup'
 import { Route as PortalAppIndexRouteImport } from './routes/portal/_app/index'
 import { Route as AdminAppsharedNotificationsRouteImport } from './routes/admin/_app/(shared)/notifications'
 import { Route as AdminAppsharedProfileRouteImport } from './routes/admin/_app/(shared)/profile'
+import { Route as AdminAppsharedLibraryIndexRouteImport } from './routes/admin/_app/(shared)/library/index'
+import { Route as AdminAppsharedLibraryAssetIdRouteImport } from './routes/admin/_app/(shared)/library/$assetId'
 import { Route as AdminAppsharedSettingsIndexRouteImport } from './routes/admin/_app/(shared)/settings/index'
 import { Route as AdminAppsharedSettingsAuditRouteImport } from './routes/admin/_app/(shared)/settings/audit'
 import { Route as AdminAppsharedSettingsNotificationsRouteImport } from './routes/admin/_app/(shared)/settings/notifications'
@@ -42,6 +45,7 @@ import { Route as AdminAppmarketingMarketingClientsNewRouteImport } from './rout
 import { Route as AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/index'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdChannelsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/channels'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdIdentityRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/identity'
+import { Route as AdminAppmarketingMarketingBrandsBrandIdLibraryRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/library'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/members'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdSettingsRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/settings'
 
@@ -115,6 +119,11 @@ const AdminInviteTokenRoute = AdminInviteTokenRouteImport.update({
   path: '/admin/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronMediaCleanupRoute = ApiCronMediaCleanupRouteImport.update({
+  id: '/api/cron/media-cleanup',
+  path: '/api/cron/media-cleanup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalAppIndexRoute = PortalAppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -131,6 +140,18 @@ const AdminAppsharedProfileRoute = AdminAppsharedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AdminAppRoute,
 } as any)
+const AdminAppsharedLibraryIndexRoute =
+  AdminAppsharedLibraryIndexRouteImport.update({
+    id: '/(shared)/library/',
+    path: '/library/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedLibraryAssetIdRoute =
+  AdminAppsharedLibraryAssetIdRouteImport.update({
+    id: '/(shared)/library/$assetId',
+    path: '/library/$assetId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
 const AdminAppsharedSettingsIndexRoute =
   AdminAppsharedSettingsIndexRouteImport.update({
     id: '/(shared)/settings/',
@@ -227,6 +248,12 @@ const AdminAppmarketingMarketingBrandsBrandIdIdentityRoute =
     path: '/identity',
     getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
   } as any)
+const AdminAppmarketingMarketingBrandsBrandIdLibraryRoute =
+  AdminAppmarketingMarketingBrandsBrandIdLibraryRouteImport.update({
+    id: '/library',
+    path: '/library',
+    getParentRoute: () => AdminAppmarketingMarketingBrandsBrandIdRoute,
+  } as any)
 const AdminAppmarketingMarketingBrandsBrandIdMembersRoute =
   AdminAppmarketingMarketingBrandsBrandIdMembersRouteImport.update({
     id: '/members',
@@ -254,16 +281,19 @@ export interface FileRoutesByFullPath {
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/media-cleanup': typeof ApiCronMediaCleanupRoute
   '/admin/': typeof AdminAppIndexRoute
   '/portal/': typeof PortalAppIndexRoute
   '/admin/notifications': typeof AdminAppsharedNotificationsRoute
   '/admin/profile': typeof AdminAppsharedProfileRoute
+  '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
   '/admin/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/library/': typeof AdminAppsharedLibraryIndexRoute
   '/admin/settings/': typeof AdminAppsharedSettingsIndexRoute
   '/admin/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
@@ -273,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
   '/admin/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  '/admin/marketing/brands/$brandId/library': typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   '/admin/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
   '/admin/marketing/brands/$brandId/settings': typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
   '/admin/marketing/brands/$brandId/': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
@@ -289,16 +320,19 @@ export interface FileRoutesByTo {
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/media-cleanup': typeof ApiCronMediaCleanupRoute
   '/admin': typeof AdminAppIndexRoute
   '/portal': typeof PortalAppIndexRoute
   '/admin/notifications': typeof AdminAppsharedNotificationsRoute
   '/admin/profile': typeof AdminAppsharedProfileRoute
+  '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
   '/admin/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/library': typeof AdminAppsharedLibraryIndexRoute
   '/admin/settings': typeof AdminAppsharedSettingsIndexRoute
   '/admin/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
   '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
@@ -307,6 +341,7 @@ export interface FileRoutesByTo {
   '/admin/marketing/clients': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
   '/admin/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  '/admin/marketing/brands/$brandId/library': typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   '/admin/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
   '/admin/marketing/brands/$brandId/settings': typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
   '/admin/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
@@ -326,16 +361,19 @@ export interface FileRoutesById {
   '/admin/_app/design': typeof AdminAppDesignRoute
   '/admin/_app/forbidden': typeof AdminAppForbiddenRoute
   '/admin/invite/$token': typeof AdminInviteTokenRoute
+  '/api/cron/media-cleanup': typeof ApiCronMediaCleanupRoute
   '/admin/_app/': typeof AdminAppIndexRoute
   '/portal/_app/': typeof PortalAppIndexRoute
   '/admin/_app/(shared)/notifications': typeof AdminAppsharedNotificationsRoute
   '/admin/_app/(shared)/profile': typeof AdminAppsharedProfileRoute
+  '/admin/_app/(shared)/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/_app/(shared)/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/_app/(shared)/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
   '/admin/_app/(shared)/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
   '/admin/_app/(shared)/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/_app/(shared)/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/_app/(shared)/settings/users': typeof AdminAppsharedSettingsUsersRoute
+  '/admin/_app/(shared)/library/': typeof AdminAppsharedLibraryIndexRoute
   '/admin/_app/(shared)/settings/': typeof AdminAppsharedSettingsIndexRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId': typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   '/admin/_app/(marketing)/marketing/brands/new': typeof AdminAppmarketingMarketingBrandsNewRoute
@@ -345,6 +383,7 @@ export interface FileRoutesById {
   '/admin/_app/(marketing)/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/identity': typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  '/admin/_app/(marketing)/marketing/brands/$brandId/library': typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/members': typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/settings': typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/': typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
@@ -365,16 +404,19 @@ export interface FileRouteTypes {
     | '/admin/design'
     | '/admin/forbidden'
     | '/admin/invite/$token'
+    | '/api/cron/media-cleanup'
     | '/admin/'
     | '/portal/'
     | '/admin/notifications'
     | '/admin/profile'
+    | '/admin/library/$assetId'
     | '/admin/settings/audit'
     | '/admin/settings/notifications'
     | '/admin/settings/organization'
     | '/admin/settings/policies'
     | '/admin/settings/roles'
     | '/admin/settings/users'
+    | '/admin/library/'
     | '/admin/settings/'
     | '/admin/marketing/brands/$brandId'
     | '/admin/marketing/brands/new'
@@ -384,6 +426,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/clients/'
     | '/admin/marketing/brands/$brandId/channels'
     | '/admin/marketing/brands/$brandId/identity'
+    | '/admin/marketing/brands/$brandId/library'
     | '/admin/marketing/brands/$brandId/members'
     | '/admin/marketing/brands/$brandId/settings'
     | '/admin/marketing/brands/$brandId/'
@@ -400,16 +443,19 @@ export interface FileRouteTypes {
     | '/admin/design'
     | '/admin/forbidden'
     | '/admin/invite/$token'
+    | '/api/cron/media-cleanup'
     | '/admin'
     | '/portal'
     | '/admin/notifications'
     | '/admin/profile'
+    | '/admin/library/$assetId'
     | '/admin/settings/audit'
     | '/admin/settings/notifications'
     | '/admin/settings/organization'
     | '/admin/settings/policies'
     | '/admin/settings/roles'
     | '/admin/settings/users'
+    | '/admin/library'
     | '/admin/settings'
     | '/admin/marketing/brands/new'
     | '/admin/marketing/clients/$clientId'
@@ -418,6 +464,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/clients'
     | '/admin/marketing/brands/$brandId/channels'
     | '/admin/marketing/brands/$brandId/identity'
+    | '/admin/marketing/brands/$brandId/library'
     | '/admin/marketing/brands/$brandId/members'
     | '/admin/marketing/brands/$brandId/settings'
     | '/admin/marketing/brands/$brandId'
@@ -436,16 +483,19 @@ export interface FileRouteTypes {
     | '/admin/_app/design'
     | '/admin/_app/forbidden'
     | '/admin/invite/$token'
+    | '/api/cron/media-cleanup'
     | '/admin/_app/'
     | '/portal/_app/'
     | '/admin/_app/(shared)/notifications'
     | '/admin/_app/(shared)/profile'
+    | '/admin/_app/(shared)/library/$assetId'
     | '/admin/_app/(shared)/settings/audit'
     | '/admin/_app/(shared)/settings/notifications'
     | '/admin/_app/(shared)/settings/organization'
     | '/admin/_app/(shared)/settings/policies'
     | '/admin/_app/(shared)/settings/roles'
     | '/admin/_app/(shared)/settings/users'
+    | '/admin/_app/(shared)/library/'
     | '/admin/_app/(shared)/settings/'
     | '/admin/_app/(marketing)/marketing/brands/$brandId'
     | '/admin/_app/(marketing)/marketing/brands/new'
@@ -455,6 +505,7 @@ export interface FileRouteTypes {
     | '/admin/_app/(marketing)/marketing/clients/'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/channels'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/identity'
+    | '/admin/_app/(marketing)/marketing/brands/$brandId/library'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/members'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/settings'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/'
@@ -472,6 +523,7 @@ export interface RootRouteChildren {
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   PortalAppRoute: typeof PortalAppRouteWithChildren
   AdminInviteTokenRoute: typeof AdminInviteTokenRoute
+  ApiCronMediaCleanupRoute: typeof ApiCronMediaCleanupRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -574,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/media-cleanup': {
+      id: '/api/cron/media-cleanup'
+      path: '/api/cron/media-cleanup'
+      fullPath: '/api/cron/media-cleanup'
+      preLoaderRoute: typeof ApiCronMediaCleanupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal/_app/': {
       id: '/portal/_app/'
       path: '/'
@@ -593,6 +652,20 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/admin/profile'
       preLoaderRoute: typeof AdminAppsharedProfileRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/library/': {
+      id: '/admin/_app/(shared)/library/'
+      path: '/library'
+      fullPath: '/admin/library/'
+      preLoaderRoute: typeof AdminAppsharedLibraryIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(shared)/library/$assetId': {
+      id: '/admin/_app/(shared)/library/$assetId'
+      path: '/library/$assetId'
+      fullPath: '/admin/library/$assetId'
+      preLoaderRoute: typeof AdminAppsharedLibraryAssetIdRouteImport
       parentRoute: typeof AdminAppRoute
     }
     '/admin/_app/(shared)/settings/': {
@@ -707,6 +780,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRouteImport
       parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
     }
+    '/admin/_app/(marketing)/marketing/brands/$brandId/library': {
+      id: '/admin/_app/(marketing)/marketing/brands/$brandId/library'
+      path: '/library'
+      fullPath: '/admin/marketing/brands/$brandId/library'
+      preLoaderRoute: typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRouteImport
+      parentRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRoute
+    }
     '/admin/_app/(marketing)/marketing/brands/$brandId/members': {
       id: '/admin/_app/(marketing)/marketing/brands/$brandId/members'
       path: '/members'
@@ -727,6 +807,7 @@ declare module '@tanstack/react-router' {
 interface AdminAppmarketingMarketingBrandsBrandIdRouteChildren {
   AdminAppmarketingMarketingBrandsBrandIdChannelsRoute: typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
   AdminAppmarketingMarketingBrandsBrandIdIdentityRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIdentityRoute
+  AdminAppmarketingMarketingBrandsBrandIdLibraryRoute: typeof AdminAppmarketingMarketingBrandsBrandIdLibraryRoute
   AdminAppmarketingMarketingBrandsBrandIdMembersRoute: typeof AdminAppmarketingMarketingBrandsBrandIdMembersRoute
   AdminAppmarketingMarketingBrandsBrandIdSettingsRoute: typeof AdminAppmarketingMarketingBrandsBrandIdSettingsRoute
   AdminAppmarketingMarketingBrandsBrandIdIndexRoute: typeof AdminAppmarketingMarketingBrandsBrandIdIndexRoute
@@ -738,6 +819,8 @@ const AdminAppmarketingMarketingBrandsBrandIdRouteChildren: AdminAppmarketingMar
       AdminAppmarketingMarketingBrandsBrandIdChannelsRoute,
     AdminAppmarketingMarketingBrandsBrandIdIdentityRoute:
       AdminAppmarketingMarketingBrandsBrandIdIdentityRoute,
+    AdminAppmarketingMarketingBrandsBrandIdLibraryRoute:
+      AdminAppmarketingMarketingBrandsBrandIdLibraryRoute,
     AdminAppmarketingMarketingBrandsBrandIdMembersRoute:
       AdminAppmarketingMarketingBrandsBrandIdMembersRoute,
     AdminAppmarketingMarketingBrandsBrandIdSettingsRoute:
@@ -757,12 +840,14 @@ interface AdminAppRouteChildren {
   AdminAppIndexRoute: typeof AdminAppIndexRoute
   AdminAppsharedNotificationsRoute: typeof AdminAppsharedNotificationsRoute
   AdminAppsharedProfileRoute: typeof AdminAppsharedProfileRoute
+  AdminAppsharedLibraryAssetIdRoute: typeof AdminAppsharedLibraryAssetIdRoute
   AdminAppsharedSettingsAuditRoute: typeof AdminAppsharedSettingsAuditRoute
   AdminAppsharedSettingsNotificationsRoute: typeof AdminAppsharedSettingsNotificationsRoute
   AdminAppsharedSettingsOrganizationRoute: typeof AdminAppsharedSettingsOrganizationRoute
   AdminAppsharedSettingsPoliciesRoute: typeof AdminAppsharedSettingsPoliciesRoute
   AdminAppsharedSettingsRolesRoute: typeof AdminAppsharedSettingsRolesRoute
   AdminAppsharedSettingsUsersRoute: typeof AdminAppsharedSettingsUsersRoute
+  AdminAppsharedLibraryIndexRoute: typeof AdminAppsharedLibraryIndexRoute
   AdminAppsharedSettingsIndexRoute: typeof AdminAppsharedSettingsIndexRoute
   AdminAppmarketingMarketingBrandsBrandIdRoute: typeof AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren
   AdminAppmarketingMarketingBrandsNewRoute: typeof AdminAppmarketingMarketingBrandsNewRoute
@@ -778,6 +863,7 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppIndexRoute: AdminAppIndexRoute,
   AdminAppsharedNotificationsRoute: AdminAppsharedNotificationsRoute,
   AdminAppsharedProfileRoute: AdminAppsharedProfileRoute,
+  AdminAppsharedLibraryAssetIdRoute: AdminAppsharedLibraryAssetIdRoute,
   AdminAppsharedSettingsAuditRoute: AdminAppsharedSettingsAuditRoute,
   AdminAppsharedSettingsNotificationsRoute:
     AdminAppsharedSettingsNotificationsRoute,
@@ -786,6 +872,7 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,
   AdminAppsharedSettingsRolesRoute: AdminAppsharedSettingsRolesRoute,
   AdminAppsharedSettingsUsersRoute: AdminAppsharedSettingsUsersRoute,
+  AdminAppsharedLibraryIndexRoute: AdminAppsharedLibraryIndexRoute,
   AdminAppsharedSettingsIndexRoute: AdminAppsharedSettingsIndexRoute,
   AdminAppmarketingMarketingBrandsBrandIdRoute:
     AdminAppmarketingMarketingBrandsBrandIdRouteWithChildren,
@@ -829,6 +916,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminResetPasswordRoute: AdminResetPasswordRoute,
   PortalAppRoute: PortalAppRouteWithChildren,
   AdminInviteTokenRoute: AdminInviteTokenRoute,
+  ApiCronMediaCleanupRoute: ApiCronMediaCleanupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

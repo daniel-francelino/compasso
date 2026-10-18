@@ -13,6 +13,11 @@ export const listSearchSchema = z.object({
   tag: z.string().max(40).optional().catch(undefined),
   client: z.string().uuid().optional().catch(undefined),
   platform: z.string().max(20).optional().catch(undefined),
+  scope: z.string().max(10).optional().catch(undefined),
+  brand: z.string().uuid().optional().catch(undefined),
+  kind: z.string().max(10).optional().catch(undefined),
+  folder: z.string().uuid().optional().catch(undefined),
+  order: z.string().max(10).optional().catch(undefined),
 });
 
 export type ListSearch = z.infer<typeof listSearchSchema>;

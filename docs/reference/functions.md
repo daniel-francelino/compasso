@@ -128,8 +128,8 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 
 | SQL function | Server function / route | Act. | Audit | Errors |
 |---|---|---|---|---|
-| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key)` | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded` |
-| `media_confirm_upload(p_version, p_checksum, p_width, p_height, p_duration)` | `confirmUpload` (stat → range read → validates → calls the RPC) | `media.upload` | — | `upload_size_mismatch`, `upload_content_mismatch`, `media_not_available` |
+| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null)` (a given `p_asset` creates a new version and needs `media.update`) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `storage_unavailable` |
+| `media_confirm_upload(p_version, p_checksum, p_width, p_height, p_duration, p_derivative_bytes default 0)` | `confirmUpload` (stat → range read → validates → calls the RPC) | `media.upload` | — | `upload_size_mismatch`, `upload_content_mismatch`, `media_not_available` |
 | `media_update(p_asset jsonb)` | `updateMedia` | `media.update` | — | `conflict` |
 | `media_set_trashed(p_asset, p_trashed)` | `trashMedia` | `media.delete` | — | `media_in_use` (when archiving a used file is restricted) |
 | `media_delete_permanently(p_asset)` | `deleteMediaPermanently` | `media.delete` | `media.deleted_permanently` | `media_in_use` |
@@ -137,7 +137,12 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `media_publish_derivative(p_version)` | `publishMedia` | `media.publish` | `media.published` | `media_not_available` |
 | `media_withdraw_derivative(p_version)` | `withdrawMedia` | `media.publish` | `media.unpublished` | `media_in_use` |
 | `media_collection_save` / `media_collection_delete` / `media_collection_move_items` | `saveCollection`, `deleteCollection`, `moveToCollection` | `media.update` (delete: `media.delete`) | — | `invalid_input` |
-| `media_storage_used()` | `getStorageUsed` | `media.view` | — | — |
+| `media_storage_used()`, `media_storage_summary()` (used and quota) | `getStorageSummary` | `media.view` | — | — |
+| `media_mark_failed(p_version, p_reason)` (author only; returns the object keys to delete; notifies `media.upload_failed`) | `abortUpload`, and `confirmUpload` on any validation failure | `media.upload` | — | `not_found` |
+| `media_expire_sessions()` (service role only; returns the keys of abandoned uploads) | cron route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |
+| `media_storage_keys()` | `checkStorage` ("Verificar com o bucket": compares the bucket listing with the keys) | `media.delete` | — | `storage_unavailable` |
+| `media_policy_mb(p_name, p_default)`, `media_version_in_use(p_version)`, `media_assert_asset_access(p_asset)`, `can_view_media_asset(p_asset)` | — | internal helpers (`media_version_in_use` is redefined by the content migration to include `content_revision_media`) | — | — |
+| — | `listMedia`, `getMedia`, `listCollections` | `media.view` | — | `not_found` |
 | — | `signMediaUrls` (authorizes then signs) | `media.view` (+ brand link) or portal | — | `denied`, `storage_unavailable` |
 | — | server route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |
 

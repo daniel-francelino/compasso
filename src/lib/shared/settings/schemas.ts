@@ -28,6 +28,7 @@ export const policySchemas = {
     maxImageMb: days("o limite de imagem", 1, 100),
     maxVideoMb: days("o limite de vídeo", 1, 2000),
     maxDocumentMb: days("o limite de documento", 1, 200),
+    quotaMb: days("o espaço total", 100, 1_000_000),
   }),
   [SettingKey.Urls]: z.object({ httpsOnly: z.boolean() }),
   [SettingKey.Retention]: z.object({
@@ -42,7 +43,7 @@ export const policySchemas = {
 export const policyDefaults = {
   [SettingKey.Approvals]: { deadlineDays: 3 },
   [SettingKey.Calendar]: { weekStartsOnMonday: true },
-  [SettingKey.Uploads]: { maxImageMb: 25, maxVideoMb: 500, maxDocumentMb: 25 },
+  [SettingKey.Uploads]: { maxImageMb: 25, maxVideoMb: 100, maxDocumentMb: 50, quotaMb: 5120 },
   [SettingKey.Urls]: { httpsOnly: true },
   [SettingKey.Retention]: { auditMonths: 24, notificationDays: 90 },
   [SettingKey.Invitations]: { expiresDays: 7 },

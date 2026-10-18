@@ -90,3 +90,17 @@ export const SettingKey = {
   Email: "policies.email",
 } as const;
 export type SettingKey = ValueOf<typeof SettingKey>;
+
+export const MediaScope = {
+  Site: "site",
+  Brand: "brand",
+} as const;
+export type MediaScope = ValueOf<typeof MediaScope>;
+
+export const MediaVersionStatus = {
+  Pending: "pending",
+  Processing: "processing",
+  Available: "available",
+  Failed: "failed",
+} as const;
+export type MediaVersionStatus = ValueOf<typeof MediaVersionStatus>;

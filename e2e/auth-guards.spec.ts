@@ -28,9 +28,15 @@ for (const path of [
   "/admin/settings/roles",
   "/admin/settings/audit",
   "/admin/notifications",
+  "/admin/library",
 ]) {
   test(`${path} requires a session`, async ({ page }) => {
     await page.goto(path);
     await expect(page).toHaveURL(/\/admin\/login\?redirect=/);
   });
 }
+
+test("the media cleanup job refuses calls without the cron secret", async ({ request }) => {
+  const response = await request.get("/api/cron/media-cleanup");
+  expect(response.status()).toBe(401);
+});

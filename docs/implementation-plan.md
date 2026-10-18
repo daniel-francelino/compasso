@@ -46,10 +46,10 @@
 
 | ID | Task | Read | Done when | Status |
 |---|---|---|---|---|
-| P2-01 | Migration 7 `media`; storage layer `ServerStorage`/`BrowserStorage` with `aws4fetch`; limits; quota | media-library, r2-storage, data-model §6 | pgTAP + integration tests with a rehearsal bucket | todo |
-| P2-02 | Upload flow: `requestUpload`, browser upload, reduced copies, `confirmUpload` (stat → range → validate → RPC), cleanup cron | media-library §8, r2-storage §5 | wrong size/MIME/oversized copy refused without full download | todo |
-| P2-03 | Library screens: grid/list, record, collections, trash, "used in", storage bar, `MediaPicker` | media-library §5–6 | acceptance criteria of media-library.md | todo |
-| P2-04 | Signed reads (`signMediaUrls`) with authorization; CORS verified on real domains | r2-storage §4, §6 | an external user of brand A gets nothing of brand B | todo |
+| P2-01 | Migration 7 `media`; storage layer `ServerStorage`/`BrowserStorage` with `aws4fetch`; limits; quota | media-library, r2-storage, data-model §6 | pgTAP + integration tests with a rehearsal bucket | done on PGlite (2026-10-18): migrations `media`, functions and summary/jobs, storage layer, 62 SQL assertions, 20 unit tests. Real bucket: [pending-external-setup.md](pending-external-setup.md) S11, V13 |
+| P2-02 | Upload flow: `requestUpload`, browser upload, reduced copies, `confirmUpload` (stat → range → validate → RPC), cleanup cron | media-library §8, r2-storage §5 | wrong size/MIME/oversized copy refused without full download | done in code (2026-10-18): `requestUpload`, browser upload with canvas copies, `confirmUpload` (stat → range → validate → checksum → RPC), `abortUpload`, cleanup cron. Validation logic is unit-tested; the browser flow needs a real bucket ([pending-external-setup.md](pending-external-setup.md) V13, V14) |
+| P2-03 | Library screens: grid/list, record, collections, trash, "used in", storage bar, `MediaPicker` | media-library §5–6 | acceptance criteria of media-library.md | done in code (2026-10-18): library grid, record, folders, trash, usage count, storage bar, bucket check, `MediaPicker`. Not seen in a browser ([pending-external-setup.md](pending-external-setup.md) V14) |
+| P2-04 | Signed reads (`signMediaUrls`) with authorization; CORS verified on real domains | r2-storage §4, §6 | an external user of brand A gets nothing of brand B | done in code, SQL-verified (2026-10-18): `signMediaUrls` signs only keys read through RLS (5-minute internal URLs). External (portal) signing arrives with `portal_media_urls` in phase 3; CORS on real domains is pending ([pending-external-setup.md](pending-external-setup.md) S11) |
 
 ## Phase 3 — Content and approvals (core)
 

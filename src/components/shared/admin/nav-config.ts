@@ -3,6 +3,7 @@ import {
   BellRing,
   Building2,
   Building,
+  Images,
   LayoutDashboard,
   Palette,
   ScrollText,
@@ -45,7 +46,15 @@ export const adminSpaces: { key: AdminSpace; title: string }[] = [
 export const navGroups: NavGroup[] = [
   {
     space: Space.Shared,
-    items: [{ title: "Início", icon: LayoutDashboard, to: AppRoute.Admin, exact: true }],
+    items: [
+      { title: "Início", icon: LayoutDashboard, to: AppRoute.Admin, exact: true },
+      {
+        title: "Biblioteca de Mídia",
+        icon: Images,
+        to: AppRoute.Library,
+        action: Action.Media.View,
+      },
+    ],
   },
   {
     space: Space.Marketing,

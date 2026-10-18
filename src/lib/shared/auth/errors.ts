@@ -115,6 +115,42 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Este canal está arquivado e não aceita novos itens.",
   },
+  upload_too_large: {
+    category: ErrorCode.Invalid,
+    message: "O arquivo é maior que o limite permitido.",
+  },
+  upload_type_not_allowed: {
+    category: ErrorCode.Invalid,
+    message: "Este tipo de arquivo não é aceito.",
+  },
+  upload_content_mismatch: {
+    category: ErrorCode.Invalid,
+    message: "O conteúdo do arquivo não corresponde ao tipo informado.",
+  },
+  upload_size_mismatch: {
+    category: ErrorCode.Invalid,
+    message: "O tamanho do arquivo enviado é diferente do esperado.",
+  },
+  quota_exceeded: {
+    category: ErrorCode.Invalid,
+    message: "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite.",
+  },
+  media_in_use: {
+    category: ErrorCode.InUse,
+    message: "O arquivo tem usos que impedem a exclusão.",
+  },
+  media_not_available: {
+    category: ErrorCode.Invalid,
+    message: "Há arquivos que ainda não estão disponíveis.",
+  },
+  media_version_immutable: {
+    category: ErrorCode.Denied,
+    message: "Esta versão do arquivo não pode ser alterada.",
+  },
+  storage_unavailable: {
+    category: ErrorCode.Unavailable,
+    message: "Não foi possível acessar o armazenamento. Tente novamente.",
+  },
   audit_immutable: {
     category: ErrorCode.Denied,
     message: "Registros de auditoria não podem ser alterados.",

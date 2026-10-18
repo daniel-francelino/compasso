@@ -91,6 +91,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `upload_content_mismatch` | invalid | "O conteúdo do arquivo não corresponde ao tipo informado." | `confirmUpload` |
 | `upload_size_mismatch` | invalid | "O tamanho do arquivo enviado é diferente do esperado." | `confirmUpload` |
 | `quota_exceeded` | invalid | "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite." | `media_request_upload` |
+| `media_version_immutable` | denied | "Esta versão do arquivo não pode ser alterada." | media version trigger |
 | `media_in_use` | in_use | "O arquivo tem usos que impedem a exclusão." | `media_delete_permanently` |
 | `media_not_published` | invalid | "Há imagens que ainda não foram publicadas para o site." | `publish_site_page` |
 | `storage_unavailable` | unavailable | "Não foi possível acessar o armazenamento. Tente novamente." | storage layer |

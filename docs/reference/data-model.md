@@ -373,6 +373,7 @@ create table media_assets (
   tags text[] not null default '{}',
   current_version_id uuid,
   size_bytes bigint not null default 0,
+  version int not null default 1,
   trashed_at timestamptz,
   created_by uuid references profiles(id),
   created_at timestamptz not null default now(),
@@ -389,8 +390,9 @@ create table media_versions (
   thumb_key text,
   display_key text,
   original_filename text not null,
-  mime_type text,
-  size_bytes bigint,
+  mime_type text not null,
+  size_bytes bigint not null check (size_bytes > 0),
+  derivative_bytes bigint not null default 0,
   width int, height int, duration_ms int,
   checksum text,
   status text not null default 'pending' check (status in ('pending','processing','available','failed')),
@@ -402,7 +404,7 @@ create table media_versions (
 );
 alter table media_assets add foreign key (current_version_id) references media_versions(id);
 alter table organizations add foreign key (logo_media_version_id) references media_versions(id);
-alter table content_variants add foreign key (published_evidence_media_version_id) references media_versions(id);
+-- content_variants.published_evidence_media_version_id gets its foreign key in the content migration (the table does not exist yet)
 
 create table media_upload_sessions (
   id uuid primary key default gen_random_uuid(),
@@ -447,7 +449,7 @@ create table media_usages (
 create index on media_usages (usage_type, usage_ref_id);
 ```
 
-Rules: collection nesting max 3 levels (trigger); a version `available` only after `confirmUpload`; `public_published_at` set by `media_publish_derivative`; versions referenced by `content_revision_media` or `media_usages` cannot be deleted (`restrict`).
+Implemented in `20261018100800_media.sql`, `…100810_media_functions.sql` and `…100820_media_summary_and_jobs.sql`. `media_versions_immutable` blocks changing the key, name, type or size of a version and any change to a confirmed version (only `public_published_at` and the derivative fields of pending versions move); `media_collections_guard` enforces the depth and that a child shares its parent's scope and brand. `derivative_bytes` counts thumbnail and display copies in the quota. Rules: collection nesting max 3 levels (trigger); a version `available` only after `confirmUpload`; `public_published_at` set by `media_publish_derivative`; versions referenced by `content_revision_media` or `media_usages` cannot be deleted (`restrict`).
 
 ## 7. Site and CMS
 

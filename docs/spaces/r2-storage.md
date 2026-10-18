@@ -8,12 +8,12 @@ The library keeps originals, reduced copies of every image and videos or PDFs sh
 
 ## 2. Storage layer
 
-All the code goes through the interface in `src/lib/shared/storage/types.ts`; only `r2-storage.ts` knows the provider, and `server.ts` is the single place that chooses it. Pages and components never know the provider.
+All the code goes through the interface in `src/lib/shared/storage/types.ts`; only `r2-storage.server.ts` knows the provider, `server-storage.server.ts` is the single place that builds it (and returns `null`, shown as `storage_unavailable`, when the R2 variables are missing) and `browser-storage.ts` is the browser side. Pages and components never know the provider.
 
 | Interface | R2 implementation |
 |---|---|
-| `createUploadTarget(path)` | Presigned **`PUT`** URL (SigV4, about 10 minutes, with `Content-Type` signed). The URL goes in an opaque `token` field; `path` stays the object key |
-| `BrowserStorage.upload(target, body, contentType)` | `fetch(token, { method: "PUT", body, headers: { "Content-Type": contentType } })`; success if the answer is 2xx |
+| `createUploadTarget(path)` | Presigned **`PUT`** URL (SigV4, about 10 minutes, bound to one object key; `aws4fetch` cannot bind `Content-Type`, so type and size are validated by `confirmUpload`, section 5). Returned as `{ path, url }` |
+| `BrowserStorage.upload(target, body, contentType)` | `fetch(target.url, { method: "PUT", body, headers: { "Content-Type": contentType } })`; success if the answer is 2xx |
 | `signUrls(paths, seconds, downloadName)` | Presigned `GET` URLs computed **locally** (no network call); `downloadName` goes in `response-content-disposition` |
 | `stat(path)` | `HEAD`: size and content type |
 | `readRange(path, range)` | `GET` with `Range` |
@@ -124,3 +124,7 @@ With a rehearsal bucket: the presigned `PUT` from the browser, the `GET` signatu
 | Count reduced copies in the quota | Yes |
 | Backup of R2 | Replication or object lock; decide with the retention policy |
 | Signed URL lifetimes | 5 min internal / 2 min external; revisit if clients complain |
+
+## Implementation status
+
+Phase 2 (2026-10-18). Done: `src/lib/shared/storage/{types.ts, r2-storage.server.ts, server-storage.server.ts, browser-storage.ts}`; `confirmUpload` validates in the order stat → ranged read → real content → streamed SHA-256 (memory stays constant, which answers the 50 MiB concern of section 10 for the checksum); reduced copies are checked for size and image content; any failure deletes the objects. The 24-hour expiry job is `/api/cron/media-cleanup` (`vercel.json` schedules it daily at 04:00 UTC, protected by `CRON_SECRET`). Validation performed: presigning tests, a fake S3 server exercising HEAD, Range, streamed hashing, listing and deletion. **Not tested**: a real bucket and the CORS rule, signed URL expiry, the public bucket (phase 5), the reconciliation of objects without a record (reported by the check screen, not deleted).

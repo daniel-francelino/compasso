@@ -14,6 +14,7 @@ export const AppRoute = {
   Design: "/admin/design",
   Notifications: "/admin/notifications",
   Profile: "/admin/profile",
+  Library: "/admin/library",
   Users: "/admin/settings/users",
   Roles: "/admin/settings/roles",
   Organization: "/admin/settings/organization",
