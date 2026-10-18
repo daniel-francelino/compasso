@@ -11,9 +11,13 @@ Start with the [product document](product-documentation-v0.1.md) (what we are bu
 | `standards/` | Rules the code and the interface must follow | [Base](standards/base.md), [Back office layout](standards/admin-layout-and-standards.md), [Design system](standards/design-system.md), [Color palette](standards/color-palette.md), [Project structure](standards/project-structure.md) |
 | `foundations/` | What sits under everything: accounts, permissions and alerts | [Authentication](foundations/authentication.md), [Roles and actions](foundations/roles-and-actions.md), [Notifications](foundations/notifications.md) |
 | `spaces/` | The spaces and cross-cutting services | [R2 storage](spaces/r2-storage.md), [Media Library](spaces/media-library.md), [Site and CMS](spaces/cms-site.md), [CMS model](spaces/cms-dynamic-architecture.md), [Public site delivery](spaces/public-site-delivery.md) |
-| `modules/` | Functional specifications of each module of Marketing Management and the portal (clients, brands, channels, content, approvals, calendar, dashboard, portal) | To be written as each module is designed |
+| `modules/` | Functional specifications of each module | [Index](modules/README.md), [Clients](modules/clients.md), [Brands](modules/brands.md), [Channels](modules/channels.md), [Content](modules/content.md), [Approvals](modules/approvals.md), [Calendar](modules/calendar.md), [Dashboard](modules/dashboard.md), [Client Portal](modules/portal.md), [Organization and settings](modules/organization-settings.md), [Audit](modules/audit.md) |
 | `audits/` | Findings and correction plans, with the status of each | Created when there is something to audit |
 | `history/` | Early planning and old diagnostics; they do not necessarily describe the current state | Created when needed |
+
+## Working with Claude Code
+
+`CLAUDE.md` imports `AGENTS.md` and `standards/base.md`, so the rules are in context on every session. `.claude/settings.json` wires hooks that block mechanical violations before a file is written, format and lint after edits, and check lint, typecheck, consistency and the documentation update before finishing. Slash commands: `/feature`, `/migration`, `/check-standards`, `/sync-docs` and `/change-rule`. If a rule changes, the document and the hook that enforces it change together (`standards/base.md`, section 9).
 
 ## How to read the documents
 

@@ -118,6 +118,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Area | Document |
 |---|---|
 | Product scope | [product-documentation-v0.1.md](product-documentation-v0.1.md) |
+| Functional specification of each module | [modules/README.md](modules/README.md) (clients, brands, channels, content, approvals, calendar, dashboard, portal, organization and settings, audit) |
 | Cross-cutting rules, layout, component kit | [standards/base.md](standards/base.md), [standards/admin-layout-and-standards.md](standards/admin-layout-and-standards.md), [standards/design-system.md](standards/design-system.md) |
 | Folder structure and import rules | [standards/project-structure.md](standards/project-structure.md) |
 | Colors, contrast, tokens | [standards/color-palette.md](standards/color-palette.md) |

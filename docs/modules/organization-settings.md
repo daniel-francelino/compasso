@@ -1,0 +1,108 @@
+# Module — Organization and settings
+
+> Functional specification. Context and conventions in [README.md](README.md). Space: `shared` (`/admin/settings/*`, UI label "Configurações"). It groups the organization data and defaults, the management of users, roles and invitations, and the operational policies. The mechanics of users, roles and invitations are in [../foundations/authentication.md](../foundations/authentication.md) and [../foundations/roles-and-actions.md](../foundations/roles-and-actions.md); this document specifies the screens and the organization-level settings.
+
+## Goal and scope
+
+One place where authorized people configure how the organization works: identity and defaults, who has access, which roles exist, how approvals and uploads behave, and retention policies.
+
+Included: organization profile, defaults, users, invitations, roles, operational policies, notification defaults, audit access. Not included in the MVP: billing and plans, several organizations, SSO, custom domains.
+
+## Screens
+
+| Route | Screen | Action |
+|---|---|---|
+| `/admin/settings` | Overview of settings (cards with status) | any settings action |
+| `/admin/settings/organization` | Organization data and defaults | `settings.manage` |
+| `/admin/settings/users` | Users and invitations | `users.view` (manage: `users.manage`; invite: `invitations.create`) |
+| `/admin/settings/roles` | Roles and the permission matrix | `roles.manage` |
+| `/admin/settings/policies` | Operational policies | `settings.manage` |
+| `/admin/settings/notifications` | Default notification rules (global) | `notifications.configure` |
+| `/admin/settings/audit` | Audit trail ([audit.md](audit.md)) | `audit.view` |
+
+Only the sections the person can use appear; the menu item "Configurações" shows only if at least one is available.
+
+## Organization
+
+| Field | Rule |
+|---|---|
+| Name | Required |
+| Legal name / tax id | Optional, internal |
+| Default time zone | Required IANA zone; default for new brands and for the global calendar (proposal `America/Sao_Paulo`) |
+| Default language | `pt-BR` (UI); content language decisions are made by the CMS settings |
+| Logo | Optional fixed asset used in emails and the portal header |
+| Contact email for the team | Optional, used as the reply-to of notification emails |
+
+Changing the default time zone affects only **new** brands; existing brands keep theirs.
+
+## Users and invitations
+
+Detailed in [../foundations/authentication.md](../foundations/authentication.md), section 5:
+
+- Tabs **Ativos**, **Convites pendentes**, **Suspensos**.
+- Invite (email, role, brands, `can_decide` for external users), resend, revoke, change role, edit brand links, suspend, reactivate.
+- Protections: nobody changes their own role or suspends themselves; the last active Owner is protected.
+- External users are marked "Externo" and show their brands; a client contact invited from [clients.md](clients.md) appears here with the same data.
+
+## Roles
+
+Detailed in [../foundations/roles-and-actions.md](../foundations/roles-and-actions.md), section 9: list, create, duplicate, edit with the matrix grouped by module, delete when unused; `owner` is read-only; `admin_only` actions are hidden; portal-only roles are marked.
+
+## Operational policies
+
+Stored as validated settings groups (jsonb with zod schemas, optimistic version), read by server functions and SQL functions where needed:
+
+| Policy | Options | Default |
+|---|---|---|
+| **Internal review** | Optional / mandatory before sending for approval | Optional |
+| **Default approval deadline** | Days after submission (local date of the brand) | 3 days |
+| **Overdue reminders** | Interval of `approval.overdue` reminders | Next day, then every 2 days |
+| **Calendar conflict thresholds** | Max variants per channel per day; minimum interval between posts | 3 per day; 30 minutes |
+| **Upload limits** | Maximum size per type; files per operation; total quota; per-user daily limit | See [../spaces/media-library.md](../spaces/media-library.md) |
+| **Signed URL lifetime** | Internal and external (seconds) | 300 / 120 |
+| **Retention** | Media trash (days); audit events (months); notification cleanup (days) | 30 days; 24 months; 90 days |
+| **Invitation validity** | Days | 7 |
+| **Password and session** | Minimum length (10, not lower), session duration, MFA requirement for Owners | 10; provider default; required from phase 6 |
+| **Email** | Sender name, reply-to, which notification kinds send email by default | See [../foundations/notifications.md](../foundations/notifications.md) |
+
+A change to a policy is audited with old and new values; policies that affect running flows (for example making internal review mandatory) apply to **new** submissions only.
+
+## Rules
+
+1. Only the Owner can change `admin_only` settings; a role with `settings.manage` is a role the Owner chose to create (it is `admin_only`, so in practice only the Owner).
+2. Settings are validated with zod on client and server; invalid groups are refused entirely.
+3. Optimistic locking by `version` on the organization record and each settings group.
+4. Secrets (API keys, tokens) are **never** stored in settings; they live in the environment of the host.
+5. Every change writes an audit event with the changed keys (not secret values).
+
+## Data model
+
+| Entity | Content |
+|---|---|
+| `organizations` | Name, default time zone, logo asset, contact data |
+| `organization_settings` | `key` (policy group), `value jsonb`, `version`, audit stamps |
+| `profiles`, `roles`, `actions`, `role_actions`, `invitations`, `brand_members` | See the foundations documents |
+
+## Permissions
+
+| Action | Allows |
+|---|---|
+| `settings.manage` (`admin_only`) | Organization data and policies |
+| `users.view`, `users.approve`, `users.manage` (`admin_only`) | See users, handle access states, suspend/change roles |
+| `roles.manage` (`admin_only`) | Create and edit roles |
+| `invitations.create` | Invite people (with the assignable-role restriction) |
+| `notifications.configure` | Global notification rules |
+| `audit.view` | See the audit trail |
+
+## Acceptance criteria
+
+- Only people with the right action see each section; a direct URL without the action leads to "Sem acesso".
+- Changing a policy is audited and applies only to new operations.
+- The last Owner cannot be removed; nobody can raise their own power.
+- Secrets never appear in settings, logs or responses.
+- An invalid settings payload is refused with per-field messages.
+- Changing the default time zone does not alter existing brands.
+
+## Implementation status
+
+Not started (users and invitations in phase 1; policies grow with the modules that use them).

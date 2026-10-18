@@ -1,0 +1,106 @@
+# Module — Audit
+
+> Functional specification. Context and conventions in [README.md](README.md). Space: `shared` (`/admin/settings/audit`, UI label "Auditoria"). It records **who did what, when and on which entity** for the critical actions of the business, so decisions are traceable and disputes can be settled.
+
+## Goal and scope
+
+Two complementary trails:
+
+| Trail | Records | Tables |
+|---|---|---|
+| **Access audit** | Decisions about accounts and roles: invitations, approvals of access, suspensions, role changes and permission changes | `profile_audit`, `role_audit` (from the authentication foundation) |
+| **Business audit** | Actions on clients, brands, content, approvals, media, site | `audit_events` (this module) |
+
+Included: event recording by server functions and SQL functions, the audit screen with filters, export of a filtered view, retention. Not included in the MVP: tamper-evident hashing, streaming to external systems, per-field diffs of every column.
+
+## Event model
+
+| Field | Meaning |
+|---|---|
+| `id` | Increasing identifier |
+| `organization_id` | Organization |
+| `brand_id` | Brand, when the event belongs to one (enables per-brand views and access checks) |
+| `actor_id` | The user (null for system jobs) and `actor_kind` (internal, external, system) |
+| `action` | `domain.verb`, a constant (`AuditAction`), for example `approval.decided` |
+| `entity_type`, `entity_id` | The affected entity |
+| `metadata` | Small jsonb with identifiers and changed field names; **no secrets, no full personal data, no full text of notes or comments** |
+| `occurred_at` | Instant (UTC) |
+| `request_id` | Correlation with logs |
+
+Events are **append-only**: no `update`, no `delete` (a trigger refuses); the retention routine is the only deleter. They are written **by functions in the same transaction** as the operation (so an event exists if and only if the action was committed), never by the client.
+
+**Single writer:** every event is written through the SQL function `audit_write(p_org uuid, p_brand uuid, p_action text, p_entity_type text, p_entity_id uuid, p_metadata jsonb)`, which validates that `p_action` is in the catalog of audit actions and fills `actor_id`, `actor_kind` and `request_id`. Nobody inserts into `audit_events` directly, and there is **one** audit table, **one** TypeScript constant list (`AuditAction` in `lib/shared/audit/actions.ts`) and **one** screen. Adding an event means adding it to this document, to `AuditAction` and to the SQL catalog, then calling `audit_write` (rule base.md section 2).
+
+## Events recorded (minimum)
+
+| Domain | Actions |
+|---|---|
+| Access | `auth.login_admin`, `invitation.created/revoked/accepted/resent`, `user.role_changed`, `user.suspended/reactivated`, `role.created/updated/deleted`, `brand.member_added/revoked/can_decide_changed` |
+| Clients and brands | `client.created/updated/owner_changed/archived/reactivated/deleted`, `brand.created/updated/timezone_changed/archived/reactivated/deleted`, `channel.created/updated/archived/reactivated/deleted` |
+| Content | `variant.submitted`, `variant.reopened` (reason), `variant.rescheduled` (old/new instant), `variant.cancelled`, `variant.published_manually`, `content.cancelled/deleted`, `comment.deleted` |
+| Approvals | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.cancelled`, `approval.approver_reassigned`, `approval.reminder_sent` |
+| Media | `media.published`, `media.unpublished`, `media.deleted_permanently`, `media.version_replaced` |
+| Site | `site.page_published`, `site.page_unpublished`, `site.rolled_back`, `site.case_study_authorized/withdrawn`, `site.settings_changed` |
+| Settings | `settings.policy_changed`, `organization.updated` |
+
+Rule: the **decision** of an approval is an immutable row in `approval_decisions`; the audit event references it; both exist in the same transaction.
+
+## Screen
+
+Route `/admin/settings/audit` (action `audit.view`; only the Owner by default).
+
+- Table: time (shown in the organization's zone), actor, action (human label in pt-BR), entity (with a link when the person can open it), brand, short summary.
+- Filters: period, actor, domain/action, brand, entity type, text in the id. Server pagination; filters in the URL.
+- Detail drawer with the stored metadata (as-is), request id and the link to the entity.
+- Export of the filtered result as CSV (needs `audit.view` and is itself audited as `audit.exported`), limited to a maximum number of rows.
+- A brand tab shows the business events of that brand to users with `audit.view` or `approvals.view` (events of the entity types they can see), so the approval history is available next to the variant.
+
+Visibility: an event with a `brand_id` is only visible to users who `can_access_brand` it **and** have `audit.view`; events without a brand (settings, roles) only to `audit.view` holders. External users never read audit events; the portal shows the decision history through `portal_get_approval`.
+
+## Retention and privacy
+
+- Default retention 24 months (configurable in the policies); the cleanup routine deletes older events in batches and records its own run.
+- Personal data in metadata is limited to ids; names are resolved at read time, so erasing or anonymizing a person (LGPD request) does not require rewriting history; anonymized actors appear as "Usuário removido".
+- The audit never stores passwords, tokens, signed URLs, invitation tokens or secrets.
+
+## Data model
+
+```sql
+create table audit_events (
+  id bigint generated always as identity primary key,
+  organization_id uuid not null,
+  brand_id uuid,
+  actor_id uuid,
+  actor_kind text not null default 'internal' check (actor_kind in ('internal','external','system')),
+  action text not null,
+  entity_type text not null,
+  entity_id uuid,
+  metadata jsonb not null default '{}',
+  request_id text,
+  occurred_at timestamptz not null default now()
+);
+create index on audit_events (organization_id, occurred_at desc);
+create index on audit_events (brand_id, occurred_at desc);
+create index on audit_events (entity_type, entity_id);
+```
+
+RLS: `select` requires `has_action('audit.view')` and (`brand_id is null` or `can_access_brand(brand_id)`); no policy for `insert`/`update`/`delete`; the writer function is `security definer`. The `AuditAction` constants are verified against the actions used in SQL by `check:consistency`.
+
+## Permissions
+
+| Action | Allows |
+|---|---|
+| `audit.view` | See and filter business events of the accessible scope; export |
+
+## Acceptance criteria
+
+- Every critical action of the table above writes exactly one event in the same transaction; a rolled-back operation leaves none.
+- Nobody (not even the Owner) can edit or delete events through the application; only the retention routine deletes.
+- A user without brand access never sees events of that brand, nor counts of them.
+- An external user cannot read audit events.
+- Metadata never contains secrets or full personal data.
+- The export is limited, audited and respects the same visibility.
+
+## Implementation status
+
+Not started (base table and writer function in phase 0; events are added with each module).
