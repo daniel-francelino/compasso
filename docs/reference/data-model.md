@@ -6,10 +6,10 @@
 
 | Table | Owner module | Brand-scoped (`brand_id`) | RLS access summary |
 |---|---|---|---|
-| `organizations` | organization-settings | no | read: approved accounts; write: `settings.manage` |
+| `organizations` | organization-settings | no | read: approved **internal** accounts (external users read nothing here, DATA-2); write: `settings.manage` |
 | `organization_settings` | organization-settings | no | read/write: `settings.manage` |
 | `profiles` | authentication | no | own row; `users.view` for others |
-| `roles`, `actions`, `role_actions` | roles-and-actions | no | read: approved; write: `roles.manage` (via function) |
+| `roles`, `actions`, `role_actions` | roles-and-actions | no | read: approved internal accounts; write: `roles.manage` (via function) |
 | `profile_audit`, `role_audit` | authentication | no | `users.view` / `roles.manage` read-only |
 | `invitations` | authentication | no (grants hold brands) | `users.view`; writes via functions |
 | `clients`, `client_contacts` | clients | no (reached through brands) | `clients.view` + link to a brand of the client |
@@ -137,6 +137,7 @@ create index on invitations (email);
 
 - `invitations.grants` shape: `[{ "brand_id": uuid, "can_decide": boolean }]` (empty for roles with no brand scope). The `kind` of the brand links comes from the role (`portal_only` → `external`).
 - Triggers: `profiles_guard` (protects `status`, `role_id`, `kind` from self-edit; blocks suspending/changing the last Owner; blocks assigning `owner` or `admin_only` actions without being Owner); `role_actions_guard` (rules 1, 4, 5, 6 of roles-and-actions); `*_audit` triggers write to `profile_audit`/`role_audit`.
+- Implemented in migration `auth_roles_profiles`: the trigger functions are `profiles_guard`, `profiles_audit`, `roles_guard`, `roles_audit`, `role_actions_guard`, `role_actions_requires_check` (deferred constraint trigger) and `role_actions_audit`. `profiles` allows a client to update only `full_name` and `locale` (column grant); everything else goes through functions. The seed holds the whole action catalog with its `requires`.
 - Seed: roles `owner`, `manager`, `collaborator`, `external_approver`, `external_commenter`; actions catalog; first Owner by `scripts/seed-owner.mjs` (no password in migrations).
 
 ## 4. Clients, brands and channels
@@ -638,8 +639,8 @@ Applies to **every** table above when the migration is written (base.md section 
 |---|---|---|
 | 1 | `core_extensions_and_organization` | extensions, `set_updated_at()`, `organizations` (+ seed row), `organization_settings`; RLS on, policies deferred to migration 2 |
 | 2 | `auth_roles_profiles` | `roles`, `actions`, `role_actions`, `profiles`, audit tables, guards, `has_action`, `is_admin`, `my_actions`, seeds |
-| 3 | `auth_invitations` | `invitations`, `accept_invitation`, invitation functions |
-| 4 | `audit_events` | `audit_events`, `audit_write` and its action catalog |
+| 3 | `auth_invitations` (built in P1-01, so its file is dated after migration 4) | `invitations`, `accept_invitation`, invitation functions |
+| 4 | `audit_events` | `audit_events`, `audit_write` and its action catalog, immutability trigger (purge only with `compasso.audit_purge`). Its read policy is organization-level only until migration 6 replaces it with the brand-scoped one |
 | 5 | `notifications` | notification tables, `notify_users`, `resolve_notifications`, `generate_due_notifications`, `pg_cron` schedule |
 | 6 | `clients_brands_channels` | tables of section 4, `can_access_brand`, `is_external_brand_member`, save functions |
 | 7 | `media` | tables of section 6, upload/confirm/publish functions, quota |

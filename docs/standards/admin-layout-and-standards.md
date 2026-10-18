@@ -21,7 +21,7 @@
 └───────────────┴──────────────────────────────────────────────┘
 ```
 
-- **Space selector** at the top of the sidebar: "Gestão de Marketing" ("Marketing Management") and "Site e CMS" ("Site and CMS"). It only lists the spaces the person has actions for; with a single space there is no selector. The active space is deduced from the **route** (`/admin/site/*` → Site and CMS; `/admin/marketing/*` → Marketing Management), so direct links and reload work with no extra state.
+- **Space selector** at the top of the sidebar: "Gestão de Marketing" ("Marketing Management") and "Site e CMS" ("Site and CMS"). Phase 0 lists both spaces always and remembers the last choice (`StoredKey.LastSpace`); once the space routes exist it will list only the spaces the person has actions for, hide the selector when there is one, and deduce the space from the **route** (`/admin/site/*` → Site and CMS; `/admin/marketing/*` → Marketing Management). Tracked in P0-10 follow-up.
 - **Brand selector** (inside Marketing Management): "Todas as marcas" or one brand. The selected brand lives **in the URL** (`/admin/marketing/brands/$brandId/...`), never in global state, and stays visible in the header.
 - **Sidebar** (`AppSidebar`): icons + text, sections with a title, items with collapsible **sub-items**, pending counters (for example approvals waiting), highlighted active item and `aria-current`.
   - **Collapses to icons only** (☰ button or `Ctrl/Cmd + B`) with a "rail" to reopen it. On small screens it opens as a **drawer**.

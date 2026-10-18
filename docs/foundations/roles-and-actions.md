@@ -100,12 +100,12 @@ Only the system role `owner` has them; they **do not appear as an option** when 
 | Role | Type | Actions |
 |---|---|---|
 | `owner` ("Proprietário") | System, protected | All (implicit) |
-| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update`, `invitations.create` |
+| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update`, `invitations.create`, `users.view` |
 | `collaborator` ("Colaborador") | Pre-created, editable | `clients.view`, `brands.view`, `channels.view`, `content.view/create/update`, `approvals.view`, `comments.create_internal`, `calendar.view`, `media.view/upload` |
 | `external_approver` ("Aprovador externo") | Pre-created, editable, portal only | `portal.view`, `approvals.decide`, `comments.create_external` |
 | `external_commenter` ("Comentarista externo") | Pre-created, editable, portal only | `portal.view`, `comments.create_external` |
 
-Dependencies are added automatically (for example `content.*` brings `channels.view`). Neither `manager` nor `collaborator` has `site.*`, `users.*`, `roles.manage` or `settings.manage`; a "Site editor" role is created through the interface (for example `site.view`, `site.edit`, `media.view`, `media.upload`). Whoever edits the site does not publish by default: `site.publish` is a separate action so the "prepare → approve" flow is possible.
+Dependencies are added automatically (for example `content.*` brings `channels.view`). Every write action also requires the `view` action of its module (and `portal.view` for portal actions); the seed in the migration is the executable list. `manager` receives `users.view` only because `invitations.create` requires it (read-only list of users and invitations). Neither `manager` nor `collaborator` has `site.*`, `users.manage`, `users.approve`, `roles.manage` or `settings.manage`; a "Site editor" role is created through the interface (for example `site.view`, `site.edit`, `media.view`, `media.upload`). Whoever edits the site does not publish by default: `site.publish` is a separate action so the "prepare → approve" flow is possible.
 
 ## 8. Data model
 

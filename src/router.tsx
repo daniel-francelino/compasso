@@ -12,3 +12,9 @@ export const getRouter = () => {
     defaultPreloadStaleTime: 0,
   });
 };
+
+declare module "@tanstack/react-router" {
+  interface StaticDataRouteOption {
+    fullScreen?: boolean;
+  }
+}

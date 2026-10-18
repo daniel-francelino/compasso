@@ -1,0 +1,96 @@
+import type { NestedValueOf } from "@/lib/shared/utils";
+
+export const AuditAction = {
+  Invitation: {
+    Created: "invitation.created",
+    Revoked: "invitation.revoked",
+    Accepted: "invitation.accepted",
+  },
+  Client: {
+    Created: "client.created",
+    Updated: "client.updated",
+    OwnerChanged: "client.owner_changed",
+    Archived: "client.archived",
+    Reactivated: "client.reactivated",
+    Deleted: "client.deleted",
+  },
+  Contact: {
+    Created: "contact.created",
+    Updated: "contact.updated",
+    Deleted: "contact.deleted",
+  },
+  Brand: {
+    Created: "brand.created",
+    Updated: "brand.updated",
+    TimezoneChanged: "brand.timezone_changed",
+    Archived: "brand.archived",
+    Reactivated: "brand.reactivated",
+    Deleted: "brand.deleted",
+    MemberAdded: "brand.member_added",
+    MemberRevoked: "brand.member_revoked",
+    MemberCanDecideChanged: "brand.member_can_decide_changed",
+  },
+  Channel: {
+    Created: "channel.created",
+    Updated: "channel.updated",
+    Archived: "channel.archived",
+    Reactivated: "channel.reactivated",
+    Deleted: "channel.deleted",
+  },
+  Content: {
+    Created: "content.created",
+    Updated: "content.updated",
+    Cancelled: "content.cancelled",
+    Deleted: "content.deleted",
+  },
+  Variant: {
+    Created: "variant.created",
+    Updated: "variant.updated",
+    Submitted: "variant.submitted",
+    Reopened: "variant.reopened",
+    Rescheduled: "variant.rescheduled",
+    Cancelled: "variant.cancelled",
+    PublishedManually: "variant.published_manually",
+  },
+  Comment: {
+    Created: "comment.created",
+    Deleted: "comment.deleted",
+  },
+  Approval: {
+    Requested: "approval.requested",
+    Decided: "approval.decided",
+    Superseded: "approval.superseded",
+    Cancelled: "approval.cancelled",
+    ApproverReassigned: "approval.approver_reassigned",
+    ReminderSent: "approval.reminder_sent",
+  },
+  Media: {
+    Published: "media.published",
+    Unpublished: "media.unpublished",
+    DeletedPermanently: "media.deleted_permanently",
+    VersionReplaced: "media.version_replaced",
+  },
+  Site: {
+    PagePublished: "site.page_published",
+    PageUnpublished: "site.page_unpublished",
+    RolledBack: "site.rolled_back",
+    CaseStudyAuthorized: "site.case_study_authorized",
+    CaseStudyWithdrawn: "site.case_study_withdrawn",
+    SettingsChanged: "site.settings_changed",
+  },
+  Settings: {
+    PolicyChanged: "settings.policy_changed",
+  },
+  Organization: {
+    Updated: "organization.updated",
+  },
+  Audit: {
+    Exported: "audit.exported",
+  },
+} as const;
+
+export type AuditActionKey = NestedValueOf<typeof AuditAction>;
+
+export const AUDIT_ACTION_KEYS: readonly AuditActionKey[] = Object.values(AuditAction).flatMap(
+  (domain) => Object.values(domain),
+);

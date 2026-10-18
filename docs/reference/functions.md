@@ -27,7 +27,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `accept_invitation(p_token_hash text)` | `acceptInvitation` (service role; creates the auth user) | none (token) | `invitation.accepted`; Notif. `invitation.accepted` | `invitation_invalid`, `invitation_email_mismatch` |
 | `profile_set_access(p_profile, p_status, p_role)` | `setUserAccess` | `users.manage` / `users.approve` | `profile_audit` | `last_owner`, `self_change_forbidden`, `role_not_assignable` |
 | `role_save(p_role jsonb)` / `role_delete(p_role)` | `saveRole`, `deleteRole` | `roles.manage` | `role_audit` | `role_system_protected`, `role_in_use`, `action_requires_read`, `portal_role_internal_action` |
-| — | `getAuthState`, `signOut`, `updateProfile` | approved | — | — |
+| — | `getAuthState`, `signIn` (generic errors, no enumeration), `signOut`, `updateProfile` | approved | — | — |
 
 ### 2b. Organization, settings and audit access (module: organization-settings, audit)
 

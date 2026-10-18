@@ -16,14 +16,15 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 
 | URL | Route file | Notes |
 |---|---|---|
-| `/admin/login` | `routes/admin/(shared)/login.tsx` | Email + password; redirects by role (admin or portal) |
-| `/admin/invite/$token` | `routes/admin/(shared)/invite.$token.tsx` | Accept invitation, set password |
-| `/admin/recover-password` | `routes/admin/(shared)/recover-password.tsx` | |
-| `/admin/reset-password` | `routes/admin/(shared)/reset-password.tsx` | |
-| `/admin/callback` | `routes/admin/(shared)/callback.tsx` | Auth redirect target |
-| `/admin/confirm-email` | `routes/admin/(shared)/confirm-email.tsx` | |
-| `/admin/pending` | `routes/admin/(shared)/pending.tsx` | Account `pending` |
-| `/admin/access-denied` | `routes/admin/(shared)/access-denied.tsx` | `rejected` / `suspended` |
+| `/admin/login` | `routes/admin/login.tsx` | Email + password; redirects by role (admin or portal) |
+| `/admin/invite/$token` | `routes/admin/invite.$token.tsx` | Accept invitation, set password |
+| `/admin/recover-password` | `routes/admin/recover-password.tsx` | |
+| `/admin/reset-password` | `routes/admin/reset-password.tsx` | |
+| `/admin/callback` | `routes/admin/callback.tsx` | Auth redirect target |
+| `/admin/confirm-email` | `routes/admin/confirm-email.tsx` | |
+| `/admin/design` | `routes/admin/_app/design.tsx` | Development only (404 in production): tokens and component states |
+| `/admin/pending` | `routes/admin/pending.tsx` | Account `pending` |
+| `/admin/access-denied` | `routes/admin/access-denied.tsx` | `rejected` / `suspended` |
 
 ## 3. Back office (`/admin`, layout `routes/admin/_app.tsx`, requires an approved account with any back office action)
 
@@ -114,8 +115,8 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 
 - Signed-in internal user opening `/` of the back office: `/admin` → first space they have actions for.
 - User with only portal actions opening any `/admin/*`: redirected to `/portal`.
-- User without `portal.view` opening `/portal/*`: `/admin/forbidden` (or login if no session).
-- Unauthenticated: `/admin/login?next=<current path>`; `next` is validated (internal paths only).
+- User without `portal.view` opening `/portal/*`: `/admin/access-denied` (a terminal page outside both layouts, so no redirect loop); login if no session.
+- Unauthenticated: `/admin/login?redirect=<current path>`; `redirect` is validated by `safeRedirect` (paths under `/admin` or `/portal` only).
 - Brand ids in URLs are validated against access; a brand the person cannot access returns the **not-found** state, never "forbidden".
 
 ## 7. Adding a route

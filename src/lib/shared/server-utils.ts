@@ -30,6 +30,8 @@ export const fail = (error: DatabaseError, fallback?: string): Failure => ({
   message: dbErrorMessage(error, fallback),
 });
 
+export const denied: Failure = fail({ message: "denied" });
+
 export const invalid = (message: string, fields?: Record<string, string>): Failure =>
   fields === undefined
     ? { ok: false, code: ErrorCode.Invalid, message }

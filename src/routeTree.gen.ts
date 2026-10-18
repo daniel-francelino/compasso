@@ -10,33 +10,146 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminAppRouteImport } from './routes/admin/_app'
+import { Route as AdminAccessDeniedRouteImport } from './routes/admin/access-denied'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminPendingRouteImport } from './routes/admin/pending'
+import { Route as PortalAppRouteImport } from './routes/portal/_app'
+import { Route as AdminAppIndexRouteImport } from './routes/admin/_app/index'
+import { Route as AdminAppDesignRouteImport } from './routes/admin/_app/design'
+import { Route as AdminAppForbiddenRouteImport } from './routes/admin/_app/forbidden'
+import { Route as PortalAppIndexRouteImport } from './routes/portal/_app/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAppRoute = AdminAppRouteImport.update({
+  id: '/admin/_app',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAccessDeniedRoute = AdminAccessDeniedRouteImport.update({
+  id: '/admin/access-denied',
+  path: '/admin/access-denied',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPendingRoute = AdminPendingRouteImport.update({
+  id: '/admin/pending',
+  path: '/admin/pending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalAppRoute = PortalAppRouteImport.update({
+  id: '/portal/_app',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAppIndexRoute = AdminAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppDesignRoute = AdminAppDesignRouteImport.update({
+  id: '/design',
+  path: '/design',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const AdminAppForbiddenRoute = AdminAppForbiddenRouteImport.update({
+  id: '/forbidden',
+  path: '/forbidden',
+  getParentRoute: () => AdminAppRoute,
+} as any)
+const PortalAppIndexRoute = PortalAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalAppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminAppRouteWithChildren
+  '/admin/access-denied': typeof AdminAccessDeniedRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/pending': typeof AdminPendingRoute
+  '/portal': typeof PortalAppRouteWithChildren
+  '/admin/design': typeof AdminAppDesignRoute
+  '/admin/forbidden': typeof AdminAppForbiddenRoute
+  '/admin/': typeof AdminAppIndexRoute
+  '/portal/': typeof PortalAppIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/access-denied': typeof AdminAccessDeniedRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/pending': typeof AdminPendingRoute
+  '/admin/design': typeof AdminAppDesignRoute
+  '/admin/forbidden': typeof AdminAppForbiddenRoute
+  '/admin': typeof AdminAppIndexRoute
+  '/portal': typeof PortalAppIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/_app': typeof AdminAppRouteWithChildren
+  '/admin/access-denied': typeof AdminAccessDeniedRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/pending': typeof AdminPendingRoute
+  '/portal/_app': typeof PortalAppRouteWithChildren
+  '/admin/_app/design': typeof AdminAppDesignRoute
+  '/admin/_app/forbidden': typeof AdminAppForbiddenRoute
+  '/admin/_app/': typeof AdminAppIndexRoute
+  '/portal/_app/': typeof PortalAppIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/admin/access-denied'
+    | '/admin/login'
+    | '/admin/pending'
+    | '/portal'
+    | '/admin/design'
+    | '/admin/forbidden'
+    | '/admin/'
+    | '/portal/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin/access-denied'
+    | '/admin/login'
+    | '/admin/pending'
+    | '/admin/design'
+    | '/admin/forbidden'
+    | '/admin'
+    | '/portal'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin/_app'
+    | '/admin/access-denied'
+    | '/admin/login'
+    | '/admin/pending'
+    | '/portal/_app'
+    | '/admin/_app/design'
+    | '/admin/_app/forbidden'
+    | '/admin/_app/'
+    | '/portal/_app/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminAppRoute: typeof AdminAppRouteWithChildren
+  AdminAccessDeniedRoute: typeof AdminAccessDeniedRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminPendingRoute: typeof AdminPendingRoute
+  PortalAppRoute: typeof PortalAppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +161,107 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/_app': {
+      id: '/admin/_app'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/access-denied': {
+      id: '/admin/access-denied'
+      path: '/admin/access-denied'
+      fullPath: '/admin/access-denied'
+      preLoaderRoute: typeof AdminAccessDeniedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/pending': {
+      id: '/admin/pending'
+      path: '/admin/pending'
+      fullPath: '/admin/pending'
+      preLoaderRoute: typeof AdminPendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/_app': {
+      id: '/portal/_app'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/_app/': {
+      id: '/admin/_app/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminAppIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/design': {
+      id: '/admin/_app/design'
+      path: '/design'
+      fullPath: '/admin/design'
+      preLoaderRoute: typeof AdminAppDesignRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/forbidden': {
+      id: '/admin/_app/forbidden'
+      path: '/forbidden'
+      fullPath: '/admin/forbidden'
+      preLoaderRoute: typeof AdminAppForbiddenRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/portal/_app/': {
+      id: '/portal/_app/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalAppIndexRouteImport
+      parentRoute: typeof PortalAppRoute
+    }
   }
 }
 
+interface AdminAppRouteChildren {
+  AdminAppDesignRoute: typeof AdminAppDesignRoute
+  AdminAppForbiddenRoute: typeof AdminAppForbiddenRoute
+  AdminAppIndexRoute: typeof AdminAppIndexRoute
+}
+
+const AdminAppRouteChildren: AdminAppRouteChildren = {
+  AdminAppDesignRoute: AdminAppDesignRoute,
+  AdminAppForbiddenRoute: AdminAppForbiddenRoute,
+  AdminAppIndexRoute: AdminAppIndexRoute,
+}
+
+const AdminAppRouteWithChildren = AdminAppRoute._addFileChildren(
+  AdminAppRouteChildren,
+)
+
+interface PortalAppRouteChildren {
+  PortalAppIndexRoute: typeof PortalAppIndexRoute
+}
+
+const PortalAppRouteChildren: PortalAppRouteChildren = {
+  PortalAppIndexRoute: PortalAppIndexRoute,
+}
+
+const PortalAppRouteWithChildren = PortalAppRoute._addFileChildren(
+  PortalAppRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminAppRoute: AdminAppRouteWithChildren,
+  AdminAccessDeniedRoute: AdminAccessDeniedRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminPendingRoute: AdminPendingRoute,
+  PortalAppRoute: PortalAppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -4,6 +4,8 @@ Documentation, folder names and file names are in **English**; only the user int
 
 Start with the [product document](product-documentation-v0.1.md) (what we are building) and the [technical architecture](technical-architecture-v0.1.md) (how). To **build**, follow the [implementation plan](implementation-plan.md) task by task, applying [standards/base.md](standards/base.md) and looking every name up in the [registries](reference/README.md). The documents below detail each area.
 
+**Open items that need a person (accounts, Docker, decisions) and what is still unverified:** [pending-external-setup.md](pending-external-setup.md).
+
 **Reading order for an implementation task:** `implementation-plan.md` (the task) → the module document → `standards/base.md` rules that apply → `reference/*` registries (names) → `standards/ui-glossary.md` (copy).
 
 ## Folders

@@ -95,13 +95,27 @@ const boundary = (space, forbidden) => ({
   },
 });
 
+const cardDefinition = ["src/components/shared/admin/section-card.tsx"];
+
+const vendoredOverLimit = ["src/components/shared/ui/sidebar.tsx"];
+
 const colourExempt = [
   "src/components/shared/ui/color-field.tsx",
   "src/components/shared/ui/chart.tsx",
 ];
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi", ".vercel", ".tanstack", "src/routeTree.gen.ts"] },
+  {
+    ignores: [
+      "dist",
+      ".output",
+      ".vinxi",
+      ".vercel",
+      ".tanstack",
+      "src/routeTree.gen.ts",
+      "src/lib/shared/supabase/database.types.ts",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -155,10 +169,14 @@ export default tseslint.config(
   },
   {
     files: ["src/**/*.tsx"],
-    ignores: colourExempt,
+    ignores: [...colourExempt, ...cardDefinition],
     rules: {
       "no-restricted-syntax": ["error", ...colourSelectors, rawFieldset, asUnknownAs, ...rawCard],
     },
+  },
+  {
+    files: cardDefinition,
+    rules: { "no-restricted-syntax": ["error", ...colourSelectors, rawFieldset, asUnknownAs] },
   },
   {
     files: colourExempt,
@@ -171,6 +189,7 @@ export default tseslint.config(
   },
   {
     files: ["src/components/**/*.tsx", "src/routes/**/*.tsx"],
+    ignores: vendoredOverLimit,
     rules: { "max-lines": ["warn", { max: 600, skipBlankLines: true, skipComments: true }] },
   },
   {

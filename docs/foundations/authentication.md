@@ -128,12 +128,13 @@ The first `owner` is **not** created by a migration with a password. The script 
 
 ```
 src/
-  lib/shared/supabase/      env.ts · client.ts (browser) · server.ts (cookies) · anon.ts · database.types.ts
+  lib/shared/supabase/      client.ts (browser) · server-client.server.ts (cookies) · anon-client.server.ts · admin.server.ts (service role) · database.types.ts
+  lib/shared/               env.ts (public) · env.server.ts (secrets)
   lib/shared/auth/          types.ts · actions.ts (Action.*) · schemas.ts · redirect.ts · errors.ts
-                            session.functions.ts (getAuthState) · users.functions.ts · invitations.functions.ts
-                            guards.ts (requireAction) · server-guards.ts (requireActionServer) · use-sign-out.ts
+                            session.functions.ts (getAuthState) · login.functions.ts (signIn, signOut) · users.functions.ts · invitations.functions.ts
+                            guards.ts (requireAction) · server-guards.server.ts (requireActionServer returns the caller or null) · permissions.ts (can) · use-sign-out.ts
   components/shared/admin/  auth-shell.tsx
-  routes/admin/(shared)/    login · invite.$token · recover-password · reset-password · callback
+  routes/admin/             login · invite.$token · recover-password · reset-password · callback
                             confirm-email · pending · access-denied
   routes/admin/_app.tsx     protected layout (guard)
   routes/portal/_app.tsx    portal layout (guard for portal.view)
@@ -219,3 +220,9 @@ Tone: calm and direct.
 3. Should external approvers also be required to use MFA?
 4. What session duration is acceptable on shared devices?
 5. Should the team receive an email when an invitation is accepted, besides the in-app notification?
+
+## Implementation status
+
+Phase 0 (2026-10-18). Done: migration `20261018100100_auth_roles_profiles.sql` (roles, actions, role_actions, profiles, access audit, guards, `is_admin`/`has_action`/`my_actions`, seeds), `Action` constants, `getAuthState`, `signIn`/`signOut`, route guards, `/admin/login`, `/admin/pending`, `/admin/access-denied`, `/admin/forbidden`, `/admin` and `/portal` layouts, `scripts/seed-owner.mjs`, pgTAP file `supabase/tests/01_auth_roles_profiles.test.sql` (61 assertions).
+
+Validation performed: 61 SQL assertions on PGlite (`npm run db:verify`); typecheck and lint; 3 Playwright tests for the unauthenticated flows. **Not tested**: login with a real Supabase, authenticated redirects, `seed-owner` against a real project, `supabase test db` (see [../pending-external-setup.md](../pending-external-setup.md) V1, V3–V5). **Pending**: invitations, users and roles screens (P1-01, P1-02), password recovery and reset screens, MFA (P6-01).

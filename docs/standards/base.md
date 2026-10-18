@@ -124,9 +124,9 @@ When a row is missing for something you need, propose the row here **first** (se
 export const submitForApproval = createServerFn({ method: "POST" })
   .validator(submitForApprovalSchema)
   .handler(async ({ data }): Promise<Result<{ requestId: string }>> => {
-    await requireActionServer(Action.Content.Submit);
-    const supabase = await serverClient();
-    const { data: row, error } = await supabase.rpc("submit_for_approval", {
+    const caller = await requireActionServer(Action.Content.Submit);
+    if (caller === null) return denied;
+    const { data: row, error } = await caller.supabase.rpc("submit_for_approval", {
       p_variant: data.variantId,
       p_approver: data.approverId,
       p_expected_version: data.expectedVersion,
@@ -352,6 +352,7 @@ A feature is done only when every item is true (or explicitly marked "not applic
 |---|---|
 | After editing code | `npm run lint` · `npm run typecheck` · `npm run format:check` |
 | After touching SQL or constants | `npm run check:consistency` · `npx supabase db reset` · `npx supabase test db` · `npm run db:types` |
+| Without Docker (fallback) | `npm run db:verify`: applies the migrations and runs `supabase/tests/*.test.sql` on an in-process Postgres (PGlite) with a pgTAP-compatible shim and Supabase stubs. It does **not** replace `supabase test db` (no `pg_cron`, no real GoTrue) |
 | After touching documents or registries | `npm run check:docs` (`node scripts/check-docs.mjs`): relative links, and that error codes, actions, audit actions and notification kinds used in `reference/functions.md` and `reference/routes.md` exist in their registries |
 | After touching flows | `npm run test` (Vitest) · `npm run e2e` (Playwright) |
 | Before pushing | the `pre-push` hook runs lint, typecheck and check:consistency |

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { ErrorCode } from "@/lib/shared/auth/errors";
-import { fail, invalid, pageOf, parseOutput, rangeOf } from "@/lib/shared/server-utils";
+import { denied, fail, invalid, pageOf, parseOutput, rangeOf } from "@/lib/shared/server-utils";
 
 vi.mock("@/lib/shared/logger", () => ({ logError: vi.fn() }));
 
@@ -30,6 +30,13 @@ describe("fail", () => {
     expect(fail({ message: "not_found" }, "Falhou ao salvar").message).toBe(
       "Não encontramos este registro.",
     );
+  });
+});
+
+describe("denied", () => {
+  it("is a failure with the denied category", () => {
+    expect(denied.ok).toBe(false);
+    expect(denied.code).toBe(ErrorCode.Denied);
   });
 });
 

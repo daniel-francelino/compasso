@@ -158,4 +158,6 @@ RLS: `select` requires `has_action('audit.view')` and (`brand_id is null` or `ca
 
 ## Implementation status
 
-Not started (base table and writer function in phase 0; events are added with each module).
+Phase 0 done on 2026-10-18 (task P0-06): migration `20261018100200_audit_events.sql` (table, immutability trigger, `audit_write` with the catalog of 58 actions, organization-level read policy), `src/lib/shared/audit/actions.ts` (`AuditAction`), `supabase/tests/02_audit_events.test.sql` (14 assertions). `npm run check:consistency` compares the SQL catalog, `AuditAction` and the table in this document.
+
+Validation performed: the 14 assertions passed on PGlite via `npm run db:verify`. **Not tested**: the real Supabase stack (`supabase test db`), see [../pending-external-setup.md](../pending-external-setup.md) V1/V3. **Pending**: brand-scoped read policy (P1-03), the audit screen (P1-08), events of each module as they are built.

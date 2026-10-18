@@ -62,6 +62,8 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 | `AuditAction` | See [../modules/audit.md](../modules/audit.md) | catalog in `audit_write` | | audit |
 | `EmailStatus` | `queued`, `sent`, `failed` | `email_outbox.status` | | notifications |
 | `ErrorCode` | `denied`, `not_found`, `conflict`, `in_use`, `invalid`, `unavailable`, `unknown` | — | Result-level codes; SQL codes are in [error-codes.md](error-codes.md) | auth |
+| `AccessAuditAction` | `created`, `status_changed`, `role_changed`, `kind_changed` (`profile_audit.action`); `created`, `updated`, `deleted`, `actions_changed` (`role_audit.action`) | written by triggers | — | authentication |
+| `AppRoute` | `lib/shared/routes.ts`: fixed URLs used in code (`Admin`, `Portal`, `Login`, `Pending`, `AccessDenied`, `Forbidden`, `Design`); grows with `routes.md` | — | — | project-structure |
 | `Space` | `marketing`, `cms`, `site`, `portal`, `shared` | — | Used by `nav-config` and lint blocks | project-structure |
 
 ## 6. Keys

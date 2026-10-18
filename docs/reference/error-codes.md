@@ -1,6 +1,6 @@
 # Error codes and messages
 
-> Every expected failure in Compasso has a **code** (English, `lowercase_with_underscores`), raised in SQL with `raise exception 'code'` and/or returned by server functions through `fail(...)`, plus a **pt-BR message** shown to the person. The messages live in `src/lib/shared/auth/errors.ts` (`messages` map); `npm run check:consistency` verifies that every code raised in SQL has a message and that no message is orphaned. Messages explain what happened and what to do, without internal details (rule UI-4, UI-12). Adding a code means: add the row here → raise it in SQL/TS → add the message → map it to an `ErrorCode` category → document it in the module.
+> Every expected failure in Compasso has a **code** (English, `lowercase_with_underscores`), raised in SQL with `raise exception 'code'` and/or returned by server functions through `fail(...)`, plus a **pt-BR message** shown to the person. The messages live in `src/lib/shared/auth/errors.ts` (`catalog` map); `npm run check:consistency` verifies that every code raised in SQL has a message and that no message is orphaned. Messages explain what happened and what to do, without internal details (rule UI-4, UI-12). Adding a code means: add the row here → raise it in SQL/TS → add the message → map it to an `ErrorCode` category → document it in the module.
 
 ## 1. Categories (`ErrorCode` in `Result`)
 
@@ -28,6 +28,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `invalid_input` | invalid | "Confira os campos destacados." | server validation |
 | `rate_limited` | unavailable | "Muitas tentativas. Tente novamente em alguns minutos." | public functions |
 | `unknown` | unknown | "Algo deu errado. Tente novamente." | fallback |
+| `audit_immutable` | denied | "Registros de auditoria não podem ser alterados." | audit trigger |
 
 ### Accounts, invitations and roles
 
@@ -42,7 +43,8 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `role_in_use` | in_use | "Este perfil está atribuído a pessoas e não pode ser excluído." | `role_delete` |
 | `role_system_protected` | denied | "Este perfil do sistema não pode ser alterado." | role functions |
 | `action_requires_read` | invalid | "Uma ação de escrita exige a ação de leitura correspondente." | `role_save` |
-| `portal_role_internal_action` | invalid | "Perfis do portal só podem ter ações do portal." | `role_save` |
+| `portal_role_internal_action` | invalid | "Perfis do portal só podem ter ações do portal." | `role_save`, role guards |
+| `admin_only_action` | denied | "Esta ação é exclusiva do Proprietário." | `role_save`, role guards |
 
 ### Clients, brands and channels
 

@@ -1,6 +1,8 @@
-import type { QueryClient } from "@tanstack/react-query";
+import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { UnsavedChangesProvider } from "@/components/shared/admin/unsaved-changes-provider";
+import { TooltipProvider } from "@/components/shared/ui/tooltip";
 import appCss from "@/styles.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
@@ -21,7 +23,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   shellComponent: RootShell,
-  component: Outlet,
+  component: RootComponent,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
@@ -35,5 +37,18 @@ function RootShell({ children }: { children: ReactNode }) {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <UnsavedChangesProvider>
+          <Outlet />
+        </UnsavedChangesProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
