@@ -10,6 +10,7 @@ import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import type { CalendarEntry, UndatedEntry } from "@/lib/shared/calendar/types";
 import {
   CalendarEntryKind,
+  CalendarNoteRepeat,
   ContentFormat,
   EditorialStatus,
   Platform,
@@ -18,36 +19,41 @@ import {
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 
 const commonShape = {
-  item_id: z.string().uuid(),
+  item_id: z.string().uuid().nullable().optional(),
   title: z.string(),
   brand_id: z.string().uuid(),
   brand_name: z.string(),
   brand_timezone: z.string(),
-  item_version: z.number().int(),
-  assignee_name: z.string().nullable(),
-  channel_archived: z.boolean(),
+  item_version: z.number().int().nullable().optional(),
+  assignee_name: z.string().nullable().optional(),
+  channel_archived: z.boolean().optional(),
 };
 
 const entrySchema = z.object({
   ...commonShape,
   kind: z.nativeEnum(CalendarEntryKind),
-  variant_id: z.string().uuid().nullable(),
+  channel_row_id: z.string().uuid().nullable().optional(),
+  note_id: z.string().uuid().nullable().optional(),
+  description: z.string().nullable().optional(),
+  repeat: z.nativeEnum(CalendarNoteRepeat).nullable().optional(),
+  converted_item_id: z.string().uuid().nullable().optional(),
   request_id: z.string().uuid().nullable().optional(),
-  channel_id: z.string().uuid().nullable(),
-  platform: z.nativeEnum(Platform).nullable(),
-  profile_name: z.string().nullable(),
-  format: z.nativeEnum(ContentFormat).nullable(),
-  editorial_status: z.nativeEnum(EditorialStatus).nullable(),
-  publication_status: z.nativeEnum(PublicationStatus).nullable(),
-  planned_timezone: z.string().nullable(),
+  channel_id: z.string().uuid().nullable().optional(),
+  platform: z.nativeEnum(Platform).nullable().optional(),
+  profile_name: z.string().nullable().optional(),
+  format: z.nativeEnum(ContentFormat).nullable().optional(),
+  editorial_status: z.nativeEnum(EditorialStatus).nullable().optional(),
+  publication_status: z.nativeEnum(PublicationStatus).nullable().optional(),
+  planned_timezone: z.string().nullable().optional(),
   at: z.string().nullable().optional(),
   date: z.string().nullable().optional(),
-  version: z.number().int().nullable(),
+  version: z.number().int().nullable().optional(),
 });
 
 const undatedSchema = z.object({
   ...commonShape,
-  variant_id: z.string().uuid(),
+  item_id: z.string().uuid(),
+  channel_row_id: z.string().uuid(),
   channel_id: z.string().uuid(),
   platform: z.nativeEnum(Platform),
   profile_name: z.string(),
@@ -78,31 +84,39 @@ export type CalendarData = {
 
 const toEntry = (row: z.infer<typeof entrySchema>): CalendarEntry => ({
   kind: row.kind,
-  itemId: row.item_id,
-  variantId: row.variant_id,
+  itemId: row.item_id ?? null,
+  channelRowId: row.channel_row_id ?? null,
+  noteId: row.note_id ?? null,
+  description: row.description ?? null,
+  repeat: row.repeat ?? null,
+  convertedItemId: row.converted_item_id ?? null,
+  noteVersion:
+    row.kind === CalendarEntryKind.Idea || row.kind === CalendarEntryKind.Date
+      ? (row.version ?? null)
+      : null,
   requestId: row.request_id ?? null,
   title: row.title,
   brandId: row.brand_id,
   brandName: row.brand_name,
   brandTimezone: row.brand_timezone,
-  channelId: row.channel_id,
-  platform: row.platform,
-  profileName: row.profile_name,
-  format: row.format,
-  editorialStatus: row.editorial_status,
-  publicationStatus: row.publication_status,
-  plannedTimezone: row.planned_timezone,
+  channelId: row.channel_id ?? null,
+  platform: row.platform ?? null,
+  profileName: row.profile_name ?? null,
+  format: row.format ?? null,
+  editorialStatus: row.editorial_status ?? null,
+  publicationStatus: row.publication_status ?? null,
+  plannedTimezone: row.planned_timezone ?? null,
   at: row.at ?? null,
   date: row.date ?? null,
-  version: row.version,
-  itemVersion: row.item_version,
-  assigneeName: row.assignee_name,
-  channelArchived: row.channel_archived,
+  version: row.version ?? null,
+  itemVersion: row.item_version ?? null,
+  assigneeName: row.assignee_name ?? null,
+  channelArchived: row.channel_archived ?? false,
 });
 
 const toUndated = (row: z.infer<typeof undatedSchema>): UndatedEntry => ({
   itemId: row.item_id,
-  variantId: row.variant_id,
+  channelRowId: row.channel_row_id,
   title: row.title,
   brandId: row.brand_id,
   brandName: row.brand_name,
@@ -113,8 +127,8 @@ const toUndated = (row: z.infer<typeof undatedSchema>): UndatedEntry => ({
   format: row.format,
   editorialStatus: row.editorial_status,
   version: row.version,
-  assigneeName: row.assignee_name,
-  channelArchived: row.channel_archived,
+  assigneeName: row.assignee_name ?? null,
+  channelArchived: row.channel_archived ?? false,
 });
 
 export const listCalendarEntries = createServerFn({ method: "GET" })
@@ -130,6 +144,7 @@ export const listCalendarEntries = createServerFn({ method: "GET" })
       ...(data.ownerId ? { p_assignee: data.ownerId } : {}),
       ...(data.editorial ? { p_editorial: [data.editorial] } : {}),
       ...(data.publication ? { p_publication: [data.publication] } : {}),
+      ...(data.notes ? { p_notes: data.notes } : {}),
     });
     if (error) return fail(error);
     const parsed = parseOutput(listSchema, row);
@@ -156,13 +171,13 @@ export const getCalendarZone = createServerFn({ method: "GET" }).handler(
   },
 );
 
-export const rescheduleVariant = createServerFn({ method: "POST" })
+export const rescheduleChannel = createServerFn({ method: "POST" })
   .validator(rescheduleSchema)
   .handler(async ({ data }): Promise<Result<{ version: number; resubmitted: boolean }>> => {
     const caller = await requireActionServer(Action.Calendar.Manage);
     if (caller === null) return denied;
-    const { data: row, error } = await caller.supabase.rpc("reschedule_variant", {
-      p_variant: data.variantId,
+    const { data: row, error } = await caller.supabase.rpc("reschedule_channel", {
+      p_channel_row: data.channelRowId,
       p_planned_at: data.plannedAt,
       p_timezone: data.timezone,
       p_expected_version: data.expectedVersion,

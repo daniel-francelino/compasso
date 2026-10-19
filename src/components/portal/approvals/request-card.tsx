@@ -5,11 +5,13 @@ import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { isOverdue } from "@/lib/portal/approvals/overdue";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
-import type { ContentFormat, Platform } from "@/lib/shared/enums";
+import type { Platform } from "@/lib/shared/enums";
 import { formatDateOnly, formatInZone } from "@/lib/shared/format";
-import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
+import { nextPlanned } from "@/lib/portal/approvals/planned";
+import { platformLabels } from "@/lib/shared/labels";
 
 export function RequestCard({ request, brandId }: { request: PortalRequest; brandId: string }) {
+  const planned = nextPlanned(request);
   return (
     <SectionCard as="li" padding="sm" className="space-y-2">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -30,15 +32,20 @@ export function RequestCard({ request, brandId }: { request: PortalRequest; bran
         </span>
       </div>
       <p className="text-sm text-muted-foreground">
-        {platformLabels[request.platform as Platform] ?? request.platform} ·{" "}
-        {contentFormatLabels[request.format as ContentFormat] ?? request.format} · Versão{" "}
-        {request.revisionNo}
+        {[
+          ...new Set(
+            request.channels.map(
+              (channel) => platformLabels[channel.platform as Platform] ?? channel.platform,
+            ),
+          ),
+        ].join(", ")}{" "}
+        · Versão {request.revisionNo}
       </p>
       <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-        {request.plannedAt !== null && request.plannedTimezone !== null ? (
+        {planned !== null ? (
           <span className="flex items-center gap-1">
             <CalendarClock className="size-4 text-muted-foreground" aria-hidden="true" />
-            Prevista: {formatInZone(request.plannedAt, request.plannedTimezone)}
+            Prevista: {formatInZone(planned.at, planned.timezone)}
           </span>
         ) : null}
         {request.dueDate ? <span>Responder até {formatDateOnly(request.dueDate)}</span> : null}

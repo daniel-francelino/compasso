@@ -63,14 +63,22 @@ report(
   difference(tsAudit, docAudit),
 );
 
-const checkValues = (table, column, constant, file) => {
+const checkValues = (table, column, constant, file, definedIn = table) => {
   const tableBlock =
-    sql.match(new RegExp(`create table public\\.${table} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? "";
+    sql.match(new RegExp(`create table public\\.${definedIn} \\(([\\s\\S]*?)\\n\\);`))?.[1] ?? "";
   const columnLine =
     tableBlock.match(
-      new RegExp(`${column} text[^,]*?check \\(${column} in \\(([^)]*)\\)\\)`),
+      new RegExp(`${column} text[^,;]*?check \\(${column} in \\(([^)]*)\\)\\)`),
     )?.[1] ?? "";
-  const fromSql = quoted(columnLine, /'([a-z_]+)'/g);
+  const added =
+    columnLine === ""
+      ? (sql.match(
+          new RegExp(
+            `add column ${column} text[\\s\\S]*?check \\(\\s*(?:${column} is null or )?${column} in \\(([^)]*)\\)`,
+          ),
+        )?.[1] ?? "")
+      : columnLine;
+  const fromSql = quoted(added, /'([a-z_]+)'/g);
   const body =
     read(file).match(new RegExp(`export const ${constant} = \\{([\\s\\S]*?)\\} as const`))?.[1] ??
     "";
@@ -83,14 +91,24 @@ checkValues("profiles", "status", "ProfileStatus", "src/lib/shared/enums.ts");
 checkValues("media_shares", "status", "MediaShareStatus", "src/lib/shared/enums.ts");
 checkValues("profiles", "kind", "ProfileKind", "src/lib/shared/enums.ts");
 checkValues("audit_events", "actor_kind", "AuditActorKind", "src/lib/shared/enums.ts");
-checkValues("content_variants", "format", "ContentFormat", "src/lib/shared/enums.ts");
-checkValues("content_variants", "editorial_status", "EditorialStatus", "src/lib/shared/enums.ts");
 checkValues(
+  "content_channels",
+  "format",
+  "ContentFormat",
+  "src/lib/shared/enums.ts",
   "content_variants",
+);
+checkValues("content_items", "editorial_status", "EditorialStatus", "src/lib/shared/enums.ts");
+checkValues("content_items", "objective_kind", "ContentObjective", "src/lib/shared/enums.ts");
+checkValues(
+  "content_channels",
   "publication_status",
   "PublicationStatus",
   "src/lib/shared/enums.ts",
+  "content_variants",
 );
+checkValues("calendar_notes", "kind", "CalendarNoteKind", "src/lib/shared/enums.ts");
+checkValues("calendar_notes", "repeat", "CalendarNoteRepeat", "src/lib/shared/enums.ts");
 checkValues("approval_requests", "status", "ApprovalRequestStatus", "src/lib/shared/enums.ts");
 checkValues("approval_decisions", "outcome", "ApprovalOutcome", "src/lib/shared/enums.ts");
 checkValues("comments", "visibility", "CommentVisibility", "src/lib/shared/enums.ts");
@@ -105,5 +123,5 @@ if (problems.length > 0) {
   process.exit(1);
 }
 console.log(
-  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 14 CHECK lists.`,
+  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 17 CHECK lists.`,
 );

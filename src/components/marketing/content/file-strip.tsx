@@ -9,7 +9,7 @@ import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
 import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
 import type { FileItem } from "@/lib/marketing/content/types";
-import { formatRules } from "@/lib/shared/editorial/editorial";
+import { combinedRule } from "@/lib/shared/editorial/editorial";
 import { type ContentFormat, MediaScope } from "@/lib/shared/enums";
 import { MediaKind } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
@@ -26,19 +26,19 @@ export function FileStrip({
   items,
   onChange,
   brandId,
-  format,
+  formats,
   disabled,
   error,
 }: {
   items: FileItem[];
   onChange: (items: FileItem[]) => void;
   brandId: string;
-  format: ContentFormat;
+  formats: readonly ContentFormat[];
   disabled: boolean;
   error?: string | undefined;
 }) {
   const [picking, setPicking] = useState(false);
-  const rule = formatRules[format];
+  const rule = combinedRule(formats);
   const urls = useSignedUrls(
     items.map((item) => item.mediaVersionId),
     MediaVariant.Thumb,

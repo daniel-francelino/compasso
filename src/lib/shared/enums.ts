@@ -170,6 +170,17 @@ export const ContentFormat = {
 } as const;
 export type ContentFormat = ValueOf<typeof ContentFormat>;
 
+export const ContentObjective = {
+  Awareness: "awareness",
+  Engagement: "engagement",
+  Traffic: "traffic",
+  Leads: "leads",
+  Sales: "sales",
+  Community: "community",
+  Other: "other",
+} as const;
+export type ContentObjective = ValueOf<typeof ContentObjective>;
+
 export const ApprovalRequestStatus = {
   Pending: "pending",
   Approved: "approved",
@@ -212,8 +223,24 @@ export const CalendarEntryKind = {
   Published: "published",
   ApprovalDeadline: "approval_deadline",
   ProductionDeadline: "production_deadline",
+  Idea: "idea",
+  Date: "date",
 } as const;
 export type CalendarEntryKind = ValueOf<typeof CalendarEntryKind>;
+
+export const CalendarNoteKind = {
+  Idea: "idea",
+  Date: "date",
+} as const;
+export type CalendarNoteKind = ValueOf<typeof CalendarNoteKind>;
+
+export const CalendarNoteRepeat = {
+  None: "none",
+  Weekly: "weekly",
+  Monthly: "monthly",
+  Yearly: "yearly",
+} as const;
+export type CalendarNoteRepeat = ValueOf<typeof CalendarNoteRepeat>;
 
 export const CalendarAlert = {
   TooManyOnDay: "too_many_on_day",

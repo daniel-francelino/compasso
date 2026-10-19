@@ -41,11 +41,11 @@ export const decideSchema = z
 export type DecideInput = z.infer<typeof decideSchema>;
 
 export const portalCommentSchema = z.object({
-  variantId: z.string().uuid(),
+  itemId: z.string().uuid(),
   body: z.string().trim().min(1, "Escreva o comentário.").max(4000, "O comentário é longo demais."),
 });
 
-export const portalVariantSchema = z.object({ variantId: z.string().uuid() });
+export const portalItemSchema = z.object({ itemId: z.string().uuid() });
 
 export const signPortalSchema = z.object({
   revisionId: z.string().uuid(),

@@ -2,6 +2,7 @@ import { Save, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError, PasswordField } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { TextField } from "@/components/shared/admin/form-fields";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -47,10 +48,12 @@ function NameForm({ initialName }: { initialName: string }) {
         error={errors["fullName"]}
       />
       <FormError message={error} />
-      <Button type="submit" loading={busy} disabled={busy || fullName === initialName}>
-        <Save aria-hidden="true" />
-        Salvar
-      </Button>
+      <FormActions>
+        <Button type="submit" loading={busy} disabled={busy || fullName === initialName}>
+          <Save aria-hidden="true" />
+          Salvar
+        </Button>
+      </FormActions>
     </SectionCard>
   );
 }
@@ -97,10 +100,12 @@ function PasswordForm() {
         onChange={(event) => setConfirmation(event.target.value)}
       />
       <FormError message={error} />
-      <Button type="submit" loading={busy} disabled={busy || password === ""}>
-        <KeyRound aria-hidden="true" />
-        Alterar senha
-      </Button>
+      <FormActions>
+        <Button type="submit" loading={busy} disabled={busy || password === ""}>
+          <KeyRound aria-hidden="true" />
+          Alterar senha
+        </Button>
+      </FormActions>
     </SectionCard>
   );
 }

@@ -89,3 +89,11 @@ Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 b
 | D2 | `audit_write` raises `invalid_input` for an action outside the catalog (no dedicated code) | Keep: it is a programming error, not a user-facing one |
 | D3 | The audit read policy is organization-level only until migration 6 (`can_access_brand`) replaces it | Keep; P1-03 must replace it (noted in [reference/data-model.md](reference/data-model.md)) |
 | D4 | Migration "3 invitations" is built in P1-01, so its file will be dated after migration 4 | Keep; the order in the registry is logical, the filename order is chronological |
+
+## Content refactor (2026-10-19)
+
+| ID | Item | Status |
+|---|---|---|
+| R1 | **Apply the four migrations of the content refactor to the linked project** (`20261019130000` to `20261019130030`): `npx supabase db push`. The environment refused the command when the assistant tried it. The migrations convert the one existing content (one variant, no versions, requests or comments); a backup of those rows was written to the assistant's scratchpad before the attempt. Until then the linked database has the old schema and the new screens will fail against it | Waiting for the person |
+| R2 | After R1, regenerate the types from the project (`npx supabase gen types typescript --linked` through `npm run db:types -- --linked`). The committed `database.types.ts` was produced by the offline generator (`npm run db:types:offline`) and types `brand_logo_keys` imprecisely, which leaves three type errors in `brand-logos.server.ts` until the real types replace it | Waiting for R1 |
+| R3 | The refactor screens (editor, list, board, calendar with notes, approval and portal tabs) were never opened in a browser | Waiting |

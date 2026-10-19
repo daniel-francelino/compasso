@@ -5,6 +5,12 @@ import { Button } from "@/components/shared/ui/button";
 import { Label } from "@/components/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/shared/ui/tooltip";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -37,6 +43,8 @@ export function ListFilters({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const active = groups.filter((group) => group.value !== group.defaultValue).length + extraActive;
+  const activeLabel = active === 1 ? "1 filtro ativo" : `${active} filtros ativos`;
+  const triggerLabel = active === 0 ? "Filtros" : `Filtros: ${activeLabel}`;
 
   const valueOf = (group: FilterGroup) => draft[group.id] ?? group.value;
 
@@ -63,21 +71,33 @@ export function ListFilters({
 
   return (
     <Popover modal open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="outline" className="w-full justify-center sm:w-auto">
-          <ListFilter aria-hidden="true" />
-          Filtros
-          {active > 0 ? (
-            <Badge
-              variant="secondary"
-              className="ml-1 px-1.5"
-              aria-label={`${active} filtros ativos`}
-            >
-              {active}
-            </Badge>
-          ) : null}
-        </Button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={250}>
+        <Tooltip>
+          <PopoverTrigger asChild>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="relative"
+                aria-label={triggerLabel}
+              >
+                <ListFilter aria-hidden="true" />
+                {active > 0 ? (
+                  <Badge
+                    variant="secondary"
+                    className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center px-1 text-xs"
+                    aria-hidden="true"
+                  >
+                    {active}
+                  </Badge>
+                ) : null}
+              </Button>
+            </TooltipTrigger>
+          </PopoverTrigger>
+          <TooltipContent className="max-w-64">{triggerLabel}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] p-0">
         <div className="max-h-[70vh] space-y-4 overflow-y-auto p-4">
           {groups.map((group) => (

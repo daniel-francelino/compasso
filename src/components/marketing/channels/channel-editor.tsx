@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { EditorSheet } from "@/components/shared/admin/editor-sheet";
 import { TextAreaField, TextField } from "@/components/shared/admin/form-fields";
-import { PlatformIcon } from "@/components/marketing/channels/platform-icon";
+import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { type ChannelRow, saveChannel } from "@/lib/marketing/channels/channels.functions";
 import { saveChannelSchema } from "@/lib/marketing/channels/schemas";

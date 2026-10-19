@@ -42,14 +42,13 @@ function AdminLayout() {
   });
   const fullWidth = useRouterState({
     select: (state) => {
-      const pathname = state.location.pathname;
+      const pathname = (state.resolvedLocation ?? state.location).pathname;
       const brandDetail =
         pathname.startsWith("/admin/marketing/brands/") &&
         pathname !== "/admin/marketing/brands/new";
       return (
         brandDetail ||
         pathname.startsWith("/admin/marketing/content") ||
-        pathname.startsWith("/admin/marketing/variants/") ||
         pathname.startsWith("/admin/marketing/calendar")
       );
     },

@@ -4,10 +4,13 @@ import {
   BrandMemberStatus,
   CalendarAlert,
   CalendarEntryKind,
+  CalendarNoteKind,
+  CalendarNoteRepeat,
   CalendarView,
   CommentVisibility,
   ContactMessageStatus,
   ContentFormat,
+  ContentObjective,
   DashboardReason,
   EditorialStatus,
   InvitationStatus,
@@ -128,6 +131,30 @@ export const calendarEntryKindLabels: Record<CalendarEntryKind, string> = {
   [CalendarEntryKind.Published]: "Publicado",
   [CalendarEntryKind.ApprovalDeadline]: "Prazo de aprovação",
   [CalendarEntryKind.ProductionDeadline]: "Prazo de produção",
+  [CalendarEntryKind.Idea]: "Ideia",
+  [CalendarEntryKind.Date]: "Data",
+};
+
+export const calendarNoteKindLabels: Record<CalendarNoteKind, string> = {
+  [CalendarNoteKind.Idea]: "Ideia",
+  [CalendarNoteKind.Date]: "Data",
+};
+
+export const calendarNoteRepeatLabels: Record<CalendarNoteRepeat, string> = {
+  [CalendarNoteRepeat.None]: "Não repetir",
+  [CalendarNoteRepeat.Weekly]: "Toda semana",
+  [CalendarNoteRepeat.Monthly]: "Todo mês",
+  [CalendarNoteRepeat.Yearly]: "Todo ano",
+};
+
+export const contentObjectiveLabels: Record<ContentObjective, string> = {
+  [ContentObjective.Awareness]: "Reconhecimento da marca",
+  [ContentObjective.Engagement]: "Engajamento",
+  [ContentObjective.Traffic]: "Tráfego para o site",
+  [ContentObjective.Leads]: "Geração de contatos",
+  [ContentObjective.Sales]: "Vendas",
+  [ContentObjective.Community]: "Comunidade",
+  [ContentObjective.Other]: "Outro",
 };
 
 export const calendarAlertLabels: Record<CalendarAlert, string> = {

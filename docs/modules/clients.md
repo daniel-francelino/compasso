@@ -123,4 +123,9 @@ Done: list (status tabs, search, server pagination), create, duplicate-name warn
 
 2026-10-19: Reused the client edit form in a full-screen dialog opened from the client name in a brand overview. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
 
-2026-10-19: Added brand avatars and time-zone details to the client's brands tab and changed "Nova marca" to create in a side sheet; saving refreshes the client data in place. Validation performed: pending. **Not tested**: browser behavior.
+2026-10-19: Added signed brand-logo avatars, time-zone details and archived status to the client's brands tab; changed "Nova marca" to use the shared editor sheet, with unsaved-change handling and client/brand cache refresh on save. No migration. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior or real logo URLs.
+
+2026-10-19: Moved the contextual "Nova marca" and "Novo contato" actions to the right side of the client's tab row. The visible action now follows the active tab and remains permission-gated. Validation performed: targeted ESLint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
+2026-10-19: Client create and edit forms now use the shared right-aligned form action component. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. Full typecheck remains blocked by existing calendar and brand-logo type errors outside this change. **Not tested**: browser rendering.
+
+2026-10-19: The shared list-filter trigger now uses an icon with a tooltip and active-count badge. This applies to the clients list. Validation performed: targeted ESLint, Prettier and `git diff --check`. `check:docs` is currently blocked by ten audit-action registry mismatches for `calendar_note.*` and `variant.*` in the audit/functions documents. Full typecheck is blocked by existing `brand-logos.server.ts` type errors. **Not tested**: browser interaction.

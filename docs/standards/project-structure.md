@@ -45,7 +45,7 @@ Examples:
 
 | File | Destination path |
 |---|---|
-| Content variant form | `src/components/marketing/content/variant-form.tsx` |
+| Content editor sections | `src/components/marketing/content/content-settings-section.tsx` |
 | Server functions of the content | `src/lib/marketing/content/content.functions.ts` |
 | Calendar hook of the portal | `src/hooks/portal/calendar/use-portal-calendar.ts` |
 | Approval decision screen piece | `src/components/portal/approvals/decision-panel.tsx` |
@@ -57,7 +57,7 @@ Examples:
 
 | Space | Modules |
 |---|---|
-| `marketing` | `clients`, `brands`, `channels`, `content` (items, variants, revisions, internal comments), `approvals` (request and follow-up), `calendar`, `dashboard` |
+| `marketing` | `clients`, `brands`, `channels`, `content` (contents with channel rows, versions, internal comments), `approvals` (request and follow-up), `calendar`, `dashboard` |
 | `cms` | `editor`, `pages`, `services`, `portfolio`, `testimonials`, `navigation`, `seo`, `publishing`, `settings`, `media` |
 | `site` | `render`, `layout`, `contact`, `public` (in `lib`: reading the published version) |
 | `portal` | `brands`, `approvals`, `calendar`, `comments` |
@@ -92,7 +92,7 @@ Consequences:
 - **If two spaces need the same piece, it moves up to `shared`**, with its own module. It is not copied and no exception is opened.
 - Inside a space, modules may import from one another, but the ideal is for the dependency to go "specific module → more general module".
 
-Import: always through the alias (`@/components/marketing/content/variant-form`). A relative path only **inside the same module** (`./variant-card`). No `index.ts` files that re-export.
+Import: always through the alias (`@/components/marketing/content/content-settings-section`). A relative path only **inside the same module** (`./channel-logos`). No `index.ts` files that re-export.
 
 This rule is enforced by `no-restricted-imports` in `eslint.config.js`, one block per space, so a violation shows up as a lint error and not only in review.
 

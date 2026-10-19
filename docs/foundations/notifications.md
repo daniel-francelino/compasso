@@ -11,7 +11,7 @@
 
 ## 2. Principles
 
-1. **Actionable**: each notification leads directly to the record in question (a variant, an approval request, a user).
+1. **Actionable**: each notification leads directly to the record in question (a content, an approval request, a user).
 2. **No duplicates**: the same alert is not repeated on every check (deduplication key).
 3. **Self-correcting**: when the problem is solved, the alert stops being relevant and is resolved.
 4. **Controllable**: each person can turn alert types on/off and adjust lead times.
@@ -30,8 +30,8 @@ Each kind requires an **action** and, when the subject belongs to a brand, a **b
 | `approval.overdue` | A pending request passed its approval deadline | Whoever submitted (`approvals.view`). The external approver is not sent this alert (see the Phase 4 addition) | Scheduled | Next day, then every 2 days until resolved |
 | `content.due_soon` | A production deadline is approaching | The content owner (`content.view`) | Scheduled | 2 days and the same day |
 | `content.overdue` | A production deadline passed and the content is not ready | The content owner and managers of the brand | Scheduled | Daily until resolved |
-| `variant.publish_due` | The planned date passed with no manual publication recorded | The content owner (`content.publish_manual`) | Scheduled | The day after |
-| `comment.created` | A comment on a variant the person follows | Participants (internal: `comments.create_internal`; external: `comments.create_external`) | Event | Immediate |
+| `content.publish_due` | The planned date of a channel row passed with no manual publication recorded | The content owner (`content.publish_manual`) | Scheduled | The day after |
+| `comment.created` | A comment on a content the person follows | Participants (internal: `comments.create_internal`; external: `comments.create_external`) | Event | Immediate |
 | `invitation.accepted` | An invitation was accepted | Whoever invited (`users.view`) | Event | Immediate |
 | `invitation.expiring` | A pending invitation expires soon | Whoever invited | Scheduled | 1 day before |
 | `site.published` | A site version was published or restored | People with `site.publish` | Event | Immediate |
@@ -92,7 +92,7 @@ The "next content, deadlines and pending approvals" block of the dashboard reuse
 | `approval.superseded` | Uma nova versão foi enviada | "A versão que você ia avaliar foi substituída. Veja a versão atual." |
 | `approval.overdue` | Aprovação atrasada | "A aprovação de «Lançamento de outono» está pendente desde 12 de outubro." |
 | `content.due_soon` | Prazo de produção chegando | "«Lançamento de outono» deve ficar pronto em 2 dias." |
-| `variant.publish_due` | Hora de registrar a publicação | "«Lançamento de outono» estava planejado para ontem às 10h. Já foi publicado?" |
+| `content.publish_due` | Hora de registrar a publicação | "«Lançamento de outono» estava planejado para ontem às 10h. Já foi publicado?" |
 | `invitation.accepted` | Convite aceito | "Marta Silva aceitou o convite e já pode acessar." |
 | `site.published` | Site publicado | "A versão 12 do site está no ar." |
 
@@ -230,18 +230,18 @@ Email complements the in-app alert for what is important or for people who are n
 2. Are the default lead times (2 days for production deadlines, next day for overdue approvals) adequate?
 3. Should the external approver receive reminder emails for pending approvals (and how often)?
 4. Does the contracted Supabase plan include **`pg_cron`**? If not, use Vercel Cron.
-5. Are there missing alert kinds (for example a comment from the client on a variant, a rejected upload)?
+5. Are there missing alert kinds (for example a comment from the client on a content, a rejected upload)?
 
 ## Implementation status (phase 1)
 
 Phase 1 (task P1-09, 2026-10-18). Migration `20261018100400_notifications.sql` (tables, 13 kinds seeded, `notify_users`, `resolve_notifications`, `notification_lead_days`, `generate_due_notifications`, policies, Realtime publication and `pg_cron` schedule when available), `notify_scan_invitations` in the invitations migration, server functions, bell with Realtime and a 60-second poll, `/admin/notifications`, preferences in the profile. Only `invitation.accepted` and `invitation.expiring` are `available`. Validation performed: 44 SQL assertions (dedupe, preferences, action and brand scope, RLS, writer not callable by clients). **Not tested**: Realtime delivery, `pg_cron`, the e-mail outbox sender (rows are queued, nothing sends them yet: task P3-06), the screens in a browser. Also done after the first pass: lead-day editing in the preferences and the defaults screen (`/admin/settings/notifications`, `notification_kind_save`). **Not done**: the portal bell (phase 3).
 ### Phase 3 addition (tasks P3-03 and P3-06, 2026-10-18)
 
-`approval.requested`, `approval.decided`, `approval.superseded` and `comment.created` are now `available` (migration `20261018100900_content.sql`) and are written inside `submit_for_approval`, `reassign_approver`, `send_approval_reminder`, `reopen_variant`, `portal_decide_approval` and `portal_add_comment`, in the same transaction as the operation. Reminders use a one-hour `dedupe_key`. The e-mail sender now exists: `/api/cron/email-outbox` (`src/lib/shared/jobs/email-outbox.server.ts`) reads queued rows, sends the title and one link through the adapter, retries with back-off (5, 10, 20, 40 minutes) and marks the row `failed` after five attempts; a failure never touches the request or the notification. The portal has a notifications counter in its header and the pages `/portal/notifications` and `/portal/profile`. **Not tested**: the worker against a database and the provider, Realtime for external users. **Not done**: the scheduled kinds `approval.overdue`, `content.due_soon`, `content.overdue` and `variant.publish_due` (task P4-04), `available` stays false for them.
+`approval.requested`, `approval.decided`, `approval.superseded` and `comment.created` are now `available` (migration `20261018100900_content.sql`) and are written inside `submit_for_approval`, `reassign_approver`, `send_approval_reminder`, `reopen_content`, `portal_decide_approval` and `portal_add_comment`, in the same transaction as the operation. Reminders use a one-hour `dedupe_key`. The e-mail sender now exists: `/api/cron/email-outbox` (`src/lib/shared/jobs/email-outbox.server.ts`) reads queued rows, sends the title and one link through the adapter, retries with back-off (5, 10, 20, 40 minutes) and marks the row `failed` after five attempts; a failure never touches the request or the notification. The portal has a notifications counter in its header and the pages `/portal/notifications` and `/portal/profile`. **Not tested**: the worker against a database and the provider, Realtime for external users. **Not done**: the scheduled kinds `approval.overdue`, `content.due_soon`, `content.overdue` and `variant.publish_due` (task P4-04), `available` stays false for them.
 
 ### Phase 4 addition (task P4-04, 2026-10-18)
 
-`approval.overdue`, `content.due_soon`, `content.overdue` and `variant.publish_due` are now `available` (migration `20261018101000_calendar.sql`). One scanner, `notify_scan_content()`, produces the four; `generate_due_notifications()` finds it by name and runs it, and the daily job `/api/cron/due-notifications` (`vercel.json`, 09:00 UTC) calls that function where `pg_cron` is unavailable. Keys: `approval.overdue:<request>:<days late>` (first alert after `lead_days[1]` days, then every `lead_days[2]` days), `content.due_soon:<item>:<date>:<days left>`, `content.overdue:<item>:<today>`, `variant.publish_due:<variant>:<planned epoch>`, so a second run of the scanner creates nothing. An item is "ready" when it has variants and all of them are approved or cancelled (`content_item_is_ready`). `variant.publish_due` is raised only for approved, planned variants whose date passed in their own zone. Each scan also resolves alerts that no longer apply (request decided, item ready or cancelled, publication recorded or date moved).
+`approval.overdue`, `content.due_soon`, `content.overdue` and `content.publish_due` (renamed from `variant.publish_due` on 2026-10-19) are now `available` (migration `20261018101000_calendar.sql`). One scanner, `notify_scan_content()`, produces the four; `generate_due_notifications()` finds it by name and runs it, and the daily job `/api/cron/due-notifications` (`vercel.json`, 09:00 UTC) calls that function where `pg_cron` is unavailable. Keys: `approval.overdue:<request>:<days late>` (first alert after `lead_days[1]` days, then every `lead_days[2]` days), `content.due_soon:<item>:<date>:<days left>`, `content.overdue:<item>:<today>`, `variant.publish_due:<variant>:<planned epoch>`, so a second run of the scanner creates nothing. An item is "ready" when it has variants and all of them are approved or cancelled (`content_item_is_ready`). `variant.publish_due` is raised only for approved, planned variants whose date passed in their own zone. Each scan also resolves alerts that no longer apply (request decided, item ready or cancelled, publication recorded or date moved).
 
 **Decision D18:** the external approver does not receive `approval.overdue`. The kind requires `approvals.view`, which the external roles do not have, and widening that action for external users would weaken the rule that they read only through `portal_*`. The portal already marks the request as late (`overdue.ts`) and the team can send a reminder ("Lembrar aprovador"). **Not tested**: the real `pg_cron` and the Vercel schedule (V21); a person's own `lead_days` for `content.overdue` (daily by design).
 

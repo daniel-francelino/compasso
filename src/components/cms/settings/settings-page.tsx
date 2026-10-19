@@ -5,6 +5,7 @@ import { ImageField } from "@/components/cms/fields/image-field";
 import { LinkField } from "@/components/cms/fields/link-field";
 import { ProblemList } from "@/components/cms/page-editor/problem-list";
 import { TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
@@ -94,10 +95,12 @@ function GroupCard({
         </p>
       ) : null}
       {canEdit ? (
-        <Button type="button" onClick={() => void save()} loading={busy} disabled={!dirty}>
-          <Save aria-hidden="true" />
-          Salvar
-        </Button>
+        <FormActions>
+          <Button type="button" onClick={() => void save()} loading={busy} disabled={!dirty}>
+            <Save aria-hidden="true" />
+            Salvar
+          </Button>
+        </FormActions>
       ) : null}
     </SectionCard>
   );

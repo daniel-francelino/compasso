@@ -9,6 +9,10 @@ begin
 end;
 $$;
 
+create function pg_temp.ver(p_item uuid) returns int language sql as $$
+  select version from public.content_items where id = p_item
+$$;
+
 create function pg_temp.notes(p_kind text, p_user uuid) returns int language sql as $$
   select count(*)::int from public.notifications where kind = p_kind and user_id = p_user
 $$;
@@ -63,10 +67,9 @@ select public.notify_scan_content();
 select is(pg_temp.notes('content.due_soon', '00000000-0000-0000-0000-0000000000b1'), 1, 'a person who turned the kind off gets no new alert');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select set_config('t.item3', public.content_item_save(format('{"brand_id":"%s","title":"Aprovacao parada"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
-select set_config('t.v3', public.content_variant_save(format('{"content_item_id":"%s","channel_id":"%s","format":"text","caption":{"text":"Texto"}}', current_setting('t.item3'), current_setting('t.channel'))::jsonb) ->> 'id', true);
-select public.content_variant_move(current_setting('t.v3')::uuid, 'in_production', 1);
-select set_config('t.sub3', public.submit_for_approval(current_setting('t.v3')::uuid, '00000000-0000-0000-0000-0000000000d1', current_setting('t.today')::date, null, 2)::text, true);
+select set_config('t.v3', public.content_item_save(format('{"brand_id":"%s","title":"Aprovacao parada","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
+select public.content_move(current_setting('t.v3')::uuid, 'in_production', pg_temp.ver(current_setting('t.v3')::uuid));
+select set_config('t.sub3', public.submit_for_approval(current_setting('t.v3')::uuid, '00000000-0000-0000-0000-0000000000d1', current_setting('t.today')::date, null, pg_temp.ver(current_setting('t.v3')::uuid))::text, true);
 reset role;
 
 alter table public.approval_requests disable trigger approval_requests_guard;
@@ -86,27 +89,27 @@ select public.notify_scan_content();
 select is((select count(*)::int from public.notifications where kind = 'approval.overdue' and status = 'resolved'), 1, 'deciding the request resolves the overdue alert');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select set_config('t.item4', public.content_item_save(format('{"brand_id":"%s","title":"Publicar ontem","assignee_id":"00000000-0000-0000-0000-0000000000b1"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
-select set_config('t.v4', public.content_variant_save(format('{"content_item_id":"%s","channel_id":"%s","format":"text","caption":{"text":"Texto"},"planned_at":"%s","planned_timezone":"America/Sao_Paulo"}', current_setting('t.item4'), current_setting('t.channel'), now() - interval '2 days')::jsonb) ->> 'id', true);
-select public.content_variant_move(current_setting('t.v4')::uuid, 'in_production', 1);
-select set_config('t.sub4', public.submit_for_approval(current_setting('t.v4')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, 2)::text, true);
+select set_config('t.v4', public.content_item_save(format('{"brand_id":"%s","title":"Publicar ontem","assignee_id":"00000000-0000-0000-0000-0000000000b1","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text","planned_at":"%s","planned_timezone":"America/Sao_Paulo"}]}', current_setting('t.brand'), current_setting('t.channel'), now() - interval '2 days')::jsonb) ->> 'id', true);
+select set_config('t.row4', (select id::text from public.content_channels where content_item_id = current_setting('t.v4')::uuid), true);
+select public.content_move(current_setting('t.v4')::uuid, 'in_production', pg_temp.ver(current_setting('t.v4')::uuid));
+select set_config('t.sub4', public.submit_for_approval(current_setting('t.v4')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver(current_setting('t.v4')::uuid))::text, true);
 reset role;
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
 select public.portal_decide_approval((current_setting('t.sub4')::jsonb ->> 'request_id')::uuid, 'approved', null);
 reset role;
 
 select public.notify_scan_content();
-select is(pg_temp.notes('variant.publish_due', '00000000-0000-0000-0000-0000000000b1'), 1, 'a passed publication date alerts the owner');
+select is(pg_temp.notes('content.publish_due', '00000000-0000-0000-0000-0000000000b1'), 1, 'a passed publication date alerts the owner');
 select public.notify_scan_content();
-select is(pg_temp.notes('variant.publish_due', '00000000-0000-0000-0000-0000000000b1'), 1, 'once');
+select is(pg_temp.notes('content.publish_due', '00000000-0000-0000-0000-0000000000b1'), 1, 'once');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select public.mark_published(current_setting('t.v4')::uuid, now(), null, null, null);
+select public.mark_published(current_setting('t.row4')::uuid, now(), null, null, null);
 reset role;
 select public.notify_scan_content();
-select is((select count(*)::int from public.notifications where kind = 'variant.publish_due' and status = 'resolved'), 1, 'recording the publication resolves the alert');
+select is((select count(*)::int from public.notifications where kind = 'content.publish_due' and status = 'resolved'), 1, 'recording the publication resolves the alert');
 
-select is((select count(*)::int from public.notification_kinds where available and kind in ('approval.overdue', 'content.due_soon', 'content.overdue', 'variant.publish_due')), 4, 'the four scheduled kinds are available');
+select is((select count(*)::int from public.notification_kinds where available and kind in ('approval.overdue', 'content.due_soon', 'content.overdue', 'content.publish_due')), 4, 'the four scheduled kinds are available');
 
 select * from finish();
 rollback;

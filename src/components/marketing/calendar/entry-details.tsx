@@ -1,5 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarClock, ExternalLink, TriangleAlert } from "lucide-react";
+import {
+  Archive,
+  CalendarClock,
+  ExternalLink,
+  Pencil,
+  RefreshCw,
+  TriangleAlert,
+} from "lucide-react";
 import { WhyDisabled } from "@/components/shared/admin/why-disabled";
 import { entrySubtitle } from "@/components/shared/calendar/entry-items";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
@@ -15,7 +22,11 @@ import {
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
 import { type CalendarAlert, CalendarEntryKind } from "@/lib/shared/enums";
 import { formatDateOnly, formatInZone } from "@/lib/shared/format";
-import { calendarAlertLabels, calendarEntryKindLabels } from "@/lib/shared/labels";
+import {
+  calendarAlertLabels,
+  calendarEntryKindLabels,
+  calendarNoteRepeatLabels,
+} from "@/lib/shared/labels";
 
 export function EntryDetails({
   entry,
@@ -23,6 +34,9 @@ export function EntryDetails({
   alerts,
   changeBlockedReason,
   onChangeDate,
+  onEditNote,
+  onArchiveNote,
+  canConvert,
   onClose,
 }: {
   entry: CalendarEntry;
@@ -30,6 +44,9 @@ export function EntryDetails({
   alerts: CalendarAlert[];
   changeBlockedReason: string | null;
   onChangeDate: (() => void) | null;
+  onEditNote: (() => void) | null;
+  onArchiveNote: (() => void) | null;
+  canConvert: boolean;
   onClose: () => void;
 }) {
   const when =
@@ -38,6 +55,7 @@ export function EntryDetails({
       : entry.date !== null
         ? formatDateOnly(entry.date)
         : "—";
+  const isNote = entry.kind === CalendarEntryKind.Idea || entry.kind === CalendarEntryKind.Date;
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -52,6 +70,18 @@ export function EntryDetails({
             <dt className="text-muted-foreground">Quando</dt>
             <dd className="font-medium">{when}</dd>
           </div>
+          {isNote && entry.repeat !== null ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <dt className="text-muted-foreground">Repete</dt>
+              <dd>{calendarNoteRepeatLabels[entry.repeat]}</dd>
+            </div>
+          ) : null}
+          {isNote && entry.description ? (
+            <div>
+              <dt className="sr-only">Descrição</dt>
+              <dd className="whitespace-pre-wrap text-sm">{entry.description}</dd>
+            </div>
+          ) : null}
           {entry.editorialStatus !== null ? (
             <div className="flex flex-wrap items-center gap-2">
               <dt className="text-muted-foreground">Estado</dt>
@@ -89,24 +119,48 @@ export function EntryDetails({
               </Link>
             </Button>
           ) : null}
-          {entry.variantId !== null ? (
-            <Button asChild variant="outline">
-              <Link
-                to="/admin/marketing/variants/$variantId"
-                params={{ variantId: entry.variantId }}
-              >
-                <ExternalLink aria-hidden="true" />
-                Abrir variante
-              </Link>
-            </Button>
-          ) : (
+          {isNote ? (
+            <>
+              {onArchiveNote !== null && entry.convertedItemId === null ? (
+                <Button type="button" variant="outline" onClick={onArchiveNote}>
+                  <Archive aria-hidden="true" />
+                  Arquivar
+                </Button>
+              ) : null}
+              {onEditNote !== null && entry.convertedItemId === null ? (
+                <Button type="button" variant="outline" onClick={onEditNote}>
+                  <Pencil aria-hidden="true" />
+                  Editar
+                </Button>
+              ) : null}
+              {entry.convertedItemId !== null ? (
+                <Button asChild variant="outline">
+                  <Link
+                    to="/admin/marketing/content/$itemId"
+                    params={{ itemId: entry.convertedItemId }}
+                  >
+                    <ExternalLink aria-hidden="true" />
+                    Abrir conteúdo
+                  </Link>
+                </Button>
+              ) : null}
+              {canConvert && entry.convertedItemId === null && entry.noteId !== null ? (
+                <Button asChild>
+                  <Link to="/admin/marketing/content/new" search={{ note: entry.noteId }}>
+                    <RefreshCw aria-hidden="true" />
+                    Converter em conteúdo
+                  </Link>
+                </Button>
+              ) : null}
+            </>
+          ) : entry.itemId !== null ? (
             <Button asChild variant="outline">
               <Link to="/admin/marketing/content/$itemId" params={{ itemId: entry.itemId }}>
                 <ExternalLink aria-hidden="true" />
                 Abrir conteúdo
               </Link>
             </Button>
-          )}
+          ) : null}
           {onChangeDate !== null ? (
             <WhyDisabled reason={changeBlockedReason}>
               <Button type="button" disabled={changeBlockedReason !== null} onClick={onChangeDate}>

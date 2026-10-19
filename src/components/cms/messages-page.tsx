@@ -98,7 +98,13 @@ function MessageCard({ message }: { message: MessageRow }) {
             </Button>
           ))}
         {note !== (message.note ?? "") ? (
-          <Button type="button" size="sm" disabled={busy} onClick={() => void set(message.status)}>
+          <Button
+            type="button"
+            size="sm"
+            className="ml-auto"
+            disabled={busy}
+            onClick={() => void set(message.status)}
+          >
             <Save aria-hidden="true" />
             Salvar nota
           </Button>

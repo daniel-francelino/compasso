@@ -2,6 +2,7 @@ import { Save } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/shared/admin/page-header";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
@@ -55,27 +56,29 @@ function KindCard({ kind }: { kind: KindDefaults }) {
             />
           </div>
         ) : null}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={busy || invalid || !dirty}
-          onClick={() =>
-            void run(
-              () =>
-                saveKindDefaults({
-                  data: {
-                    kind: kind.kind,
-                    defaultLeadDays: kind.schedulable ? parsed : null,
-                    defaultEmail: email,
-                  },
-                }),
-              { success: "Padrão salvo.", invalidate: [QueryKey.Notifications.defaults()] },
-            )
-          }
-        >
-          <Save aria-hidden="true" />
-          Salvar
-        </Button>
+        <FormActions className="ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={busy || invalid || !dirty}
+            onClick={() =>
+              void run(
+                () =>
+                  saveKindDefaults({
+                    data: {
+                      kind: kind.kind,
+                      defaultLeadDays: kind.schedulable ? parsed : null,
+                      defaultEmail: email,
+                    },
+                  }),
+                { success: "Padrão salvo.", invalidate: [QueryKey.Notifications.defaults()] },
+              )
+            }
+          >
+            <Save aria-hidden="true" />
+            Salvar
+          </Button>
+        </FormActions>
       </div>
       {invalid ? (
         <p role="alert" className="text-xs text-destructive">

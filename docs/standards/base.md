@@ -100,10 +100,10 @@ When a row is missing for something you need, propose the row here **first** (se
 | Constants (as const) | `PascalCase` object + same-name type | `EditorialStatus` |
 | Query keys | `QueryKey.<Module>.<name>` | `QueryKey.Content.list(filters)` |
 | Actions | `module.verb` in SQL, `Action.Module.Verb` in TS | `content.update`, `Action.Content.Update` |
-| Tables and columns | `snake_case`, plural tables, English | `content_variants.planned_at` |
+| Tables and columns | `snake_case`, plural tables, English | `content_channels.planned_at` |
 | SQL functions | `snake_case` verbs; portal ones prefixed `portal_` | `submit_for_approval`, `portal_decide_approval` |
 | SQL error codes | `lowercase_with_underscores` | `revision_superseded` |
-| Migrations | `YYYYMMDDHHMMSS_<module>_<change>.sql` | `20261101120000_content_variants.sql` |
+| Migrations | `YYYYMMDDHHMMSS_<module>_<change>.sql` | `20261101120000_content_channels.sql` |
 | Tests | Unit `*.test.ts` next to the file; pgTAP `supabase/tests/NN_<area>.test.sql`; E2E `e2e/<flow>.spec.ts` | |
 | Routes | English, kebab-case segments, plural collections, `$param` | `/admin/marketing/clients/$clientId` |
 | Documents | English, kebab-case `.md`, in the folder of their area | `docs/modules/content.md` |
@@ -127,7 +127,7 @@ export const submitForApproval = createServerFn({ method: "POST" })
     const caller = await requireActionServer(Action.Content.Submit);
     if (caller === null) return denied;
     const { data: row, error } = await caller.supabase.rpc("submit_for_approval", {
-      p_variant: data.variantId,
+      p_item: data.itemId,
       p_approver: data.approverId,
       p_expected_version: data.expectedVersion,
     });
@@ -185,7 +185,7 @@ For each new table or function: one test per role (Owner, an internal role with 
 
 ### 5.7 Audit event
 
-Inside the transactional SQL function: `perform audit_write(v_org, v_brand, 'variant.submitted', 'content_variant', v_variant, jsonb_build_object('revision_no', v_no));` The action name must exist in `AuditAction` (TS) and in the list verified by `check:consistency`. Metadata: ids and field names only.
+Inside the transactional SQL function: `perform audit_write(v_org, v_brand, 'content.submitted', 'content_item', v_item, jsonb_build_object('revision_no', v_no));` The action name must exist in `AuditAction` (TS) and in the list verified by `check:consistency`. Metadata: ids and field names only.
 
 ## 6. Data and database rules
 

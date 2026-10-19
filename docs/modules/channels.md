@@ -6,7 +6,7 @@
 
 A channel is a **concrete profile or destination of a brand**: "@cafeaurora on Instagram", "Café Aurora on LinkedIn", the brand's blog or newsletter. A brand can have at most one active channel per platform. Archived channels remain available as history and free the platform slot for a replacement.
 
-**Registering a channel does not mean there is an authenticated integration with the platform.** In the MVP channels are descriptive: they classify variants, drive previews and calendar filters. Automatic publishing and token management are a separate future project.
+**Registering a channel does not mean there is an authenticated integration with the platform.** In the MVP channels are descriptive: they classify the channel rows of contents, drive previews and calendar filters. Automatic publishing and token management are a separate future project.
 
 Included: register, edit, archive, preview rules per platform. Not included: OAuth connections, token renewal, metrics, scheduling through platform APIs.
 
@@ -26,7 +26,7 @@ The channel editor UI allows at most one active channel per platform for a brand
 
 ## Platform rules (preview and validation guidance)
 
-Each platform has a descriptor in `shared/preview` used by the variant editor and the portal preview. They are **guidance**, not enforcement of platform limits (which change); the team can override with a warning.
+Each platform has a descriptor in `shared/preview` used by the content editor (the formats offered per channel row) and the portal preview. They are **guidance**, not enforcement of platform limits (which change); the team can override with a warning.
 
 | Platform | Formats offered | Caption guidance | Preview |
 |---|---|---|---|
@@ -47,14 +47,14 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 
 - **Channels tab:** active platforms appear in a compact, responsive grid of square platform cards, with one card per platform and one active profile slot per card, ordered by social usage priority: Instagram, TikTok, Facebook, YouTube, LinkedIn, X, Threads, Pinterest, then E-mail, Blog and Outro. Each card uses the platform SVG mark (`PlatformIcon`); Outro uses a neutral globe mark. Clicking a card creates or edits its single channel. The profile name is shown when present, otherwise `-`; the card has no create/edit prompt. Configured channels retain their actions menu. Only active channels are displayed on this screen; archiving removes the channel from the grid.
 - **Create/edit:** the existing sheet (`EditorSheet`) keeps profile name, URL, identifier and notes. Choosing an empty platform card supplies the platform; editing a configured card retains it. No new channel fields are introduced.
-- **Archive:** archiving blocks **new** planned items on the channel; variants already planned or published stay linked to it and visible; a channel with planned (not yet published) variants lists them first and requires the person to confirm or reassign them. Archived channels are hidden from this screen.
-- **Delete:** only a channel never used by any variant; otherwise archive.
+- **Archive:** archiving blocks **new** planned items on the channel; channel rows already planned or published stay linked to it and visible; a channel with planned (not yet published) rows lists them first and requires the person to confirm or reassign them. Archived channels are hidden from this screen.
+- **Delete:** only a channel never used by any content channel row; otherwise archive.
 - When a brand is created, the screen offers "Adicionar canais agora" but it is optional.
 
 ## Rules
 
-1. A variant must reference an **active** channel of the **same brand** when it is planned or sent for approval (composite FK `(channel_id, brand_id)` guarantees the brand; a trigger guarantees the active status).
-2. An archived channel is shown with a badge on existing variants; it cannot be chosen for new variants.
+1. A content channel row must reference an **active** channel of the **same brand** when it is planned or sent for approval (composite FK `(channel_id, brand_id)` guarantees the brand; a trigger guarantees the active status).
+2. An archived channel is shown with a badge on existing channel rows; it cannot be chosen for new ones.
 3. Changing the platform of a channel in use is refused (create a new channel instead); changing the profile name or URL is allowed and audited.
 4. Registration never contacts the platform; no secrets are stored here.
 5. Audit: `channel.created/updated/archived/reactivated/deleted`.
@@ -74,7 +74,7 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 | `channels.update` | Edit, archive, reactivate | `channels.view` |
 | `channels.delete` | Delete unused channels | `channels.update` |
 
-External users never read channels directly; the portal receives only the platform name, icon and profile name of the channels used by the variants shared with them.
+External users never read channels directly; the portal receives only the platform name, icon and profile name of the channels used by the contents shared with them.
 
 ## Error codes
 
@@ -87,10 +87,10 @@ External users never read channels directly; the portal receives only the platfo
 - A brand's active channel grid has exactly one card per platform; an unused platform card starts creation and a configured card opens that channel for editing.
 - The active channel grid is ordered with the most-used social platforms first and displays an SVG mark for each platform.
 - Archived channels do not appear in the channels screen or occupy an active platform card.
-- A variant cannot be planned on an archived channel or on a channel of another brand (UI and database).
-- Archiving a channel keeps the history of variants linked to it.
+- A content channel row cannot be planned on an archived channel or on a channel of another brand (UI and database).
+- Archiving a channel keeps the history of channel rows linked to it.
 - No channel registration triggers external calls.
-- The portal shows the preview of the variant according to its channel's platform descriptor.
+- The portal shows the preview of each channel according to its channel's platform descriptor.
 
 
 ## Implementation status

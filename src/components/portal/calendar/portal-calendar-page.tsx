@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
 import { useCalendarState } from "@/hooks/shared/use-calendar-state";
 import { listPortalCalendar } from "@/lib/portal/calendar/portal-calendar.functions";
-import type { GridItem } from "@/lib/shared/calendar/grid-item";
+import { type GridItem, StatusMark } from "@/lib/shared/calendar/grid-item";
 import { rangeTitle } from "@/lib/shared/calendar/range";
 import type { PortalCalendarEntry } from "@/lib/shared/calendar/types";
 import { ApprovalRequestStatus, CalendarView } from "@/lib/shared/enums";
@@ -27,6 +27,8 @@ const LEGEND = [
   ApprovalRequestStatus.Superseded,
 ];
 
+const requestOf = (key: string): string => key.split(":")[0] ?? key;
+
 const requestZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const toItem = (entry: PortalCalendarEntry, zone: string): GridItem => {
@@ -35,7 +37,7 @@ const toItem = (entry: PortalCalendarEntry, zone: string): GridItem => {
   const own =
     entry.plannedTimezone !== zone ? ` · ${entry.plannedTimezone.replaceAll("_", " ")}` : "";
   return {
-    key: entry.requestId,
+    key: `${entry.requestId}:${entry.profileName}:${entry.plannedAt}`,
     day: local.slice(0, 10),
     time: local.slice(11),
     title: entry.title,
@@ -46,6 +48,9 @@ const toItem = (entry: PortalCalendarEntry, zone: string): GridItem => {
     icon: style.icon,
     movable: false,
     alerts: [],
+    platform: entry.platform,
+    mark: StatusMark.Scheduled,
+    muted: false,
   };
 };
 
@@ -107,7 +112,7 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
           onSelect={(key) =>
             void navigate({
               to: "/portal/brands/$brandId/approvals/$requestId",
-              params: { brandId, requestId: key },
+              params: { brandId, requestId: requestOf(key) },
             })
           }
         />
@@ -122,7 +127,7 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
           onSelect={(key) =>
             void navigate({
               to: "/portal/brands/$brandId/approvals/$requestId",
-              params: { brandId, requestId: key },
+              params: { brandId, requestId: requestOf(key) },
             })
           }
           onOpenDay={(day) => void state.openDay(day)}

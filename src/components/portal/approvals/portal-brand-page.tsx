@@ -6,6 +6,7 @@ import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
 import { RequestCard } from "@/components/portal/approvals/request-card";
 import { listPortalApprovals, listPortalPending } from "@/lib/portal/approvals/portal.functions";
+import { nextPlanned } from "@/lib/portal/approvals/planned";
 import { PortalApprovalFilter } from "@/lib/portal/approvals/schemas";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -80,9 +81,10 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
   const mine = pending.data.filter((request) => request.isMine);
   const others = pending.data.filter((request) => !request.isMine);
   const upcoming = (approved.data ?? [])
-    .filter(
-      (request) => request.plannedAt !== null && new Date(request.plannedAt).getTime() > Date.now(),
-    )
+    .filter((request) => {
+      const planned = nextPlanned(request);
+      return planned !== null && new Date(planned.at).getTime() > Date.now();
+    })
     .slice(0, RECENT);
   const recent = [...(approved.data ?? []), ...(decided.data ?? [])]
     .sort((a, b) => (b.decidedAt ?? "").localeCompare(a.decidedAt ?? ""))

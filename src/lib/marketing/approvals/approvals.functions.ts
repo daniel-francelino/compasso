@@ -6,7 +6,6 @@ import {
   type ApprovalOutcome,
   ApprovalRequestStatus,
   CommentVisibility,
-  type ContentFormat,
   type Platform,
 } from "@/lib/shared/enums";
 import { todayInZone } from "@/lib/shared/format";
@@ -43,10 +42,8 @@ export type ApprovalRow = {
   title: string;
   brandId: string;
   brandName: string;
-  variantId: string;
-  platform: Platform;
-  profileName: string;
-  format: ContentFormat;
+  itemId: string;
+  channels: { platform: Platform; profileName: string }[];
   revisionNo: number;
   approverName: string | null;
   requestedAt: string;
@@ -60,7 +57,6 @@ export type ApprovalDetail = {
   brandId: string;
   brandName: string;
   brandTimezone: string;
-  variantId: string;
   itemId: string;
   approverId: string;
   approverName: string | null;
@@ -82,6 +78,19 @@ export type ApprovalDetail = {
 
 const reassignedSchema = z.object({ request_id: z.string().uuid() });
 
+const snapshotChannelsSchema = z.object({
+  channels: z.array(z.object({ platform: z.string(), profile_name: z.string() })),
+});
+
+const snapshotChannels = (snapshot: unknown): { platform: Platform; profileName: string }[] => {
+  const parsed = snapshotChannelsSchema.safeParse(snapshot);
+  if (!parsed.success) return [];
+  return parsed.data.channels.map((channel) => ({
+    platform: channel.platform as Platform,
+    profileName: channel.profile_name,
+  }));
+};
+
 const organizationZone = async (supabase: Caller["supabase"]): Promise<string> => {
   const { data } = await supabase.from("organizations").select("default_timezone").limit(1);
   return data?.[0]?.default_timezone ?? "America/Sao_Paulo";
@@ -99,7 +108,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     let query = caller.supabase
       .from("approval_requests")
       .select(
-        "id, status, brand_id, variant_id, approver_user_id, requested_at, due_date, content_revisions(revision_no), content_variants!inner(format, channels(platform, profile_name), content_items!inner(title, brands(name)))",
+        "id, status, brand_id, item_id, approver_user_id, requested_at, due_date, content_revisions(revision_no, snapshot), content_items!inner(title, brands(name))",
         { count: "exact" },
       );
     const filter = data.status ?? ApprovalFilter.Pending;
@@ -109,7 +118,7 @@ export const listApprovals = createServerFn({ method: "GET" })
         : query.eq("status", filter);
     if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
     if (data.approverId !== undefined) query = query.eq("approver_user_id", data.approverId);
-    if (search !== "") query = query.ilike("content_variants.content_items.title", `%${search}%`);
+    if (search !== "") query = query.ilike("content_items.title", `%${search}%`);
 
     const {
       data: rows,
@@ -128,13 +137,11 @@ export const listApprovals = createServerFn({ method: "GET" })
     const mapped = rows.map((row) => ({
       id: row.id,
       status: row.status as ApprovalRequestStatus,
-      title: row.content_variants?.content_items?.title ?? "",
+      title: row.content_items?.title ?? "",
       brandId: row.brand_id,
-      brandName: row.content_variants?.content_items?.brands?.name ?? "",
-      variantId: row.variant_id,
-      platform: (row.content_variants?.channels?.platform ?? "other") as Platform,
-      profileName: row.content_variants?.channels?.profile_name ?? "",
-      format: (row.content_variants?.format ?? "other") as ContentFormat,
+      brandName: row.content_items?.brands?.name ?? "",
+      itemId: row.item_id,
+      channels: snapshotChannels(row.content_revisions?.snapshot),
       revisionNo: row.content_revisions?.revision_no ?? 0,
       approverName: names.get(row.approver_user_id) ?? null,
       requestedAt: row.requested_at,
@@ -157,7 +164,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("approval_requests")
       .select(
-        "id, status, brand_id, variant_id, revision_id, approver_user_id, requested_by, requested_at, due_date, message, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by), content_variants(content_item_id, current_revision_id, content_items(brands(name, timezone)))",
+        "id, status, brand_id, item_id, revision_id, approver_user_id, requested_by, requested_at, due_date, message, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by), content_items(current_revision_id, brands(name, timezone))",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -170,7 +177,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
         .select(REVISION_SELECT)
         .eq("id", row.revision_id)
         .maybeSingle(),
-      supabase.rpc("comment_list", { p_variant: row.variant_id }),
+      supabase.rpc("comment_list", { p_item: row.item_id }),
     ]);
     if (revisionResult.error) return fail(revisionResult.error);
     if (commentsResult.error) return fail(commentsResult.error);
@@ -186,7 +193,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
       row.requested_by,
       decision?.decided_by,
     ]);
-    const brand = row.content_variants?.content_items?.brands;
+    const brand = row.content_items?.brands;
     const zone = brand?.timezone ?? (await organizationZone(supabase));
     const today = todayInZone(zone);
 
@@ -198,8 +205,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
         brandId: row.brand_id,
         brandName: brand?.name ?? "",
         brandTimezone: zone,
-        variantId: row.variant_id,
-        itemId: row.content_variants?.content_item_id ?? "",
+        itemId: row.item_id,
         approverId: row.approver_user_id,
         approverName: names.get(row.approver_user_id) ?? null,
         requestedByName: row.requested_by === null ? null : (names.get(row.requested_by) ?? null),
@@ -212,7 +218,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
         outcome: (decision?.outcome ?? null) as ApprovalOutcome | null,
         decisionComment: decision?.comment ?? null,
         decidedByName: decision === undefined ? null : (names.get(decision.decided_by) ?? null),
-        isCurrent: row.content_variants?.current_revision_id === row.revision_id,
+        isCurrent: row.content_items?.current_revision_id === row.revision_id,
         overdue:
           row.status === ApprovalRequestStatus.Pending &&
           row.due_date !== null &&

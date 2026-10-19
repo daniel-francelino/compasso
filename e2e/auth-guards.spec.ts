@@ -33,7 +33,7 @@ for (const path of [
   "/admin/marketing/content",
   "/admin/marketing/approvals",
   "/admin/marketing/content/00000000-0000-0000-0000-000000000001",
-  "/admin/marketing/variants/00000000-0000-0000-0000-000000000001",
+  "/admin/marketing/content/new",
   "/admin/marketing/approvals/00000000-0000-0000-0000-000000000001",
   "/admin/marketing/calendar",
   "/admin/marketing/brands/00000000-0000-0000-0000-000000000001/calendar",

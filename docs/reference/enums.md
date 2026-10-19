@@ -16,16 +16,19 @@
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
 |---|---|---|---|---|
-| `EditorialStatus` | `draft`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `cancelled` | `content_variants.editorial_status` | "Rascunho", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Cancelado" | content |
-| `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_variants.publication_status` | "Não planejada", "Planejada", "Publicada manualmente", "Cancelada" | content |
+| `EditorialStatus` | `draft`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Cancelado" | content |
+| `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_channels.publication_status` | "Não planejada", "Planejada", "Publicada manualmente", "Cancelada" | content |
 | `RichNodeType` | `doc`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `hardBreak`, `text` | Tiptap JSON of `content_items.briefing` (not a database column check; validated by zod in `lib/shared/rich-text/types.ts`) | (not shown) | content |
 | `RichMarkType` | `bold`, `italic` | Marks allowed in that JSON | (not shown) | content |
-| `ContentFormat` | `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` | `content_variants.format` | "Imagem", "Carrossel", "Vídeo", "Texto", "Story", "Reel", "Artigo", "Outro" | content |
+| `ContentFormat` | `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` | `content_channels.format` | "Imagem", "Carrossel", "Vídeo", "Texto", "Story", "Reel", "Artigo", "Outro" | content |
 | `ApprovalRequestStatus` | `pending`, `approved`, `changes_requested`, `superseded`, `cancelled` | `approval_requests.status` | "Pendente", "Aprovada", "Alterações solicitadas", "Substituída", "Cancelada" | approvals |
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |
 | `CommentVisibility` | `internal`, `external` | `comments.visibility` | "Interno", "Externo" | content |
 | `CalendarView` | `month`, `week`, `list` | URL param `view` (not stored in the database) | "Mês", "Semana", "Lista" | calendar |
-| `CalendarEntryKind` | `publication`, `published`, `approval_deadline`, `production_deadline` | `list_calendar_entries` output (`kind`, not stored) | "Publicação planejada", "Publicado", "Prazo de aprovação", "Prazo de produção" | calendar |
+| `CalendarEntryKind` | `publication`, `published`, `approval_deadline`, `production_deadline`, `idea`, `date` | `list_calendar_entries` output (`kind`, not stored) | "Publicação planejada", "Publicado", "Prazo de aprovação", "Prazo de produção", "Ideia", "Data" | calendar |
+| `CalendarNoteKind` | `idea`, `date` | `calendar_notes.kind` | "Ideia", "Data" | calendar |
+| `CalendarNoteRepeat` | `none`, `weekly`, `monthly`, `yearly` | `calendar_notes.repeat` | "Não repetir", "Toda semana", "Todo mês", "Todo ano" | calendar |
+| `ContentObjective` | `awareness`, `engagement`, `traffic`, `leads`, `sales`, `community`, `other` | `content_items.objective_kind` | "Reconhecimento da marca", "Engajamento", "Tráfego para o site", "Geração de contatos", "Vendas", "Comunidade", "Outro" | content |
 | `CalendarAlert` | `too_many_on_day`, `too_close`, `not_approved_yet`, `date_passed` | computed in the browser (not stored) | see `calendarAlertLabels` in `lib/shared/labels.ts` | calendar |
 | `DashboardReason` | `approval_overdue`, `changes_requested`, `production_overdue`, `planned_date_passed`, `approver_without_access` | `dashboard_attention` output (`reasons`, not stored) | "Aprovação atrasada", "Alterações solicitadas", "Prazo de produção vencido", "Data prevista ultrapassada", "Aprovador sem acesso" | dashboard |
 | `Platform` | `instagram`, `facebook`, `linkedin`, `tiktok`, `youtube`, `x`, `pinterest`, `threads`, `email`, `blog`, `other` | `channels.platform` | "Instagram", "Facebook", "LinkedIn", "TikTok", "YouTube", "X", "Pinterest", "Threads", "E-mail", "Blog", "Outro" | channels |
@@ -71,7 +74,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 |---|---|---|---|---|
 | `NotificationSeverity` | `info`, `warning`, `urgent` | `notifications.severity`, `notification_kinds.severity` | | notifications |
 | `NotificationStatus` | `active`, `resolved` | `notifications.status` | | notifications |
-| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.overdue`, `content.due_soon`, `content.overdue`, `variant.publish_due`, `comment.created`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
+| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
 | `AuditActorKind` | `internal`, `external`, `system` | `audit_events.actor_kind` ✔ | | audit |
 | `AuditAction` | See [../modules/audit.md](../modules/audit.md) | catalog in `audit_write` | | audit |
 | `EmailStatus` | `queued`, `sent`, `failed` | `email_outbox.status` | | notifications |

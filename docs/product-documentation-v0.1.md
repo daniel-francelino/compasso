@@ -139,13 +139,13 @@ Channel: platform, profile name, identifier or URL, active/archived status and r
 
 Archiving preserves history. An archived channel cannot receive new planned items but stays associated with earlier posts.
 
-## 8. Content and per-channel variants
+## 8. Content with several channels
 
 A content item is an editorial idea that belongs to a brand. It holds an internal title, goal, briefing, owner, tags, deadlines and internal notes.
 
-Each content item can originate several variants, one per channel and publication occurrence. Each variant has its own format, caption, file order, call to action, planned date and approval cycle. For example, a campaign can generate a carousel on Instagram and a different text on LinkedIn.
+A content is written once and goes to one or more channels. Each channel row (channel, format and publication occurrence) has its own format, optional caption adjustment and planned date; the caption, files, call to action and the approval cycle are shared. For example, a campaign can generate a carousel and a story on Instagram and a text on LinkedIn from one content.
 
-A variant sent for approval creates an immutable revision with the texts, files, order, channel and date shown to the client. File references must point to immutable object versions.
+A content sent for approval creates an immutable version with the texts, files, order and, per channel, the format, adjustment and date shown to the client. File references must point to immutable object versions.
 
 ### Editorial statuses
 
@@ -161,7 +161,7 @@ Draft → In production → In internal review → Awaiting approval → Approve
 | `approved` | "Aprovado" |
 | `cancelled` | "Cancelado" |
 
-A change request moves the variant to "changes requested"; the team prepares a new revision and submits it again. A variant can also be cancelled without deleting its history.
+A change request moves the content to "changes requested"; the team prepares a new version and submits it again. A content can also be cancelled without deleting its history.
 
 Publication status is separate: Unplanned ("Não planejada"), Planned ("Planejada"), Published manually ("Publicada manualmente") or Cancelled ("Cancelada"). "Planned" means an editorial date exists; it does not mean the platform will publish automatically. "Scheduled" is reserved for a future integration that actually confirms a scheduling.
 
@@ -178,13 +178,13 @@ Publication status is separate: Unplanned ("Não planejada"), Planned ("Planejad
 
 ## 9. Editorial calendar
 
-Month, week and list views. The internal view aggregates the authorized brands; the portal is restricted to the brands and variants shared with the user.
+Month, week and list views. The internal view aggregates the authorized brands; the portal is restricted to the brands and contents shared with the user.
 
-Each entry corresponds to a channel variant. Filters: client, brand, channel, owner, editorial status and publication status. Production and approval deadlines must be distinct from the publication date and visually identifiable.
+Each entry corresponds to a channel row of a content (shown with the channel logo); ideas and dates created by the team also appear. Filters: client, brand, channel, owner, editorial status and publication status. Production and approval deadlines must be distinct from the publication date and visually identifiable.
 
 Store instants in UTC and the applicable IANA time zone (for example America/Sao_Paulo or Europe/Lisbon). The default time zone comes from the organization and each brand can have its own. Show the time zone in the calendar and handle daylight-saving changes where they exist. Deadlines without a time must be modeled as local dates.
 
-Dragging an entry changes the date after confirmation. If the variant was already submitted or approved, the new-revision rule applies. Content without a date stays in a pending list. An approval received after the planned date raises a warning and requires rescheduling; it does not trigger publishing.
+Dragging an entry changes the date after confirmation. If the content was already submitted or approved, the new-version rule applies. Content without a date stays in a pending list. An approval received after the planned date raises a warning and requires rescheduling; it does not trigger publishing.
 
 ## 10. Client Portal
 
@@ -249,8 +249,9 @@ Technical sources: https://supabase.com/docs/guides/database/postgres/row-level-
 | brands, brand_members | Brands and explicit internal/external links |
 | channels | Editorial destinations of a brand |
 | content_items | Editorial idea and briefing of a brand |
-| content_variants | Adaptation for a channel and publication occurrence |
-| content_revisions, content_revision_media | Immutable versions of the variant and the files shown |
+| content_channels | Channel, format and publication occurrence of a content |
+| calendar_notes | Ideas and dates on the calendar, convertible into contents |
+| content_revisions, content_revision_media | Immutable versions of the content and the files shown |
 | approval_requests, approval_decisions | Request per revision and the designated approver's decision |
 | comments | Comments with internal or external visibility |
 | media_assets, media_versions | Logical identity and file versions in R2 |
@@ -261,7 +262,7 @@ Technical sources: https://supabase.com/docs/guides/database/postgres/row-level-
 | notification_kinds, notifications, notification_preferences | Internal alerts |
 | audit_events | Traceability of critical business actions |
 
-Subordinate entities carry a verifiable brand context. Composite foreign keys or equivalent validations prevent linking a variant to another brand's channel. Adding a context identifier is not enough without guaranteeing the consistency of the relations.
+Subordinate entities carry a verifiable brand context. Composite foreign keys or equivalent validations prevent linking a content channel row to another brand's channel. Adding a context identifier is not enough without guaranteeing the consistency of the relations.
 
 Decisions and critical transitions are transactional. Audit records actor, action, entity and instant, with restricted access. Indexes must cover the authorization fields and the calendar filters. Public content is exposed through a read function limited to published revisions.
 
@@ -293,7 +294,7 @@ Everyone signs in at /admin/login; the external approver is sent to /portal. Sep
 
 ### Proposed MVP
 
-Authentication and invitations; two internal spaces; structured CMS; registered clients, brands and channels; content with variants; revisions and approval by one responsible person; internal/external comments; calendar; library in R2; manually recorded publishing; audit of critical actions.
+Authentication and invitations; two internal spaces; structured CMS; registered clients, brands and channels; content with several channels; revisions and approval by one responsible person; internal/external comments; calendar; library in R2; manually recorded publishing; audit of critical actions.
 
 ### Later evolution
 
@@ -307,7 +308,7 @@ Automatic publishing must be its own integration project. Having a calendar and 
 - An external member of brand A cannot obtain data, comments or private URLs of brand B, even by changing identifiers in requests.
 - The approver sees exactly the revision that was sent. Editing approved content requires a new approval.
 - A decision on a superseded revision is refused, including under concurrency.
-- Only shared variants appear in the external calendar.
+- Only shared contents appear in the external calendar.
 - Content with two channels can have different dates, formats and decisions per channel.
 - A private file is not reachable through a public domain; temporary URLs expire.
 - An invalid or incomplete upload does not become available for public selection.

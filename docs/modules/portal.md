@@ -20,8 +20,8 @@ Included: brand selection, pending dashboard, calendar, approval screen, externa
 | Can see | Cannot see |
 |---|---|
 | The brands they are linked to | Other brands, other clients, the client list |
-| Variants **with a revision sent** to them: the revision snapshot (caption, files, order, channel, planned date with zone), request status, approval deadline | Drafts, working copies, internal notes, briefing, owner, internal deadlines |
-| External comments of the variant and the decision history of those requests | Internal comments, audit events, settings, users |
+| Contents **with a revision sent** to them: the version snapshot (caption, files, order and, per channel, the platform, format, caption adjustment and planned date with zone), request status, approval deadline | Drafts, working copies, internal notes, briefing, owner, internal deadlines |
+| External comments of the content and the decision history of those requests | Internal comments, audit events, settings, users |
 | Files referenced by the revisions shared with them (short signed URLs) | The rest of the media library |
 | Their own notifications and profile | Anything outside `portal_*` functions |
 
@@ -33,7 +33,7 @@ Technically the external role has **no `select` policy** on any internal table; 
 |---|---|
 | `/portal` | Brand selection (only linked brands). With a single brand, it goes straight to it |
 | `/portal/brands/$brandId` | **Painel**: pending approvals first (with deadlines), then upcoming planned posts, then recent decisions; calendar shortcut |
-| `/portal/brands/$brandId/calendar` | Read-only calendar of shared variants (month/week/list; list by default on mobile) |
+| `/portal/brands/$brandId/calendar` | Read-only calendar of shared contents (month/week/list; list by default on mobile) |
 | `/portal/brands/$brandId/approvals` | List of requests with filters: Pendentes, Aprovadas, Alterações solicitadas, Substituídas |
 | `/portal/brands/$brandId/approvals/$requestId` | **Review and decision** |
 | `/portal/notifications`, `/portal/profile` | Notifications and own profile (name, password) |
@@ -62,7 +62,7 @@ Technically the external role has **no `select` policy** on any internal table; 
 - **Decision buttons** are at the bottom (sticky on mobile), 44 px targets. "Aprovar" asks for a light confirmation; "Pedir alterações" opens a required comment field (minimum 5 characters). Both are disabled while the request is running and re-enabled with the data preserved if it fails.
 - **States:** pending (decision available); decided (read-only, with the decision and its comment); superseded (banner "Esta versão foi atualizada" with a link to the current request); cancelled; approver without `can_decide` (the screen shows the content and comments but no decision buttons, with the message "Você pode comentar, mas a decisão é de {nome}"); no access ("Você não tem acesso a esta marca").
 - **External comments:** a thread below the content; the person adds comments (`comments.create_external`); the team sees them with an "Externo" badge.
-- **History:** previous revisions of the same variant with their decisions (only those shared with the person).
+- **History:** previous revisions of the same content with their decisions (only those shared with the person).
 
 ### Dashboard
 
@@ -83,7 +83,7 @@ Shows, by brand: "Aguardando você (N)" with deadline and age, "Próximas public
 
 > Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
 
-All reads and writes go through: `portal_list_brands()`, `portal_list_pending(p_brand)`, `portal_get_approval(p_request)`, `portal_list_calendar(p_brand, p_from, p_to)`, `portal_list_comments(p_variant)`, `portal_add_comment(p_variant, p_body)`, `portal_decide_approval(p_request, p_outcome, p_comment)`, `portal_record_view(p_request)`. Each checks `has_action('portal.view')` and the active external link; outputs are validated with zod on the server (`parseOutput`) and returned as explicit DTOs (never full rows).
+All reads and writes go through: `portal_list_brands()`, `portal_list_pending(p_brand)`, `portal_get_approval(p_request)`, `portal_list_calendar(p_brand, p_from, p_to)`, `portal_list_comments(p_item)`, `portal_add_comment(p_item, p_body)`, `portal_decide_approval(p_request, p_outcome, p_comment)`, `portal_record_view(p_request)`. Each checks `has_action('portal.view')` and the active external link; outputs are validated with zod on the server (`parseOutput`) and returned as explicit DTOs (never full rows).
 
 Code layout: `components/portal/{brands,approvals,calendar,comments}`, `lib/portal/{brands,approvals,calendar,comments}` (server functions `*.functions.ts`), `hooks/portal/...`; shared pieces (`shared/preview`, `shared/calendar`, `shared/editorial`, `shared/media` for signed URLs) are imported from `shared`.
 
@@ -93,7 +93,7 @@ Code layout: `components/portal/{brands,approvals,calendar,comments}`, `lib/port
 |---|---|
 | `portal.view` | Enter the portal and read the allowed data |
 | `approvals.decide` | Decide the requests designated to the person (needs `portal.view`) |
-| `comments.create_external` | Comment on variants of the linked brands (needs `portal.view`) |
+| `comments.create_external` | Comment on contents of the linked brands (needs `portal.view`) |
 
 Starting roles: `external_approver` (all three) and `external_commenter` (`portal.view` and `comments.create_external`).
 
@@ -108,7 +108,7 @@ Starting roles: `external_approver` (all three) and `external_commenter` (`porta
 - An external member of brand A cannot obtain data, comments or private URLs of brand B, even by changing identifiers in requests.
 - The approver sees exactly the revision sent; later edits by the team do not change it.
 - A decision on a superseded revision is refused, also with concurrent sessions.
-- Only shared variants appear in the portal calendar; drafts and internal deadlines never do.
+- Only shared contents appear in the portal calendar; drafts and internal deadlines never do.
 - A member without `can_decide` can comment but cannot decide.
 - The approval flow works completely on a phone (360 px) and with keyboard only.
 - Revoking access blocks the next read or decision; the history of past decisions stays.
@@ -120,4 +120,4 @@ Phase 3 (task P3-05, 2026-10-18). Done: migration `20261018100920_portal_functio
 
 Validation performed: pgTAP (brand A versus brand B on every function, designated approver, member without `can_decide`, commenter, internal manager refused, revoked link, no storage key or internal text in the DTO, superseded revision, signing only for files of a shared revision); typecheck, lint, build; the unauthenticated redirects of the portal routes in Playwright. **Not tested**: the portal in a browser at 360 px and with the keyboard (acceptance criterion), the invite → approve flow with real accounts, the signed file URLs against a real bucket. **Not done**: anonymous links (out of scope).
 
-Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (returns the brand zone and one entry per variant that has a request that is not cancelled, with date, status and title taken from the snapshot of its latest request; never drafts, owners, internal deadlines or comments), the server function `listPortalCalendar`, the page `/portal/brands/$brandId/calendar` (month, week and list, read-only, a click opens the approval screen) and a "Ver calendário" link on the brand panel. Tested with the SQL assertions of `11_calendar.test.sql` (brand A versus brand B, the team refused, no internal field in the output); **not tested** in a browser (V20).
+Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (returns the brand zone and one entry per content that has a request that is not cancelled, with date, status and title taken from the snapshot of its latest request; never drafts, owners, internal deadlines or comments), the server function `listPortalCalendar`, the page `/portal/brands/$brandId/calendar` (month, week and list, read-only, a click opens the approval screen) and a "Ver calendário" link on the brand panel. Tested with the SQL assertions of `11_calendar.test.sql` (brand A versus brand B, the team refused, no internal field in the output); **not tested** in a browser (V20).

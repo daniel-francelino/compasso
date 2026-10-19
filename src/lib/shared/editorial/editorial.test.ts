@@ -4,8 +4,10 @@ import {
   DirectMoves,
   EditorialTransitions,
   canTransition,
+  combinedRule,
   fileCountProblem,
   formatRules,
+  mediaProblem,
   platformFormats,
 } from "@/lib/shared/editorial/editorial";
 import { ContentFormat, EditorialStatus, Platform } from "@/lib/shared/enums";
@@ -69,5 +71,15 @@ describe("formats", () => {
     expect(fileCountProblem(ContentFormat.Video, 2)).toBe("Este formato aceita 1 arquivo.");
     expect(fileCountProblem(ContentFormat.Text, 0)).toBeNull();
     expect(formatRules[ContentFormat.Carousel].max).toBe(20);
+  });
+
+  it("combine the rules of several formats into the strictest one", () => {
+    const rule = combinedRule([ContentFormat.Carousel, ContentFormat.Video]);
+    expect([rule.min, rule.max]).toEqual([2, 1]);
+    expect(combinedRule([]).max).toBe(formatRules[ContentFormat.Other].max);
+    expect(mediaProblem([ContentFormat.Image, ContentFormat.Video], 2)).toBe(
+      "Este formato aceita 1 arquivo.",
+    );
+    expect(mediaProblem([ContentFormat.Image, ContentFormat.Text], 1)).toBeNull();
   });
 });

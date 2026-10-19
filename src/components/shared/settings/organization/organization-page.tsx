@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { SelectField, TextField } from "@/components/shared/admin/form-fields";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -111,10 +112,12 @@ function OrganizationForm({ organization }: { organization: OrganizationRecord }
         error={errors["contactEmail"]}
       />
       <FormError message={error} />
-      <Button type="submit" loading={busy} disabled={!dirty || busy}>
-        <Save aria-hidden="true" />
-        Salvar
-      </Button>
+      <FormActions>
+        <Button type="submit" loading={busy} disabled={!dirty || busy}>
+          <Save aria-hidden="true" />
+          Salvar
+        </Button>
+      </FormActions>
     </SectionCard>
   );
 }

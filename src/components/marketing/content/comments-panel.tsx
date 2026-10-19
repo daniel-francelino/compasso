@@ -56,7 +56,7 @@ function CommentItem({ comment, onDelete }: { comment: CommentRow; onDelete: () 
   );
 }
 
-export function CommentsPanel({ variantId }: { variantId: string }) {
+export function CommentsPanel({ itemId }: { itemId: string }) {
   const auth = useAuth();
   const { run, busy } = useServerAction();
   const [body, setBody] = useState("");
@@ -67,8 +67,8 @@ export function CommentsPanel({ variantId }: { variantId: string }) {
   const canInternal = can(auth, Action.Comments.CreateInternal);
   const canExternal = can(auth, Action.Comments.CreateExternal);
   const query = useQuery({
-    queryKey: QueryKey.Content.comments(variantId),
-    queryFn: async () => unwrapResult(await listComments({ data: { variantId } })).comments,
+    queryKey: QueryKey.Content.comments(itemId),
+    queryFn: async () => unwrapResult(await listComments({ data: { itemId } })).comments,
   });
 
   async function send() {
@@ -78,8 +78,8 @@ export function CommentsPanel({ variantId }: { variantId: string }) {
       return;
     }
     setError(undefined);
-    const result = await run(() => addComment({ data: { variantId, visibility, body } }), {
-      invalidate: [QueryKey.Content.comments(variantId)],
+    const result = await run(() => addComment({ data: { itemId, visibility, body } }), {
+      invalidate: [QueryKey.Content.comments(itemId)],
     });
     if (result.ok) {
       setBody("");
@@ -161,8 +161,8 @@ export function CommentsPanel({ variantId }: { variantId: string }) {
         busy={busy}
         onConfirm={async () => {
           if (removing === null) return true;
-          const result = await run(() => deleteComment({ data: { id: removing.id, variantId } }), {
-            invalidate: [QueryKey.Content.comments(variantId)],
+          const result = await run(() => deleteComment({ data: { id: removing.id, itemId } }), {
+            invalidate: [QueryKey.Content.comments(itemId)],
             success: "Comentário excluído.",
           });
           return result.ok;

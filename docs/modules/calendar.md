@@ -1,50 +1,53 @@
 # Module — Editorial calendar
 
-> Functional specification. Context and conventions in [README.md](README.md). Spaces: `marketing` (`/admin/marketing/calendar` and the "Calendário" tab of a brand) and `portal` (calendar of the shared variants). The calendar components live in `shared/calendar`.
+> Functional specification. Context and conventions in [README.md](README.md). Spaces: `marketing` (`/admin/marketing/calendar` and the "Calendário" tab of a brand) and `portal` (calendar of the shared contents). The calendar components live in `shared/calendar`.
 
 ## Goal and scope
 
-Show **what is planned, when and in which state**, for one brand or for all the authorized brands, and let the team move dates safely. Each entry is a **variant** (one channel, one occurrence). Production and approval **deadlines** are shown apart from the publication date.
+Show **what is planned, when and in which state**, for one brand or for all the authorized brands, and let the team move dates safely. Each entry is a **channel row of a content** (one channel, one format, one occurrence), shown with the **channel logo** and a status mark (published or scheduled). Production and approval **deadlines** are shown apart from the publication date. The team can also keep **ideas** and **dates** on the calendar and convert them into contents.
 
 Admin calendar screens use all available content width for the calendar grid and its undated-content panel.
 
-Included: month, week and list views, filters, items without a date, drag to reschedule with confirmation, time zones and daylight saving, shareable URLs, portal calendar. Not included in the MVP: free-form events and tasks, external calendar sync (Google/ICS export is a later option), automatic publishing, resource planning.
+Included: month, week and list views, filters, items without a date, drag to reschedule with confirmation, time zones and daylight saving, shareable URLs, portal calendar. Not included in the MVP: tasks and other free-form events (only ideas and dates exist), external calendar sync (Google/ICS export is a later option), automatic publishing, resource planning.
 
 ## What appears on the calendar
 
 | Entry | Source | Date | Display |
 |---|---|---|---|
-| Planned publication | `content_variants.planned_at` + `planned_timezone` | An instant with time | Timed item; color by editorial status; channel icon; thumbnail on hover |
+| Planned publication | `content_channels.planned_at` + `planned_timezone` | An instant with time | Timed item; color by the editorial status of the content; **channel logo**; a clock mark ("Agendados") |
 | Production deadline | `content_items.production_due_date` | A local date | All-day item with a neutral style and a "prazo" marker |
-| Approval deadline | `content_variants.approval_due_date` | A local date | All-day item with its own marker |
-| Published manually | `published_at` | Real instant | Item with a "publicado" icon, at the real time |
+| Approval deadline | `content_items.approval_due_date` | A local date | All-day item with its own marker |
+| Published manually | `content_channels.published_at` | Real instant | Item with the channel logo and a check mark ("Publicados"), at the real time |
+| Idea | `calendar_notes` (`kind = idea`) | A local date | All-day item with a light bulb; greyed and linked when it became a content |
+| Date | `calendar_notes` (`kind = date`) | A local date | All-day item with a calendar mark; repeats weekly, monthly or yearly when asked |
 
-Variants without a planned date do **not** appear on the grid; they stay in the side list **"Sem data"**.
+Channel rows without a planned date do **not** appear on the grid; they stay in the side list **"Sem data"**.
 
 ## Time zones
 
 - Instants are stored in UTC **plus** the IANA zone chosen at planning (the brand's zone by default; the organization's zone is the brand's default).
 - Deadlines are local dates of the brand, without time.
-- The calendar grid uses the zone of the **selected brand**; in the global view it uses the organization's zone with a visible selector, and each entry shows its own zone when it differs ("10:00 · America/Sao_Paulo").
+- The calendar grid uses the zone of the **selected brand**; in the global view it detects and uses the browser timezone, shown compactly in the toolbar. The global view has no timezone selector. Each entry shows its own zone when it differs ("10:00 · America/Sao_Paulo").
 - The editor of a date asks for date and time **in the brand's zone**; the server converts before saving. Non-existent and ambiguous local times (daylight-saving changes) are handled explicitly: a non-existent time is refused with a suggestion; an ambiguous one asks which occurrence.
 - Mandatory tests: daylight-saving changes of a zone that has them (for example Europe/Lisbon in March and October) and a zone that has none (America/Sao_Paulo).
 
 ## Views and navigation
 
-- **Month**, **Week** and **List**; today button; previous/next; a title with the range. Default: Week in Marketing Management, List on mobile.
-- **Filters:** brand, client, channel, owner, editorial status, publication status, "somente prazos". Filters and the visible range live in the **URL** so links can be shared and the position restored when returning from a detail.
+- **Month**, **Week** and **List**; today button; previous/next; a title with the range. Default: Week in Marketing Management, List on mobile. The last selected view is saved in local storage (`StoredKey.CalendarView`); a `view` in the URL takes precedence and refreshes that saved preference.
+- **Filters:** brand, client, channel, owner, editorial status, publication status, "somente prazos", and the two chips **"Datas"** and **"Ideias"** (on by default; turning one off hides those notes). Notes are hidden whenever a channel, owner, editorial or publication filter is on. Filters and the visible range live in the **URL** so links can be shared and the position restored when returning from a detail.
 - **Side list "Sem data":** content without date, filtered the same way; drag a card onto the grid to plan it. The panel can be hidden with an icon button (tooltip "Ocultar/Mostrar conteúdos sem data") next to the filters, so the grid takes the whole width; the choice is remembered in the browser (`StoredKey.CalendarUndatedOpen`, open by default).
-- **Legend:** status colors from `statusStyles` with icon and text; deadline markers explained.
-- **Entry preview:** click opens a popover with title, brand, channel, status, time with zone and quick actions (open variant, reschedule); on mobile a bottom sheet.
+- **Legend:** the marks "Publicados" (check) and "Agendados" (clock), status colors from `statusStyles` with icon and text, deadline and note markers explained.
+- **Adding from a day:** every day cell of the grid has an **"Adicionar"** button (visible on hover and focus) with three options: "Agendar conteúdo" (opens the content editor with that day), "Adicionar data" and "Adicionar ideia" (a dialog with date, repetition, title and description). The options appear only with `content.create` and `calendar.manage`.
+- **Entry preview:** click opens a dialog with title, brand, channel, status, time with zone and quick actions (open content, reschedule); for an idea or a date: description, repetition and the actions "Converter em conteúdo", "Editar" and "Arquivar" (a converted note links to its content instead).
 - **Accessibility:** a **list alternative** is always available and keyboard-navigable; the grid supports arrow-key navigation; reschedule is also possible through a "Alterar data…" dialog (no drag required).
 
 ## Rescheduling
 
 1. Drag an entry to another day/time, or use "Alterar data…".
 2. A confirmation dialog shows old and new date/time **with the zone** and the effects:
-   - variant `draft` / `in_production` / `internal_review`: just changes the date;
-   - variant `awaiting_approval` or `approved`: warns that **a new revision and a new approval are required**; confirming calls `reschedule_variant`, which creates the new revision (the previous pending request is superseded);
-   - variant already `published_manually`: refused (the publication record is a fact; correct it with a note);
+   - content `draft` / `in_production` / `internal_review`: just changes the date of that channel row;
+   - content `awaiting_approval` or `approved`: warns that **a new version and a new approval are required**; confirming calls `reschedule_channel`, which creates the new version of the whole content (the previous pending request is superseded);
+   - channel row already `published_manually`: refused (the publication record is a fact; correct it with a note);
    - date in the past: allowed only with an explicit warning.
 3. Conflicts (optimistic `version`) show "Este item foi alterado por outra pessoa" and reload.
 4. Deadlines can be changed by drag or in the editor; they do not require a new revision.
@@ -55,29 +58,30 @@ Dragging in the **portal** is not allowed (external users never reschedule).
 
 The calendar shows non-blocking warnings, never silent changes:
 
-- more than N variants of the same channel on the same day (configurable, default 3);
+- more than N channel rows of the same channel on the same day (configurable, default 3);
 - the same brand and channel within a very short interval (default 30 minutes);
-- a planned publication before the approval deadline, or before the variant is approved ("ainda não aprovado");
-- a planned date in the past for a variant that is not published.
+- a planned publication before the approval deadline, or before the content is approved ("ainda não aprovado");
+- a planned date in the past for a channel row that is not published.
 
 ## Portal calendar
 
-External users see a calendar restricted to the **brands they are linked to** and to the variants that were **sent or shared** with them (those with a revision in a request addressed to someone of their brand). It shows date, channel, status and the title of the revision snapshot; it never shows drafts, internal deadlines, owners or comments. Read-only; a click opens the approval screen. Data comes from `portal_list_calendar(brand, from, to)`.
+External users see a calendar restricted to the **brands they are linked to** and to the contents that were **sent or shared** with them (those with a version in a request addressed to someone of their brand). It shows one entry per channel row of the latest shared version (date, channel logo, status and the title of the snapshot); it never shows drafts, ideas, dates, internal deadlines, owners or comments. Read-only; a click opens the approval screen. Data comes from `portal_list_calendar(brand, from, to)`.
 
 ## Queries and performance
 
-> Functions: [../reference/functions.md](../reference/functions.md) section 6 (`list_calendar_entries`, `portal_list_calendar`, `reschedule_variant`). Error codes: [../reference/error-codes.md](../reference/error-codes.md). Constants: [../reference/enums.md](../reference/enums.md).
+> Functions: [../reference/functions.md](../reference/functions.md) section 6 (`list_calendar_entries`, `portal_list_calendar`, `reschedule_channel`, `calendar_note_save`, `calendar_note_archive`, `calendar_note_get`). Error codes: [../reference/error-codes.md](../reference/error-codes.md). Constants: [../reference/enums.md](../reference/enums.md).
 
-- `list_calendar_entries(p_from, p_to, p_brands, p_channels, p_assignee, p_editorial, p_publication)` filters by `calendar.view` and `can_access_brand`; the range is limited (maximum 100 days) and paginated; index `(brand_id, planned_at)`.
+- `list_calendar_entries(p_from, p_to, p_brands, p_channels, p_assignee, p_editorial, p_publication, p_notes)` (`p_notes` is the list of note kinds to include; null means none) filters by `calendar.view` and `can_access_brand`; the range is limited (maximum 100 days) and paginated; index `(brand_id, planned_at)`.
 - The client requests only the visible range plus a margin; changing the range or filter cancels the previous request.
 - Entries are plain data; no totals or aggregates are stored.
 
 ## Rules
 
-1. An entry is always a variant; there are no free events.
+1. An entry is a channel row of a content, a deadline, or a calendar note (an idea or a date); there are no other free events.
 2. The calendar never changes statuses by itself; it only reads and calls the transition/reschedule functions.
 3. A date change after submission follows the new-revision rule; the calendar does not bypass it.
-4. A variant on an archived channel keeps its entry; it cannot be moved to another date unless the channel is reactivated or the variant reassigned.
+4. A channel row on an archived channel keeps its entry; it cannot be moved to another date unless the channel is reactivated.
+6. A note belongs to one brand, has a local date and an optional repetition computed when reading (`weekly`, `monthly`, `yearly`); it is edited and archived only with `calendar.manage`; it becomes a content through "Converter em conteúdo", which links it when that content is first saved; a converted note can no longer be edited or archived.
 5. Everything shown respects brand access; counts never reveal brands the person cannot access.
 
 ## Permissions
@@ -85,15 +89,16 @@ External users see a calendar restricted to the **brands they are linked to** an
 | Action | Allows | Requires |
 |---|---|---|
 | `calendar.view` | See the calendar of linked brands | — |
-| `calendar.manage` | Reschedule by drag/dialog and change deadlines | `calendar.view`, `content.update` |
+| `calendar.manage` | Reschedule by drag/dialog, change deadlines, create, edit and archive ideas and dates | `calendar.view`, `content.update` |
 | `portal.view` | See the portal calendar | — |
 
 ## Acceptance criteria
 
 - The same event is shown at the same instant in every view; a brand in Europe/Lisbon and another in America/Sao_Paulo display their own zones correctly, including across daylight-saving changes.
-- A content item with two channels appears as two entries with their own dates and statuses.
-- Dragging an approved entry asks for confirmation, creates a new revision and returns the variant to awaiting approval.
-- The portal calendar shows only shared variants of linked brands.
+- A content with two channels appears as two entries, each with its channel logo and its own date.
+- An idea or a date added from a day cell appears on that day (and on its repetitions) and can be converted into a content once.
+- Dragging an approved entry asks for confirmation, creates a new version and returns the content to awaiting approval.
+- The portal calendar shows only shared contents of linked brands, one entry per channel.
 - Items without a date stay in "Sem data" and can be planned by drag or by dialog.
 - Filters and range are restored from the URL; keyboard users can do everything without dragging.
 - No calendar action triggers publishing or calls to social networks.
@@ -103,12 +108,19 @@ External users see a calendar restricted to the **brands they are linked to** an
 1. **Own calendar, no library** (spike P4-01, 2026-10-18). FullCalendar was not adopted: it brings its own styles and time-zone plugin, which would have to be fitted to the tokens of [../standards/color-palette.md](../standards/color-palette.md), and the project needs only month, week and list views with day-level drag. The Memoria Print calendar was not ported (it is not part of this repository). The grid is a plain CSS grid in `shared/calendar` that reuses the kit, the status styles and the time-zone helpers of `format.ts`. Cost: no hourly lanes and no multi-day events, which the MVP does not need. If hourly lanes are wanted later, adopting a library becomes a new decision (CODE-12).
 2. **Drag moves the day, not the time.** Dragging an entry to another day keeps its local time of day and always opens the confirmation dialog, where the time can be changed ("Alterar data…" is the keyboard alternative). Hour-level dragging is not offered.
 3. **The approval deadline is read-only on the calendar.** It belongs to the approval request, which is immutable after sending (`approval_requests_guard`); changing it means sending a new version. Only the production deadline moves (`reschedule_production_deadline`, which does not create a revision).
-4. **Rescheduling a variant that is awaiting approval or approved creates the new revision straight away**, copied from the current one with the new date and addressed to the same approver; the pending request is superseded (acceptance criterion "returns the variant to awaiting approval"). If the approver no longer has access the call fails with `approver_without_access` and nothing changes. A variant in any earlier state just changes its date.
+4. **Rescheduling a channel row of a content that is awaiting approval or approved creates the new version straight away**, copied from the current one with the new date of that channel and addressed to the same approver; the pending request is superseded. If the approver no longer has access the call fails with `approver_without_access` and nothing changes. A content in any earlier state just changes the date of the row.
 5. **A date in the past is accepted by the server**; the dialog warns first (`date_in_past` is a UI warning, never raised by SQL).
 6. **The conflict alerts use fixed limits** (3 publications per channel per day, 30 minutes between two of the same channel) kept in `lib/shared/calendar/alerts.ts`; they are not yet a setting of `policies.calendar`.
 7. **The week starts on Monday.** `policies.calendar.weekStartsOnMonday` is stored but the calendar does not read it yet, because `organization_settings` is readable only with `settings.manage`.
 8. **A window of at most 100 days and 500 entries** replaces pagination: `list_calendar_entries` answers with `truncated = true` and the screen asks the person to filter. The "Sem data" list comes in the same call (at most 100, filtered like the grid).
 9. **Mobile shows the list** (the grid is not drawn below 768 px), as the document asks; the list is also available on desktop.
+
+## Decisions of the content refactor (2026-10-19)
+
+1. **The entry is a channel row**, not a content: a content with three channel rows shows three entries with their logos (the benchmark mLabs does the same). The key of an entry is the kind plus the row (or note) and the day, so a repeating note has one key per day.
+2. **Ideas and dates are `calendar_notes`**, not contents: no channels, no approval, no versions. They can repeat (`none`, `weekly`, `monthly`, `yearly`), are expanded when reading (no rows are generated) and are only visible to the team.
+3. **Conversion is lazy**: "Converter em conteúdo" opens the editor filled; the note is linked when the content is first saved, so abandoning the editor leaves the note untouched.
+4. **Notes are hidden when other filters are on** (channel, owner, editorial or publication), because those filters describe contents.
 
 ## Implementation status
 
@@ -131,3 +143,11 @@ Phase 5 (calendar screen layout, 2026-10-19).
 **Not tested.** Browser rendering and filter/navigation interaction on desktop and mobile were not tested.
 
 2026-10-19: Admin calendar routes use the full available admin content width. Validation performed: pending. **Not tested**: browser rendering.
+
+2026-10-19: The undated-content panel is positioned absolutely beside the calendar, with space reserved on desktop, and its toggle uses a calendar icon. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. The full typecheck fails on existing repository errors across calendar labels, approvals, content and generated database types. **Not tested**: browser rendering or responsive interaction.
+
+2026-10-19: The shared list-filter trigger now uses an icon with a tooltip and active-count badge. This applies to the calendar filters. Validation performed: targeted ESLint, Prettier and `git diff --check`. `check:docs` is currently blocked by ten audit-action registry mismatches for `calendar_note.*` and `variant.*` in the audit/functions documents. Full typecheck is blocked by existing `brand-logos.server.ts` type errors. **Not tested**: browser interaction.
+
+2026-10-19 (content refactor): the calendar reads channel rows (`content_channels`) and notes (`calendar_notes`). Migration `20261019130020_calendar_notes.sql` (table, `calendar_note_save/archive/get`, `list_calendar_entries` with `p_notes`, `reschedule_channel`, `content_item_is_ready`), `…130030_content_single_aggregate_portal.sql` (`portal_list_calendar` per channel row, `notify_scan_content` per channel row with the kind `content.publish_due`). UI: `calendar-page.tsx` with the "Datas" and "Ideias" chips, `DayAddMenu`, `NoteDialog`, entries with `PlatformIcon` and status marks (`EntryChip`, `StatusMark`), `EntryDetails` for notes, legend with the marks. Validated: 79 pgTAP assertions (`11_calendar`: notes, repetition, conversion, isolation) plus 15 (`12_calendar_notifications`), unit tests with the new fixtures, lint, build. **Not tested**: any screen in a browser; the migrations on the real project.
+2026-10-19: The global calendar now detects the browser timezone and shows it beside a globe icon in the toolbar; the timezone selector was removed. Brand calendars continue using the selected brand timezone. Validation performed: targeted ESLint, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering or timezone detection in a browser.
+2026-10-19: Calendar view selection is synchronized to local storage when selected or opened from a URL, including the week view opened from a day cell. Validation performed: pending. **Not tested**: browser storage behavior.

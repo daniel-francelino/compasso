@@ -329,7 +329,7 @@ Modules inside each space:
 
 | Space | Modules (same name in `components`, `lib` and `hooks`) |
 |---|---|
-| `marketing` | `clients`, `brands`, `channels`, `content` (items, variants, revisions, internal comments), `approvals` (request and follow-up), `calendar` (internal-side queries), `dashboard` |
+| `marketing` | `clients`, `brands`, `channels`, `content` (contents with channel rows, versions, internal comments), `approvals` (request and follow-up), `calendar` (internal-side queries), `dashboard` |
 | `cms` | `editor`, `pages`, `services`, `portfolio`, `testimonials`, `navigation`, `seo`, `publishing`, `settings`, `media` (site images) |
 | `site` | `render` (single renderer of the published pages), `layout` (header and footer), `contact` (form), `public` (in `lib`: reading the published version) |
 | `portal` | `brands`, `approvals` (read and decide), `calendar`, `comments` |
@@ -499,7 +499,7 @@ create policy content_items_update on public.content_items for update
 
 **External users (portal)**: **no `select` policy on internal tables**. Reads go through `security definer` functions that check `portal.view`, the external link and the shared status, and return only safe columns (never `internal_notes`, internal briefing or drafts):
 
-`portal_list_brands()`, `portal_list_pending()`, `portal_get_approval(p_request)`, `portal_list_calendar(p_brand, p_from, p_to)`, `portal_list_comments(p_variant)`, `portal_add_comment(...)`, `portal_decide_approval(p_request, p_outcome, p_comment)`.
+`portal_list_brands()`, `portal_list_pending()`, `portal_get_approval(p_request)`, `portal_list_calendar(p_brand, p_from, p_to)`, `portal_list_comments(p_item)`, `portal_add_comment(...)`, `portal_decide_approval(p_request, p_outcome, p_comment)`.
 
 This solves the RLS limitation (per row, not per column): even with their JWT in a manual query, the external user cannot reach the internal columns.
 
@@ -537,7 +537,7 @@ Principles:
 
 ## 10. State machines and transactional rules
 
-### 10.1 Editorial status of the variant
+### 10.1 Editorial status of the content
 
 ```
 draft ─▶ in_production ─▶ internal_review ─▶ awaiting_approval ─▶ approved
@@ -557,7 +557,7 @@ any status ─▶ cancelled
 | approved | in_production | `content.reopen` | Audited, with reason; clears `approved_revision_id` and keeps the history |
 | any | cancelled | `content.cancel` | Does not delete history |
 
-Publication status evolves in parallel: `unplanned → planned → published_manually | cancelled`. `published_manually` only with a non-null `approved_revision_id`. The statuses and transitions live in `shared/editorial` (constants `EditorialStatus`, `PublicationStatus` and the transition map); `check:consistency` compares the constants with the `CHECK` lists.
+Publication status evolves in parallel: `unplanned → planned → published_manually | cancelled`. `published_manually` (on a channel row) only when the content has a non-null `approved_revision_id`; the editorial status lives on the content and the publication status on each of its channel rows. The statuses and transitions live in `shared/editorial` (constants `EditorialStatus`, `PublicationStatus` and the transition map); `check:consistency` compares the constants with the `CHECK` lists.
 
 ### 10.2 Transactional SQL functions (RPC)
 
@@ -565,11 +565,11 @@ All `security definer`, with a fixed `search_path`, explicitly checking `has_act
 
 | Function | What it does |
 |---|---|
-| `submit_for_approval(p_variant, p_approver, p_expected_version)` | Locks the variant (`for update`); validates the version; freezes `snapshot` and `content_revision_media`; marks the previous pending request `superseded`; creates `approval_requests`; changes the status; notifies |
+| `submit_for_approval(p_item, p_approver, p_due_date, p_message, p_expected_version)` | Locks the content (`for update`); validates the version; freezes `snapshot` and `content_revision_media`; marks the previous pending request `superseded`; creates `approval_requests`; changes the status; notifies |
 | `portal_decide_approval(p_request, p_outcome, p_comment)` | See below |
-| `reopen_variant(p_variant, p_reason)` | Reopens `approved` or `awaiting_approval`; supersedes pending requests |
-| `reschedule_variant(p_variant, p_planned_at, p_tz, p_expected_version)` | If the status is `awaiting_approval` or `approved`, requires a new revision and returns the code `requires_new_revision` |
-| `mark_published(p_variant, p_published_at, p_url, p_evidence_media)` | Only with `approved_revision_id`; does not call social networks |
+| `reopen_content(p_item, p_reason)` | Reopens `approved` or `awaiting_approval`; supersedes pending requests |
+| `reschedule_channel(p_channel_row, p_planned_at, p_tz, p_expected_version)` | If the content is `awaiting_approval` or `approved`, creates a new version with the new date of that channel and supersedes the pending request |
+| `mark_published(p_channel_row, p_published_at, p_url, p_evidence_media, p_note)` | Only with `approved_revision_id`; does not call social networks |
 | `accept_invitation(p_token_hash)` | See section 7.2 |
 | `publish_site_page(p_page)` | Freezes `draft_content` into `site_page_revisions` and updates `published_revision_id` |
 
@@ -578,10 +578,10 @@ All `security definer`, with a fixed `search_path`, explicitly checking `has_act
 ```sql
 create function public.portal_decide_approval(p_request uuid, p_outcome text, p_comment text)
 returns void language plpgsql security definer set search_path = public as $$
-declare r public.approval_requests; v public.content_variants;
+declare r public.approval_requests; v public.content_items;
 begin
-  select * into v from public.content_variants
-   where id = (select variant_id from public.approval_requests where id = p_request)
+  select * into v from public.content_items
+   where id = (select item_id from public.approval_requests where id = p_request)
    for update;
 
   select * into r from public.approval_requests where id = p_request;
@@ -598,7 +598,7 @@ begin
   values (r.id, r.revision_id, (select auth.uid()), p_outcome, p_comment);
 
   update public.approval_requests set status = p_outcome, decided_at = now() where id = r.id;
-  update public.content_variants
+  update public.content_items
      set editorial_status = case p_outcome when 'approved' then 'approved' else 'changes_requested' end,
          approved_revision_id = case p_outcome when 'approved' then r.revision_id else null end,
          version = version + 1
@@ -610,7 +610,7 @@ begin
 end $$;
 ```
 
-**Concurrency**: `for update` on the variant serializes "approve" and "submit a new revision". The second operation sees the already changed status and is refused (`revision_superseded`). The partial index `approval_one_pending_per_variant` is the safety net.
+**Concurrency**: `for update` on the content serializes "approve" and "submit a new version". The second operation sees the already changed status and is refused (`revision_superseded`). The partial index `approval_one_pending_per_item` is the safety net.
 
 **Error codes**: the functions use `raise exception 'code'` in lowercase with underscores; `errors.ts` translates each code into the pt-BR UI message; `check:consistency` guarantees SQL and TypeScript talk about the same codes.
 
@@ -626,7 +626,7 @@ Created in the same transaction as the functions above through `notify_users(...
 | `approval.decided` | Approved or changes requested | Whoever sent it (`approvals.view`) |
 | `approval.overdue` | Pending request beyond the approval deadline | Whoever sent it (scheduled, `pg_cron`) |
 | `content.due_soon` | Production deadline approaching | Owner (`content.view`, scheduled) |
-| `variant.publish_due` | Planned date passed without a recorded publication | Owner (scheduled) |
+| `content.publish_due` | Planned date of a channel row passed without a recorded publication | Owner (scheduled) |
 | `invitation.accepted` | Invitation accepted | Whoever invited (`users.view`) |
 
 An email failure never undoes the request; the alert remains in the portal and in the bell.
@@ -744,13 +744,13 @@ Lint rule (`noSiteContentInCode`): the site does not import from `@/assets/site/
 
 ### 13.2 Query
 
-RPC `list_calendar_entries(p_from, p_to, p_brands, p_channels, p_assignee, p_editorial, p_publication)`: range limited to 100 days, paginated, index `(brand_id, planned_at)`; filters by `calendar.view` and `can_access_brand`. On the portal side, `portal_list_calendar` returns only **sent or shared** variants, without internal fields.
+RPC `list_calendar_entries(p_from, p_to, p_brands, p_channels, p_assignee, p_editorial, p_publication, p_notes)`: range limited to 100 days, paginated, index `(brand_id, planned_at)`; filters by `calendar.view` and `can_access_brand`. On the portal side, `portal_list_calendar` returns only **sent or shared** variants, without internal fields.
 
 ### 13.3 Interface
 
 - Components in `shared/calendar`, used by `marketing` and `portal`. Month, week and list views; color per editorial status (single `statusStyles` map, with icon and text beyond color); channel icon; deadlines as all-day items, distinct from publication.
-- Side list "No date" with drag onto the calendar.
-- Dragging opens a confirmation; if the status is `awaiting_approval` or `approved`, the dialog warns that a new revision will be created and calls `reschedule_variant`.
+- Side list "No date" with drag onto the calendar; ideas and dates (`calendar_notes`) with an "Adicionar" menu on every day.
+- Dragging opens a confirmation; if the status is `awaiting_approval` or `approved`, the dialog warns that a new version will be created and calls `reschedule_channel`.
 - Filters in the URL search params (shareable links and position preserved when returning from a detail).
 - Accessible list alternative for keyboard navigation.
 
@@ -781,7 +781,7 @@ export const submitForApproval = createServerFn({ method: "POST" })
     await requireActionServer(Action.Content.Submit);
     const supabase = await serverClient();
     const { data: row, error } = await supabase.rpc("submit_for_approval", {
-      p_variant: data.variantId,
+      p_item: data.itemId,
       p_approver: data.approverId,
       p_expected_version: data.expectedVersion,
     });
@@ -915,7 +915,7 @@ The Memoria Print CMS (pages, publishing, published snapshot) is a good referenc
 
 ### 17.3 New Compasso components (in `shared`)
 
-`BrandSwitcher`, `ChannelIcon`, `StatusBadge` (editorial and publication), `DateTimeField` with time zone, `MediaPicker`, `RichTextEditor`, `ChannelPreview` (`shared/preview`), `CalendarView` (`shared/calendar`), `ApprovalTimeline`.
+`ChannelIcon`, `StatusBadge` (editorial and publication), `DateTimeField` with time zone, `MediaPicker`, `RichTextEditor`, `ChannelPreview` (`shared/preview`), `CalendarView` (`shared/calendar`), `ApprovalTimeline`.
 
 ### 17.4 Accessibility and responsiveness
 
@@ -1050,11 +1050,11 @@ Rules: `.env.local` outside git (`*.local` in `.gitignore`); `.env.example` vers
 | Level | What | Tool |
 |---|---|---|
 | SQL and RLS | For each profile (Owner, Manager, Collaborator, external approver of brand A, of brand B, commenter, `anon`): read and write each table and call each function; crossed IDs; composite FKs; immediate effect of revocation | pgTAP |
-| Critical functions | `submit_for_approval`, `portal_decide_approval` (including concurrency between two sessions), `reopen_variant`, `reschedule_variant`, `mark_published`, `accept_invitation`, `publish_site_page` | pgTAP and integration |
+| Critical functions | `submit_for_approval`, `portal_decide_approval` (including concurrency between two sessions), `reopen_content`, `reschedule_channel`, `mark_published`, `accept_invitation`, `publish_site_page` | pgTAP and integration |
 | Consistency | Actions, error codes, notification kinds and `CHECK` lists equal between SQL and TypeScript | `check:consistency` |
 | Unit | zod schemas, transition map, time zone utilities (daylight saving), error mapping | Vitest |
 | Integration | Upload flow (`requestUpload`, `confirmUpload`) with simulated R2 or a test bucket: divergent size, fake type, oversized copy | Vitest |
-| E2E | (1) invitation → external login → approve; (2) content with two variants → send → request changes → new revision → approve; (3) upload → use in the revision; (4) CMS: draft → publish → public site; (5) external user of brand A cannot access brand B by changing the URL | Playwright |
+| E2E | (1) invitation → external login → approve; (2) content with two channels → send → request changes → new version → approve; (3) upload → use in the revision; (4) CMS: draft → publish → public site; (5) external user of brand A cannot access brand B by changing the URL | Playwright |
 | Accessibility | `axe` in the main flows | `@axe-core/playwright` |
 | Performance | Lighthouse on the public site (LCP target below 2.5 s) | Lighthouse CI |
 
@@ -1092,7 +1092,7 @@ Rough estimates for one or two people; review after phase 0.
 - Cleanup cron; CORS and limit tests.
 
 ### Phase 3 — Content and approval (about 3 weeks), the core of the product
-- Items and variants, variant editor with `MediaPicker`, list and board by status.
+- Contents with channel rows (one editor with a multi-select of channels, text with tabs, `MediaPicker`, dates per channel), list and board by status.
 - Immutable revisions, `submit_for_approval`, internal comments.
 - Portal: pending items, approval screen, `portal_decide_approval`, external comments, history.
 - Internal notifications and email; reopening; manual publishing.
@@ -1197,7 +1197,7 @@ npm run format:check
 | Editorial calendar | Section 13 |
 | Cross-cutting media library | Section 11 |
 | Supabase and R2 | Sections 4, 9 and 11 |
-| Variants and immutable revisions | [reference/data-model.md](reference/data-model.md) section 5; section 10 |
+| Contents, channel rows and immutable versions | [reference/data-model.md](reference/data-model.md) section 5; section 10 |
 | Approval rules 1 to 8 | Sections 10.1 and 10.2 |
 | Profiles and permissions | Section 8 |
 | Isolation between brands | Sections 8 and 22 |

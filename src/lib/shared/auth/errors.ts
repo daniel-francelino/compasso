@@ -115,6 +115,10 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Este canal está arquivado e não aceita novos itens.",
   },
+  channel_required: {
+    category: ErrorCode.Invalid,
+    message: "Escolha ao menos um canal para enviar.",
+  },
   date_in_past: {
     category: ErrorCode.Invalid,
     message: "A data escolhida já passou.",

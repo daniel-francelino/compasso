@@ -20,7 +20,7 @@ import {
   portalCommentSchema,
   portalListSchema,
   portalRequestSchema,
-  portalVariantSchema,
+  portalItemSchema,
   signPortalSchema,
 } from "@/lib/portal/approvals/schemas";
 import {
@@ -41,14 +41,18 @@ import type {
 
 const toRequest = (row: PortalRequestRow): PortalRequest => ({
   id: row.id,
-  variantId: row.variant_id,
+  itemId: row.item_id,
   status: row.status,
   title: row.title,
-  format: row.format,
-  platform: row.platform,
-  profileName: row.profile_name,
-  plannedAt: row.planned_at,
-  plannedTimezone: row.planned_timezone,
+  channels: row.channels.map((channel) => ({
+    rowId: channel.row_id,
+    platform: channel.platform,
+    profileName: channel.profile_name,
+    format: channel.format,
+    caption: channel.caption?.text ?? null,
+    plannedAt: channel.planned_at ?? null,
+    plannedTimezone: channel.planned_timezone ?? null,
+  })),
   brandTimezone: row.brand_timezone,
   revisionNo: row.revision_no,
   dueDate: row.due_date,
@@ -198,12 +202,12 @@ export const decidePortalApproval = createServerFn({ method: "POST" })
   });
 
 export const listPortalComments = createServerFn({ method: "GET" })
-  .validator(portalVariantSchema)
+  .validator(portalItemSchema)
   .handler(async ({ data }): Promise<Result<{ comments: PortalComment[] }>> => {
     const caller = await requireActionServer(Action.Portal.View);
     if (caller === null) return denied;
     const { data: rows, error } = await caller.supabase.rpc("portal_list_comments", {
-      p_variant: data.variantId,
+      p_item: data.itemId,
     });
     if (error) return fail(error);
     const parsed = parseOutput(portalCommentsSchema, { list: rows });
@@ -228,7 +232,7 @@ export const addPortalComment = createServerFn({ method: "POST" })
     const caller = await requireActionServer(Action.Comments.CreateExternal);
     if (caller === null) return denied;
     const { error } = await caller.supabase.rpc("portal_add_comment", {
-      p_variant: data.variantId,
+      p_item: data.itemId,
       p_body: data.body,
     });
     if (error) return fail(error);

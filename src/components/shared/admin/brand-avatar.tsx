@@ -28,7 +28,7 @@ export function BrandAvatar({
 }) {
   return (
     <Avatar className={cn("rounded-lg", sizes[size], className)}>
-      {logoUrl ? <AvatarImage src={logoUrl} alt="" className="object-cover" /> : null}
+      {logoUrl ? <AvatarImage src={logoUrl} alt="" className="max-w-full object-contain" /> : null}
       <AvatarFallback className="rounded-lg bg-secondary font-medium text-secondary-foreground">
         {initialsOf(name)}
       </AvatarFallback>

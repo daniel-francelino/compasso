@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRightLeft, CalendarClock, TriangleAlert, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
+import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
@@ -22,14 +23,14 @@ import {
   type BoardColumn,
   listBoard,
 } from "@/lib/marketing/content/content.functions";
-import { moveVariant } from "@/lib/marketing/content/variants.functions";
+import { moveContent } from "@/lib/marketing/content/workflow.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { DirectMoves } from "@/lib/shared/editorial/editorial";
 import { EditorialStatus } from "@/lib/shared/enums";
 import { formatInZone } from "@/lib/shared/format";
-import { contentFormatLabels, editorialStatusLabels, platformLabels } from "@/lib/shared/labels";
+import { contentFormatLabels, editorialStatusLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -37,10 +38,19 @@ type BoardFilters = { search: string; brandId?: string; channelId?: string; owne
 
 const REFUSED: Partial<Record<EditorialStatus, string>> = {
   [EditorialStatus.AwaitingApproval]:
-    "Para enviar à aprovação, abra a variante e use “Enviar para aprovação”.",
+    "Para enviar à aprovação, abra o conteúdo e use “Enviar para aprovação”.",
   [EditorialStatus.Approved]: "A aprovação é decidida pelo cliente no portal.",
   [EditorialStatus.ChangesRequested]: "Este estado é definido pelo pedido do cliente.",
-  [EditorialStatus.Cancelled]: "Para cancelar, abra a variante e use “Cancelar”.",
+  [EditorialStatus.Cancelled]: "Para cancelar, abra o conteúdo e use “Cancelar”.",
+};
+
+const nextPlanned = (card: BoardCard): string => {
+  const planned = card.channels
+    .filter((channel) => channel.plannedAt !== null && channel.plannedTimezone !== null)
+    .sort((a, b) => (a.plannedAt ?? "").localeCompare(b.plannedAt ?? ""))[0];
+  return planned?.plannedAt && planned.plannedTimezone
+    ? formatInZone(planned.plannedAt, planned.plannedTimezone)
+    : "Sem data prevista";
 };
 
 function Card({
@@ -62,25 +72,23 @@ function Card({
       className="space-y-3 shadow-sm transition-shadow hover:shadow-md"
     >
       <Link
-        to="/admin/marketing/variants/$variantId"
-        params={{ variantId: card.id }}
+        to="/admin/marketing/content/$itemId"
+        params={{ itemId: card.id }}
         className="block font-medium leading-snug text-primary underline-offset-4 hover:underline"
       >
         {card.title}
       </Link>
-      <div className="flex flex-wrap gap-1.5">
-        <Badge variant="secondary" className="font-normal">
-          {contentFormatLabels[card.format]}
-        </Badge>
-        <Badge variant="outline" className="font-normal">
-          {platformLabels[card.platform]} · {card.profileName}
-        </Badge>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <ChannelLogos channels={card.channels} />
+        {[...new Set(card.channels.map((channel) => channel.format))].map((format) => (
+          <Badge key={format} variant="secondary" className="font-normal">
+            {contentFormatLabels[format]}
+          </Badge>
+        ))}
       </div>
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
-        {card.plannedAt !== null && card.plannedTimezone !== null
-          ? formatInZone(card.plannedAt, card.plannedTimezone)
-          : "Sem data prevista"}
+        {nextPlanned(card)}
       </p>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -104,7 +112,7 @@ function Card({
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="max-w-56 whitespace-normal text-xs font-normal text-muted-foreground">
-            Aprovar, pedir alterações, enviar à aprovação e cancelar são feitos dentro da variante.
+            Aprovar, pedir alterações, enviar à aprovação e cancelar são feitos dentro do conteúdo.
           </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -167,7 +175,7 @@ export function ContentBoard({ filters }: { filters: BoardFilters }) {
 
   async function move(card: BoardCard, to: EditorialStatus) {
     const result = await run(
-      () => moveVariant({ data: { id: card.id, to, expectedVersion: card.version } }),
+      () => moveContent({ data: { id: card.id, to, expectedVersion: card.version } }),
       { invalidate: [QueryKey.Content.all(), QueryKey.Dashboard.all()] },
     );
     if (result.ok) toast.success(`Movido para “${editorialStatusLabels[to]}”.`);

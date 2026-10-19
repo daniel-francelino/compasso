@@ -3,14 +3,17 @@ import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { type Caller, requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import {
+  type ApprovalOutcome,
+  type ApprovalRequestStatus,
   type ContentFormat,
+  type ContentObjective,
   EditorialStatus,
   type Platform,
-  type PublicationStatus,
+  PublicationStatus,
 } from "@/lib/shared/enums";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { personNames } from "@/lib/shared/people.server";
-import { type RichDoc, isRichDocEmpty, richDocFromStored } from "@/lib/shared/rich-text/types";
+import { richDocFromStored } from "@/lib/shared/rich-text/types";
 import {
   type Page,
   type Result,
@@ -30,22 +33,17 @@ import {
   cancelSchema,
   idSchema,
   listContentSchema,
-  saveItemSchema,
+  saveContentSchema,
 } from "@/lib/marketing/content/schemas";
-
-export type VariantSummary = {
-  id: string;
-  channelId: string;
-  platform: Platform;
-  profileName: string;
-  format: ContentFormat;
-  editorialStatus: EditorialStatus;
-  publicationStatus: PublicationStatus;
-  plannedAt: string | null;
-  plannedTimezone: string | null;
-  thumbnailVersionId: string | null;
-  version: number;
-};
+import { REVISION_SELECT, loadMedia, toRevision } from "@/lib/marketing/content/revisions.server";
+import type {
+  ChannelRowDetail,
+  ChannelSummary,
+  ContentDetail,
+  ContentMedia,
+  RequestRow,
+  RevisionRow,
+} from "@/lib/marketing/content/types";
 
 export type ContentItemRow = {
   id: string;
@@ -56,30 +54,20 @@ export type ContentItemRow = {
   productionDueDate: string | null;
   tags: string[];
   cancelled: boolean;
+  editorialStatus: EditorialStatus;
   updatedAt: string;
-  variants: VariantSummary[];
-};
-
-export type ContentItemDetail = ContentItemRow & {
-  objective: string | null;
-  briefing: RichDoc | null;
-  internalNotes: string | null;
-  assigneeId: string | null;
+  thumbnailVersionId: string | null;
   version: number;
-  brandTimezone: string;
+  channels: ChannelSummary[];
 };
 
 export type BoardCard = {
   id: string;
-  itemId: string;
   title: string;
   brandName: string;
-  platform: Platform;
-  profileName: string;
-  format: ContentFormat;
   editorialStatus: EditorialStatus;
-  plannedAt: string | null;
-  plannedTimezone: string | null;
+  thumbnailVersionId: string | null;
+  channels: ChannelSummary[];
   version: number;
 };
 
@@ -88,68 +76,94 @@ export type BoardColumn = { status: EditorialStatus; total: number; cards: Board
 const BOARD_CARDS_PER_COLUMN = 30;
 const ID_FILTER_LIMIT = 1000;
 
-const savedSchema = z.object({ id: z.string().uuid(), version: z.number().int() });
+const savedSchema = z.object({
+  id: z.string().uuid(),
+  version: z.number().int(),
+  channels: z.array(z.object({ id: z.string().uuid(), channel_id: z.string().uuid() })),
+});
+const workingMediaSchema = z.array(
+  z.object({ media_version_id: z.string().uuid(), alt_text: z.string().nullable().optional() }),
+);
+const captionSchema = z.object({ text: z.string() });
+
 const firstMediaVersion = (value: unknown): string | null => {
-  const parsed = z.array(z.object({ media_version_id: z.string().uuid() })).safeParse(value);
+  const parsed = workingMediaSchema.safeParse(value);
   return parsed.success ? (parsed.data[0]?.media_version_id ?? null) : null;
 };
 
-const variantSelect =
-  "id, channel_id, format, editorial_status, publication_status, planned_at, planned_timezone, working_media, version, channels(platform, profile_name)";
+const CHANNEL_SELECT =
+  "id, channel_id, format, caption, publication_status, planned_at, planned_timezone, position, version, published_at, published_url, published_note, channels(platform, profile_name, archived_at)";
 
-type VariantRow = {
+type ChannelQueryRow = {
   id: string;
   channel_id: string;
   format: string;
-  editorial_status: string;
+  caption: unknown;
   publication_status: string;
   planned_at: string | null;
   planned_timezone: string | null;
-  working_media: unknown;
+  position: number;
   version: number;
-  channels: { platform: string; profile_name: string } | null;
+  published_at: string | null;
+  published_url: string | null;
+  published_note: string | null;
+  channels: { platform: string; profile_name: string; archived_at: string | null } | null;
 };
 
-const toVariant = (row: VariantRow): VariantSummary => ({
+const byPosition = (a: ChannelQueryRow, b: ChannelQueryRow): number => a.position - b.position;
+
+const captionText = (value: unknown): string => {
+  const parsed = captionSchema.safeParse(value);
+  return parsed.success ? parsed.data.text : "";
+};
+
+const toSummary = (row: ChannelQueryRow): ChannelSummary => ({
   id: row.id,
   channelId: row.channel_id,
   platform: (row.channels?.platform ?? "other") as Platform,
   profileName: row.channels?.profile_name ?? "",
   format: row.format as ContentFormat,
-  editorialStatus: row.editorial_status as EditorialStatus,
   publicationStatus: row.publication_status as PublicationStatus,
   plannedAt: row.planned_at,
   plannedTimezone: row.planned_timezone,
-  thumbnailVersionId: firstMediaVersion(row.working_media),
-  version: row.version,
 });
 
-type VariantFilters = {
+const activeRows = (rows: ChannelQueryRow[]): ChannelQueryRow[] =>
+  [...rows]
+    .filter((row) => row.publication_status !== PublicationStatus.Cancelled)
+    .sort(byPosition);
+
+const toDetailChannel = (row: ChannelQueryRow): ChannelRowDetail => ({
+  ...toSummary(row),
+  channelArchived: (row.channels?.archived_at ?? null) !== null,
+  caption: captionText(row.caption),
+  version: row.version,
+  published:
+    row.published_at === null
+      ? null
+      : { at: row.published_at, url: row.published_url, note: row.published_note },
+});
+
+type ItemFilters = {
   brandId?: string | undefined;
   channelId?: string | undefined;
-  editorial?: EditorialStatus | undefined;
   publication?: string | undefined;
 };
 
 const matchingItemIds = async (
   supabase: Caller["supabase"],
-  filters: VariantFilters,
+  filters: ItemFilters,
 ): Promise<Result<{ ids: string[] | null }>> => {
   const equals = Object.fromEntries(
     Object.entries({
-      brand_id: filters.brandId,
       channel_id: filters.channelId,
-      editorial_status: filters.editorial,
       publication_status: filters.publication,
     }).filter(([, value]) => value !== undefined),
   );
-  const variantLevel = Object.keys(equals).some((key) => key !== "brand_id");
-  if (!variantLevel) return { ok: true, ids: null };
-  const { data, error } = await supabase
-    .from("content_variants")
-    .select("content_item_id")
-    .match(equals)
-    .limit(ID_FILTER_LIMIT);
+  if (Object.keys(equals).length === 0) return { ok: true, ids: null };
+  let query = supabase.from("content_channels").select("content_item_id").match(equals);
+  if (filters.brandId !== undefined) query = query.eq("brand_id", filters.brandId);
+  const { data, error } = await query.limit(ID_FILTER_LIMIT);
   if (error) return fail(error);
   return { ok: true, ids: [...new Set(data.map((row) => row.content_item_id))] };
 };
@@ -172,15 +186,15 @@ export const listContentItems = createServerFn({ method: "GET" })
     let query = caller.supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, assignee_id, production_due_date, tags, cancelled_at, updated_at, brands(name), content_variants(${variantSelect})`,
+        `id, title, brand_id, assignee_id, production_due_date, tags, cancelled_at, updated_at, editorial_status, working_media, version, brands(name), content_channels(${CHANNEL_SELECT})`,
         { count: "exact" },
-      )
-      .order("created_at", { referencedTable: "content_variants" });
+      );
     query =
       data.status === ContentStatusFilter.Cancelled
         ? query.not("cancelled_at", "is", null)
         : query.is("cancelled_at", null);
     if (itemIds !== null) query = query.in("id", itemIds);
+    if (data.editorial !== undefined) query = query.eq("editorial_status", data.editorial);
     if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
     if (data.ownerId !== undefined) query = query.eq("assignee_id", data.ownerId);
     if (search !== "") query = query.ilike("title", `%${search}%`);
@@ -210,71 +224,192 @@ export const listContentItems = createServerFn({ method: "GET" })
       productionDueDate: row.production_due_date,
       tags: row.tags,
       cancelled: row.cancelled_at !== null,
+      editorialStatus: row.editorial_status as EditorialStatus,
       updatedAt: row.updated_at,
-      variants: row.content_variants.map(toVariant),
+      thumbnailVersionId: firstMediaVersion(row.working_media),
+      version: row.version,
+      channels: activeRows(row.content_channels).map(toSummary),
     }));
     return { ok: true, ...pageOf(mapped, count ?? 0, { page: data.page, pageSize: PAGE_SIZE }) };
   });
 
+const sameMedia = (left: ContentMedia[], right: ContentMedia[]): boolean =>
+  left.length === right.length &&
+  left.every(
+    (item, index) =>
+      item.mediaVersionId === right[index]?.mediaVersionId &&
+      (item.altText ?? "") === (right[index]?.altText ?? ""),
+  );
+
+const instantOf = (value: string | null): number | null =>
+  value === null ? null : new Date(value).getTime();
+
+const sameChannels = (revision: RevisionRow, rows: ChannelRowDetail[]): boolean =>
+  revision.snapshot.channels.length === rows.length &&
+  revision.snapshot.channels.every((channel, index) => {
+    const row = rows[index];
+    return (
+      row !== undefined &&
+      channel.rowId === row.id &&
+      channel.format === row.format &&
+      (channel.caption ?? "") === row.caption &&
+      instantOf(channel.plannedAt) === instantOf(row.plannedAt)
+    );
+  });
+
 export const getContentItem = createServerFn({ method: "GET" })
   .validator(idSchema)
-  .handler(async ({ data }): Promise<Result<{ item: ContentItemDetail }>> => {
+  .handler(async ({ data }): Promise<Result<{ item: ContentDetail }>> => {
     const caller = await requireActionServer(Action.Content.View);
     if (caller === null) return denied;
-    const { data: row, error } = await caller.supabase
+    const { supabase } = caller;
+
+    const { data: row, error } = await supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, objective, briefing, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, brands(name, timezone), content_variants(${variantSelect})`,
+        `id, title, brand_id, objective, objective_kind, briefing, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, current_revision_id, approved_revision_id, brands(name, timezone), content_channels(${CHANNEL_SELECT})`,
       )
       .eq("id", data.id)
-      .order("created_at", { referencedTable: "content_variants" })
       .maybeSingle();
     if (error) return fail(error);
     if (row === null) return fail({ message: "not_found" });
-    const names = await personNames(caller.supabase, [row.assignee_id]);
+
+    const [revisionsResult, requestsResult] = await Promise.all([
+      supabase
+        .from("content_revisions")
+        .select(REVISION_SELECT)
+        .eq("item_id", data.id)
+        .order("revision_no", { ascending: false }),
+      supabase
+        .from("approval_requests")
+        .select(
+          "id, revision_id, status, approver_user_id, requested_by, requested_at, due_date, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment)",
+        )
+        .eq("item_id", data.id)
+        .order("requested_at", { ascending: false }),
+    ]);
+    if (revisionsResult.error) return fail(revisionsResult.error);
+    if (requestsResult.error) return fail(requestsResult.error);
+
+    const working = workingMediaSchema.safeParse(row.working_media);
+    const media = await loadMedia(
+      supabase,
+      (working.success ? working.data : []).map((item) => ({
+        id: item.media_version_id,
+        alt: item.alt_text ?? null,
+      })),
+    );
+
+    const built = await Promise.all(
+      revisionsResult.data.map((revision) => toRevision(supabase, revision)),
+    );
+    const revisions = built.filter((revision): revision is RevisionRow => revision !== null);
+    if (revisions.length !== built.length) return fail({ message: "unknown" });
+
+    const names = await personNames(supabase, [
+      row.assignee_id,
+      ...requestsResult.data.flatMap((request) => [request.approver_user_id, request.requested_by]),
+    ]);
+    const numberOf = new Map(revisions.map((revision) => [revision.id, revision.revisionNo]));
+    const requests: RequestRow[] = requestsResult.data.map((request) => {
+      const decision = request.approval_decisions[0];
+      return {
+        id: request.id,
+        revisionId: request.revision_id,
+        revisionNo: numberOf.get(request.revision_id) ?? 0,
+        status: request.status as ApprovalRequestStatus,
+        approverName: names.get(request.approver_user_id) ?? null,
+        requestedByName:
+          request.requested_by === null ? null : (names.get(request.requested_by) ?? null),
+        requestedAt: request.requested_at,
+        dueDate: request.due_date,
+        viewedAt: request.viewed_at,
+        decidedAt: request.decided_at,
+        outcome: (decision?.outcome ?? null) as ApprovalOutcome | null,
+        decisionComment: decision?.comment ?? null,
+        cancelledReason: request.cancelled_reason,
+      };
+    });
+
+    const channels = activeRows(row.content_channels).map(toDetailChannel);
+    const current = revisions.find((revision) => revision.id === row.current_revision_id);
+    const text = captionText(row.caption);
+    const hasUnsentChanges =
+      current !== undefined &&
+      (current.snapshot.caption !== text ||
+        (current.snapshot.callToAction ?? "") !== (row.call_to_action ?? "") ||
+        !sameChannels(current, channels) ||
+        !sameMedia(current.media, media));
+
     return {
       ok: true,
       item: {
         id: row.id,
-        title: row.title,
+        version: row.version,
         brandId: row.brand_id,
         brandName: row.brands?.name ?? "",
         brandTimezone: row.brands?.timezone ?? "America/Sao_Paulo",
+        title: row.title,
+        objectiveKind: row.objective_kind as ContentObjective | null,
         objective: row.objective,
         briefing: richDocFromStored(row.briefing),
         internalNotes: row.internal_notes,
         assigneeId: row.assignee_id,
         assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
-        productionDueDate: row.production_due_date,
         tags: row.tags,
+        productionDueDate: row.production_due_date,
         cancelled: row.cancelled_at !== null,
+        editorialStatus: row.editorial_status as EditorialStatus,
+        approvalDueDate: row.approval_due_date,
+        caption: text,
+        callToAction: row.call_to_action,
+        media,
+        channels,
+        currentRevisionId: row.current_revision_id,
+        approvedRevisionId: row.approved_revision_id,
+        nextRevisionNo: (revisions[0]?.revisionNo ?? 0) + 1,
+        hasUnsentChanges,
+        revisions,
+        requests,
         updatedAt: row.updated_at,
-        version: row.version,
-        variants: row.content_variants.map(toVariant),
       },
     };
   });
 
 export const saveContentItem = createServerFn({ method: "POST" })
-  .validator(saveItemSchema)
+  .validator(saveContentSchema)
   .handler(async ({ data }): Promise<Result<{ id: string; version: number }>> => {
     const caller = await requireActionServer(
       data.id === undefined ? Action.Content.Create : Action.Content.Update,
     );
     if (caller === null) return denied;
-    const briefing =
-      data.briefing === undefined || isRichDocEmpty(data.briefing) ? null : data.briefing;
     const { data: row, error } = await caller.supabase.rpc("content_item_save", {
       p_item: {
         ...(data.id === undefined ? {} : { id: data.id }),
         brand_id: data.brandId,
         title: data.title,
         objective: data.objective ?? null,
-        briefing,
+        objective_kind: data.objectiveKind ?? null,
+        briefing: data.briefing ?? null,
         internal_notes: data.internalNotes ?? null,
         assignee_id: data.assigneeId ?? null,
         tags: data.tags,
         production_due_date: data.productionDueDate ?? null,
+        caption: { text: data.caption },
+        call_to_action: data.callToAction ?? null,
+        working_media: data.media.map((item) => ({
+          media_version_id: item.mediaVersionId,
+          alt_text: item.altText ?? null,
+        })),
+        channels: data.channels.map((channel) => ({
+          ...(channel.id === undefined ? {} : { id: channel.id }),
+          channel_id: channel.channelId,
+          format: channel.format,
+          caption: channel.caption,
+          planned_at: channel.plannedAt ?? null,
+          planned_timezone: channel.plannedTimezone ?? null,
+        })),
+        ...(data.sourceNote === undefined ? {} : { source_note: data.sourceNote }),
         ...(data.expectedVersion === undefined ? {} : { expected_version: data.expectedVersion }),
       },
     });
@@ -321,19 +456,25 @@ export const listBoard = createServerFn({ method: "GET" })
       EditorialStatus.Approved,
     ];
 
+    const matched = await matchingItemIds(caller.supabase, {
+      brandId: data.brandId,
+      channelId: data.channelId,
+    });
+    if (!matched.ok) return matched;
+
     const loadColumn = async (status: EditorialStatus): Promise<BoardColumn | null> => {
       let query = caller.supabase
-        .from("content_variants")
+        .from("content_items")
         .select(
-          "id, content_item_id, format, editorial_status, planned_at, planned_timezone, version, channels(platform, profile_name), content_items!inner(title, assignee_id, cancelled_at, brands(name))",
+          `id, title, assignee_id, working_media, version, brands(name), content_channels(${CHANNEL_SELECT})`,
           { count: "exact" },
         )
         .eq("editorial_status", status)
-        .is("content_items.cancelled_at", null);
+        .is("cancelled_at", null);
+      if (matched.ids !== null) query = query.in("id", matched.ids);
       if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
-      if (data.channelId !== undefined) query = query.eq("channel_id", data.channelId);
-      if (data.ownerId !== undefined) query = query.eq("content_items.assignee_id", data.ownerId);
-      if (search !== "") query = query.ilike("content_items.title", `%${search}%`);
+      if (data.ownerId !== undefined) query = query.eq("assignee_id", data.ownerId);
+      if (search !== "") query = query.ilike("title", `%${search}%`);
       const {
         data: rows,
         count,
@@ -345,15 +486,11 @@ export const listBoard = createServerFn({ method: "GET" })
         total: count ?? rows.length,
         cards: rows.map((row) => ({
           id: row.id,
-          itemId: row.content_item_id,
-          title: row.content_items?.title ?? "",
-          brandName: row.content_items?.brands?.name ?? "",
-          platform: (row.channels?.platform ?? "other") as Platform,
-          profileName: row.channels?.profile_name ?? "",
-          format: row.format as ContentFormat,
-          editorialStatus: row.editorial_status as EditorialStatus,
-          plannedAt: row.planned_at,
-          plannedTimezone: row.planned_timezone,
+          title: row.title,
+          brandName: row.brands?.name ?? "",
+          editorialStatus: status,
+          thumbnailVersionId: firstMediaVersion(row.working_media),
+          channels: activeRows(row.content_channels).map(toSummary),
           version: row.version,
         })),
       };

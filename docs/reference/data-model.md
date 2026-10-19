@@ -15,7 +15,8 @@
 | `clients`, `client_contacts` | clients | no (reached through brands) | `clients.view` + link to a brand of the client |
 | `brands`, `brand_members` | brands | yes (is the boundary) | `brands.view` + `can_access_brand` |
 | `channels` | channels | yes | `channels.view` + `can_access_brand` |
-| `content_items`, `content_variants`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
+| `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
+| `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
 | `approval_requests`, `approval_decisions` | approvals | yes | `approvals.view` + `can_access_brand`; external only via `portal_*` |
 | `media_assets`, `media_versions`, `media_upload_sessions`, `media_collections`, `media_collection_items`, `media_usages` | media-library | scope `brand` or `site` | `media.view` + brand link (or `site.view` for site scope) |
 | `media_shares`, `media_share_grants`, `media_share_events` | media-library | share links of a file or a collection: secret `token`, optional expiry, password (bcrypt hash), download limit, lock after 5 wrong passwords; grants hold only the hash of a password session; events are the access timeline. `status` is `active`, `revoked` or `target_deleted` | `media.share` + brand link (or `site.view`); never readable by `anon` |
@@ -230,21 +231,31 @@ create unique index channels_unique_active on channels (brand_id, platform, lowe
 create index on channels (brand_id) where archived_at is null;
 ```
 
-Triggers: `brand_members.kind` must equal `profiles.kind` of the user; the last internal member rule (`last_internal_member`); channel `platform` immutable once used by a variant.
+Triggers: `brand_members.kind` must equal `profiles.kind` of the user; the last internal member rule (`last_internal_member`); channel `platform` immutable once used by a content channel row.
 
-## 5. Content, revisions, comments and approvals
+## 5. Content, versions, comments and approvals
 
 ```sql
 create table content_items (
   id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brands(id),
   title text not null check (char_length(title) between 2 and 140),
+  objective_kind text check (objective_kind is null or objective_kind in
+    ('awareness','engagement','traffic','leads','sales','community','other')),
   objective text,
   briefing jsonb,
   internal_notes text,
   assignee_id uuid references profiles(id),
   tags text[] not null default '{}',
   production_due_date date,
+  caption jsonb,
+  call_to_action text,
+  working_media jsonb not null default '[]',
+  editorial_status text not null default 'draft' check (editorial_status in
+    ('draft','in_production','internal_review','awaiting_approval','changes_requested','approved','cancelled')),
+  approval_due_date date,
+  current_revision_id uuid,
+  approved_revision_id uuid,
   version int not null default 1,
   cancelled_at timestamptz,
   created_by uuid references profiles(id),
@@ -253,29 +264,24 @@ create table content_items (
   unique (id, brand_id)
 );
 create index on content_items (brand_id, cancelled_at, production_due_date);
+create index on content_items (brand_id, editorial_status) where cancelled_at is null;
 
-create table content_variants (
+create table content_channels (
   id uuid primary key default gen_random_uuid(),
   brand_id uuid not null,
   content_item_id uuid not null,
   channel_id uuid not null,
   format text not null check (format in ('image','carousel','video','text','story','reel','article','other')),
-  editorial_status text not null default 'draft' check (editorial_status in
-    ('draft','in_production','internal_review','awaiting_approval','changes_requested','approved','cancelled')),
+  caption jsonb,
+  position int not null default 0,
   publication_status text not null default 'unplanned' check (publication_status in
     ('unplanned','planned','published_manually','cancelled')),
   planned_at timestamptz,
   planned_timezone text,
-  approval_due_date date,
-  caption jsonb,
-  call_to_action text,
-  working_media jsonb not null default '[]',
-  current_revision_id uuid,
-  approved_revision_id uuid,
   published_at timestamptz,
   published_url text,
   published_note text,
-  published_evidence_media_version_id uuid,
+  published_evidence_media_version_id uuid references media_versions(id),
   version int not null default 1,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -283,26 +289,27 @@ create table content_variants (
   foreign key (channel_id, brand_id) references channels(id, brand_id),
   unique (id, brand_id),
   check (planned_at is null or planned_timezone is not null),
-  check (publication_status <> 'planned' or planned_at is not null),
-  check (publication_status <> 'published_manually' or approved_revision_id is not null)
+  check (publication_status <> 'planned' or planned_at is not null)
 );
-create index on content_variants (brand_id, planned_at);
-create index on content_variants (brand_id, editorial_status);
-create index on content_variants (channel_id);
-create index on content_variants (content_item_id);
+create index on content_channels (brand_id, planned_at);
+create index on content_channels (channel_id);
+create index on content_channels (content_item_id);
 
 create table content_revisions (
   id uuid primary key default gen_random_uuid(),
-  variant_id uuid not null,
+  item_id uuid not null,
   brand_id uuid not null,
   revision_no int not null,
   snapshot jsonb not null,
   created_by uuid references profiles(id),
   created_at timestamptz not null default now(),
-  foreign key (variant_id, brand_id) references content_variants(id, brand_id),
-  unique (variant_id, revision_no),
-  unique (id, variant_id)
+  foreign key (item_id, brand_id) references content_items(id, brand_id),
+  unique (item_id, revision_no),
+  unique (id, item_id)
 );
+alter table content_items
+  add foreign key (current_revision_id, id) references content_revisions(id, item_id),
+  add foreign key (approved_revision_id, id) references content_revisions(id, item_id);
 
 create table content_revision_media (
   revision_id uuid not null references content_revisions(id),
@@ -315,7 +322,7 @@ create table content_revision_media (
 create table approval_requests (
   id uuid primary key default gen_random_uuid(),
   brand_id uuid not null,
-  variant_id uuid not null,
+  item_id uuid not null,
   revision_id uuid not null,
   approver_user_id uuid not null references profiles(id),
   status text not null default 'pending' check (status in
@@ -327,10 +334,10 @@ create table approval_requests (
   viewed_at timestamptz,
   decided_at timestamptz,
   cancelled_reason text,
-  foreign key (revision_id, variant_id) references content_revisions(id, variant_id),
-  foreign key (variant_id, brand_id) references content_variants(id, brand_id)
+  foreign key (revision_id, item_id) references content_revisions(id, item_id),
+  foreign key (item_id, brand_id) references content_items(id, brand_id)
 );
-create unique index approval_one_pending_per_variant on approval_requests (variant_id) where status = 'pending';
+create unique index approval_one_pending_per_item on approval_requests (item_id) where status = 'pending';
 create index on approval_requests (brand_id, status, due_date);
 create index on approval_requests (approver_user_id, status);
 
@@ -349,28 +356,47 @@ create unique index approval_decision_once on approval_decisions (request_id);
 create table comments (
   id uuid primary key default gen_random_uuid(),
   brand_id uuid not null,
-  variant_id uuid not null,
+  item_id uuid not null,
   revision_id uuid,
   author_id uuid not null references profiles(id),
   visibility text not null check (visibility in ('internal','external')),
   body text not null check (char_length(body) between 1 and 4000),
   created_at timestamptz not null default now(),
   deleted_at timestamptz,
-  foreign key (variant_id, brand_id) references content_variants(id, brand_id)
+  foreign key (item_id, brand_id) references content_items(id, brand_id)
 );
-create index on comments (variant_id, created_at);
+create index on comments (item_id, created_at);
+
+create table calendar_notes (
+  id uuid primary key default gen_random_uuid(),
+  brand_id uuid not null references brands(id),
+  kind text not null check (kind in ('idea','date')),
+  title text not null check (char_length(title) between 2 and 140),
+  description text,
+  note_date date not null,
+  repeat text not null default 'none' check (repeat in ('none','weekly','monthly','yearly')),
+  converted_item_id uuid,
+  converted_at timestamptz,
+  archived_at timestamptz,
+  version int not null default 1,
+  created_by uuid references profiles(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  foreign key (converted_item_id, brand_id) references content_items(id, brand_id),
+  check ((converted_item_id is null) = (converted_at is null))
+);
+create index on calendar_notes (brand_id, note_date) where archived_at is null;
 ```
 
-Triggers: `content_revisions`, `content_revision_media`, `approval_decisions` → refuse `update` and `delete`; `content_variants` → a planned/submitted variant requires an active channel; `approval_requests` → block `status` changes except through the functions; `comments` → `deleted_at` is the only mutable column and only by the author (audited).
+Triggers: `content_revisions`, `content_revision_media`, `approval_decisions` → refuse `update` and `delete`; `content_items` → a change of brand and any editorial transition outside the map of [enums.md](enums.md) are refused; `content_channels` → a change of brand or content is refused; `approval_requests` → block `status` changes except through the functions; `comments` → `deleted_at` is the only mutable column and only by the author (audited).
 
-Implemented in `20261018100900_content.sql`, `…100910_content_functions.sql` and `…100920_portal_functions.sql`. Differences from the sketch above, all decided while implementing:
+Implemented in `20261018100900_content.sql`, `…100910_content_functions.sql`, `…100920_portal_functions.sql` and, for the single-aggregate refactor of 2026-10-19, `20261019130000_content_single_aggregate.sql`, `…130010_content_single_aggregate_functions.sql`, `…130020_calendar_notes.sql` and `…130030_content_single_aggregate_portal.sql` (the first migrations created `content_variants`; the refactor converted it into `content_channels`, moved the caption, files and editorial status up to `content_items` and renamed the `variant_id` columns to `item_id`). Notes:
 
-- `caption` and `briefing` are `jsonb` objects. In the MVP the caption is `{ "text": string }` and the briefing `{ "text": string }` (plain text); the object leaves room for rich text later without a migration (decision D12 in [../pending-external-setup.md](../pending-external-setup.md)).
+- `caption` (content and channel row) is a `jsonb` object `{ "text": string }`; on a channel row it is the **adjustment** (null means the base caption is used). `briefing` is a Tiptap JSON document (closed set of nodes and marks); text saved earlier as `{ "text": string }` is read as paragraphs (decision D12 in [../pending-external-setup.md](../pending-external-setup.md) concerns the caption only).
 - `working_media` is an ordered array of `{ "media_version_id": uuid, "alt_text": string | null }` (at most 20); `submit_for_approval` copies it into `content_revision_media` and `media_usages` (`content_revision`).
-- `content_variants` also has composite foreign keys `(current_revision_id, id)` and `(approved_revision_id, id)` to `content_revisions (id, variant_id)`, so a variant can only point to its own revisions; `comments (revision_id, variant_id)` likewise.
-- Trigger `content_variants_guard` refuses a change of brand or item and any editorial transition outside the map of [enums.md](enums.md) (`transition_not_allowed`); `content_items_guard` refuses a change of brand; `approval_requests_guard` freezes revision, variant, approver, requester, due date and message and makes a decided request final (`record_immutable`, `request_not_pending`); `comments_guard` allows only `deleted_at` to be set once.
-- `content_revisions.snapshot` keys: `title`, `format`, `caption`, `call_to_action`, `planned_at`, `planned_timezone`, `brand_timezone`, `channel { id, platform, profile_name }`. The ordered files are the `content_revision_media` rows.
-- Policies: items and variants `content.view` + brand; revisions `content.view` or `approvals.view` + brand; requests and decisions `approvals.view` + brand; comments (not deleted) `content.view` for internal ones and `content.view` or `approvals.view` for external ones. No policy for external roles on any of these tables; `authenticated` has `select` only.
+- `content_items` has composite foreign keys `(current_revision_id, id)` and `(approved_revision_id, id)` to `content_revisions (id, item_id)`, so a content can only point to its own versions; `comments (revision_id, item_id)` likewise. The "published manually requires an approved version" rule is enforced by `mark_published`, not by a check.
+- `content_revisions.snapshot` keys: `title`, `caption`, `call_to_action`, `brand_timezone`, `channels` (an array of `{ row_id, id, platform, profile_name, format, caption, planned_at, planned_timezone }`). The ordered files are the `content_revision_media` rows.
+- Policies: contents, channel rows and notes `content.view` (notes: `calendar.view`) + brand; versions `content.view` or `approvals.view` + brand; requests and decisions `approvals.view` + brand; comments (not deleted) `content.view` for internal ones and `content.view` or `approvals.view` for external ones. No policy for external roles on any of these tables; `authenticated` has `select` only.
 
 ## 6. Media
 
@@ -415,7 +441,7 @@ create table media_versions (
 );
 alter table media_assets add foreign key (current_version_id) references media_versions(id);
 alter table organizations add foreign key (logo_media_version_id) references media_versions(id);
--- content_variants.published_evidence_media_version_id gets its foreign key in the content migration (the table does not exist yet)
+-- content_channels.published_evidence_media_version_id gets its foreign key in the content migration (the table does not exist yet)
 
 create table media_upload_sessions (
   id uuid primary key default gen_random_uuid(),

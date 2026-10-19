@@ -14,7 +14,7 @@ import { useListState } from "@/hooks/shared/use-list-state";
 import { type ApprovalRow, listApprovals } from "@/lib/marketing/approvals/approvals.functions";
 import { ApprovalFilter } from "@/lib/marketing/approvals/schemas";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
-import { platformLabels } from "@/lib/shared/labels";
+import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -66,8 +66,8 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
     { id: "brand", label: "Marca", cell: (row) => row.brandName },
     {
       id: "channel",
-      label: "Canal",
-      cell: (row) => `${platformLabels[row.platform]} · ${row.profileName}`,
+      label: "Canais",
+      cell: (row) => <ChannelLogos channels={row.channels} />,
     },
     { id: "revision", label: "Versão", cell: (row) => row.revisionNo },
     { id: "approver", label: "Aprovador", cell: (row) => row.approverName ?? "—" },

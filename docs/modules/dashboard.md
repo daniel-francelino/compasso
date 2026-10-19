@@ -14,7 +14,7 @@ Every block is computed on the server from the source tables, paginated or limit
 
 | Block | Content | Source | Action needed |
 |---|---|---|---|
-| **Precisa de atenção** | Overdue approvals, variants with `changes_requested`, overdue production deadlines, planned dates already passed without publication, approvers without access | content, approvals | `content.view` / `approvals.view` |
+| **Precisa de atenção** | Overdue approvals, contents with `changes_requested`, overdue production deadlines, planned dates already passed without publication, approvers without access | content, approvals | `content.view` / `approvals.view` |
 | **Aprovações pendentes** | Requests awaiting the client, age and deadline, by brand | approvals | `approvals.view` |
 | **Próximos prazos e publicações** | The next 14 days: production deadlines and planned posts (by day) | content, calendar | `calendar.view` |
 | **Conteúdos por estado** | Counts by editorial status (draft → approved), per brand filter | content | `content.view` |
@@ -31,7 +31,7 @@ Each item links to the exact record. Counts that would reveal brands or content 
 - Blocks load independently with skeletons; a failing block shows an inline error with "Tentar novamente" without breaking the page.
 - Responsive: on mobile the blocks stack in the order "Precisa de atenção", "Pendentes", "Próximos"; the rest below.
 - **Everything is derived**: nothing on the dashboard is stored or editable. Definitions of the counts live in one place (`lib/marketing/dashboard`) and are reused by notifications and list filters so numbers always agree.
-- Definitions: **overdue approval** = pending request past its deadline; **late production** = production deadline past and the item has a variant not yet `approved`; **needs attention** counts each variant once even if it matches several rules; the reason is shown.
+- Definitions: **overdue approval** = pending request past its deadline; **late production** = production deadline past and the content is not yet `approved`; **needs attention** counts each content once even if it matches several rules; the reason is shown.
 
 ## Data and functions
 
@@ -49,13 +49,13 @@ The dashboard itself requires an approved account with at least one marketing ac
 
 - A user linked to brand A sees only brand A in every block and every count.
 - A user without `approvals.view` does not see approval blocks or their counts.
-- A variant that is late for two reasons appears once, with both reasons.
+- A content that is late for two reasons appears once, with both reasons.
 - Opening an item from the dashboard leads to the right record and, after the action, the dashboard updates without a full reload.
 - A failure in one block does not affect the others; skeletons keep the layout stable.
 - The numbers on the dashboard equal those of the filtered lists they link to.
 
 ## Implementation status
 
-Phase 3 (task P3-07, 2026-10-18). Done: migration `20261018100930_dashboard.sql` (`dashboard_attention`, `dashboard_status_counts`, `dashboard_my_items`); `src/lib/marketing/dashboard/dashboard.functions.ts`; the page `/admin/marketing` ("Visão geral", reached from `/admin` for people with a marketing action) with the blocks "Precisa de atenção" (each variant once with all its reasons), "Aprovações pendentes" (reuses the approvals list), "Conteúdos por estado" (links to the filtered list) and "Minhas tarefas", each with its own skeleton and retry, a brand filter in the URL and blocks hidden without the action.
+Phase 3 (task P3-07, 2026-10-18). Done: migration `20261018100930_dashboard.sql` (`dashboard_attention`, `dashboard_status_counts`, `dashboard_my_items`); `src/lib/marketing/dashboard/dashboard.functions.ts`; the page `/admin/marketing` ("Visão geral", reached from `/admin` for people with a marketing action) with the blocks "Precisa de atenção" (each content once with all its reasons), "Aprovações pendentes" (reuses the approvals list), "Conteúdos por estado" (links to the filtered list) and "Minhas tarefas", each with its own skeleton and retry, a brand filter in the URL and blocks hidden without the action.
 
-Validation performed: 18 pgTAP assertions on PGlite (every reason, a variant with two reasons listed once, brand isolation, external user refused, anon refused); typecheck, lint, build. **Not tested**: the page in a browser. **Not done**: "Próximos prazos e publicações" (`dashboard_upcoming`, still open after phase 4: the calendar itself is the place for it), "Atividade recente", "Acessos" and "Armazenamento" blocks, live update through the notification subscription (the blocks refetch after the 30-second stale time and after mutations).
+Validation performed: 18 pgTAP assertions on PGlite (every reason, a content with two reasons listed once, brand isolation, external user refused, anon refused); typecheck, lint, build. **Not tested**: the page in a browser. **Not done**: "Próximos prazos e publicações" (`dashboard_upcoming`, still open after phase 4: the calendar itself is the place for it), "Atividade recente", "Acessos" and "Armazenamento" blocks, live update through the notification subscription (the blocks refetch after the 30-second stale time and after mutations).

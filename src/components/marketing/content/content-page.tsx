@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -10,7 +10,6 @@ import {
   Eye,
   FileText,
   List,
-  LoaderCircle,
   Pencil,
   Plus,
   Trash2,
@@ -31,14 +30,7 @@ import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { Button } from "@/components/shared/ui/button";
 import { ContentBoard } from "@/components/marketing/content/content-board";
-import { ItemFormDialog } from "@/components/marketing/content/item-form-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/shared/ui/dialog";
+import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { useServerAction } from "@/hooks/shared/use-server-action";
@@ -47,7 +39,6 @@ import {
   type ContentItemRow,
   cancelContentItem,
   deleteContentItem,
-  getContentItem,
   listAssigneeOptions,
   listContentItems,
 } from "@/lib/marketing/content/content.functions";
@@ -91,7 +82,7 @@ const publicationOptions = [
 ];
 
 const nextPlanned = (row: ContentItemRow): string => {
-  const planned = row.variants
+  const planned = row.channels
     .filter((variant) => variant.plannedAt !== null && variant.plannedTimezone !== null)
     .sort((a, b) => (a.plannedAt ?? "").localeCompare(b.plannedAt ?? ""))[0];
   return planned?.plannedAt && planned.plannedTimezone
@@ -102,12 +93,9 @@ const nextPlanned = (row: ContentItemRow): string => {
 export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const list = useListState<string>(ContentStatusFilter.Active);
-  const [creating, setCreating] = useState(false);
   const [cancelling, setCancelling] = useState<ContentItemRow | null>(null);
   const [deleting, setDeleting] = useState<ContentItemRow | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const { run, busy } = useServerAction();
   const brandId = fixedBrandId ?? list.filters.brand;
   const board = list.filters.view === VIEW_BOARD;
@@ -145,11 +133,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     placeholderData: keepPreviousData,
     enabled: !board,
   });
-  const editingQuery = useQuery({
-    queryKey: QueryKey.Content.item(editingId ?? ""),
-    queryFn: async () => unwrapResult(await getContentItem({ data: { id: editingId ?? "" } })).item,
-    enabled: editingId !== null,
-  });
   const invalidate = [QueryKey.Content.all(), QueryKey.Dashboard.all()];
 
   const columns: DataTableColumn<ContentItemRow>[] = [
@@ -171,26 +154,12 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     {
       id: "channels",
       label: "Canais",
-      cell: (row) =>
-        row.variants.length === 0
-          ? "—"
-          : [...new Set(row.variants.map((variant) => platformLabels[variant.platform]))].join(
-              ", ",
-            ),
+      cell: (row) => <ChannelLogos channels={row.channels} />,
     },
     {
       id: "status",
-      label: "Estados",
-      cell: (row) =>
-        row.variants.length === 0 ? (
-          "Sem variantes"
-        ) : (
-          <span className="flex flex-wrap gap-1">
-            {[...new Set(row.variants.map((variant) => variant.editorialStatus))].map((status) => (
-              <EditorialStatusBadge key={status} status={status} />
-            ))}
-          </span>
-        ),
+      label: "Estado",
+      cell: (row) => <EditorialStatusBadge status={row.editorialStatus} />,
     },
     { id: "planned", label: "Prevista", cell: nextPlanned },
     { id: "owner", label: "Responsável", cell: (row) => row.assigneeName ?? "—" },
@@ -203,13 +172,17 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   ];
 
   const actions = (row: ContentItemRow): DataTableAction<ContentItemRow>[] => [
-    ...(fixedBrandId && can(auth, Action.Content.Update)
+    ...(can(auth, Action.Content.Update)
       ? [
           {
             id: "edit",
             label: "Editar conteúdo",
             icon: Pencil,
-            onSelect: (item: ContentItemRow) => setEditingId(item.id),
+            onSelect: (item: ContentItemRow) =>
+              void navigate({
+                to: "/admin/marketing/content/$itemId",
+                params: { itemId: item.id },
+              }),
           },
         ]
       : []),
@@ -230,11 +203,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
             label: "Excluir conteúdo",
             icon: Trash2,
             destructive: true,
-            disabled: row.variants.length > 0,
-            disabledReason:
-              row.variants.length > 0
-                ? "Conteúdos com variantes não podem ser excluídos."
-                : undefined,
             onSelect: setDeleting,
           },
         ]
@@ -324,11 +292,18 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     <div className="space-y-6">
       <PageHeader
         title="Conteúdos"
-        description="As ideias de conteúdo e suas variantes por canal."
+        description="Cada conteúdo, os canais onde vai sair e o estado de aprovação."
         breadcrumbs={fixedBrandId ? undefined : [{ label: "Conteúdos" }]}
         actions={
           can(auth, Action.Content.Create) ? (
-            <Button onClick={() => setCreating(true)}>
+            <Button
+              onClick={() =>
+                void navigate({
+                  to: "/admin/marketing/content/new",
+                  search: fixedBrandId ? { brand: fixedBrandId } : {},
+                })
+              }
+            >
               <Plus aria-hidden="true" />
               Novo conteúdo
             </Button>
@@ -423,7 +398,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         open={cancelling !== null}
         onOpenChange={(open) => !open && setCancelling(null)}
         title={`Cancelar “${cancelling?.title ?? ""}”?`}
-        description="As variantes ainda não publicadas serão canceladas e os pedidos pendentes ao cliente também. O histórico é mantido."
+        description="Os canais ainda não publicados serão cancelados e os pedidos pendentes ao cliente também. O histórico é mantido."
         confirmLabel="Cancelar conteúdo"
         onSubmit={async (reason) => {
           if (cancelling === null) return false;
@@ -438,7 +413,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         open={deleting !== null}
         onOpenChange={(open) => !open && setDeleting(null)}
         title={`Excluir “${deleting?.title ?? ""}”?`}
-        description="Este conteúdo ainda não tem variantes, então pode ser excluído. Esta ação não pode ser desfeita."
+        description="Só é possível excluir conteúdos que nunca foram enviados para aprovação nem receberam comentários. Esta ação não pode ser desfeita."
         confirmLabel="Excluir"
         destructive
         busy={busy}
@@ -451,55 +426,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           return result.ok;
         }}
       />
-      {creating ? (
-        <ItemFormDialog
-          open
-          fixedBrandId={fixedBrandId}
-          onOpenChange={(next) => !next && setCreating(false)}
-          onSaved={(saved) =>
-            void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: saved.id } })
-          }
-        />
-      ) : null}
-      {editingId !== null && editingQuery.data ? (
-        <ItemFormDialog
-          key={editingQuery.data.id}
-          open
-          item={editingQuery.data}
-          fixedBrandId={fixedBrandId}
-          fullScreen
-          onOpenChange={(open) => !open && setEditingId(null)}
-          onSaved={() => {
-            setEditingId(null);
-            void Promise.all(
-              invalidate.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-            );
-          }}
-        />
-      ) : editingId !== null ? (
-        <Dialog open onOpenChange={(open) => !open && setEditingId(null)}>
-          <DialogContent className="h-dvh max-h-dvh w-screen max-w-none rounded-none border-0 p-5 sm:max-w-none sm:rounded-none sm:p-8">
-            <DialogHeader>
-              <DialogTitle>Editar conteúdo</DialogTitle>
-              <DialogDescription>
-                {editingQuery.isError
-                  ? "Não foi possível carregar este conteúdo. Tente novamente."
-                  : "Carregando conteúdo…"}
-              </DialogDescription>
-            </DialogHeader>
-            {editingQuery.isError ? (
-              <Button variant="outline" onClick={() => void editingQuery.refetch()}>
-                Tentar novamente
-              </Button>
-            ) : (
-              <LoaderCircle
-                className="size-5 animate-spin text-muted-foreground"
-                aria-hidden="true"
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-      ) : null}
     </div>
   );
 }

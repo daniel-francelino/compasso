@@ -6,6 +6,7 @@ import { Download, Replace, Trash2, Undo2, Save, Globe, RefreshCw, Share2 } from
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
@@ -130,10 +131,12 @@ function MetadataForm({ detail, canEdit }: { detail: MediaDetail; canEdit: boole
       />
       <FormError message={error} />
       {canEdit ? (
-        <Button type="submit" loading={busy} disabled={busy || !dirty}>
-          <Save aria-hidden="true" />
-          Salvar
-        </Button>
+        <FormActions>
+          <Button type="submit" loading={busy} disabled={busy || !dirty}>
+            <Save aria-hidden="true" />
+            Salvar
+          </Button>
+        </FormActions>
       ) : null}
     </SectionCard>
   );

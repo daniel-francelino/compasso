@@ -17,14 +17,14 @@ import { formatDateTime } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
-export function PortalComments({ variantId }: { variantId: string }) {
+export function PortalComments({ itemId }: { itemId: string }) {
   const auth = useAuth();
   const { run, busy } = useServerAction();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | undefined>();
   const query = useQuery({
-    queryKey: QueryKey.Portal.comments(variantId),
-    queryFn: async () => unwrapResult(await listPortalComments({ data: { variantId } })).comments,
+    queryKey: QueryKey.Portal.comments(itemId),
+    queryFn: async () => unwrapResult(await listPortalComments({ data: { itemId } })).comments,
   });
 
   async function send() {
@@ -34,8 +34,8 @@ export function PortalComments({ variantId }: { variantId: string }) {
       return;
     }
     setError(undefined);
-    const result = await run(() => addPortalComment({ data: { variantId, body } }), {
-      invalidate: [QueryKey.Portal.comments(variantId)],
+    const result = await run(() => addPortalComment({ data: { itemId, body } }), {
+      invalidate: [QueryKey.Portal.comments(itemId)],
     });
     if (result.ok) {
       setBody("");

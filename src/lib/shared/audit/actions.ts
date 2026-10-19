@@ -40,8 +40,23 @@ export const AuditAction = {
   Content: {
     Created: "content.created",
     Updated: "content.updated",
+    Submitted: "content.submitted",
+    Reopened: "content.reopened",
     Cancelled: "content.cancelled",
     Deleted: "content.deleted",
+  },
+  ContentChannel: {
+    Added: "content_channel.added",
+    Removed: "content_channel.removed",
+    Rescheduled: "content_channel.rescheduled",
+    PublishedManually: "content_channel.published_manually",
+    Cancelled: "content_channel.cancelled",
+  },
+  CalendarNote: {
+    Created: "calendar_note.created",
+    Updated: "calendar_note.updated",
+    Archived: "calendar_note.archived",
+    Converted: "calendar_note.converted",
   },
   Variant: {
     Created: "variant.created",

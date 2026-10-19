@@ -30,10 +30,6 @@ export function BrandLogoField({ brand, canEdit }: { brand: BrandDetail; canEdit
     <SectionCard as="div" title="Logo">
       <div className="flex flex-wrap items-center gap-4">
         <BrandAvatar name={brand.name} logoUrl={brand.logoUrl} size="lg" />
-        <p className="max-w-sm text-sm text-muted-foreground">
-          O logo aparece como avatar da marca nas listas e nos seletores. Escolha uma imagem da
-          biblioteca desta marca.
-        </p>
         {canEdit ? (
           <div className="flex flex-wrap gap-2">
             <Button

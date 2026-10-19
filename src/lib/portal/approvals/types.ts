@@ -2,16 +2,22 @@ import type { ApprovalOutcome, ApprovalRequestStatus } from "@/lib/shared/enums"
 
 export type PortalBrand = { id: string; name: string; pendingCount: number };
 
-export type PortalRequest = {
-  id: string;
-  variantId: string;
-  status: ApprovalRequestStatus;
-  title: string;
-  format: string;
+export type PortalChannel = {
+  rowId: string;
   platform: string;
   profileName: string;
+  format: string;
+  caption: string | null;
   plannedAt: string | null;
   plannedTimezone: string | null;
+};
+
+export type PortalRequest = {
+  id: string;
+  itemId: string;
+  status: ApprovalRequestStatus;
+  title: string;
+  channels: PortalChannel[];
   brandTimezone: string | null;
   revisionNo: number;
   dueDate: string | null;

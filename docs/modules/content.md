@@ -1,177 +1,190 @@
 # Module — Content
 
-> Functional specification. Context and conventions in [README.md](README.md). Space: `marketing` (`/admin/marketing/content` and the "Conteúdos" tab of a brand). It is the **core** of the product together with [approvals.md](approvals.md).
+> Functional specification. Context and conventions in [README.md](README.md). Space: `marketing` (`/admin/marketing/content` and the "Conteúdos" tab of a brand). It is the **core** of the product together with [approvals.md](approvals.md) and [calendar.md](calendar.md).
 
 ## Goal and scope
 
-A **content item** is an editorial idea that belongs to a brand: it holds the objective, the briefing, the owner, the deadlines and internal notes. Each item can originate several **variants**, one per channel and publication occurrence, each with its own format, caption, files, planned date and approval cycle. When a variant is sent for approval it becomes an **immutable revision** that is exactly what the client sees.
+A **content** is one piece of work for one brand: the person writes it once (text, files, objective, briefing), chooses **one or more channels** and, for each channel, the format and the publication date. The whole content goes through **one approval cycle**: when it is sent, it becomes an **immutable version** that is exactly what the client sees, with a preview tab per channel.
 
-Included: items, variants, revisions, internal comments, board and list by status, manual publication record, cancelling and reopening. Not included in the MVP: automatic publishing, campaigns and tasks, multiple approvers, content templates, AI assistance, metrics.
+Included: contents with several channels, versions, internal comments, board and list by status, manual publication record per channel, cancelling and reopening, ideas and dates that can be converted into contents ([calendar.md](calendar.md)). Not included in the MVP: automatic publishing, campaigns and tasks, multiple approvers, content templates, AI assistance, metrics.
+
+The earlier model (content item → variant per channel → revision) was replaced on 2026-10-19: the three layers confused the team and repeated the same text and files for every network (see [Open decisions](#open-decisions)). Benchmark: mLabs ("Agendar post"): 1 choose profiles, 2 choose channels, 3 text with tabs "Todos | one per channel", 4 media, 5 date and time per channel with "Incluir mais dias e horários", 6 settings.
 
 ## Concepts
 
 | Concept | Meaning |
 |---|---|
-| Content item (`content_items`) | The idea: title, objective, briefing, owner, tags, production deadline, internal notes |
-| Variant (`content_variants`) | The adaptation for **one channel and one publication occurrence**: format, caption, call to action, files, planned date, statuses |
-| Revision (`content_revisions`) | **Immutable** snapshot of a variant at the moment it is sent for approval (text, files, order, channel, date) |
-| Revision media (`content_revision_media`) | The ordered, immutable media **versions** shown in a revision |
-| Comment (`comments`) | Internal or external, attached to a variant (and optionally to a revision) |
+| Content (`content_items`) | The only editable aggregate: title, objective, briefing, **caption, call to action, files**, owner, tags, deadlines, internal notes, **editorial status**, approval fields, `version`. UI name: "Conteúdo" |
+| Content channel (`content_channels`) | One row per **channel + format + publication occurrence** of a content: format, optional caption adjustment, planned date and zone, **publication status**, manual publication record. No editorial status, no versions and no approval of its own |
+| Version (`content_revisions`) | **Immutable** snapshot of the whole content (caption, files, and every channel row with format, adjustment and date) taken when it is sent for approval. In the UI it is "Versão n", a history list, never a place where the person works |
+| Version media (`content_revision_media`) | The ordered, immutable media **versions** shown in a version |
+| Comment (`comments`) | Internal or external, attached to a content (and optionally to a version) |
+| Calendar note (`calendar_notes`) | An idea or a date on the calendar that can become a content ([calendar.md](calendar.md)) |
 
-Example: a campaign "Lançamento de outono" generates a carousel for Instagram and a different text for LinkedIn: one item, two variants, with different dates, formats and decisions.
+Example: the campaign "Lançamento de outono" is one content with an Instagram carousel (Tuesday 10:00), an Instagram story (Tuesday 18:00) and a LinkedIn text (Wednesday 09:00): one caption, one set of files, three channel rows, one approval.
 
-## Content item
+## Content
 
 | Field | Rule |
 |---|---|
 | Brand | Required; fixed after creation |
-| Title | Required; internal title, 2–140 characters (never shown to the client unless used as the revision title) |
-| Objective | Optional |
-| Briefing | Optional; rich text (Tiptap JSON, closed set: bold, italic, heading, bullet and numbered lists; no links or HTML), up to 8000 characters; internal. Text saved before this editor existed (`{ "text": … }`) is read as paragraphs |
+| Title | Required; internal title, 2–140 characters (never shown to the client unless used as the version title) |
+| Objective | Optional; one choice from the closed list `ContentObjective` (`awareness`, `engagement`, `traffic`, `leads`, `sales`, `community`, `other`) plus an optional free-text detail (up to 2000 characters) |
+| Briefing | Optional; rich text (Tiptap JSON, closed set: bold, italic, heading, bullet and numbered lists; no links or HTML), up to 8000 characters; internal. Text saved before the editor existed (`{ "text": … }`) is read as paragraphs |
+| Caption | One base text for every channel (plain text, up to 5000 characters) |
+| Call to action | Optional text, up to 300 characters |
+| Files | Ordered list of media **versions** from the library (up to 20, alternative text per usage), shared by every channel; the allowed count follows the strictest format among the channel rows |
 | Owner | Optional; an internal user linked to the brand |
 | Tags | Optional; up to 20 of 40 characters, edited with `TagInputField` |
 | Production deadline | Optional; a **local date** of the brand (no time), chosen with `DatePickerField` |
 | Internal notes | Optional; **never exposed to external users** |
-| Cancelled | Cancelling hides the item from active lists without deleting history |
+| Editorial status | `EditorialStatus` of the whole content (see below) |
+| `version` | Optimistic locking counter |
 
-Briefing and internal notes live in tables that external roles cannot read; the portal only receives the revision snapshot.
+Briefing and internal notes live in tables that external roles cannot read; the portal only receives the version snapshot.
 
-## Variant
+## Content channel
 
 | Field | Rule |
 |---|---|
 | Channel | Required; an **active** channel of the same brand |
-| Format | Required; `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` (constant `ContentFormat`); allowed formats depend on the channel platform |
-| Caption | Rich text/plain per platform rules; counter with the platform guidance |
-| Call to action | Optional text |
-| Files | Ordered list of media **versions** from the library (max by format: for example a carousel up to 20) with alternative text per usage |
+| Format | Required; `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` (constant `ContentFormat`); the formats offered depend on the platform ([channels.md](channels.md): Instagram offers image, carousel, video, story and reel) |
+| Caption adjustment | Optional; empty means the row uses the base caption |
 | Planned date and time | Optional; stored as an instant (UTC) plus the IANA zone (brand zone by default) |
-| Approval deadline | Optional; a local date |
-| Editorial status | See below |
-| Publication status | `unplanned`, `planned`, `published_manually`, `cancelled` |
-| `version` | Optimistic locking counter |
+| Publication status | `PublicationStatus`: `unplanned`, `planned`, `published_manually`, `cancelled` |
+| Manual publication | Real date and time, optional link and evidence file, optional note |
 
-Rules: `planned_at` requires `planned_timezone`; publication status `planned` requires `planned_at`; `published_manually` requires an approved revision.
+Rules: `planned_at` requires `planned_timezone`; `planned` requires `planned_at`; the same channel may appear more than once with different formats or dates ("Incluir mais dias e horários"); at most 20 rows per content; the content is "published" only when every non-cancelled row is `published_manually` (derived, never stored).
 
 ## Statuses and transitions
 
-Editorial status of a variant: `draft` → `in_production` → `internal_review` → `awaiting_approval` → `approved`; `changes_requested` after a request; `cancelled` at any time (constants `EditorialStatus`; the transition map lives in `shared/editorial`).
+Editorial status of a content: `draft` → `in_production` → `internal_review` → `awaiting_approval` → `approved`; `changes_requested` after a request; `cancelled` at any time (constants `EditorialStatus`; the transition map lives in `shared/editorial`).
 
 | From | To | Action required | Notes |
 |---|---|---|---|
 | `draft` | `in_production` | `content.update` | |
-| `in_production` | `internal_review` | `content.update` | Optional step; configurable (see organization settings) |
-| `in_production` / `internal_review` | `awaiting_approval` | `content.submit` | Creates a revision and an approval request ([approvals.md](approvals.md)) |
+| `in_production` | `internal_review` | `content.update` | Optional step |
+| `in_production` / `internal_review` | `awaiting_approval` | `content.submit` | Creates a version and an approval request ([approvals.md](approvals.md)); needs at least one channel row (`channel_required`) |
 | `awaiting_approval` | `approved` / `changes_requested` | Designated approver | Through the portal |
-| `changes_requested` | `in_production` | `content.update` | A new revision is prepared |
-| `approved` | `in_production` | `content.reopen` | Audited with a reason; clears the approved revision and keeps history |
+| `changes_requested` | `in_production` | `content.update` | A new version is prepared |
+| `approved` | `in_production` | `content.reopen` | Audited with a reason; clears the approved version and keeps history; refused once any channel row is published |
 | any | `cancelled` | `content.cancel` | Does not delete history |
 
-Publication status is separate: `unplanned → planned → published_manually | cancelled`. "Planned" is an **editorial date**; it never means a platform will publish automatically. "Scheduled" is reserved for a future integration that confirms a real scheduling.
+Publication status is separate and lives on each channel row: `unplanned → planned → published_manually | cancelled`. "Planned" is an **editorial date**; it never means a platform will publish automatically. "Scheduled" is reserved for a future integration that confirms a real scheduling.
 
-## Revisions
+## Versions
 
-When a variant is submitted (`submit_for_approval`):
+When a content is submitted (`submit_for_approval`):
 
-1. The variant row is locked (`for update`) and the expected `version` is checked (`conflict` if outdated).
-2. A revision is created with `snapshot` = format, caption, call to action, channel (platform and profile name), planned date + zone, title shown to the client; the exact media versions in order go to `content_revision_media`.
-3. The previous pending request of the variant becomes `superseded`; a new approval request is created for the designated approver.
-4. The variant moves to `awaiting_approval`; notifications and an audit event are written in the same transaction.
+1. The content row is locked (`for update`) and the expected `version` is checked (`conflict` if outdated).
+2. A version is created with the title, base caption, call to action, brand zone and **every non-cancelled channel row** (row id, platform, profile name, format, caption adjustment, planned date and zone); the exact media versions in order go to `content_revision_media`.
+3. The previous pending request of the content becomes `superseded`; a new approval request is created for the designated approver.
+4. The content moves to `awaiting_approval`; notifications and an audit event are written in the same transaction.
 
-Revisions and their media rows are **immutable** (triggers refuse `update` and `delete`). Editing a variant that is `awaiting_approval` or `approved` is not an in-place edit: the working copy is edited and a **new revision** is submitted. Changing text, files, order, channel or date after submission always requires a new revision and a new approval.
+Versions and their media rows are **immutable** (triggers refuse `update` and `delete`). Editing a content that is `awaiting_approval` edits the working copy and a **new version** must be sent; an `approved` content refuses a change of text, files, channels, formats or dates (`requires_new_revision`) until it is reopened. The internal title, objective, briefing, owner, tags, deadline and notes can change at any time.
 
 ## Screens and flows
 
-Routes: `/admin/marketing/content` (all authorized brands), `/admin/marketing/brands/$brandId/content`, `/admin/marketing/content/$itemId`, `/admin/marketing/variants/$variantId`.
+Routes: `/admin/marketing/content` (all authorized brands), `/admin/marketing/brands/$brandId/content`, `/admin/marketing/content/new`, `/admin/marketing/content/$itemId`.
 
-Marketing content screens use all available content width to support their dense list, board and editor layouts.
-
-- **List:** title, brand, channels (icons), statuses, planned date, owner, deadline. Search; filters by brand, channel, owner, editorial status, publication status and tag in the shared filter popover; sorting by deadline or planned date. Each row has a three-dot actions menu to open the item, edit it in a full-screen dialog when shown inside brand context, cancel it when active or delete it when it has no variants, subject to permissions. Saving in the brand context keeps the person on the brand's "Conteúdos" tab. A single icon button beside the filter button switches between list and board, with a tooltip naming the destination view. Main action "Novo conteúdo".
-- **Board:** columns by editorial status; each card has a "Mover para…" menu that calls the transition function and obeys the table above. A refused move explains why. Card moves use the menu, not drag and drop (decision D13).
-- **Item page:** briefing, owner, deadlines, internal notes and the list of variants (one card per channel with status, date and thumbnail), action "Adicionar variante" (choose channel and format; option "Duplicar de outra variante" copies caption and files).
-- **Variant editor:** caption editor with counter and guidance; file strip with the `MediaPicker`, ordering by buttons and drag, alternative text per file; date/time field with the **brand time zone** shown; platform preview (`ChannelPreview`) updating live; internal comments panel; history of revisions and decisions; action buttons contextual to the status: "Enviar para aprovação", "Reabrir", "Registrar publicação", "Cancelar".
-- **Send for approval dialog:** choose the **designated approver** among external members with `can_decide`; optional message; approval deadline; the dialog states "Isto cria a revisão nº N. O cliente verá exatamente esta versão."; checks run first (required fields, files available, channel active, date in the future with a warning).
-- **Manual publication:** "Registrar publicação" (only for the **currently approved** revision) asks real date/time, URL or evidence file (optional) and a note; it changes the publication status to `published_manually`, audits it and **never calls a social network**.
-- **Reopen:** requires a reason; supersedes any pending request; the variant returns to `in_production`.
-- **Cancel:** with confirmation; pending requests become `cancelled`.
+- **List:** title, brand, channel logos (up to 4 and "+N"), editorial status, next planned date, owner, deadline. Search; filters by brand, channel, owner, editorial status, publication status and tag in the shared filter popover; sorting by deadline, update or title. A single icon button beside the filter button switches between list and board. Main action "Novo conteúdo".
+- **Board:** columns by editorial status; each card shows the channel logos, the format badges and the next planned date, and has a "Mover para…" menu that calls the transition function and obeys the table above. Card moves use the menu, not drag and drop (decision D13).
+- **Editor** (one screen for create and edit, `ContentEditor`): sections numbered like mLabs.
+  1. **Selecione os canais:** multi-select of the brand's active channels as platform logo buttons (`ChannelPicker`, `PlatformIcon`); a channel with a published row is locked; an empty state links to the channels tab. For a new content the brand is chosen first.
+  2. **Texto do post:** tabs "Todos | one per channel row"; "Todos" holds the base caption, each row tab holds the optional adjustment (with the platform character guidance); the call to action is below.
+  3. **Mídias:** the file strip with `MediaPicker`, ordering by buttons and alternative text; the count rule follows the strictest selected format.
+  4. **Data e horário das publicações:** one line per channel row: logo, format select, date and time (`DateTimeField`, brand zone), "Registrar publicação" and "Cancelar este canal" icon buttons, and "Incluir mais dias e horários neste canal".
+  5. **Configurações:** title, objective (select) and detail, briefing (`RichTextEditor`), owner, production deadline (`DatePickerField`), tags, internal notes.
+  Right column: live `ChannelPreview` of the selected tab, history of versions and decisions, internal comments. Actions: "Criar conteúdo"/"Salvar", "Iniciar produção", "Enviar para revisão interna", "Enviar para aprovação", "Reabrir", "Cancelar conteúdo". Unsaved changes warn before leaving; a save conflict keeps the typed text.
+- **Send for approval dialog:** choose the **designated approver** among external members with `can_decide`; optional message; approval deadline; the dialog states "Isto cria a versão nº N. O cliente verá exatamente esta versão, com todos os canais."; checks run first (at least one channel, text or files, file count for every format, files available, channels active, dates in the future as a warning).
+- **Manual publication:** "Registrar publicação" on a channel row (only when the content is `approved`) asks real date/time, link or evidence file (optional) and a note; it changes that row to `published_manually`, audits it and **never calls a social network**.
+- **Reopen:** requires a reason; supersedes any pending request; the content returns to `in_production`.
+- **Cancel:** the content (with confirmation and a reason) cancels its unpublished rows and pending requests; one channel row can be cancelled alone while another active row remains.
+- **From an idea or a date:** "Converter em conteúdo" on the calendar opens `/admin/marketing/content/new?note=…` with the title and description (as the briefing) filled and, for a date, the day as the default planned day of every row; the note is linked only when that content is first saved ([calendar.md](calendar.md)).
 
 ## Comments
 
-Comments belong to a variant (and optionally a revision) with visibility `internal` or `external`:
+Comments belong to a content (and optionally a version) with visibility `internal` or `external`:
 
 - Internal comments need `comments.create_internal`; external users never see them.
 - External comments need `comments.create_external`; internal users with `approvals.view` see them with an "Externo" badge; they are shown to external users linked to the brand.
-- Comments are plain text with mentions of internal users (optional later), immutable after 5 minutes except for deletion by the author with an audit event. A decision comment is part of the decision and cannot be edited.
+- Comments are plain text, immutable except for deletion by the author with an audit event. A decision comment is part of the decision and cannot be edited.
 - A new external comment notifies the content owner.
 
 ## Rules
 
-1. A variant belongs to an item **and** a channel of the same brand (composite foreign keys).
-2. Only files with status `available` can be attached; the exact media version is frozen on submission; replacing a file later never changes a past revision.
+1. A channel row belongs to a content **and** a channel of the same brand (composite foreign keys).
+2. Only files with status `available` can be attached; the exact media version is frozen on submission; replacing a file later never changes a past version.
 3. A concurrent submission and decision are serialized by the row lock; the loser receives `revision_superseded` or `conflict`.
-4. Rescheduling a variant in `awaiting_approval` or `approved` requires a new revision (`requires_new_revision`).
-5. A cancelled item cancels its active variants; a cancelled brand blocks new content.
-6. Drafts and internal notes are never visible to external users; only the submitted revision snapshot is.
+4. Rescheduling a channel row of a content in `awaiting_approval` or `approved` requires a new version (`requires_new_revision`; the calendar creates it, see [calendar.md](calendar.md)).
+5. A cancelled content cancels its active channel rows; a cancelled brand blocks new content.
+6. Drafts and internal notes are never visible to external users; only the submitted version snapshot is.
 7. Optimistic locking: edits send `version`; on conflict the editor offers to reload and keeps the person's text.
+8. Saving a content replaces its channel rows in one transaction: rows not sent are removed unless they were published (then the save is refused).
 
 ## Data model
 
 > Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
 
-`content_items`, `content_variants`, `content_revisions`, `content_revision_media`, `comments` as in [../reference/data-model.md](../reference/data-model.md) section 5 (composite FKs `(content_item_id, brand_id)` and `(channel_id, brand_id)`, immutability triggers, `unique (variant_id, revision_no)`). Server functions: `submit_for_approval`, `reopen_variant`, `reschedule_variant`, `mark_published`, plus `cancel_variant` and `cancel_item`.
+`content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` and `calendar_notes` as in [../reference/data-model.md](../reference/data-model.md) section 5 (composite foreign keys `(content_item_id, brand_id)` and `(channel_id, brand_id)`, immutability triggers, `unique (item_id, revision_no)`). Server functions: `content_item_save`, `content_move`, `submit_for_approval`, `reopen_content`, `reschedule_channel`, `mark_published`, plus `content_item_cancel`, `content_channel_cancel` and `content_item_delete`.
 
 ## Permissions
 
 | Action | Allows | Requires |
 |---|---|---|
-| `content.view` | See items and variants of linked brands | — |
-| `content.create` | Create items and variants | `content.view`, `channels.view` |
-| `content.update` | Edit items, variants and working copies; move status before approval | `content.view` |
-| `content.delete` | Delete items without revisions | `content.update` |
+| `content.view` | See contents of linked brands | — |
+| `content.create` | Create contents | `content.view`, `channels.view` |
+| `content.update` | Edit contents, channel rows and working copies; move status before approval | `content.view` |
+| `content.delete` | Delete contents that were never sent or commented | `content.update` |
 | `content.submit` | Send for approval | `content.update` |
-| `content.cancel` | Cancel items and variants | `content.update` |
-| `content.reopen` | Reopen approved or pending variants | `content.update` |
-| `content.publish_manual` | Record the manual publication | `content.view` |
+| `content.cancel` | Cancel contents and channel rows | `content.update` |
+| `content.reopen` | Reopen approved or pending contents | `content.update` |
+| `content.publish_manual` | Record the manual publication of a channel row | `content.view` |
 | `comments.create_internal` | Internal comments | `content.view` |
 
 ## Audit events
 
-`content.created/updated/cancelled/deleted`, `variant.created/updated/cancelled`, `variant.submitted`, `variant.reopened` (with reason), `variant.rescheduled`, `variant.published_manually`, `comment.created/deleted`.
+`content.created/updated/submitted/reopened/cancelled/deleted`, `content_channel.added/removed/rescheduled/published_manually/cancelled`, `comment.created/deleted`. The earlier `variant.*` actions stay in the catalog as **legacy** values so history already written keeps its labels; nothing writes them any more.
 
 ## Error codes
 
 > Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
-`conflict`, `revision_superseded`, `requires_new_revision`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `approver_required`, `approver_without_access`, `transition_not_allowed`, `not_approved`, `denied`, `not_found`.
+`conflict`, `revision_superseded`, `requires_new_revision`, `channel_required`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `approver_required`, `approver_without_access`, `transition_not_allowed`, `not_approved`, `content_has_history`, `denied`, `not_found`.
 
 ## Acceptance criteria
 
-- A content item with two channels has two variants with different dates, formats and decisions.
-- Submitting freezes text, files, order, channel and date; editing the working copy afterwards does not change what the approver sees.
+- One content with three channel rows (two formats of the same network and one other network) has one caption, one set of files and one approval, and three calendar entries with different dates.
+- A channel row can carry its own caption adjustment; the client sees one tab per channel.
+- Submitting freezes text, files, order, channels, formats and dates; editing the working copy afterwards does not change what the approver sees.
 - A new submission supersedes the pending request and its approver sees a "versão substituída" notice.
-- Editing an approved variant forces a new revision and a new approval; reopening is audited with a reason.
-- A file attached to an approved revision cannot be overwritten or permanently deleted.
-- Registering a manual publication is only possible for the approved revision and never triggers external calls.
+- Editing the text, channels or dates of an approved content forces a new version and a new approval; reopening is audited with a reason.
+- A file attached to an approved version cannot be overwritten or permanently deleted.
+- Registering a manual publication is only possible for an approved content, per channel, and never triggers external calls.
+- A content with no channel cannot be sent for approval.
 - External users never receive the briefing, internal notes, internal comments or drafts.
 - Board moves obey the transition table and are available by keyboard.
 - Concurrent edits produce a `conflict` that keeps the typed text.
+- An idea or a date converted into a content links to it once, when the content is first saved.
+
+## Open decisions
+
+| ID | Decision | Status |
+|---|---|---|
+| O1 | The **objective** is per content, from one closed list | Decided (2026-10-19) |
+| O2 | Each channel having **its own files** (a vertical video for Reels, a square image for the feed) | Not in this delivery; add an optional per-channel list later without touching the shared one |
+| O3 | The approval is **per content**; a channel the client does not want is removed by the team in a new version | Decided |
+| O4 | A date change after approval creates a new version and a new approval (as before). If it proves heavy, take the planned date **out of the approved snapshot**: the approval would cover text and files and dates become scheduling | Open; revisit after real use |
+| O5 | At most 20 channel rows per content | Decided |
 
 ## Implementation status
 
-Phase 3 (tasks P3-01 to P3-04, 2026-10-18). Done: migrations `20261018100900_content.sql` (tables, composite foreign keys, immutability and transition triggers, RLS) and `…100910_content_functions.sql` (`content_item_save/cancel/delete`, `content_variant_save/move/cancel`, `submit_for_approval`, `reopen_variant`, `mark_published`, `comment_add/delete/list`, `approver_options`, `person_names`); server functions in `src/lib/marketing/content/*` (list, board, item, variant with revisions and history, comments, approver options); `src/lib/shared/editorial/editorial.ts` (transition map, formats by platform, file rules); screens `/admin/marketing/content` (list and "Quadro"), `/admin/marketing/content/$itemId`, `/admin/marketing/variants/$variantId` and the brand tab "Conteúdos": filters in the URL, new/edit item, add variant (with "Duplicar de outra variante"), variant editor (caption with platform counter, file strip with `MediaPicker`, ordering and alternative text, date-time with the brand zone, live `ChannelPreview`, internal and external comments, history of versions and decisions, "Enviar para aprovação" dialog with checks, "Registrar publicação", "Reabrir", "Cancelar"), conflict banner that keeps the typed text.
+**Refactor to one content with several channels (Phase R, 2026-10-19).** Done in code: migrations `20261019130000_content_single_aggregate.sql` (guards the data, adds the editorial and caption columns to `content_items`, renames `content_variants` to `content_channels`, moves the `variant_id` columns of versions, requests and comments to `item_id`, redefines the guards, renames the notification kind to `content.publish_due`), `…130010_content_single_aggregate_functions.sql` (`content_item_save` with the channel rows, `content_move`, `content_channel_cancel`, `submit_for_approval`, `reopen_content`, `mark_published`, comments, approver functions, `audit_write` catalog), `…130020_calendar_notes.sql` (notes, `list_calendar_entries` with ideas and dates, `reschedule_channel`) and `…130030_content_single_aggregate_portal.sql` (portal, dashboard and scanner); server functions in `src/lib/marketing/content/*` (`content.functions.ts`, `workflow.functions.ts`, `comments.functions.ts`, `revisions.server.ts`), `src/lib/marketing/calendar/*`, `src/lib/portal/approvals/*`; the editor (`content-editor.tsx` with `ChannelPicker`, `CaptionSection`, `ChannelRowsSection`, `ContentSettingsSection`), the list and board with channel logos, the approval and portal screens with channel tabs (`RevisionView`), the calendar with logos, status marks, "Adicionar" on each day, ideas and dates; `PlatformIcon` moved to `shared/preview`; `variants.functions.ts`, the variant editor, the item page and the new-variant dialog were removed.
 
-Decisions taken while implementing (all recorded in [../pending-external-setup.md](../pending-external-setup.md)): caption and briefing are plain text stored as `{ "text": … }` (D12); the board moves cards through a "Mover para…" menu, with no drag and drop (D13); a comment cannot be edited, only deleted by its author (D14); the optional internal-review step is always available, with no policy switch yet (D15); an `approved` variant must be reopened before any change, which also covers a change of date (`requires_new_revision`); sorting by planned date waits for the calendar (the list sorts by deadline, update or title).
+**Existing data.** The linked project had one content with one variant and no versions, requests or comments on 2026-10-19; the migration converts it (its caption, files and status move to the content and the variant becomes its first channel row). A backup of those rows was taken before the change. The migration refuses to run when a content has two or more variants or any version, request or comment exists (`content_single_aggregate: unsupported data`).
 
-Validation performed: 158 pgTAP assertions on PGlite for this module and the portal (transitions, composite foreign keys, immutability of revisions, revision files and decisions, supersession, brand A versus brand B, approver rules, files frozen and protected from permanent deletion, comments); 6 Vitest tests (the TypeScript transition map is compared with the SQL function; formats and file rules); typecheck, lint, build; the unauthenticated redirects of every new route in Playwright. **Not tested**: any screen in a browser with real data; two simultaneous sessions (PGlite has one connection, so the row-lock concurrency between a submission and a decision is covered by the version and status checks only); upload and signing against a real bucket from the variant editor; the end-to-end flow with real accounts. **Not done**: drag and drop on the board, the planned-date sort, `reschedule_variant` (phase 4), the "used in" names in the library.
+Validation performed: 741 pgTAP assertions on PGlite (tests 09 to 12 rewritten: 180 for content and approvals, 18 for the dashboard, 79 for the calendar and notes, 15 for the scanners; the rest unchanged), 132 Vitest tests (rich text schema, combined file rules, calendar fixtures), lint, Prettier, build, `check:consistency` for the SQL and TypeScript constants. **Not tested**: any screen in a browser; the migrations on the real project (the `db push` was refused by the environment, so the linked database still has the old schema until the person approves it); the generated types come from the offline generator until then (`brand_logo_keys` has an imprecise type); two simultaneous sessions; upload and signing from the editor against a real bucket; the portal flow with real accounts.
 
-2026-10-19: Moved content filters into the shared filter popover and replaced the list/board tabs with one tooltip-enabled icon button beside the filters. Validation performed: targeted ESLint, typecheck, `check:docs` and `git diff --check`. **Not tested**: browser behavior.
+History of the earlier model (kept for context): phase 3 delivered items, variants and revisions on 2026-10-18 with 158 pgTAP assertions; decisions D12 (plain captions), D13 (board moves by menu), D14 (comments are never edited), D15 (internal review always available) are in [../pending-external-setup.md](../pending-external-setup.md); on 2026-10-19 the briefing became rich text (`RichTextEditor`, `RichTextView`, no migration), dates use `DatePickerField` and tags use `TagInputField`.
 
-2026-10-19: Refined the board columns and cards with status badges, format and channel metadata, date markers, contained column scrolling and clearer empty states. Kept the documented menu-based move flow (D13). Validation performed: targeted ESLint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior with real content and horizontal/vertical scrolling.
-
-2026-10-19: Content list, item and variant routes use the full available admin content width. Validation performed: targeted ESLint and typecheck. **Not tested**: browser rendering.
-
-2026-10-19: Added a three-dot row-action menu to the content list for opening, cancelling active items and deleting items without variants, subject to permissions. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
-
-2026-10-19: In the brand's "Conteúdos" tab, added "Editar conteúdo" to the row actions for people with `content.update`; it loads the item and opens the existing form in a full-screen dialog, preserving the brand context after saving. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
-
-2026-10-19: "Novo conteúdo" form: the briefing is now rich text (Tiptap `RichTextEditor`, JSON validated by `richDocSchema`, shown by `RichTextView`; no migration, the column was already `jsonb`), the production deadline uses `DatePickerField` (also in "Enviar para aprovação" and "Reagendar"; `DateField` removed), and tags use `TagInputField` (also in the media detail). Dependencies added: `@tiptap/react`, `@tiptap/pm`, `@tiptap/starter-kit`, `react-day-picker` (the date picker the documents already required). Validation performed: typecheck, lint, Prettier, build, `check:consistency`, 4 Vitest tests of the rich text schema. **Not tested**: the form in a browser (the dev server could not be used because of a route-generation reload loop), saving and reading a briefing against the real database. **Not done, waiting for a decision**: choosing the channel, an objective list per channel and the formats inside "Novo conteúdo" (see the open question below).
+2026-10-19: The shared list-filter trigger now uses an icon with a tooltip and active-count badge. This applies to the content list. Validation performed: targeted ESLint, Prettier and `git diff --check`. `check:docs` is currently blocked by ten audit-action registry mismatches for `calendar_note.*` and `variant.*` in the audit/functions documents. Full typecheck is blocked by existing `brand-logos.server.ts` type errors. **Not tested**: browser interaction.

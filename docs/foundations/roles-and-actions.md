@@ -62,7 +62,7 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 | **Approvals (external)** | `approvals.decide` |
 | **Comments** | `comments.create_internal`, `comments.create_external` |
 | **Portal** | `portal.view` |
-| **Calendar** | `calendar.view`, `calendar.manage` |
+| **Calendar** | `calendar.view`, `calendar.manage` (reschedule, deadlines, ideas and dates) |
 | **Media** | `media.view`, `media.upload`, `media.update`, `media.delete`, `media.publish`, `media.share` |
 | **Site and CMS** | `site.view`, `site.edit`, `site.settings`, `site.structure`, `site.publish` |
 | **Notifications** | `notifications.configure` |

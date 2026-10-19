@@ -228,13 +228,17 @@ export function PortalApprovalPage({ brandId, requestId }: { brandId: string; re
       ) : null}
       <RevisionView
         title={request.title}
-        platform={request.platform as Platform}
-        profileName={request.profileName}
-        format={request.format as ContentFormat}
+        channels={request.channels.map((channel) => ({
+          rowId: channel.rowId,
+          platform: channel.platform as Platform,
+          profileName: channel.profileName,
+          format: channel.format as ContentFormat,
+          caption: channel.caption,
+          plannedAt: channel.plannedAt,
+          plannedTimezone: channel.plannedTimezone ?? request.brandTimezone,
+        }))}
         caption={approval.caption}
         callToAction={approval.callToAction}
-        plannedAt={request.plannedAt}
-        plannedTimezone={request.plannedTimezone ?? request.brandTimezone}
         media={approval.media.map((item) => ({
           versionId: item.versionId,
           name: item.name,
@@ -246,7 +250,7 @@ export function PortalApprovalPage({ brandId, requestId }: { brandId: string; re
       />
       <DecisionCard approval={approval} />
       <History approval={approval} />
-      <PortalComments variantId={request.variantId} />
+      <PortalComments itemId={request.itemId} />
       {approval.canDecide ? (
         <div
           className="fixed inset-x-0 bottom-0 z-10 flex flex-wrap justify-end gap-2 border-t border-border bg-background p-3 sm:static sm:border-0 sm:p-0"

@@ -106,3 +106,21 @@ export const fileCountProblem = (format: ContentFormat, count: number): string |
   }
   return null;
 };
+
+export const combinedRule = (formats: readonly ContentFormat[]): FormatRule => {
+  const rules = (formats.length === 0 ? [ContentFormat.Other] : formats).map(
+    (format) => formatRules[format],
+  );
+  const kinds = rules
+    .map((rule) => rule.kinds)
+    .reduce((left, right) => left.filter((kind) => right.includes(kind)));
+  return {
+    min: Math.max(...rules.map((rule) => rule.min)),
+    max: Math.min(...rules.map((rule) => rule.max)),
+    kinds,
+  };
+};
+
+export const mediaProblem = (formats: readonly ContentFormat[], count: number): string | null =>
+  formats.map((format) => fileCountProblem(format, count)).find((problem) => problem !== null) ??
+  null;

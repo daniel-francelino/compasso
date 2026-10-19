@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Archive, Pencil, Radio, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ChannelEditor } from "@/components/marketing/channels/channel-editor";
-import { PlatformIcon } from "@/components/marketing/channels/platform-icon";
+import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { type DataTableAction, DataTableRowActions } from "@/components/shared/admin/data-table";
 import { EmptyState } from "@/components/shared/admin/empty-state";

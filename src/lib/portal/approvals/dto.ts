@@ -1,16 +1,22 @@
 import { z } from "zod";
 import { ApprovalOutcome, ApprovalRequestStatus } from "@/lib/shared/enums";
 
-export const portalRequestRowSchema = z.object({
-  id: z.string().uuid(),
-  variant_id: z.string().uuid(),
-  status: z.nativeEnum(ApprovalRequestStatus),
-  title: z.string(),
-  format: z.string(),
+export const portalChannelSchema = z.object({
+  row_id: z.string(),
   platform: z.string(),
   profile_name: z.string(),
-  planned_at: z.string().nullable(),
-  planned_timezone: z.string().nullable(),
+  format: z.string(),
+  caption: z.object({ text: z.string() }).nullable().optional(),
+  planned_at: z.string().nullable().optional(),
+  planned_timezone: z.string().nullable().optional(),
+});
+
+export const portalRequestRowSchema = z.object({
+  id: z.string().uuid(),
+  item_id: z.string().uuid(),
+  status: z.nativeEnum(ApprovalRequestStatus),
+  title: z.string(),
+  channels: z.array(portalChannelSchema),
   brand_timezone: z.string().nullable(),
   revision_no: z.number().int(),
   due_date: z.string().nullable(),

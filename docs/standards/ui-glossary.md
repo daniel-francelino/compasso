@@ -12,7 +12,9 @@
 | Channel | Canal / Canais | "Perfil" only inside the channel form |
 | Platform profile collision | "Mais de um perfil cadastrado" | Shown only when legacy data has multiple active profiles on one platform |
 | Content item | Conteúdo / Conteúdos | The idea; never "post" |
-| Variant | Variante / Variantes | One per channel; in the client portal call it "Publicação" |
+| Content channel | (no name on screen) | One row per channel, format and date of a content; people see the channel logo and name; in the client portal call it "Publicação" |
+| Idea | Ideia / Ideias | A calendar note that can become a content |
+| Date | Data / Datas | A calendar note for a day that matters (holiday, campaign day) |
 | Revision | Versão / Versões | "Versão nº 3"; never "revisão" in the portal |
 | Approval request | Pedido de aprovação / Pedidos de aprovação | |
 | Approval (action/result) | Aprovação | |
@@ -77,7 +79,8 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Request changes | "Pedir alterações" |
 | Reopen | "Reabrir" |
 | Move between statuses | "Mover para…" (menu), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
-| Add a variant | "Adicionar variante" |
+| Add more days and times to a channel | "Incluir mais dias e horários" |
+| Convert a note | "Converter em conteúdo" |
 | Remind / reassign the approver | "Reenviar lembrete" / "Reatribuir aprovador" |
 | Cancel an item | "Cancelar conteúdo" / "Cancelar pedido" |
 | Resend | "Reenviar" |
@@ -115,7 +118,7 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 2. Sentence case, no ALL CAPS, no exclamation marks except for real celebration.
 3. Numbers and dates through `format.ts` (`pt-BR`): "18 de out. de 2026", "R$ 1.250,00".
 4. Button text never changes meaning between screens; if two verbs exist for the same action, pick the one in this glossary.
-5. The client portal uses the client's vocabulary: "Publicação" (not "variante"), "Versão" (not "revisão"), "Aprovar", "Pedir alterações".
+5. The client portal uses the client's vocabulary: "Publicação" (not "canal do conteúdo"), "Versão" (not "revisão"), "Aprovar", "Pedir alterações".
 6. Do not mention automatic publishing: the product records **manual** publication; say "Registrar publicação".
 7. Gender: use neutral forms where possible ("Pessoa responsável"), otherwise the form with parentheses only in short labels ("Aprovador(a)").
 

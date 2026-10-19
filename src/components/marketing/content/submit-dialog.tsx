@@ -9,46 +9,56 @@ import { SelectField, TextAreaField } from "@/components/shared/admin/form-field
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { submitSchema } from "@/lib/marketing/content/schemas";
-import type { VariantDetail } from "@/lib/marketing/content/types";
-import { listApproverOptions, submitForApproval } from "@/lib/marketing/content/variants.functions";
-import { fileCountProblem } from "@/lib/shared/editorial/editorial";
+import type { ContentDetail } from "@/lib/marketing/content/types";
+import { listApproverOptions, submitForApproval } from "@/lib/marketing/content/workflow.functions";
+import { mediaProblem } from "@/lib/shared/editorial/editorial";
 import { addDaysToDate, todayInZone } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 type Check = { ok: boolean; warning?: boolean; text: string };
 
-const checksOf = (variant: VariantDetail, dirty: boolean): Check[] => {
-  const countProblem = fileCountProblem(variant.format, variant.media.length);
-  const hasContent = variant.caption.trim() !== "" || variant.media.length > 0;
+const checksOf = (content: ContentDetail, dirty: boolean): Check[] => {
+  const hasContent = content.caption.trim() !== "" || content.media.length > 0;
+  const countProblem = mediaProblem(
+    content.channels.map((channel) => channel.format),
+    content.media.length,
+  );
   return [
     { ok: !dirty, text: "As alterações estão salvas" },
+    { ok: content.channels.length > 0, text: "Há ao menos um canal" },
     { ok: hasContent, text: "Há legenda ou arquivos" },
     {
       ok: countProblem === null,
-      text: countProblem ?? "A quantidade de arquivos serve para o formato",
+      text: countProblem ?? "A quantidade de arquivos serve para os formatos",
     },
     {
-      ok: variant.media.every((file) => file.available),
+      ok: content.media.every((file) => file.available),
       text: "Todos os arquivos estão disponíveis",
     },
-    { ok: !variant.channelArchived, text: "O canal está ativo" },
     {
-      ok: variant.plannedAt === null || new Date(variant.plannedAt).getTime() > Date.now(),
+      ok: content.channels.every((channel) => !channel.channelArchived),
+      text: "Os canais estão ativos",
+    },
+    {
+      ok: content.channels.every(
+        (channel) =>
+          channel.plannedAt === null || new Date(channel.plannedAt).getTime() > Date.now(),
+      ),
       warning: true,
-      text: "A data prevista está no futuro",
+      text: "As datas previstas estão no futuro",
     },
   ];
 };
 
 export function SubmitDialog({
-  variant,
+  content,
   dirty,
   open,
   onOpenChange,
   onSubmitted,
 }: {
-  variant: VariantDetail;
+  content: ContentDetail;
   dirty: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,14 +70,14 @@ export function SubmitDialog({
   const [message, setMessage] = useState("");
 
   const options = useQuery({
-    queryKey: QueryKey.Content.approvers(variant.brandId),
+    queryKey: QueryKey.Content.approvers(content.brandId),
     queryFn: async () =>
-      unwrapResult(await listApproverOptions({ data: { brandId: variant.brandId } })),
+      unwrapResult(await listApproverOptions({ data: { brandId: content.brandId } })),
     enabled: open,
   });
-  const today = todayInZone(variant.brandTimezone);
+  const today = todayInZone(content.brandTimezone);
   const effectiveDue = dueDate ?? addDaysToDate(today, options.data?.defaultDeadlineDays ?? 3);
-  const checks = checksOf(variant, dirty);
+  const checks = checksOf(content, dirty);
   const blocked = checks.some((check) => !check.ok && check.warning !== true);
   const approvers = options.data?.approvers ?? [];
 
@@ -77,7 +87,7 @@ export function SubmitDialog({
       onOpenChange={onOpenChange}
       icon={Send}
       title="Enviar para aprovação"
-      description={`Isto cria a revisão nº ${variant.nextRevisionNo}. O cliente verá exatamente esta versão.`}
+      description={`Isto cria a versão nº ${content.nextRevisionNo}. O cliente verá exatamente esta versão, com todos os canais.`}
       submitLabel="Enviar para aprovação"
       submitDisabled={blocked || approvers.length === 0}
       busy={busy}
@@ -89,11 +99,11 @@ export function SubmitDialog({
           void submit(
             submitSchema,
             {
-              id: variant.id,
+              id: content.id,
               approverId,
               dueDate: effectiveDue,
               message,
-              expectedVersion: variant.version,
+              expectedVersion: content.version,
             },
             (data) => submitForApproval({ data }),
             (result) => {
@@ -135,7 +145,7 @@ export function SubmitDialog({
           Esta marca ainda não tem um aprovador com permissão de decidir.{" "}
           <Link
             to="/admin/marketing/brands/$brandId/members"
-            params={{ brandId: variant.brandId }}
+            params={{ brandId: content.brandId }}
             className="text-primary underline-offset-4 hover:underline"
           >
             Convidar aprovador

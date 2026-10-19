@@ -34,10 +34,13 @@ export function UndatedPanel({
               : null;
             return (
               <li
-                key={entry.variantId}
+                key={entry.channelRowId}
                 draggable={canPlan && blocked === null}
                 onDragStart={(event) => {
-                  event.dataTransfer.setData("text/plain", `${UNDATED_PREFIX}${entry.variantId}`);
+                  event.dataTransfer.setData(
+                    "text/plain",
+                    `${UNDATED_PREFIX}${entry.channelRowId}`,
+                  );
                   event.dataTransfer.effectAllowed = "move";
                 }}
                 className="space-y-1.5 rounded-lg border border-border p-2 text-sm"

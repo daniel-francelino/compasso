@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { TextField } from "@/components/shared/admin/form-fields";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -85,10 +86,12 @@ function PolicyCard({ setting }: { setting: SettingRecord }) {
         })}
       </div>
       <FormError message={error} />
-      <Button type="submit" loading={busy} disabled={!dirty || !parsed.success || busy}>
-        <Save aria-hidden="true" />
-        Salvar
-      </Button>
+      <FormActions>
+        <Button type="submit" loading={busy} disabled={!dirty || !parsed.success || busy}>
+          <Save aria-hidden="true" />
+          Salvar
+        </Button>
+      </FormActions>
     </SectionCard>
   );
 }

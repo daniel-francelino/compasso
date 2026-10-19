@@ -7,7 +7,7 @@ const isDeadline = (entry: CalendarEntry): boolean =>
   entry.kind === CalendarEntryKind.ProductionDeadline;
 
 export const entryKey = (entry: CalendarEntry): string =>
-  `${entry.kind}:${entry.variantId ?? entry.itemId}`;
+  `${entry.kind}:${entry.channelRowId ?? entry.noteId ?? entry.itemId ?? ""}:${entry.date ?? entry.at ?? ""}`;
 
 export const entryDay = (entry: CalendarEntry, zone: string): string | null => {
   if (entry.date !== null) return entry.date;

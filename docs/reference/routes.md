@@ -68,7 +68,7 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/marketing/brands/$brandId/settings` | `brands.update` | brands |
 | `/admin/marketing/content` | `content.view` | content (all authorized brands) |
 | `/admin/marketing/content/$itemId` | `content.view` | content |
-| `/admin/marketing/variants/$variantId` | `content.view` | content (variant editor) |
+| `/admin/marketing/content/new` | `content.create` | content (editor for a new content; search `brand`, `note`, `day`) |
 | `/admin/marketing/approvals` | `approvals.view` | approvals |
 | `/admin/marketing/approvals/$requestId` | `approvals.view` | approvals |
 | `/admin/marketing/calendar` | `calendar.view` | calendar |

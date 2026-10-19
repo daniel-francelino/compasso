@@ -1,13 +1,12 @@
-import { PanelRightClose, PanelRightOpen, RotateCw } from "lucide-react";
+import { CalendarClock, CalendarDays, Globe, Lightbulb, RotateCw } from "lucide-react";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { PageHeader } from "@/components/shared/admin/page-header";
-import { SelectField } from "@/components/shared/admin/form-fields";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { ListFilters } from "@/components/shared/admin/list-filters";
 import { CalendarGrid } from "@/components/shared/calendar/calendar-grid";
@@ -17,7 +16,9 @@ import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { toGridItem } from "@/components/shared/calendar/entry-items";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
+import { DayAddMenu } from "@/components/marketing/calendar/day-add-menu";
 import { EntryDetails } from "@/components/marketing/calendar/entry-details";
+import { type NoteDialogTarget, NoteDialog } from "@/components/marketing/calendar/note-dialog";
 import {
   type RescheduleTarget,
   RescheduleDialog,
@@ -27,7 +28,10 @@ import { useBrand } from "@/hooks/marketing/use-brand";
 import { useCalendarState } from "@/hooks/shared/use-calendar-state";
 import { listChannels } from "@/lib/marketing/channels/channels.functions";
 import { listAssigneeOptions } from "@/lib/marketing/content/content.functions";
-import { getCalendarZone, listCalendarEntries } from "@/lib/marketing/calendar/calendar.functions";
+import { listCalendarEntries } from "@/lib/marketing/calendar/calendar.functions";
+import { archiveCalendarNote } from "@/lib/marketing/calendar/notes.functions";
+import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { useServerAction } from "@/hooks/shared/use-server-action";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
@@ -39,6 +43,8 @@ import { calendarSearchSchema } from "@/lib/shared/calendar/search";
 import type { CalendarEntry, UndatedEntry } from "@/lib/shared/calendar/types";
 import {
   CalendarEntryKind,
+  CalendarNoteKind,
+  CalendarNoteRepeat,
   CalendarView,
   EditorialStatus,
   PublicationStatus,
@@ -52,7 +58,6 @@ import {
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
-import { timezoneOptions } from "@/lib/shared/timezones";
 import { cn } from "@/lib/shared/utils";
 
 const ALL = "all";
@@ -87,11 +92,11 @@ const publicationTarget = (
   entry: CalendarEntry,
   initialLocal: string | undefined,
 ): RescheduleTarget | null =>
-  entry.variantId === null
+  entry.channelRowId === null
     ? null
     : {
         kind: "publication",
-        variantId: entry.variantId,
+        channelRowId: entry.channelRowId,
         title: entry.title,
         brandTimezone: entry.brandTimezone,
         editorialStatus: entry.editorialStatus ?? EditorialStatus.Draft,
@@ -102,7 +107,7 @@ const publicationTarget = (
 
 const undatedTarget = (entry: UndatedEntry, day: string | null): RescheduleTarget => ({
   kind: "publication",
-  variantId: entry.variantId,
+  channelRowId: entry.channelRowId,
   title: entry.title,
   brandTimezone: entry.brandTimezone,
   editorialStatus: entry.editorialStatus,
@@ -115,24 +120,30 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const raw = calendarSearchSchema.parse(useSearch({ strict: false }));
   const brandId = fixedBrandId ?? raw.brand;
+  const navigate = useNavigate();
+  const { run, busy } = useServerAction();
   const canManage = can(auth, Action.Calendar.Manage) && can(auth, Action.Content.Update);
+  const canNote = can(auth, Action.Calendar.Manage);
+  const canCreate = can(auth, Action.Content.Create);
 
-  const orgZone = useQuery({
-    queryKey: QueryKey.Calendar.zone(),
-    queryFn: async () => unwrapResult(await getCalendarZone()).timezone,
-  });
   const brand = useBrand(brandId ?? "", brandId !== undefined);
-  const zone =
-    brandId === undefined ? (raw.zone ?? orgZone.data ?? null) : (brand.data?.timezone ?? null);
+  const [browserZone, setBrowserZone] = useState("UTC");
+  const zone = brandId === undefined ? browserZone : (brand.data?.timezone ?? null);
   const state = useCalendarState(zone ?? "UTC");
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [target, setTarget] = useState<RescheduleTarget | null>(null);
   const [undatedOpen, setUndatedOpen] = useState(true);
+  const [noteTarget, setNoteTarget] = useState<NoteDialogTarget | null>(null);
+  const [archiving, setArchiving] = useState<CalendarEntry | null>(null);
 
   useEffect(() => {
     setUndatedOpen(readStored(StoredKey.CalendarUndatedOpen, z.boolean(), true));
   }, []);
+
+  useEffect(() => {
+    if (brandId === undefined) setBrowserZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, [brandId]);
 
   function toggleUndated() {
     const next = !undatedOpen;
@@ -162,6 +173,10 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(state.search.owner ? { ownerId: state.search.owner } : {}),
     ...(state.search.editorial ? { editorial: state.search.editorial } : {}),
     ...(state.search.publication ? { publication: state.search.publication } : {}),
+    notes: [
+      ...(state.search.ideas === false ? [] : [CalendarNoteKind.Idea]),
+      ...(state.search.dates === false ? [] : [CalendarNoteKind.Date]),
+    ],
   };
   const query = useQuery({
     queryKey: QueryKey.Calendar.entries(request),
@@ -193,13 +208,13 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const selected = entries.find((entry) => entryKey(entry) === selectedKey) ?? null;
   const showGrid = state.view !== CalendarView.List;
 
-  function dropUndated(variantId: string, day: string) {
-    const undated = query.data?.undated.find((entry) => entry.variantId === variantId);
+  function dropUndated(channelRowId: string, day: string) {
+    const undated = query.data?.undated.find((entry) => entry.channelRowId === channelRowId);
     if (undated) setTarget(undatedTarget(undated, day));
   }
 
   function dropDeadline(entry: CalendarEntry, day: string) {
-    if (entry.date === day) return;
+    if (entry.date === day || entry.itemId === null || entry.itemVersion === null) return;
     setTarget({
       kind: "deadline",
       itemId: entry.itemId,
@@ -229,7 +244,11 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
 
   function changeDate(entry: CalendarEntry) {
     setSelectedKey(null);
-    if (entry.kind === CalendarEntryKind.ProductionDeadline) {
+    if (
+      entry.kind === CalendarEntryKind.ProductionDeadline &&
+      entry.itemId !== null &&
+      entry.itemVersion !== null
+    ) {
       setTarget({
         kind: "deadline",
         itemId: entry.itemId,
@@ -244,6 +263,45 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   }
 
   const title = rangeTitle(state.view, state.range, state.anchor);
+
+  function editNote(entry: CalendarEntry) {
+    if (entry.noteId === null || entry.noteVersion === null) return;
+    const kind =
+      entry.kind === CalendarEntryKind.Idea ? CalendarNoteKind.Idea : CalendarNoteKind.Date;
+    setSelectedKey(null);
+    setNoteTarget({
+      kind,
+      day: entry.date ?? todayInZone(activeZone),
+      brandId: entry.brandId,
+      note: {
+        id: entry.noteId,
+        brandId: entry.brandId,
+        kind,
+        title: entry.title,
+        description: entry.description,
+        noteDate: entry.date ?? todayInZone(activeZone),
+        repeat: entry.repeat ?? CalendarNoteRepeat.None,
+        convertedItemId: entry.convertedItemId,
+        archived: false,
+        version: entry.noteVersion,
+      },
+    });
+  }
+
+  const addMenu = (day: string) => (
+    <DayAddMenu
+      day={day}
+      canSchedule={canCreate}
+      canNote={canNote}
+      onSchedule={(chosen) =>
+        void navigate({
+          to: "/admin/marketing/content/new",
+          search: { day: chosen, ...(brandId ? { brand: brandId } : {}) },
+        })
+      }
+      onNote={(kind, chosen) => setNoteTarget({ kind, day: chosen, brandId, note: undefined })}
+    />
+  );
 
   return (
     <div className="space-y-4">
@@ -329,20 +387,27 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           ]}
         />
         <div className="flex flex-wrap items-end gap-3">
-          {brandId === undefined ? (
-            <div className="w-full sm:w-64">
-              <SelectField
-                id="calendar-zone"
-                label="Fuso horário do calendário"
-                value={activeZone}
-                onValueChange={(value) => void state.setZone(value)}
-                options={timezoneOptions()}
-              />
-            </div>
-          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            aria-pressed={state.search.dates !== false}
+            onClick={() => void state.setDatesVisible(state.search.dates === false)}
+          >
+            <CalendarDays aria-hidden="true" />
+            Datas
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            aria-pressed={state.search.ideas !== false}
+            onClick={() => void state.setIdeasVisible(state.search.ideas === false)}
+          >
+            <Lightbulb aria-hidden="true" />
+            Ideias
+          </Button>
           <IconButton
             variant="outline"
-            icon={undatedOpen ? PanelRightClose : PanelRightOpen}
+            icon={CalendarClock}
             label={undatedOpen ? "Ocultar conteúdos sem data" : "Mostrar conteúdos sem data"}
             onClick={toggleUndated}
           />
@@ -357,8 +422,12 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         onNext={() => void state.shift(1)}
         onToday={() => void state.goToday()}
       >
-        <p className="text-xs text-muted-foreground">
-          Horários no fuso {activeZone.replaceAll("_", " ")}
+        <p
+          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          aria-label={`Fuso horário: ${activeZone}`}
+        >
+          <Globe aria-hidden="true" className="size-4" />
+          {activeZone.replaceAll("_", " ")}
         </p>
       </CalendarToolbar>
       {query.data?.truncated ? (
@@ -381,12 +450,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           </AlertDescription>
         </Alert>
       ) : (
-        <div
-          className={cn(
-            "grid items-start gap-4",
-            undatedOpen && "lg:grid-cols-[minmax(0,1fr)_16rem]",
-          )}
-        >
+        <div className={cn("relative", undatedOpen && "lg:pr-[17rem]")}>
           <div className={query.isFetching ? "opacity-70 transition-opacity" : undefined}>
             {showGrid ? (
               <CalendarGrid
@@ -399,17 +463,20 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                 onSelect={setSelectedKey}
                 onOpenDay={(day) => void state.openDay(day)}
                 onDropKey={canManage ? startDrop : undefined}
+                renderDayAction={addMenu}
               />
             ) : (
               <CalendarList items={items} onSelect={setSelectedKey} />
             )}
           </div>
           {undatedOpen ? (
-            <UndatedPanel
-              entries={query.data.undated}
-              canPlan={canManage}
-              onPlan={(entry) => setTarget(undatedTarget(entry, null))}
-            />
+            <div className="absolute right-0 top-0 z-10 max-h-[70vh] w-64 max-w-[calc(100%_-_1rem)] overflow-y-auto rounded-xl shadow-md">
+              <UndatedPanel
+                entries={query.data.undated}
+                canPlan={canManage}
+                onPlan={(entry) => setTarget(undatedTarget(entry, null))}
+              />
+            </div>
           ) : null}
         </div>
       )}
@@ -425,12 +492,47 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
               : null
           }
           onChangeDate={canManage && isMovable(selected) ? () => changeDate(selected) : null}
+          onEditNote={canNote ? () => editNote(selected) : null}
+          onArchiveNote={
+            canNote
+              ? () => {
+                  setSelectedKey(null);
+                  setArchiving(selected);
+                }
+              : null
+          }
+          canConvert={canCreate && canNote}
           onClose={() => setSelectedKey(null)}
         />
       ) : null}
+      {noteTarget ? (
+        <NoteDialog
+          key={noteTarget.note?.id ?? "new-" + noteTarget.kind + "-" + noteTarget.day}
+          target={noteTarget}
+          onOpenChange={(open) => !open && setNoteTarget(null)}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={archiving !== null}
+        onOpenChange={(open) => !open && setArchiving(null)}
+        title={"Arquivar “" + (archiving?.title ?? "") + "”?"}
+        description="Ela sai do calendário. Se virou conteúdo, o conteúdo continua."
+        confirmLabel="Arquivar"
+        destructive
+        busy={busy}
+        onConfirm={async () => {
+          const noteId = archiving?.noteId;
+          if (noteId === null || noteId === undefined) return false;
+          const result = await run(() => archiveCalendarNote({ data: { id: noteId } }), {
+            invalidate: [QueryKey.Calendar.all()],
+            success: "Arquivada.",
+          });
+          return result.ok;
+        }}
+      />
       {target ? (
         <RescheduleDialog
-          key={target.kind === "publication" ? target.variantId : target.itemId}
+          key={target.kind === "publication" ? target.channelRowId : target.itemId}
           target={target}
           onOpenChange={(open) => !open && setTarget(null)}
         />

@@ -21,7 +21,12 @@ import {
 const entry = (patch: Partial<CalendarEntry> = {}): CalendarEntry => ({
   kind: CalendarEntryKind.Publication,
   itemId: "item-1",
-  variantId: "variant-1",
+  channelRowId: "row-1",
+  noteId: null,
+  description: null,
+  repeat: null,
+  convertedItemId: null,
+  noteVersion: null,
   requestId: null,
   title: "Lançamento",
   brandId: "brand-1",
@@ -134,25 +139,25 @@ describe("entries", () => {
   it("groups by day with deadlines first and times in order", () => {
     const groups = groupByDay(
       [
-        entry({ variantId: "late", at: "2026-10-20T20:00:00Z" }),
-        entry({ variantId: "early", at: "2026-10-20T12:00:00Z" }),
+        entry({ channelRowId: "late", at: "2026-10-20T20:00:00Z" }),
+        entry({ channelRowId: "early", at: "2026-10-20T12:00:00Z" }),
         entry({
           kind: CalendarEntryKind.ApprovalDeadline,
-          variantId: "due",
+          channelRowId: "due",
           at: null,
           date: "2026-10-20",
         }),
       ],
       "America/Sao_Paulo",
     );
-    expect((groups.get("2026-10-20") ?? []).map((item) => item.variantId)).toEqual([
+    expect((groups.get("2026-10-20") ?? []).map((item) => item.channelRowId)).toEqual([
       "due",
       "early",
       "late",
     ]);
   });
 
-  it("gives each entry a key that tells a variant's date apart from its deadline", () => {
+  it("gives each entry a key that tells a channel row's date apart from its deadline", () => {
     expect(entryKey(entry())).not.toBe(entryKey(entry({ kind: CalendarEntryKind.Published })));
   });
 });
@@ -162,7 +167,7 @@ describe("calendarAlerts", () => {
 
   it("warns when a channel has more entries in a day than the limit", () => {
     const crowded = Array.from({ length: MAX_PER_CHANNEL_PER_DAY + 1 }, (_, index) =>
-      entry({ variantId: `v${index}`, at: `2026-10-20T${10 + index * 2}:00:00Z` }),
+      entry({ channelRowId: `v${index}`, at: `2026-10-20T${10 + index * 2}:00:00Z` }),
     );
     const alerts = calendarAlerts(crowded, "America/Sao_Paulo", now);
     expect(alerts.get(entryKey(crowded[0] as CalendarEntry))).toContain(CalendarAlert.TooManyOnDay);
@@ -175,10 +180,10 @@ describe("calendarAlerts", () => {
   });
 
   it("warns about two publications of one channel that are too close", () => {
-    const first = entry({ variantId: "a", at: "2026-10-20T13:00:00Z" });
-    const second = entry({ variantId: "b", at: `2026-10-20T13:${MIN_MINUTES_BETWEEN - 1}:00Z` });
+    const first = entry({ channelRowId: "a", at: "2026-10-20T13:00:00Z" });
+    const second = entry({ channelRowId: "b", at: `2026-10-20T13:${MIN_MINUTES_BETWEEN - 1}:00Z` });
     const far = entry({
-      variantId: "c",
+      channelRowId: "c",
       at: `2026-10-20T13:${MIN_MINUTES_BETWEEN}:00Z`,
       channelId: "other",
     });
@@ -189,8 +194,8 @@ describe("calendarAlerts", () => {
   });
 
   it("warns about a publication that is not approved yet and one whose date passed", () => {
-    const pending = entry({ variantId: "p", editorialStatus: EditorialStatus.AwaitingApproval });
-    const past = entry({ variantId: "q", at: "2026-10-10T13:00:00Z" });
+    const pending = entry({ channelRowId: "p", editorialStatus: EditorialStatus.AwaitingApproval });
+    const past = entry({ channelRowId: "q", at: "2026-10-10T13:00:00Z" });
     const alerts = calendarAlerts([pending, past], "America/Sao_Paulo", now);
     expect(alerts.get(entryKey(pending))).toContain(CalendarAlert.NotApprovedYet);
     expect(alerts.get(entryKey(past))).toContain(CalendarAlert.DatePassed);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { EntryChip } from "@/components/shared/calendar/entry-chip";
 import { Button } from "@/components/shared/ui/button";
 import type { GridItem } from "@/lib/shared/calendar/grid-item";
@@ -25,6 +25,7 @@ export function CalendarGrid({
   onSelect,
   onOpenDay,
   onDropKey,
+  renderDayAction,
 }: {
   label: string;
   days: string[];
@@ -35,6 +36,7 @@ export function CalendarGrid({
   onSelect: (key: string) => void;
   onOpenDay: (day: string) => void;
   onDropKey?: ((key: string, day: string) => void) | undefined;
+  renderDayAction?: ((day: string) => ReactNode) | undefined;
 }) {
   const [focused, setFocused] = useState(days.includes(today) ? today : (days[0] ?? today));
   const [over, setOver] = useState<string | null>(null);
@@ -105,21 +107,24 @@ export function CalendarGrid({
                   : undefined
               }
               className={cn(
-                "flex flex-col gap-1 border-b border-r border-border p-1.5 outline-offset-[-2px]",
+                "group/day flex flex-col gap-1 border-b border-r border-border p-1.5 outline-offset-[-2px]",
                 "focus-visible:outline-2 focus-visible:outline-ring",
                 compact ? "min-h-28" : "min-h-56",
                 outside && "bg-muted/40 text-muted-foreground",
                 over === day && "bg-accent",
               )}
             >
-              <span
-                className={cn(
-                  "flex size-6 items-center justify-center self-end rounded-full text-xs",
-                  day === today && "bg-primary font-semibold text-primary-foreground",
-                )}
-              >
-                {Number(day.slice(8))}
-              </span>
+              <div className="flex items-center justify-between gap-1">
+                <span>{renderDayAction ? renderDayAction(day) : null}</span>
+                <span
+                  className={cn(
+                    "flex size-6 items-center justify-center rounded-full text-xs",
+                    day === today && "bg-primary font-semibold text-primary-foreground",
+                  )}
+                >
+                  {Number(day.slice(8))}
+                </span>
+              </div>
               {shown.map((item) => (
                 <EntryChip key={item.key} item={item} onSelect={onSelect} />
               ))}

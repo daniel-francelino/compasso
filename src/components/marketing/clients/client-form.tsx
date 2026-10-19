@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { SelectField, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
 import { TagInputField } from "@/components/shared/admin/tag-input-field";
 import { Button } from "@/components/shared/ui/button";
@@ -141,7 +142,7 @@ export function ClientForm({
         error={errors["internalNotes"]}
       />
       <FormError message={error} />
-      <div className="flex flex-wrap justify-end gap-2">
+      <FormActions>
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
             <X aria-hidden="true" />
@@ -152,7 +153,7 @@ export function ClientForm({
           <Plus aria-hidden="true" />
           {client ? "Salvar" : "Criar cliente"}
         </Button>
-      </div>
+      </FormActions>
     </form>
   );
 }

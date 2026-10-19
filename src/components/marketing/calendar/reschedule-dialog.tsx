@@ -11,7 +11,7 @@ import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { deadlineSchema, rescheduleSchema } from "@/lib/marketing/calendar/schemas";
 import {
   rescheduleProductionDeadline,
-  rescheduleVariant,
+  rescheduleChannel,
 } from "@/lib/marketing/calendar/calendar.functions";
 import { resolveLocalTime } from "@/lib/shared/calendar/reschedule";
 import { EditorialStatus } from "@/lib/shared/enums";
@@ -21,7 +21,7 @@ import { QueryKey } from "@/lib/shared/query-keys";
 export type RescheduleTarget =
   | {
       kind: "publication";
-      variantId: string;
+      channelRowId: string;
       title: string;
       brandTimezone: string;
       editorialStatus: EditorialStatus;
@@ -89,12 +89,12 @@ export function RescheduleDialog({
             void submit(
               rescheduleSchema,
               {
-                variantId: publication.variantId,
+                channelRowId: publication.channelRowId,
                 plannedAt,
                 timezone: publication.brandTimezone,
                 expectedVersion: publication.version,
               },
-              (data) => rescheduleVariant({ data }),
+              (data) => rescheduleChannel({ data }),
               (result) => {
                 toast.success(
                   result.resubmitted

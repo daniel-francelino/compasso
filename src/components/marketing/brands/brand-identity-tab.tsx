@@ -3,6 +3,7 @@ import { BrandLogoField } from "@/components/marketing/brands/brand-logo-field";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { InfoTip } from "@/components/shared/admin/info-tip";
 import { TextAreaField, TextField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -210,10 +211,12 @@ function IdentityForm({ brand, canEdit }: { brand: BrandDetail; canEdit: boolean
       />
       <FormError message={error} />
       {canEdit ? (
-        <Button type="submit" loading={busy} disabled={busy || !dirty}>
-          <Save aria-hidden="true" />
-          Salvar
-        </Button>
+        <FormActions>
+          <Button type="submit" loading={busy} disabled={busy || !dirty}>
+            <Save aria-hidden="true" />
+            Salvar
+          </Button>
+        </FormActions>
       ) : null}
     </SectionCard>
   );

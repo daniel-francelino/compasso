@@ -6,12 +6,11 @@ import { DashboardReason, EditorialStatus } from "@/lib/shared/enums";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 
 export type AttentionItem = {
-  variantId: string;
   itemId: string;
   title: string;
   brandId: string;
   brandName: string;
-  channel: string;
+  channels: string[];
   reasons: DashboardReason[];
 };
 
@@ -21,7 +20,7 @@ export type MyItem = {
   brandId: string;
   brandName: string;
   productionDueDate: string | null;
-  openVariants: number;
+  editorialStatus: EditorialStatus;
 };
 
 export type StatusCounts = Partial<Record<EditorialStatus, number>>;
@@ -31,12 +30,11 @@ const brandFilterSchema = z.object({ brandId: z.string().uuid().optional() });
 const attentionSchema = z.object({
   list: z.array(
     z.object({
-      variant_id: z.string().uuid(),
       item_id: z.string().uuid(),
       title: z.string(),
       brand_id: z.string().uuid(),
       brand_name: z.string(),
-      channel: z.string(),
+      channels: z.array(z.string()),
       reasons: z.array(z.nativeEnum(DashboardReason)),
     }),
   ),
@@ -54,7 +52,7 @@ const myItemsSchema = z.object({
       brand_id: z.string().uuid(),
       brand_name: z.string(),
       production_due_date: z.string().nullable(),
-      open_variants: z.number().int(),
+      editorial_status: z.nativeEnum(EditorialStatus),
     }),
   ),
 });
@@ -76,12 +74,11 @@ export const getAttention = createServerFn({ method: "GET" })
     return {
       ok: true,
       items: parsed.list.map((row) => ({
-        variantId: row.variant_id,
         itemId: row.item_id,
         title: row.title,
         brandId: row.brand_id,
         brandName: row.brand_name,
-        channel: row.channel,
+        channels: row.channels,
         reasons: row.reasons,
       })),
     };
@@ -116,7 +113,7 @@ export const getMyItems = createServerFn({ method: "GET" }).handler(
         brandId: row.brand_id,
         brandName: row.brand_name,
         productionDueDate: row.production_due_date,
-        openVariants: row.open_variants,
+        editorialStatus: row.editorial_status,
       })),
     };
   },

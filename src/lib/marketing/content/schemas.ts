@@ -1,11 +1,18 @@
 import { z } from "zod";
-import { CommentVisibility, ContentFormat, EditorialStatus } from "@/lib/shared/enums";
+import {
+  CommentVisibility,
+  ContentFormat,
+  ContentObjective,
+  EditorialStatus,
+} from "@/lib/shared/enums";
 import { listRequestSchema } from "@/lib/shared/list-search";
 import { richDocSchema } from "@/lib/shared/rich-text/types";
 
 export const ContentStatusFilter = { Active: "active", Cancelled: "cancelled" } as const;
 
 export const ContentSort = { Deadline: "deadline", Updated: "updated", Title: "title" } as const;
+
+export const MAX_CONTENT_CHANNELS = 20;
 
 const dateOnly = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Informe uma data válida.");
 const reasonSchema = z
@@ -30,29 +37,6 @@ export const boardSchema = z.object({
   search: z.string().max(100).default(""),
 });
 
-export const saveItemSchema = z.object({
-  id: z.string().uuid().optional(),
-  brandId: z.string().uuid({ message: "Escolha a marca." }),
-  title: z
-    .string()
-    .trim()
-    .min(2, "O título precisa ter ao menos 2 letras.")
-    .max(140, "O título é longo demais."),
-  objective: z.string().trim().max(2000, "O objetivo é longo demais.").optional(),
-  briefing: richDocSchema.nullable().optional(),
-  internalNotes: z.string().trim().max(4000, "As notas são longas demais.").optional(),
-  assigneeId: z.string().uuid().nullable().optional(),
-  tags: z.array(z.string().trim().min(1).max(40)).max(20),
-  productionDueDate: dateOnly.nullable().optional(),
-  expectedVersion: z.number().int().min(1).optional(),
-});
-
-export type SaveItemInput = z.infer<typeof saveItemSchema>;
-
-export const idSchema = z.object({ id: z.string().uuid() });
-
-export const cancelSchema = z.object({ id: z.string().uuid(), reason: reasonSchema });
-
 export const mediaRefSchema = z.object({
   mediaVersionId: z.string().uuid(),
   altText: z.string().trim().max(300, "O texto alternativo é longo demais.").optional(),
@@ -60,18 +44,38 @@ export const mediaRefSchema = z.object({
 
 export type MediaRef = z.infer<typeof mediaRefSchema>;
 
-export const saveVariantSchema = z
+export const channelRowSchema = z.object({
+  id: z.string().uuid().optional(),
+  channelId: z.string().uuid({ message: "Escolha o canal." }),
+  format: z.nativeEnum(ContentFormat, { errorMap: () => ({ message: "Escolha o formato." }) }),
+  caption: z.string().max(5000, "A legenda é longa demais.").default(""),
+  plannedAt: z.string().datetime({ offset: true }).nullable().optional(),
+  plannedTimezone: z.string().trim().max(60).nullable().optional(),
+});
+
+export type ChannelRowInput = z.infer<typeof channelRowSchema>;
+
+export const saveContentSchema = z
   .object({
     id: z.string().uuid().optional(),
-    contentItemId: z.string().uuid(),
-    channelId: z.string().uuid({ message: "Escolha o canal." }),
-    format: z.nativeEnum(ContentFormat, { errorMap: () => ({ message: "Escolha o formato." }) }),
+    brandId: z.string().uuid({ message: "Escolha a marca." }),
+    title: z
+      .string()
+      .trim()
+      .min(2, "O título precisa ter ao menos 2 letras.")
+      .max(140, "O título é longo demais."),
+    objectiveKind: z.nativeEnum(ContentObjective).nullable().optional(),
+    objective: z.string().trim().max(2000, "O objetivo é longo demais.").optional(),
+    briefing: richDocSchema.nullable().optional(),
+    internalNotes: z.string().trim().max(4000, "As notas são longas demais.").optional(),
+    assigneeId: z.string().uuid().nullable().optional(),
+    tags: z.array(z.string().trim().min(1).max(40)).max(20),
+    productionDueDate: dateOnly.nullable().optional(),
     caption: z.string().max(5000, "A legenda é longa demais.").default(""),
     callToAction: z.string().trim().max(300, "A chamada para ação é longa demais.").optional(),
-    plannedAt: z.string().datetime({ offset: true }).nullable().optional(),
-    plannedTimezone: z.string().trim().max(60).nullable().optional(),
-    approvalDueDate: dateOnly.nullable().optional(),
     media: z.array(mediaRefSchema).max(20, "No máximo 20 arquivos."),
+    channels: z.array(channelRowSchema).max(MAX_CONTENT_CHANNELS, "No máximo 20 canais."),
+    sourceNote: z.string().uuid().optional(),
     expectedVersion: z.number().int().min(1).optional(),
   })
   .refine((value) => value.id === undefined || value.expectedVersion !== undefined, {
@@ -79,9 +83,13 @@ export const saveVariantSchema = z
     path: ["expectedVersion"],
   });
 
-export type SaveVariantInput = z.infer<typeof saveVariantSchema>;
+export type SaveContentInput = z.infer<typeof saveContentSchema>;
 
-export const moveVariantSchema = z.object({
+export const idSchema = z.object({ id: z.string().uuid() });
+
+export const cancelSchema = z.object({ id: z.string().uuid(), reason: reasonSchema });
+
+export const moveContentSchema = z.object({
   id: z.string().uuid(),
   to: z.nativeEnum(EditorialStatus),
   expectedVersion: z.number().int().min(1),
@@ -117,13 +125,13 @@ export const publishSchema = z.object({
 export type PublishInput = z.infer<typeof publishSchema>;
 
 export const commentSchema = z.object({
-  variantId: z.string().uuid(),
+  itemId: z.string().uuid(),
   visibility: z.nativeEnum(CommentVisibility),
   body: z.string().trim().min(1, "Escreva o comentário.").max(4000, "O comentário é longo demais."),
 });
 
-export const commentIdSchema = z.object({ id: z.string().uuid(), variantId: z.string().uuid() });
+export const commentIdSchema = z.object({ id: z.string().uuid(), itemId: z.string().uuid() });
 
 export const brandIdSchema = z.object({ brandId: z.string().uuid() });
 
-export const variantIdSchema = z.object({ variantId: z.string().uuid() });
+export const itemIdSchema = z.object({ itemId: z.string().uuid() });

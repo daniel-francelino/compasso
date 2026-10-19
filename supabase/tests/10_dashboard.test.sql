@@ -9,10 +9,14 @@ begin
 end;
 $$;
 
-create function pg_temp.reasons(p_variant uuid) returns text language sql as $$
+create function pg_temp.ver(p_item uuid) returns int language sql as $$
+  select version from public.content_items where id = p_item
+$$;
+
+create function pg_temp.reasons(p_item uuid) returns text language sql as $$
   select coalesce(
     (select string_agg(r, ',' order by r) from jsonb_array_elements_text(
-      (select e -> 'reasons' from jsonb_array_elements(public.dashboard_attention(null)) e where e ->> 'variant_id' = p_variant::text)
+      (select e -> 'reasons' from jsonb_array_elements(public.dashboard_attention(null)) e where e ->> 'item_id' = p_item::text)
     ) r),
     ''
   )
@@ -47,11 +51,10 @@ select public.client_save('{"name":"Padaria Sol"}'::jsonb, true);
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select set_config('t.item1', public.content_item_save(format('{"brand_id":"%s","title":"Atrasado","assignee_id":"00000000-0000-0000-0000-0000000000b1","production_due_date":"2020-01-01"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
-select set_config('t.v1', public.content_variant_save(format('{"content_item_id":"%s","channel_id":"%s","format":"text","caption":{"text":"Texto"}}', current_setting('t.item1'), current_setting('t.channel'))::jsonb) ->> 'id', true);
+select set_config('t.v1', public.content_item_save(format('{"brand_id":"%s","title":"Atrasado","assignee_id":"00000000-0000-0000-0000-0000000000b1","production_due_date":"2020-01-01","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'production_overdue', 'a late production deadline needs attention');
-select public.content_variant_move(current_setting('t.v1')::uuid, 'in_production', 1);
-select set_config('t.sub1', public.submit_for_approval(current_setting('t.v1')::uuid, '00000000-0000-0000-0000-0000000000d1', current_date + 2, null, 2)::text, true);
+select public.content_move(current_setting('t.v1')::uuid, 'in_production', pg_temp.ver(current_setting('t.v1')::uuid));
+select set_config('t.sub1', public.submit_for_approval(current_setting('t.v1')::uuid, '00000000-0000-0000-0000-0000000000d1', current_date + 2, null, pg_temp.ver(current_setting('t.v1')::uuid))::text, true);
 select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'production_overdue', 'a pending request within its deadline adds no reason');
 reset role;
 
@@ -60,8 +63,8 @@ update public.approval_requests set due_date = current_date - 2 where id = (curr
 alter table public.approval_requests enable trigger approval_requests_guard;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'approval_overdue,production_overdue', 'an overdue approval is added and the variant is listed once');
-select is((select count(*)::int from jsonb_array_elements(public.dashboard_attention(null)) e where e ->> 'variant_id' = current_setting('t.v1')), 1, 'a variant with two reasons appears once');
+select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'approval_overdue,production_overdue', 'an overdue approval is added and the content is listed once');
+select is((select count(*)::int from jsonb_array_elements(public.dashboard_attention(null)) e where e ->> 'item_id' = current_setting('t.v1')), 1, 'a content with two reasons appears once');
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', false, 'active');
 select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'approval_overdue,approver_without_access,production_overdue', 'an approver who lost access is flagged');
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', true, 'active');
@@ -73,10 +76,9 @@ reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'changes_requested,production_overdue', 'a request for changes needs attention');
-select set_config('t.item2', public.content_item_save(format('{"brand_id":"%s","title":"Data passou"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
-select set_config('t.v2', public.content_variant_save(format('{"content_item_id":"%s","channel_id":"%s","format":"text","caption":{"text":"Texto"},"planned_at":"2020-01-01T10:00:00Z","planned_timezone":"America/Sao_Paulo"}', current_setting('t.item2'), current_setting('t.channel'))::jsonb) ->> 'id', true);
+select set_config('t.v2', public.content_item_save(format('{"brand_id":"%s","title":"Data passou","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text","planned_at":"2020-01-01T10:00:00Z","planned_timezone":"America/Sao_Paulo"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select is(pg_temp.reasons(current_setting('t.v2')::uuid), 'planned_date_passed', 'a planned date in the past without publication needs attention');
-select is((select (public.dashboard_status_counts(null) ->> 'changes_requested')::int), 1, 'the counts include the variant waiting for changes');
+select is((select (public.dashboard_status_counts(null) ->> 'changes_requested')::int), 1, 'the counts include the content waiting for changes');
 select is((select (public.dashboard_status_counts(null) ->> 'draft')::int), 1, 'and the draft one');
 select is(jsonb_array_length(public.dashboard_my_items()), 1, 'my items lists the item assigned to me');
 select is(jsonb_array_length(public.dashboard_attention(array[gen_random_uuid()])), 0, 'a brand filter with another brand shows nothing');

@@ -9,20 +9,25 @@ import { MediaPicker } from "@/components/shared/media/media-picker";
 import { Button } from "@/components/shared/ui/button";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { publishSchema } from "@/lib/marketing/content/schemas";
-import type { VariantDetail } from "@/lib/marketing/content/types";
-import { markPublished } from "@/lib/marketing/content/variants.functions";
+import { markPublished } from "@/lib/marketing/content/workflow.functions";
 import { MediaScope } from "@/lib/shared/enums";
 import { MediaKind } from "@/lib/shared/media/limits";
 
 const EVIDENCE_KINDS = [MediaKind.Image, MediaKind.Document] as const;
 
 export function PublishDialog({
-  variant,
+  channelRowId,
+  channelLabel,
+  brandId,
+  brandTimezone,
   open,
   onOpenChange,
   onPublished,
 }: {
-  variant: VariantDetail;
+  channelRowId: string;
+  channelLabel: string;
+  brandId: string;
+  brandTimezone: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPublished: () => void;
@@ -40,7 +45,7 @@ export function PublishDialog({
       onOpenChange={onOpenChange}
       icon={Megaphone}
       title="Registrar publicação"
-      description="Isto só registra que a publicação aconteceu. O Compasso não publica em nenhuma rede social."
+      description={`Isto só registra que a publicação em ${channelLabel} aconteceu. O Compasso não publica em nenhuma rede social.`}
       submitLabel="Registrar publicação"
       busy={busy}
       form={{
@@ -51,7 +56,7 @@ export function PublishDialog({
           void submit(
             publishSchema,
             {
-              id: variant.id,
+              id: channelRowId,
               publishedAt,
               url,
               note,
@@ -71,7 +76,7 @@ export function PublishDialog({
         id="publish-at"
         label="Data e hora da publicação"
         value={publishedAt}
-        timeZone={variant.brandTimezone}
+        timeZone={brandTimezone}
         onValueChange={setPublishedAt}
         error={errors["publishedAt"]}
       />
@@ -116,7 +121,7 @@ export function PublishDialog({
         open={picking}
         onOpenChange={setPicking}
         scope={MediaScope.Brand}
-        brandId={variant.brandId}
+        brandId={brandId}
         kinds={EVIDENCE_KINDS}
         onConfirm={(picked) => {
           const first = picked[0];

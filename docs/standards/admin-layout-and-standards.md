@@ -22,12 +22,12 @@
 ```
 
 - **Space selector** (`SpaceSwitcher`) in the fixed header, next to the notification bell: an icon button that opens a popover with one tile per space the person can use ("Gestão de Marketing", "Site e CMS"); the selector is hidden when there is only one. The current space is deduced from the **route** (`/admin/site/*` → Site and CMS; `/admin/marketing/*` → Marketing Management); on shared routes (library, settings, notifications, profile) the last space is kept (`StoredKey.LastSpace`). Choosing a space navigates to its home. Decided 2026-10-19 after the visual review (the first version was a select in the sidebar that did not follow the route).
-- **Brand selector** (inside Marketing Management): "Todas as marcas" or one brand. The selected brand lives **in the URL** (`/admin/marketing/brands/$brandId/...`), never in global state, and stays visible in the header.
+- **Brand context**: marketing list screens expose their own brand filters. Brand-specific screens take the brand from the URL (`/admin/marketing/brands/$brandId/...`); there is no global brand selector in the sidebar or header.
 - **Sidebar** (`AppSidebar`): icons + text, sections with a title, items with collapsible **sub-items**, pending counters (for example approvals waiting), highlighted active item and `aria-current`.
   - **Collapses to icons only** (☰ button or `Ctrl/Cmd + B`) with a "rail" to reopen it. On small screens it opens as a **drawer**.
   - In icon mode, clicking an item with sub-items opens the sidebar first.
   - Footer with the account: name, profile, "Meu perfil" and "Sair".
-- **Header**: sidebar button, space and brand selectors, notification bell (always in the same position).
+- **Header**: sidebar button, space selector and notification bell (always in the same position).
 - **Content**: maximum width of 72 rem by default, responsive margins, `id="main-content"` and a "Pular para o conteúdo" link for keyboard users. Brand detail pages, content screens and calendar screens use all available width because their dense grids and data benefit from the extra room.
 - **Inside the layout**: non-existent pages ("Página não encontrada"), errors ("Algo deu errado" + try again) and missing permission ("Sem acesso a esta área") appear **in the same layout**, with a way to continue.
 - **Feedback**: _toast_ notifications (Sonner) in the top-right corner.
@@ -89,7 +89,7 @@ In `src/components/shared/admin/` (generic, no business rules). Before creating 
 | `Can` | Shows content only to those who have the action |
 | `NotificationBell` / `NotificationRow` | Bell and notification row |
 
-Compasso-specific components built on top of the kit live in `shared`: `BrandSwitcher`, `ChannelIcon`, `DateTimeField` (with time zone), `MediaPicker`, `RichTextEditor`, `ChannelPreview`, `CalendarView`, `ApprovalTimeline`.
+Compasso-specific components built on top of the kit live in `shared`: `ChannelIcon`, `DateTimeField` (with time zone), `MediaPicker`, `RichTextEditor`, `ChannelPreview`, `CalendarView`, `ApprovalTimeline`.
 
 Hooks and utilities:
 
@@ -159,4 +159,4 @@ Creating a record from a list uses a `Sheet` (`EditorSheet`): `onSaved` closes t
 - [ ] Contrast and keyboard checked (see [color-palette.md](color-palette.md)).
 - [ ] Main flows and relevant failures covered by tests (pgTAP for rules, Playwright for flows).
 
-**Brand filter (2026-10-19).** `BrandSwitcher` is in the sidebar header, below the space name, only in the Marketing Management space and with `brands.view`; when the sidebar is collapsed to icons it is hidden. Open question: whether the sidebar should float over the page (absolute) instead of pushing it; today it pushes, and collapses to icons with the trigger in the top bar.
+**Brand filter (2026-10-19).** Marketing list screens own their brand filters; brand context is carried by the URL on brand-specific screens. The global brand selector was removed from the sidebar because each relevant screen already provides its own filter.

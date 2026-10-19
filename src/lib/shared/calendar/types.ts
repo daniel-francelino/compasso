@@ -1,6 +1,7 @@
 import type {
   ApprovalRequestStatus,
   CalendarEntryKind,
+  CalendarNoteRepeat,
   ContentFormat,
   EditorialStatus,
   Platform,
@@ -9,8 +10,13 @@ import type {
 
 export type CalendarEntry = {
   kind: CalendarEntryKind;
-  itemId: string;
-  variantId: string | null;
+  itemId: string | null;
+  channelRowId: string | null;
+  noteId: string | null;
+  description: string | null;
+  repeat: CalendarNoteRepeat | null;
+  convertedItemId: string | null;
+  noteVersion: number | null;
   requestId: string | null;
   title: string;
   brandId: string;
@@ -26,14 +32,14 @@ export type CalendarEntry = {
   at: string | null;
   date: string | null;
   version: number | null;
-  itemVersion: number;
+  itemVersion: number | null;
   assigneeName: string | null;
   channelArchived: boolean;
 };
 
 export type UndatedEntry = {
   itemId: string;
-  variantId: string;
+  channelRowId: string;
   title: string;
   brandId: string;
   brandName: string;

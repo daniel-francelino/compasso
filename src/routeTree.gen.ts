@@ -71,7 +71,7 @@ import { Route as AdminAppmarketingMarketingClientsClientIdRouteImport } from '.
 import { Route as AdminAppmarketingMarketingClientsNewRouteImport } from './routes/admin/_app/(marketing)/marketing/clients/new'
 import { Route as AdminAppmarketingMarketingContentIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/content/index'
 import { Route as AdminAppmarketingMarketingContentItemIdRouteImport } from './routes/admin/_app/(marketing)/marketing/content/$itemId'
-import { Route as AdminAppmarketingMarketingVariantsVariantIdRouteImport } from './routes/admin/_app/(marketing)/marketing/variants/$variantId'
+import { Route as AdminAppmarketingMarketingContentNewRouteImport } from './routes/admin/_app/(marketing)/marketing/content/new'
 import { Route as PortalAppBrandsBrandIdApprovalsIndexRouteImport } from './routes/portal/_app/brands/$brandId/approvals/index'
 import { Route as PortalAppBrandsBrandIdApprovalsRequestIdRouteImport } from './routes/portal/_app/brands/$brandId/approvals/$requestId'
 import { Route as AdminAppmarketingMarketingBrandsBrandIdIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/brands/$brandId/index'
@@ -426,10 +426,10 @@ const AdminAppmarketingMarketingContentItemIdRoute =
     path: '/marketing/content/$itemId',
     getParentRoute: () => AdminAppRoute,
   } as any)
-const AdminAppmarketingMarketingVariantsVariantIdRoute =
-  AdminAppmarketingMarketingVariantsVariantIdRouteImport.update({
-    id: '/(marketing)/marketing/variants/$variantId',
-    path: '/marketing/variants/$variantId',
+const AdminAppmarketingMarketingContentNewRoute =
+  AdminAppmarketingMarketingContentNewRouteImport.update({
+    id: '/(marketing)/marketing/content/new',
+    path: '/marketing/content/new',
     getParentRoute: () => AdminAppRoute,
   } as any)
 const PortalAppBrandsBrandIdApprovalsIndexRoute =
@@ -556,7 +556,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
   '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
   '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
-  '/admin/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  '/admin/marketing/content/new': typeof AdminAppmarketingMarketingContentNewRoute
   '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   '/admin/site/pages/': typeof AdminAppcmsSitePagesIndexRoute
   '/admin/marketing/approvals/': typeof AdminAppmarketingMarketingApprovalsIndexRoute
@@ -629,7 +629,7 @@ export interface FileRoutesByTo {
   '/admin/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
   '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
   '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
-  '/admin/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  '/admin/marketing/content/new': typeof AdminAppmarketingMarketingContentNewRoute
   '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   '/admin/site/pages': typeof AdminAppcmsSitePagesIndexRoute
   '/admin/marketing/approvals': typeof AdminAppmarketingMarketingApprovalsIndexRoute
@@ -706,7 +706,7 @@ export interface FileRoutesById {
   '/admin/_app/(marketing)/marketing/clients/$clientId': typeof AdminAppmarketingMarketingClientsClientIdRoute
   '/admin/_app/(marketing)/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
   '/admin/_app/(marketing)/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
-  '/admin/_app/(marketing)/marketing/variants/$variantId': typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  '/admin/_app/(marketing)/marketing/content/new': typeof AdminAppmarketingMarketingContentNewRoute
   '/portal/_app/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   '/admin/_app/(cms)/site/pages/': typeof AdminAppcmsSitePagesIndexRoute
   '/admin/_app/(marketing)/marketing/approvals/': typeof AdminAppmarketingMarketingApprovalsIndexRoute
@@ -784,7 +784,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/clients/$clientId'
     | '/admin/marketing/clients/new'
     | '/admin/marketing/content/$itemId'
-    | '/admin/marketing/variants/$variantId'
+    | '/admin/marketing/content/new'
     | '/portal/brands/$brandId/approvals/$requestId'
     | '/admin/site/pages/'
     | '/admin/marketing/approvals/'
@@ -857,7 +857,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/clients/$clientId'
     | '/admin/marketing/clients/new'
     | '/admin/marketing/content/$itemId'
-    | '/admin/marketing/variants/$variantId'
+    | '/admin/marketing/content/new'
     | '/portal/brands/$brandId/approvals/$requestId'
     | '/admin/site/pages'
     | '/admin/marketing/approvals'
@@ -933,7 +933,7 @@ export interface FileRouteTypes {
     | '/admin/_app/(marketing)/marketing/clients/$clientId'
     | '/admin/_app/(marketing)/marketing/clients/new'
     | '/admin/_app/(marketing)/marketing/content/$itemId'
-    | '/admin/_app/(marketing)/marketing/variants/$variantId'
+    | '/admin/_app/(marketing)/marketing/content/new'
     | '/portal/_app/brands/$brandId/approvals/$requestId'
     | '/admin/_app/(cms)/site/pages/'
     | '/admin/_app/(marketing)/marketing/approvals/'
@@ -1410,11 +1410,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppmarketingMarketingContentItemIdRouteImport
       parentRoute: typeof AdminAppRoute
     }
-    '/admin/_app/(marketing)/marketing/variants/$variantId': {
-      id: '/admin/_app/(marketing)/marketing/variants/$variantId'
-      path: '/marketing/variants/$variantId'
-      fullPath: '/admin/marketing/variants/$variantId'
-      preLoaderRoute: typeof AdminAppmarketingMarketingVariantsVariantIdRouteImport
+    '/admin/_app/(marketing)/marketing/content/new': {
+      id: '/admin/_app/(marketing)/marketing/content/new'
+      path: '/marketing/content/new'
+      fullPath: '/admin/marketing/content/new'
+      preLoaderRoute: typeof AdminAppmarketingMarketingContentNewRouteImport
       parentRoute: typeof AdminAppRoute
     }
     '/portal/_app/brands/$brandId/approvals/': {
@@ -1570,7 +1570,7 @@ interface AdminAppRouteChildren {
   AdminAppmarketingMarketingClientsClientIdRoute: typeof AdminAppmarketingMarketingClientsClientIdRoute
   AdminAppmarketingMarketingClientsNewRoute: typeof AdminAppmarketingMarketingClientsNewRoute
   AdminAppmarketingMarketingContentItemIdRoute: typeof AdminAppmarketingMarketingContentItemIdRoute
-  AdminAppmarketingMarketingVariantsVariantIdRoute: typeof AdminAppmarketingMarketingVariantsVariantIdRoute
+  AdminAppmarketingMarketingContentNewRoute: typeof AdminAppmarketingMarketingContentNewRoute
   AdminAppcmsSitePagesIndexRoute: typeof AdminAppcmsSitePagesIndexRoute
   AdminAppmarketingMarketingApprovalsIndexRoute: typeof AdminAppmarketingMarketingApprovalsIndexRoute
   AdminAppmarketingMarketingBrandsIndexRoute: typeof AdminAppmarketingMarketingBrandsIndexRoute
@@ -1621,8 +1621,8 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
     AdminAppmarketingMarketingClientsNewRoute,
   AdminAppmarketingMarketingContentItemIdRoute:
     AdminAppmarketingMarketingContentItemIdRoute,
-  AdminAppmarketingMarketingVariantsVariantIdRoute:
-    AdminAppmarketingMarketingVariantsVariantIdRoute,
+  AdminAppmarketingMarketingContentNewRoute:
+    AdminAppmarketingMarketingContentNewRoute,
   AdminAppcmsSitePagesIndexRoute: AdminAppcmsSitePagesIndexRoute,
   AdminAppmarketingMarketingApprovalsIndexRoute:
     AdminAppmarketingMarketingApprovalsIndexRoute,

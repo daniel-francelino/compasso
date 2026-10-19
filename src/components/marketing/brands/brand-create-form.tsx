@@ -2,6 +2,7 @@ import { X, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { SelectField, TextField } from "@/components/shared/admin/form-fields";
 import { Button } from "@/components/shared/ui/button";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
@@ -102,7 +103,7 @@ export function BrandCreateForm({
       />
       <FormError message={error} />
       {formId ? null : (
-        <div className="flex justify-end gap-2">
+        <FormActions>
           <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
             <X aria-hidden="true" />
             Cancelar
@@ -111,7 +112,7 @@ export function BrandCreateForm({
             <Plus aria-hidden="true" />
             Criar marca
           </Button>
-        </div>
+        </FormActions>
       )}
     </form>
   );

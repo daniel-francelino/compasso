@@ -100,16 +100,16 @@ function AttentionBlock({ brandId }: { brandId: string | undefined }) {
       ) : (
         <ul className="space-y-2">
           {query.data?.map((item) => (
-            <li key={item.variantId} className="space-y-1 rounded-xl border border-border p-3">
+            <li key={item.itemId} className="space-y-1 rounded-xl border border-border p-3">
               <Link
-                to="/admin/marketing/variants/$variantId"
-                params={{ variantId: item.variantId }}
+                to="/admin/marketing/content/$itemId"
+                params={{ itemId: item.itemId }}
                 className="font-medium text-primary underline-offset-4 hover:underline"
               >
                 {item.title}
               </Link>
               <p className="text-xs text-muted-foreground">
-                {item.brandName} · {item.channel}
+                {item.brandName} · {item.channels.join(", ") || "sem canais"}
               </p>
               <div className="flex flex-wrap gap-1">
                 {item.reasons.map((reason) => (
@@ -166,7 +166,8 @@ function PendingBlock({ brandId }: { brandId: string | undefined }) {
                   {row.title}
                 </Link>
                 <span className="block text-xs text-muted-foreground">
-                  {row.brandName} · {platformLabels[row.platform]} ·{" "}
+                  {row.brandName} ·{" "}
+                  {row.channels.map((channel) => platformLabels[channel.platform]).join(", ")} ·{" "}
                   {row.dueDate ? `prazo ${formatDateOnly(row.dueDate)}` : "sem prazo"}
                 </span>
               </span>
@@ -272,7 +273,7 @@ function MineBlock() {
                 {item.title}
               </Link>
               <span className="block text-xs text-muted-foreground">
-                {item.brandName} · {item.openVariants} variante(s) em aberto
+                {item.brandName} · {editorialStatusLabels[item.editorialStatus]}
                 {item.productionDueDate ? ` · prazo ${formatDateOnly(item.productionDueDate)}` : ""}
               </span>
             </li>

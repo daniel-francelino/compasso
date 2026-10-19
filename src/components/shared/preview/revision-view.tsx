@@ -1,7 +1,10 @@
 import { CalendarClock, ExternalLink } from "lucide-react";
+import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
+import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { Button } from "@/components/shared/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { formatInZone } from "@/lib/shared/format";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
@@ -14,92 +17,118 @@ export type RevisionViewMedia = {
   altText: string | null;
 };
 
+export type RevisionViewChannel = {
+  rowId: string;
+  platform: Platform;
+  profileName: string;
+  format: ContentFormat;
+  caption: string | null;
+  plannedAt: string | null;
+  plannedTimezone: string | null;
+};
+
 export function RevisionView({
   title,
-  platform,
-  profileName,
-  format,
+  channels,
   caption,
   callToAction,
-  plannedAt,
-  plannedTimezone,
   media,
   urls,
   onOpenFile,
 }: {
   title: string;
-  platform: Platform;
-  profileName: string;
-  format: ContentFormat;
+  channels: RevisionViewChannel[];
   caption: string;
   callToAction: string | null;
-  plannedAt: string | null;
-  plannedTimezone: string | null;
   media: RevisionViewMedia[];
   urls: Record<string, string> | undefined;
   onOpenFile: (versionId: string) => void | Promise<void>;
 }) {
+  const [active, setActive] = useState(channels[0]?.rowId ?? "");
+  const current = channels.find((channel) => channel.rowId === active) ?? channels[0];
+  const text = current?.caption ?? caption;
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <ChannelPreview
-        platform={platform}
-        profileName={profileName}
-        format={format}
-        caption={caption}
-        callToAction={callToAction}
-        media={media.map((item) => ({
-          versionId: item.versionId,
-          kind: item.kind,
-          altText: item.altText,
-          url: urls?.[item.versionId] ?? null,
-        }))}
-      />
-      <div className="min-w-0 space-y-4">
-        <div>
-          <h2 className="heading-card text-foreground">{title}</h2>
-          <p className="text-sm text-muted-foreground">
-            {platformLabels[platform]} · {contentFormatLabels[format]}
-          </p>
+    <div className="space-y-4">
+      {channels.length > 1 ? (
+        <Tabs value={current?.rowId ?? ""} onValueChange={setActive}>
+          <TabsList className="h-auto max-w-full flex-wrap justify-start">
+            {channels.map((channel) => (
+              <TabsTrigger key={channel.rowId} value={channel.rowId}>
+                <PlatformIcon platform={channel.platform} />
+                {platformLabels[channel.platform]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      ) : null}
+      <div className="grid gap-6 md:grid-cols-2">
+        {current ? (
+          <ChannelPreview
+            platform={current.platform}
+            profileName={current.profileName}
+            format={current.format}
+            caption={text}
+            callToAction={callToAction}
+            media={media.map((item) => ({
+              versionId: item.versionId,
+              kind: item.kind,
+              altText: item.altText,
+              url: urls?.[item.versionId] ?? null,
+            }))}
+          />
+        ) : null}
+        <div className="min-w-0 space-y-4">
+          <div>
+            <h2 className="heading-card text-foreground">{title}</h2>
+            {current ? (
+              <p className="text-sm text-muted-foreground">
+                {platformLabels[current.platform]} · {current.profileName} ·{" "}
+                {contentFormatLabels[current.format]}
+              </p>
+            ) : null}
+          </div>
+          {current ? (
+            <p className="flex items-center gap-2 text-sm">
+              <CalendarClock className="size-4 text-muted-foreground" aria-hidden="true" />
+              {current.plannedAt !== null && current.plannedTimezone !== null
+                ? `Prevista para ${formatInZone(current.plannedAt, current.plannedTimezone)}`
+                : "Sem data prevista"}
+            </p>
+          ) : null}
+          <SectionCard title="Legenda completa" padding="sm">
+            {text === "" ? (
+              <p className="text-sm text-muted-foreground">Sem legenda.</p>
+            ) : (
+              <p className="whitespace-pre-wrap break-words text-sm">{text}</p>
+            )}
+            {callToAction ? <p className="mt-2 text-sm font-medium">{callToAction}</p> : null}
+          </SectionCard>
+          <SectionCard title={`Arquivos (${media.length})`} padding="sm">
+            {media.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum arquivo.</p>
+            ) : (
+              <ul className="space-y-2">
+                {media.map((item, index) => (
+                  <li key={item.versionId} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm">
+                      {index + 1}. {item.name}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void onOpenFile(item.versionId)}
+                      aria-label={`Abrir ${item.name}`}
+                    >
+                      <ExternalLink aria-hidden="true" />
+                      Abrir
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
         </div>
-        <p className="flex items-center gap-2 text-sm">
-          <CalendarClock className="size-4 text-muted-foreground" aria-hidden="true" />
-          {plannedAt !== null && plannedTimezone !== null
-            ? `Prevista para ${formatInZone(plannedAt, plannedTimezone)}`
-            : "Sem data prevista"}
-        </p>
-        <SectionCard title="Legenda completa" padding="sm">
-          {caption === "" ? (
-            <p className="text-sm text-muted-foreground">Sem legenda.</p>
-          ) : (
-            <p className="whitespace-pre-wrap break-words text-sm">{caption}</p>
-          )}
-          {callToAction ? <p className="mt-2 text-sm font-medium">{callToAction}</p> : null}
-        </SectionCard>
-        <SectionCard title={`Arquivos (${media.length})`} padding="sm">
-          {media.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum arquivo.</p>
-          ) : (
-            <ul className="space-y-2">
-              {media.map((item, index) => (
-                <li key={item.versionId} className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-sm">
-                    {index + 1}. {item.name}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void onOpenFile(item.versionId)}
-                    aria-label={`Abrir ${item.name}`}
-                  >
-                    <ExternalLink aria-hidden="true" />
-                    Abrir
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </SectionCard>
       </div>
     </div>
   );

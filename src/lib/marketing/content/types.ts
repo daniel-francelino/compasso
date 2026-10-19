@@ -1,14 +1,17 @@
 import type {
   ApprovalOutcome,
   ApprovalRequestStatus,
+  CommentVisibility,
   ContentFormat,
+  ContentObjective,
   EditorialStatus,
   Platform,
   PublicationStatus,
 } from "@/lib/shared/enums";
 import type { MediaKind } from "@/lib/shared/media/limits";
+import type { RichDoc } from "@/lib/shared/rich-text/types";
 
-export type VariantMedia = {
+export type ContentMedia = {
   mediaVersionId: string;
   altText: string | null;
   name: string;
@@ -17,15 +20,21 @@ export type VariantMedia = {
   available: boolean;
 };
 
-export type RevisionSnapshot = {
-  title: string;
-  format: ContentFormat;
-  caption: string;
-  callToAction: string | null;
-  plannedAt: string | null;
-  plannedTimezone: string | null;
+export type SnapshotChannel = {
+  rowId: string;
   platform: Platform;
   profileName: string;
+  format: ContentFormat;
+  caption: string | null;
+  plannedAt: string | null;
+  plannedTimezone: string | null;
+};
+
+export type RevisionSnapshot = {
+  title: string;
+  caption: string;
+  callToAction: string | null;
+  channels: SnapshotChannel[];
 };
 
 export type RevisionRow = {
@@ -33,7 +42,7 @@ export type RevisionRow = {
   revisionNo: number;
   createdAt: string;
   snapshot: RevisionSnapshot;
-  media: VariantMedia[];
+  media: ContentMedia[];
 };
 
 export type RequestRow = {
@@ -52,40 +61,58 @@ export type RequestRow = {
   cancelledReason: string | null;
 };
 
-export type VariantDetail = {
+export type ChannelSummary = {
+  id: string;
+  channelId: string;
+  platform: Platform;
+  profileName: string;
+  format: ContentFormat;
+  publicationStatus: PublicationStatus;
+  plannedAt: string | null;
+  plannedTimezone: string | null;
+};
+
+export type ChannelRowDetail = ChannelSummary & {
+  channelArchived: boolean;
+  caption: string;
+  version: number;
+  published: { at: string; url: string | null; note: string | null } | null;
+};
+
+export type ContentDetail = {
   id: string;
   version: number;
   brandId: string;
   brandName: string;
   brandTimezone: string;
-  itemId: string;
-  itemTitle: string;
-  itemCancelled: boolean;
-  channelId: string;
-  platform: Platform;
-  profileName: string;
-  channelArchived: boolean;
-  format: ContentFormat;
+  title: string;
+  objectiveKind: ContentObjective | null;
+  objective: string | null;
+  briefing: RichDoc | null;
+  internalNotes: string | null;
+  assigneeId: string | null;
+  assigneeName: string | null;
+  tags: string[];
+  productionDueDate: string | null;
+  cancelled: boolean;
   editorialStatus: EditorialStatus;
-  publicationStatus: PublicationStatus;
-  plannedAt: string | null;
-  plannedTimezone: string | null;
   approvalDueDate: string | null;
   caption: string;
   callToAction: string | null;
-  media: VariantMedia[];
+  media: ContentMedia[];
+  channels: ChannelRowDetail[];
   currentRevisionId: string | null;
   approvedRevisionId: string | null;
   nextRevisionNo: number;
   hasUnsentChanges: boolean;
-  published: { at: string; url: string | null; note: string | null } | null;
   revisions: RevisionRow[];
   requests: RequestRow[];
+  updatedAt: string;
 };
 
 export type CommentRow = {
   id: string;
-  visibility: "internal" | "external";
+  visibility: CommentVisibility;
   body: string;
   createdAt: string;
   authorId: string;

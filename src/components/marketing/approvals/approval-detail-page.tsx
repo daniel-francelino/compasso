@@ -35,7 +35,7 @@ import {
   reassignApprover,
   remindApprover,
 } from "@/lib/marketing/approvals/approvals.functions";
-import { listApproverOptions } from "@/lib/marketing/content/variants.functions";
+import { listApproverOptions } from "@/lib/marketing/content/workflow.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
@@ -190,12 +190,9 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
               </StatusBadge>
             ) : null}
             <Button asChild variant="outline">
-              <Link
-                to="/admin/marketing/variants/$variantId"
-                params={{ variantId: request.variantId }}
-              >
+              <Link to="/admin/marketing/content/$itemId" params={{ itemId: request.itemId }}>
                 <ArrowRight aria-hidden="true" />
-                Abrir variante
+                Abrir conteúdo
               </Link>
             </Button>
           </>
@@ -206,7 +203,7 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
           <Replace aria-hidden="true" />
           <AlertTitle>Esta versão foi substituída</AlertTitle>
           <AlertDescription>
-            O cliente deve avaliar a versão mais recente da variante.
+            O cliente deve avaliar a versão mais recente do conteúdo.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -240,13 +237,9 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
       <SectionCard title="O que o cliente vê" icon={Eye}>
         <RevisionView
           title={snapshot.title}
-          platform={snapshot.platform}
-          profileName={snapshot.profileName}
-          format={snapshot.format}
+          channels={snapshot.channels}
           caption={snapshot.caption}
           callToAction={snapshot.callToAction}
-          plannedAt={snapshot.plannedAt}
-          plannedTimezone={snapshot.plannedTimezone}
           media={request.revision.media.map((file) => ({
             versionId: file.mediaVersionId,
             name: file.name,
@@ -319,7 +312,7 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
         open={cancelling}
         onOpenChange={setCancelling}
         title="Cancelar pedido"
-        description="A variante volta para produção e o aprovador deixa de ver este pedido como pendente."
+        description="O conteúdo volta para produção e o aprovador deixa de ver este pedido como pendente."
         confirmLabel="Cancelar pedido"
         onSubmit={async (reason) => {
           const result = await run(

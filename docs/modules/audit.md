@@ -67,18 +67,29 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `content.updated` | `content_item` | `content_item_save` |
 | `content.cancelled` | `content_item` | `content_item_cancel` |
 | `content.deleted` | `content_item` | `content_item_delete` |
-| `variant.created` | `content_variant` | `content_variant_save` |
-| `variant.updated` | `content_variant` | `content_variant_save`, `content_variant_move` |
-| `variant.submitted` | `content_variant` | `submit_for_approval` |
-| `variant.reopened` | `content_variant` | `reopen_variant` (reason in metadata) |
-| `variant.rescheduled` | `content_variant` | `reschedule_variant` (old and new instant) |
-| `variant.cancelled` | `content_variant` | `content_variant_cancel` |
-| `variant.published_manually` | `content_variant` | `mark_published` |
+| `content.submitted` | `content_item` | `submit_for_approval` |
+| `content.reopened` | `content_item` | `reopen_content` (reason in metadata) |
+| `content_channel.added` | `content_channel` | `content_item_save` |
+| `content_channel.removed` | `content_channel` | `content_item_save` |
+| `content_channel.rescheduled` | `content_channel` | `reschedule_channel` (old and new instant) |
+| `content_channel.published_manually` | `content_channel` | `mark_published` |
+| `content_channel.cancelled` | `content_channel` | `content_channel_cancel` |
+| `calendar_note.created` | `calendar_note` | `calendar_note_save` |
+| `calendar_note.updated` | `calendar_note` | `calendar_note_save` |
+| `calendar_note.archived` | `calendar_note` | `calendar_note_archive` |
+| `calendar_note.converted` | `calendar_note` | `content_item_save` (`source_note`) |
+| `variant.created` | `content_variant` | legacy: written before 2026-10-19, kept so old history keeps its label |
+| `variant.updated` | `content_variant` | legacy |
+| `variant.submitted` | `content_variant` | legacy |
+| `variant.reopened` | `content_variant` | legacy |
+| `variant.rescheduled` | `content_variant` | legacy |
+| `variant.cancelled` | `content_variant` | legacy |
+| `variant.published_manually` | `content_variant` | legacy |
 | `comment.created` | `comment` | `comment_add`, `portal_add_comment` |
 | `comment.deleted` | `comment` | `comment_delete` |
 | `approval.requested` | `approval_request` | `submit_for_approval`, `reassign_approver` |
 | `approval.decided` | `approval_request` | `portal_decide_approval` |
-| `approval.superseded` | `approval_request` | `submit_for_approval`, `reopen_variant`, `reschedule_variant` |
+| `approval.superseded` | `approval_request` | `submit_for_approval`, `reopen_content`, `reschedule_channel` |
 | `approval.cancelled` | `approval_request` | `cancel_request` |
 | `approval.approver_reassigned` | `approval_request` | `reassign_approver` |
 | `approval.reminder_sent` | `approval_request` | `send_approval_reminder` |
@@ -108,7 +119,7 @@ Route `/admin/settings/audit` (action `audit.view`; only the Owner by default).
 - Filters: period, actor, domain/action, brand, entity type, text in the id. Server pagination; filters in the URL.
 - Detail drawer with the stored metadata (as-is), request id and the link to the entity.
 - Export of the filtered result as CSV (needs `audit.view` and is itself audited as `audit.exported`), limited to a maximum number of rows.
-- A brand tab shows the business events of that brand to users with `audit.view` or `approvals.view` (events of the entity types they can see), so the approval history is available next to the variant.
+- A brand tab shows the business events of that brand to users with `audit.view` or `approvals.view` (events of the entity types they can see), so the approval history is available next to the content.
 
 Visibility: an event with a `brand_id` is only visible to users who `can_access_brand` it **and** have `audit.view`; events without a brand (settings, roles) only to `audit.view` holders. External users never read audit events; the portal shows the decision history through `portal_get_approval`.
 

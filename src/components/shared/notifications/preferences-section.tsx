@@ -56,6 +56,7 @@ function LeadDays({
       <Button
         variant="outline"
         size="sm"
+        className="ml-auto"
         disabled={busy || invalid || text === initial}
         onClick={() => onSave(text.trim() === "" ? null : parsed)}
       >

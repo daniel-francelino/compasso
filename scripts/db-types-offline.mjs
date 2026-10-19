@@ -67,6 +67,8 @@ const functions = await q(
   `select p.proname, p.pronargs, p.pronargdefaults, p.proretset,
           coalesce(p.proargnames, '{}') as argnames,
           array(select format_type(t, null) from unnest(p.proargtypes::oid[]) t) as argtypes,
+          coalesce(p.proargmodes::text[], '{}') as argmodes,
+          coalesce(array(select format_type(t, null) from unnest(p.proallargtypes) t), '{}') as alltypes,
           format_type(p.prorettype, null) as rettype
    from pg_proc p
    join pg_namespace n on n.oid = p.pronamespace
@@ -120,7 +122,15 @@ const renderFunction = (fn) => {
     const name = fn.argnames[index] ?? `arg${index + 1}`;
     return `${name}${index >= required ? "?" : ""}: ${tsType(type)} | null`;
   });
-  const returns = `${tsType(fn.rettype)}${fn.proretset ? "[]" : ""}`;
+  const tableColumns = fn.argmodes
+    .map((mode, index) =>
+      mode === "t" ? `${fn.argnames[index]}: ${tsType(fn.alltypes[index])}` : null,
+    )
+    .filter((column) => column !== null);
+  const returns =
+    tableColumns.length > 0
+      ? `{ ${tableColumns.join("; ")} }[]`
+      : `${tsType(fn.rettype)}${fn.proretset ? "[]" : ""}`;
   return `      ${fn.proname}: {
         Args: ${args.length === 0 ? "never" : `{ ${args.join("; ")} }`}
         Returns: ${returns}

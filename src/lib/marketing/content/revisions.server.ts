@@ -2,18 +2,27 @@ import { z } from "zod";
 import type { Caller } from "@/lib/shared/auth/server-guards.server";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { kindOfMime } from "@/lib/shared/media/limits";
-import type { RevisionRow, VariantMedia } from "@/lib/marketing/content/types";
+import type { ContentMedia, RevisionRow } from "@/lib/marketing/content/types";
 
 type Supabase = Caller["supabase"];
 
+const captionSchema = z.object({ text: z.string() }).nullable().optional();
+
 const snapshotSchema = z.object({
   title: z.string(),
-  format: z.string(),
-  caption: z.object({ text: z.string() }).nullable().optional(),
+  caption: captionSchema,
   call_to_action: z.string().nullable().optional(),
-  planned_at: z.string().nullable().optional(),
-  planned_timezone: z.string().nullable().optional(),
-  channel: z.object({ platform: z.string(), profile_name: z.string() }),
+  channels: z.array(
+    z.object({
+      row_id: z.string(),
+      platform: z.string(),
+      profile_name: z.string(),
+      format: z.string(),
+      caption: captionSchema,
+      planned_at: z.string().nullable().optional(),
+      planned_timezone: z.string().nullable().optional(),
+    }),
+  ),
 });
 
 export const REVISION_SELECT =
@@ -30,7 +39,7 @@ export type RevisionQueryRow = {
 export const loadMedia = async (
   supabase: Supabase,
   refs: { id: string; alt: string | null }[],
-): Promise<VariantMedia[]> => {
+): Promise<ContentMedia[]> => {
   if (refs.length === 0) return [];
   const { data } = await supabase
     .from("media_versions")
@@ -68,13 +77,17 @@ export const toRevision = async (
     createdAt: revision.created_at,
     snapshot: {
       title: snapshot.data.title,
-      format: snapshot.data.format as ContentFormat,
       caption: snapshot.data.caption?.text ?? "",
       callToAction: snapshot.data.call_to_action ?? null,
-      plannedAt: snapshot.data.planned_at ?? null,
-      plannedTimezone: snapshot.data.planned_timezone ?? null,
-      platform: snapshot.data.channel.platform as Platform,
-      profileName: snapshot.data.channel.profile_name,
+      channels: snapshot.data.channels.map((channel) => ({
+        rowId: channel.row_id,
+        platform: channel.platform as Platform,
+        profileName: channel.profile_name,
+        format: channel.format as ContentFormat,
+        caption: channel.caption?.text ?? null,
+        plannedAt: channel.planned_at ?? null,
+        plannedTimezone: channel.planned_timezone ?? null,
+      })),
     },
     media: await loadMedia(supabase, refs),
   };

@@ -49,8 +49,7 @@ export const QueryKey = {
     list: (filters: Filters) => ["content", "list", filters] as const,
     board: (filters: Filters) => ["content", "board", filters] as const,
     item: (id: string) => ["content", "item", id] as const,
-    variant: (id: string) => ["content", "variant", id] as const,
-    comments: (variantId: string) => ["content", "comments", variantId] as const,
+    comments: (itemId: string) => ["content", "comments", itemId] as const,
     approvers: (brandId: string) => ["content", "approvers", brandId] as const,
     assignees: (brandId: string) => ["content", "assignees", brandId] as const,
   },
@@ -66,7 +65,7 @@ export const QueryKey = {
     approvals: (brandId: string, filters: Filters) =>
       ["portal", "approvals", brandId, filters] as const,
     approval: (id: string) => ["portal", "approval", id] as const,
-    comments: (variantId: string) => ["portal", "comments", variantId] as const,
+    comments: (itemId: string) => ["portal", "comments", itemId] as const,
     calendar: (brandId: string, filters: Filters) =>
       ["portal", "calendar", brandId, filters] as const,
     urls: (revisionId: string, variant: string, versionIds: readonly string[]) =>
@@ -76,6 +75,7 @@ export const QueryKey = {
     all: () => ["calendar"] as const,
     entries: (filters: Filters) => ["calendar", "entries", filters] as const,
     zone: () => ["calendar", "zone"] as const,
+    note: (id: string) => ["calendar", "note", id] as const,
   },
   Site: {
     all: () => ["site"] as const,
