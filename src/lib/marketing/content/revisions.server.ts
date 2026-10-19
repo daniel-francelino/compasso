@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Caller } from "@/lib/shared/auth/server-guards.server";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { kindOfMime } from "@/lib/shared/media/limits";
+import { fail, type Result } from "@/lib/shared/server-utils";
 import type { ContentMedia, RevisionRow } from "@/lib/marketing/content/types";
 
 type Supabase = Caller["supabase"];
@@ -39,56 +40,67 @@ export type RevisionQueryRow = {
 export const loadMedia = async (
   supabase: Supabase,
   refs: { id: string; alt: string | null }[],
-): Promise<ContentMedia[]> => {
-  if (refs.length === 0) return [];
-  const { data } = await supabase
+): Promise<Result<{ media: ContentMedia[] }>> => {
+  if (refs.length === 0) return { ok: true, media: [] };
+  const { data, error } = await supabase
     .from("media_versions")
-    .select("id, original_filename, mime_type, status, media_assets(display_name, trashed_at)")
+    .select(
+      "id, original_filename, mime_type, status, media_assets!media_versions_asset_id_fkey(display_name, trashed_at)",
+    )
     .in(
       "id",
       refs.map((ref) => ref.id),
     );
+  if (error) return fail(error);
   const byId = new Map((data ?? []).map((row) => [row.id, row]));
-  return refs.map((ref) => {
-    const row = byId.get(ref.id);
-    return {
-      mediaVersionId: ref.id,
-      altText: ref.alt,
-      name: row?.media_assets?.display_name ?? row?.original_filename ?? "Arquivo removido",
-      mimeType: row?.mime_type ?? "",
-      kind: row === undefined ? null : kindOfMime(row.mime_type),
-      available: row?.status === "available" && row.media_assets?.trashed_at === null,
-    };
-  });
+  return {
+    ok: true,
+    media: refs.map((ref) => {
+      const row = byId.get(ref.id);
+      return {
+        mediaVersionId: ref.id,
+        altText: ref.alt,
+        name: row?.media_assets?.display_name ?? row?.original_filename ?? "Arquivo removido",
+        mimeType: row?.mime_type ?? "",
+        kind: row === undefined ? null : kindOfMime(row.mime_type),
+        available: row?.status === "available" && row.media_assets?.trashed_at === null,
+      };
+    }),
+  };
 };
 
 export const toRevision = async (
   supabase: Supabase,
   revision: RevisionQueryRow,
-): Promise<RevisionRow | null> => {
+): Promise<Result<{ revision: RevisionRow | null }>> => {
   const snapshot = snapshotSchema.safeParse(revision.snapshot);
-  if (!snapshot.success) return null;
+  if (!snapshot.success) return { ok: true, revision: null };
   const refs = [...revision.content_revision_media]
     .sort((a, b) => a.position - b.position)
     .map((item) => ({ id: item.media_version_id, alt: item.alt_text }));
+  const media = await loadMedia(supabase, refs);
+  if (!media.ok) return media;
   return {
-    id: revision.id,
-    revisionNo: revision.revision_no,
-    createdAt: revision.created_at,
-    snapshot: {
-      title: snapshot.data.title,
-      caption: snapshot.data.caption?.text ?? "",
-      callToAction: snapshot.data.call_to_action ?? null,
-      channels: snapshot.data.channels.map((channel) => ({
-        rowId: channel.row_id,
-        platform: channel.platform as Platform,
-        profileName: channel.profile_name,
-        format: channel.format as ContentFormat,
-        caption: channel.caption?.text ?? null,
-        plannedAt: channel.planned_at ?? null,
-        plannedTimezone: channel.planned_timezone ?? null,
-      })),
+    ok: true,
+    revision: {
+      id: revision.id,
+      revisionNo: revision.revision_no,
+      createdAt: revision.created_at,
+      snapshot: {
+        title: snapshot.data.title,
+        caption: snapshot.data.caption?.text ?? "",
+        callToAction: snapshot.data.call_to_action ?? null,
+        channels: snapshot.data.channels.map((channel) => ({
+          rowId: channel.row_id,
+          platform: channel.platform as Platform,
+          profileName: channel.profile_name,
+          format: channel.format as ContentFormat,
+          caption: channel.caption?.text ?? null,
+          plannedAt: channel.planned_at ?? null,
+          plannedTimezone: channel.planned_timezone ?? null,
+        })),
+      },
+      media: media.media,
     },
-    media: await loadMedia(supabase, refs),
   };
 };

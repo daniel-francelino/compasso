@@ -107,7 +107,12 @@ export const listMedia = createServerFn({ method: "GET" })
         : query.is("trashed_at", null);
     if (data.scope !== undefined) query = query.eq("scope", data.scope);
     if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
-    if (data.kind !== undefined) query = query.like("current.mime_type", MIME_PATTERNS[data.kind]);
+    if (data.kinds !== undefined) {
+      const filters = data.kinds.map((kind) => `mime_type.like.${MIME_PATTERNS[kind]}`).join(",");
+      query = query.or(filters, { referencedTable: "current" });
+    } else if (data.kind !== undefined) {
+      query = query.like("current.mime_type", MIME_PATTERNS[data.kind]);
+    }
     const items =
       data.collectionId === undefined
         ? null

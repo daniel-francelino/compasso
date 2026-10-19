@@ -8,8 +8,7 @@ import { EmptyState } from "@/components/shared/admin/empty-state";
 import { SelectField } from "@/components/shared/admin/form-fields";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
+import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import {
   Sheet,
   SheetContent,
@@ -139,26 +138,20 @@ export function AuditPage() {
           }
           options={[{ value: ALL_DOMAINS, label: "Todos" }, ...auditDomains]}
         />
-        <div className="space-y-1.5">
-          <Label htmlFor="audit-from">De</Label>
-          <Input
-            id="audit-from"
-            type="date"
-            className="h-11 md:h-10"
-            value={search.from ?? ""}
-            onChange={(event) => void update({ from: event.target.value || undefined })}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="audit-to">Até</Label>
-          <Input
-            id="audit-to"
-            type="date"
-            className="h-11 md:h-10"
-            value={search.to ?? ""}
-            onChange={(event) => void update({ to: event.target.value || undefined })}
-          />
-        </div>
+        <DatePickerField
+          id="audit-from"
+          label="De"
+          value={search.from ?? ""}
+          onChange={(value) => void update({ from: value || undefined })}
+          clearable
+        />
+        <DatePickerField
+          id="audit-to"
+          label="Até"
+          value={search.to ?? ""}
+          onChange={(value) => void update({ to: value || undefined })}
+          clearable
+        />
       </div>
       <DataTable
         caption="Eventos de auditoria"

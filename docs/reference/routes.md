@@ -40,7 +40,6 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/library/$assetId` | `media.view` | media-library |
 | `/share/$token` | public (no session): the page of a share link; `noindex` | media-library |
 | `/admin/settings` | any settings action | organization-settings |
-| `/admin/settings/organization` | `settings.manage` | organization-settings |
 | `/admin/settings/users` | `users.view` | authentication |
 | `/admin/settings/roles` | `roles.manage` | roles-and-actions |
 | `/admin/settings/policies` | `settings.manage` | organization-settings |

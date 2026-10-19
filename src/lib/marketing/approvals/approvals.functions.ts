@@ -182,8 +182,9 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
     if (revisionResult.error) return fail(revisionResult.error);
     if (commentsResult.error) return fail(commentsResult.error);
     if (revisionResult.data === null) return fail({ message: "not_found" });
-    const revision = await toRevision(supabase, revisionResult.data as RevisionQueryRow);
-    if (revision === null) return fail({ message: "unknown" });
+    const revisionResultData = await toRevision(supabase, revisionResult.data as RevisionQueryRow);
+    if (!revisionResultData.ok) return revisionResultData;
+    if (revisionResultData.revision === null) return fail({ message: "unknown" });
 
     const comments = parseComments(commentsResult.data);
     if (!comments.ok) return comments;
@@ -223,7 +224,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
           row.status === ApprovalRequestStatus.Pending &&
           row.due_date !== null &&
           row.due_date < today,
-        revision,
+        revision: revisionResultData.revision,
         comments: comments.comments.filter(
           (comment) => comment.visibility === CommentVisibility.External,
         ),

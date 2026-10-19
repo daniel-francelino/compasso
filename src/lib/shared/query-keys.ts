@@ -18,7 +18,6 @@ export const QueryKey = {
     assignable: () => ["roles", "assignable"] as const,
   },
   Organization: {
-    detail: () => ["organization"] as const,
     settings: () => ["organization", "settings"] as const,
   },
   Audit: {

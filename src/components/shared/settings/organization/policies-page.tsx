@@ -12,10 +12,10 @@ import { policyFields } from "@/components/shared/settings/organization/policy-f
 import { Button } from "@/components/shared/ui/button";
 import { Switch } from "@/components/shared/ui/switch";
 import { Label } from "@/components/shared/ui/label";
-import { useFormSubmit } from "@/hooks/shared/use-form-submit";
+import { useUnsavedChanges } from "@/hooks/shared/use-unsaved-changes";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
-import { policyLabels, policySchemas, saveSettingSchema } from "@/lib/shared/settings/schemas";
+import { policyLabels, policySchemas } from "@/lib/shared/settings/schemas";
 import {
   type SettingRecord,
   listSettings,
@@ -24,70 +24,115 @@ import {
 
 type Draft = Record<string, string | number | boolean>;
 
-function PolicyCard({ setting }: { setting: SettingRecord }) {
-  const queryClient = useQueryClient();
-  const { errors, error, busy, submit } = useFormSubmit();
-  const [draft, setDraft] = useState<Draft>({ ...setting.value });
-  const fields = policyFields[setting.key];
+const isDirty = (setting: SettingRecord, draft: Draft | undefined): boolean =>
+  draft !== undefined && JSON.stringify(draft) !== JSON.stringify(setting.value);
 
-  const parsed = policySchemas[setting.key].safeParse(draft);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(setting.value);
+function PoliciesForm({ settings }: { settings: SettingRecord[] }) {
+  const queryClient = useQueryClient();
+  const [drafts, setDrafts] = useState<Record<string, Draft>>(() =>
+    Object.fromEntries(settings.map((setting) => [setting.key, { ...setting.value }])),
+  );
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const dirty = settings.filter((setting) => isDirty(setting, drafts[setting.key]));
+  const valid = dirty.every(
+    (setting) => policySchemas[setting.key].safeParse(drafts[setting.key]).success,
+  );
+  useUnsavedChanges(dirty.length > 0);
+
+  const setField = (key: string, name: string, value: string | number | boolean) =>
+    setDrafts((current) => ({ ...current, [key]: { ...current[key], [name]: value } }));
+
+  async function save() {
+    if (busy || dirty.length === 0) return;
+    setBusy(true);
+    setError(null);
+    let failure: string | null = null;
+    for (const setting of dirty) {
+      const result = await saveSetting({
+        data: {
+          key: setting.key,
+          value: drafts[setting.key] ?? {},
+          expectedVersion: setting.version,
+        },
+      });
+      if (!result.ok) {
+        failure = result.message;
+        break;
+      }
+    }
+    await queryClient.invalidateQueries({ queryKey: QueryKey.Organization.settings() });
+    setBusy(false);
+    if (failure !== null) {
+      setError(failure);
+      return;
+    }
+    toast.success("Políticas salvas.");
+  }
 
   return (
     <SectionCard
       as="form"
       noValidate
-      title={policyLabels[setting.key]}
       onSubmit={(event) => {
         event.preventDefault();
-        void submit(
-          saveSettingSchema,
-          { key: setting.key, value: draft, expectedVersion: setting.version },
-          (data) => saveSetting({ data }),
-          async () => {
-            toast.success("Política salva.");
-            await queryClient.invalidateQueries({ queryKey: QueryKey.Organization.settings() });
-          },
-        );
+        void save();
       }}
+      className="space-y-6"
     >
-      <div className="space-y-3">
-        {fields.map((field) => {
-          const value = draft[field.name];
-          if (field.type === "boolean") {
-            return (
-              <div key={field.name} className="flex items-center justify-between gap-3">
-                <Label htmlFor={`${setting.key}-${field.name}`}>{field.label}</Label>
-                <Switch
-                  id={`${setting.key}-${field.name}`}
-                  checked={value === true}
-                  onCheckedChange={(checked) => setDraft({ ...draft, [field.name]: checked })}
-                />
-              </div>
-            );
-          }
-          return (
-            <TextField
-              key={field.name}
-              id={`${setting.key}-${field.name}`}
-              label={field.label}
-              inputMode={field.type === "number" ? "numeric" : "text"}
-              value={String(value ?? "")}
-              hint={field.hint}
-              onValueChange={(text) =>
-                setDraft({
-                  ...draft,
-                  [field.name]: field.type === "number" ? Number(text.replace(/\D/g, "")) : text,
-                })
-              }
-              error={errors[field.name]}
-            />
-          );
-        })}
-      </div>
+      {settings.map((setting) => {
+        const draft = drafts[setting.key] ?? {};
+        return (
+          <section
+            key={setting.key}
+            aria-labelledby={`policy-${setting.key}`}
+            className="space-y-3 border-b border-border pb-6 last:border-b-0 last:pb-0"
+          >
+            <h2 id={`policy-${setting.key}`} className="heading-card text-foreground">
+              {policyLabels[setting.key]}
+            </h2>
+            <div className="space-y-3">
+              {policyFields[setting.key].map((field) => {
+                const value = draft[field.name];
+                const id = `${setting.key}-${field.name}`;
+                if (field.type === "boolean") {
+                  return (
+                    <div key={field.name} className="flex items-center justify-between gap-3">
+                      <Label htmlFor={id}>{field.label}</Label>
+                      <Switch
+                        id={id}
+                        checked={value === true}
+                        onCheckedChange={(checked) => setField(setting.key, field.name, checked)}
+                      />
+                    </div>
+                  );
+                }
+                return (
+                  <TextField
+                    key={field.name}
+                    id={id}
+                    label={field.label}
+                    inputMode={field.type === "number" ? "numeric" : "text"}
+                    value={String(value ?? "")}
+                    hint={field.hint}
+                    onValueChange={(text) =>
+                      setField(
+                        setting.key,
+                        field.name,
+                        field.type === "number" ? Number(text.replace(/\D/g, "")) : text,
+                      )
+                    }
+                  />
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
       <FormError message={error} />
       <FormActions>
-        <Button type="submit" loading={busy} disabled={!dirty || !parsed.success || busy}>
+        <Button type="submit" loading={busy} disabled={dirty.length === 0 || !valid || busy}>
           <Save aria-hidden="true" />
           Salvar
         </Button>
@@ -101,6 +146,8 @@ export function PoliciesPage() {
     queryKey: QueryKey.Organization.settings(),
     queryFn: async () => unwrapResult(await listSettings()).settings,
   });
+  const settings = query.data ?? [];
+  const formKey = settings.map((setting) => `${setting.key}-${setting.version}`).join("|");
 
   return (
     <div className="space-y-6">
@@ -115,11 +162,7 @@ export function PoliciesPage() {
           {query.error.message}
         </p>
       ) : null}
-      <div className="grid gap-4 md:grid-cols-2">
-        {(query.data ?? []).map((setting) => (
-          <PolicyCard key={`${setting.key}-${setting.version}`} setting={setting} />
-        ))}
-      </div>
+      {settings.length > 0 ? <PoliciesForm key={formKey} settings={settings} /> : null}
     </div>
   );
 }

@@ -17,7 +17,6 @@ export const AppRoute = {
   Library: "/admin/library",
   Users: "/admin/settings/users",
   Roles: "/admin/settings/roles",
-  Organization: "/admin/settings/organization",
   Policies: "/admin/settings/policies",
   Audit: "/admin/settings/audit",
   Clients: "/admin/marketing/clients",

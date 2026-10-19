@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import {
   BellRing,
-  Building,
   ScrollText,
   ShieldCheck,
   SlidersHorizontal,
@@ -22,7 +21,6 @@ type Entry = {
   to:
     | "/admin/settings/users"
     | "/admin/settings/roles"
-    | "/admin/settings/organization"
     | "/admin/settings/policies"
     | "/admin/settings/audit"
     | "/admin/settings/notifications";
@@ -43,13 +41,6 @@ const entries: Entry[] = [
     icon: ShieldCheck,
     to: AppRoute.Roles,
     action: Action.Roles.Manage,
-  },
-  {
-    title: "Organização",
-    description: "Nome, documento, fuso horário e contato da empresa.",
-    icon: Building,
-    to: AppRoute.Organization,
-    action: Action.Settings.Manage,
   },
   {
     title: "Políticas",

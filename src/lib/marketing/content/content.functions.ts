@@ -292,19 +292,24 @@ export const getContentItem = createServerFn({ method: "GET" })
     if (requestsResult.error) return fail(requestsResult.error);
 
     const working = workingMediaSchema.safeParse(row.working_media);
-    const media = await loadMedia(
+    const mediaResult = await loadMedia(
       supabase,
       (working.success ? working.data : []).map((item) => ({
         id: item.media_version_id,
         alt: item.alt_text ?? null,
       })),
     );
+    if (!mediaResult.ok) return mediaResult;
 
     const built = await Promise.all(
       revisionsResult.data.map((revision) => toRevision(supabase, revision)),
     );
-    const revisions = built.filter((revision): revision is RevisionRow => revision !== null);
-    if (revisions.length !== built.length) return fail({ message: "unknown" });
+    const revisions: RevisionRow[] = [];
+    for (const result of built) {
+      if (!result.ok) return result;
+      if (result.revision === null) return fail({ message: "unknown" });
+      revisions.push(result.revision);
+    }
 
     const names = await personNames(supabase, [
       row.assignee_id,
@@ -339,7 +344,7 @@ export const getContentItem = createServerFn({ method: "GET" })
       (current.snapshot.caption !== text ||
         (current.snapshot.callToAction ?? "") !== (row.call_to_action ?? "") ||
         !sameChannels(current, channels) ||
-        !sameMedia(current.media, media));
+        !sameMedia(current.media, mediaResult.media));
 
     return {
       ok: true,
@@ -363,7 +368,7 @@ export const getContentItem = createServerFn({ method: "GET" })
         approvalDueDate: row.approval_due_date,
         caption: text,
         callToAction: row.call_to_action,
-        media,
+        media: mediaResult.media,
         channels,
         currentRevisionId: row.current_revision_id,
         approvedRevisionId: row.approved_revision_id,

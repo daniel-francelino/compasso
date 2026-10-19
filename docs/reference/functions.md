@@ -45,7 +45,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 
 | SQL function | Server function | Act. | Audit | Errors |
 |---|---|---|---|---|
-| `organization_save(p_organization jsonb)` | `saveOrganization` | `settings.manage` | `organization.updated` | `conflict`, `invalid_input` |
+| `organization_save(p_organization jsonb)` | none (no screen since 2026-10-19; kept in the database for manual use) | `settings.manage` | `organization.updated` | `conflict`, `invalid_input` |
 | `organization_setting_save(p_key text, p_value jsonb, p_expected_version int)` | `saveOrganizationSetting` | `settings.manage` | `settings.policy_changed` | `conflict`, `invalid_input` |
 | `audit_list(p_filters jsonb, p_page int, p_export boolean default false)` (checks `audit.view` and brand scope itself; with `p_export` returns up to 5000 rows and writes `audit.exported`) | `listAuditEvents` | `audit.view` | — | `denied` |
 | (same `audit_list` with `p_export`) | `exportAudit` (CSV, row limit) | `audit.view` | `audit.exported` | `denied` |
@@ -57,7 +57,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `listUsers`, `listInvitations` | `users.view` | paginated, filtered on the server (RLS) |
 | `listRoles` (with the action catalog), `listAssignableRoles` | `roles.manage` / `invitations.create` | assignable roles hide the owner role and administration-only roles for non-owners |
 | `previewInvitation`, `resendInvitation` | none (token) / `invitations.create` | preview uses the service role and reveals only the invited e-mail and role name; resend (`{ id, sendEmail }`) creates a new invitation (revokes the pending one) and returns the new link, sending email only when `sendEmail` is true |
-| `getOrganization`, `listSettings`, `saveSetting` | `settings.manage` | `saveSetting` validates each policy group with zod before `organization_setting_save` |
+| `listSettings`, `saveSetting` | `settings.manage` | `saveSetting` validates each policy group with zod before `organization_setting_save` |
 | `listAuditEvents` | `audit.view` | calls `audit_list`; filters: domain, period, actor, brand, entity |
 | `listNotifications`, `countUnread`, `markRead`, `markAllRead`, `snoozeNotification`, `listPreferences`, `savePreference` | approved account | own rows only; RLS applies (update limited to `read_at` and `snoozed_until`) |
 | `changePassword` | approved account | Supabase Auth `updateUser` |

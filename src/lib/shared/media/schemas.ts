@@ -43,6 +43,7 @@ export const listMediaSchema = listRequestSchema.extend({
   scope: z.nativeEnum(MediaScope).optional(),
   brandId: z.string().uuid().optional(),
   kind: z.nativeEnum(MediaKind).optional(),
+  kinds: z.array(z.nativeEnum(MediaKind)).min(1).max(3).optional(),
   collectionId: z.string().uuid().optional(),
   order: z.nativeEnum(MediaSort).default(MediaSort.Newest),
 });

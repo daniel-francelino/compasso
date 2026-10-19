@@ -51,7 +51,6 @@ import { Route as AdminAppsharedLibraryAssetIdRouteImport } from './routes/admin
 import { Route as AdminAppsharedSettingsIndexRouteImport } from './routes/admin/_app/(shared)/settings/index'
 import { Route as AdminAppsharedSettingsAuditRouteImport } from './routes/admin/_app/(shared)/settings/audit'
 import { Route as AdminAppsharedSettingsNotificationsRouteImport } from './routes/admin/_app/(shared)/settings/notifications'
-import { Route as AdminAppsharedSettingsOrganizationRouteImport } from './routes/admin/_app/(shared)/settings/organization'
 import { Route as AdminAppsharedSettingsPoliciesRouteImport } from './routes/admin/_app/(shared)/settings/policies'
 import { Route as AdminAppsharedSettingsRolesRouteImport } from './routes/admin/_app/(shared)/settings/roles'
 import { Route as AdminAppsharedSettingsUsersRouteImport } from './routes/admin/_app/(shared)/settings/users'
@@ -306,12 +305,6 @@ const AdminAppsharedSettingsNotificationsRoute =
     path: '/settings/notifications',
     getParentRoute: () => AdminAppRoute,
   } as any)
-const AdminAppsharedSettingsOrganizationRoute =
-  AdminAppsharedSettingsOrganizationRouteImport.update({
-    id: '/(shared)/settings/organization',
-    path: '/settings/organization',
-    getParentRoute: () => AdminAppRoute,
-  } as any)
 const AdminAppsharedSettingsPoliciesRoute =
   AdminAppsharedSettingsPoliciesRouteImport.update({
     id: '/(shared)/settings/policies',
@@ -538,7 +531,6 @@ export interface FileRoutesByFullPath {
   '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
-  '/admin/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
@@ -612,7 +604,6 @@ export interface FileRoutesByTo {
   '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
-  '/admin/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/settings/users': typeof AdminAppsharedSettingsUsersRoute
@@ -688,7 +679,6 @@ export interface FileRoutesById {
   '/admin/_app/(shared)/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/_app/(shared)/settings/audit': typeof AdminAppsharedSettingsAuditRoute
   '/admin/_app/(shared)/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
-  '/admin/_app/(shared)/settings/organization': typeof AdminAppsharedSettingsOrganizationRoute
   '/admin/_app/(shared)/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/_app/(shared)/settings/roles': typeof AdminAppsharedSettingsRolesRoute
   '/admin/_app/(shared)/settings/users': typeof AdminAppsharedSettingsUsersRoute
@@ -766,7 +756,6 @@ export interface FileRouteTypes {
     | '/admin/library/$assetId'
     | '/admin/settings/audit'
     | '/admin/settings/notifications'
-    | '/admin/settings/organization'
     | '/admin/settings/policies'
     | '/admin/settings/roles'
     | '/admin/settings/users'
@@ -840,7 +829,6 @@ export interface FileRouteTypes {
     | '/admin/library/$assetId'
     | '/admin/settings/audit'
     | '/admin/settings/notifications'
-    | '/admin/settings/organization'
     | '/admin/settings/policies'
     | '/admin/settings/roles'
     | '/admin/settings/users'
@@ -915,7 +903,6 @@ export interface FileRouteTypes {
     | '/admin/_app/(shared)/library/$assetId'
     | '/admin/_app/(shared)/settings/audit'
     | '/admin/_app/(shared)/settings/notifications'
-    | '/admin/_app/(shared)/settings/organization'
     | '/admin/_app/(shared)/settings/policies'
     | '/admin/_app/(shared)/settings/roles'
     | '/admin/_app/(shared)/settings/users'
@@ -1270,13 +1257,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsharedSettingsNotificationsRouteImport
       parentRoute: typeof AdminAppRoute
     }
-    '/admin/_app/(shared)/settings/organization': {
-      id: '/admin/_app/(shared)/settings/organization'
-      path: '/settings/organization'
-      fullPath: '/admin/settings/organization'
-      preLoaderRoute: typeof AdminAppsharedSettingsOrganizationRouteImport
-      parentRoute: typeof AdminAppRoute
-    }
     '/admin/_app/(shared)/settings/policies': {
       id: '/admin/_app/(shared)/settings/policies'
       path: '/settings/policies'
@@ -1554,7 +1534,6 @@ interface AdminAppRouteChildren {
   AdminAppsharedLibraryAssetIdRoute: typeof AdminAppsharedLibraryAssetIdRoute
   AdminAppsharedSettingsAuditRoute: typeof AdminAppsharedSettingsAuditRoute
   AdminAppsharedSettingsNotificationsRoute: typeof AdminAppsharedSettingsNotificationsRoute
-  AdminAppsharedSettingsOrganizationRoute: typeof AdminAppsharedSettingsOrganizationRoute
   AdminAppsharedSettingsPoliciesRoute: typeof AdminAppsharedSettingsPoliciesRoute
   AdminAppsharedSettingsRolesRoute: typeof AdminAppsharedSettingsRolesRoute
   AdminAppsharedSettingsUsersRoute: typeof AdminAppsharedSettingsUsersRoute
@@ -1598,8 +1577,6 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppsharedSettingsAuditRoute: AdminAppsharedSettingsAuditRoute,
   AdminAppsharedSettingsNotificationsRoute:
     AdminAppsharedSettingsNotificationsRoute,
-  AdminAppsharedSettingsOrganizationRoute:
-    AdminAppsharedSettingsOrganizationRoute,
   AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,
   AdminAppsharedSettingsRolesRoute: AdminAppsharedSettingsRolesRoute,
   AdminAppsharedSettingsUsersRoute: AdminAppsharedSettingsUsersRoute,

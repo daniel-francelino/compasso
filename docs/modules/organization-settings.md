@@ -13,7 +13,6 @@ Included: organization profile, defaults, users, invitations, roles, operational
 | Route | Screen | Action |
 |---|---|---|
 | `/admin/settings` | Overview of settings (cards with status) | any settings action |
-| `/admin/settings/organization` | Organization data and defaults | `settings.manage` |
 | `/admin/settings/users` | Users and invitations | `users.view` (manage: `users.manage`; invite: `invitations.create`) |
 | `/admin/settings/roles` | Roles and the permission matrix | `roles.manage` |
 | `/admin/settings/policies` | Operational policies | `settings.manage` |
@@ -23,6 +22,8 @@ Included: organization profile, defaults, users, invitations, roles, operational
 Only the sections the person can use appear; the menu item "Configurações" shows only if at least one is available.
 
 ## Organization
+
+Decision (2026-10-19): there is **no screen and no menu item** to manage the organization record. The data stays in `organizations` (and `organization_save` stays in the database) and is edited by hand when needed. The fields below describe what the record holds.
 
 | Field | Rule |
 |---|---|
@@ -109,6 +110,8 @@ A change to a policy is audited with old and new values; policies that affect ru
 ## Implementation status
 
 Phase 1 (tasks P1-01, P1-02, P1-07, 2026-10-18). Done: users screen (`/admin/settings/users`: active, invitations, suspended; invite, resend, revoke, change role, suspend/reactivate), roles screen with the permission matrix and automatic dependencies (`/admin/settings/roles`), organization screen and policies screen (`/admin/settings/organization`, `/policies`, eight groups validated with zod), profile page (name, password, notification preferences), invitation acceptance page. SQL: `profile_set_access`, `role_save`, `role_delete`, `organization_save`, `organization_setting_save` (migration `20261018100600_access_and_settings_functions.sql`) and invitations (`20261018100500_auth_invitations.sql`). Validation performed: 35 + 44 SQL assertions on PGlite, 5 Vitest tests of the role matrix, typecheck, lint. **Not tested**: real Supabase, e-mail sending (the Resend adapter is untested), the screens in a browser. Also done after the first pass: the `/admin/settings` index, `/admin/settings/notifications` (defaults per kind through `notification_kind_save`, migration `20261018100700_notification_defaults.sql`, 8 SQL assertions), password recovery, callback, reset and confirm-email screens (`SITE_URL` or the request origin builds the link; the allowed redirect URLs must be set in Supabase). **Not done**: edit of brand links from the users screen (done from the brand), policies are stored but not yet read by the modules that will use them (invitation validity is still the 7-day constant).
+2026-10-19: The organization screen (`/admin/settings/organization`), its menu entry and index card, `getOrganization`, `saveOrganization`, `organizationSchema` and `QueryKey.Organization.detail` were removed; the table and `organization_save` remain in the database. The policies screen now has one card with every policy group and a single "Salvar" that saves all changed groups (one `saveSetting` call per changed group, stopping at the first failure). Validation performed: typecheck, lint. **Not tested**: the policies screen in a browser, a partial failure while saving several groups.
+2026-10-19: The default notifications screen (`/admin/settings/notifications`) is now one card with one row per notification kind and a single "Salvar" that saves every changed kind (one `saveKindDefaults` call per changed kind, stopping at the first failure; the unsaved-changes warning is on). Validation performed: lint of the changed files. **Not tested**: the screen in a browser, a partial failure while saving several kinds. The whole-project typecheck currently fails in `content.functions.ts` and `approvals.functions.ts`, which another change is editing.
 2026-10-19: Aligned profile, organization, policy and notification-default save actions to the right using the shared form action component. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. Full typecheck remains blocked by existing calendar and brand-logo type errors outside this change. **Not tested**: browser rendering.
 
 Manual access delivery (2026-10-19). Done: the invite dialog generates the link and shows it in "Link de acesso" with a copy button; "Também enviar por e-mail" is an optional switch (off by default); the invitations list has "Gerar novo link" and "Reenviar por e-mail". Files: `invitations.functions.ts`, `schemas.ts` (`sendEmail`, `resendInvitationSchema`), `invite-dialog.tsx`, `invite-link-dialog.tsx`, `users-page.tsx`. No migration (the token flow is unchanged). Validation performed: typecheck, lint. **Not tested**: the dialogs in a browser, copying to the clipboard, end-to-end acceptance of a copied link.

@@ -51,7 +51,7 @@ Removing a file from a draft revision removes only the association. Approved rev
 
 ## 5. Shared picker
 
-Every page uses the same selection component (`MediaPicker`), configured by context, accepted types, maximum quantity, single/multiple selection and usage role. The server validates these rules; it does not trust the configuration sent by the browser.
+Every page uses the same selection component (`MediaPicker`), configured by context, accepted types, maximum quantity, single/multiple selection and usage role. Accepted types are filtered on the server before pagination, so compatible files remain discoverable across pages. The picker has loading, retry, empty and paginated states; cancelling clears its draft selection. The server validates these rules; it does not trust the configuration sent by the browser.
 
 1. In the content editor choose "Adicionar arquivos".
 2. A panel opens with "Biblioteca" and "Enviar arquivos", showing only accessible and compatible files (the brand's, or the site's).
@@ -201,3 +201,5 @@ Share links and library layout (2026-10-19). Migrations `20261019120000_media_qu
 2026-10-19: Aligned media detail save action to the right using the shared form action component. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. Full typecheck remains blocked by existing calendar and brand-logo type errors outside this change. **Not tested**: browser rendering.
 
 2026-10-19: The shared list-filter trigger now uses an icon with a tooltip and active-count badge. This applies to the media library. Validation performed: targeted ESLint, Prettier and `git diff --check`. `check:docs` is currently blocked by ten audit-action registry mismatches for `calendar_note.*` and `variant.*` in the audit/functions documents. Full typecheck is blocked by existing `brand-logos.server.ts` type errors. **Not tested**: browser interaction.
+
+2026-10-19: The shared media picker now filters accepted types before server pagination and provides pagination, loading, retry and clearer empty states. Closing the picker clears the unconfirmed selection. Files: `src/components/shared/media/media-picker.tsx`, `src/lib/shared/media/media.functions.ts`, `src/lib/shared/media/schemas.ts`. Validation performed: targeted ESLint, full TypeScript check, Prettier, `check:docs` and `git diff --check`. **Not tested**: selecting files or uploading from the picker in a browser.

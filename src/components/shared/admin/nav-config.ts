@@ -4,7 +4,6 @@ import {
   BellRing,
   Building2,
   Briefcase,
-  Building,
   CalendarDays,
   ClipboardCheck,
   FileText,
@@ -176,12 +175,6 @@ export const navGroups: NavGroup[] = [
       { title: "Pessoas", icon: Users, to: AppRoute.Users, action: Action.Users.View },
       { title: "Perfis", icon: ShieldCheck, to: AppRoute.Roles, action: Action.Roles.Manage },
       {
-        title: "Organização",
-        icon: Building,
-        to: AppRoute.Organization,
-        action: Action.Settings.Manage,
-      },
-      {
         title: "Políticas",
         icon: SlidersHorizontal,
         to: AppRoute.Policies,
@@ -200,7 +193,6 @@ export const navGroups: NavGroup[] = [
     space: Space.Shared,
     label: "Minha conta",
     items: [
-      { title: "Avisos", icon: Bell, to: AppRoute.Notifications },
       { title: "Meu perfil", icon: UserRound, to: AppRoute.Profile },
     ],
   },
