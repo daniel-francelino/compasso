@@ -20,6 +20,7 @@ Included: register, identity and guidelines, time zone, members and external acc
 | Objectives | Optional |
 | References | Optional notes and links |
 | Visual identity | Optional structured data: logos (media usages), brand colors (names and hex **as data**, not UI tokens), fonts (names), link to guidelines |
+| Logo | Optional image of the brand's own library scope (`brands.logo_media_version_id`); shown as the **avatar** of the brand everywhere (lists, header, selects, sidebar); without one the avatar shows the initials |
 | Time zone | Required IANA zone; default from the organization; used by the calendar, deadlines and scheduling |
 | Status | Active or archived |
 | Created / updated / by | Audit stamps |
@@ -54,7 +55,8 @@ Routes: `/admin/marketing/brands`, `/admin/marketing/brands/new`, `/admin/market
 - **Brand context:** once a brand is open, the header shows the brand and a switcher; the URL carries it (`/brands/$brandId/...`). Tabs: **Visão geral**, **Canais** ([channels.md](channels.md)), **Conteúdos** ([content.md](content.md)), **Calendário** ([calendar.md](calendar.md)), **Aprovações** ([approvals.md](approvals.md)), **Biblioteca** (filtered to the brand), **Membros**, **Identidade**, **Configurações**.
 - **Overview:** pending approvals, content by status, next deadlines, recent activity, members count, channels with their status.
 - **Members tab:** table of members with kind, `can_decide`, status; actions "Convidar", "Adicionar membro existente", "Alterar permissão de decisão", "Revogar". External members are shown with an "Externo" badge.
-- **Identity tab:** form with guideline fields and the logo/asset picker.
+- **Identity tab:** form with guideline fields and the logo field (picks an image of this brand from the library, or removes it; the logo is a `brand_identity` usage of its media version, so the file cannot be deleted while it is the logo).
+- **Brand select:** wherever a person chooses a brand (filters, forms, the sidebar) the shared `BrandSelect` is used: avatar plus name in the list and in the closed field. A raw `SelectField` with brand names is not allowed.
 - **Settings tab:** name, time zone, archive/reactivate.
 - **Archive:** blocks new content and new planning; keeps all history; active channels and pending approvals are listed first and must be resolved or explicitly cancelled. A brand with approved but unpublished variants warns before archiving.
 
@@ -103,4 +105,8 @@ Routes: `/admin/marketing/brands`, `/admin/marketing/brands/new`, `/admin/market
 
 Phase 1 (task P1-03/P1-05, 2026-10-18). Same migrations and tests as [clients.md](clients.md); `src/lib/marketing/brands/*`, `src/components/marketing/brands/*`; routes `/admin/marketing/brands`, `/new`, `/$brandId` with tabs overview, channels, members, identity, settings.
 
+2026-10-19: Fixed the Brands client filters and create form sharing `QueryKey.Clients.list` with the Clients page while caching different data shapes. All consumers now cache the canonical paginated `listClients` result and read its `rows` field. Validation performed: pending. **Not tested**: browser behavior and real Supabase.
+
 Done: list, create, overview, members (add existing, invite, decision right, revoke, last-internal-member rule), identity (guidelines text, colors and fonts as data, guidelines link), settings (name, time zone with warning, archive, delete). Validation performed: SQL assertions (isolation between brands, external users read nothing, time zone change audited). **Not tested**: real Supabase, browser. Also done after the first pass: brand switcher in the header (URL-based, "Todas as marcas"), list filters by client and platform. **Not done**: the "pending approvals" and "next planned post" columns and the archive pre-check of pending approvals (they depend on the content and approvals tables of phase 3; `brand_has_history` and the approver check are placeholders until then).
+
+Brand logo and avatar (2026-10-19). Migration `20261019120200_brand_logo.sql` (column `brands.logo_media_version_id`; `brand_set_logo`, which accepts only an available image of that brand, keeps the `brand_identity` usage of the file in step and records `brand.updated`; `brand_logo_keys`, which returns the thumbnail key to people who see the brand), applied to the Supabase project, and the test `supabase/tests/18_brand_logo.test.sql` (13 assertions on PGlite: set, replace, usage released, PDF refused, other brand, role without `brands.update`, remove, audit). Code: `setBrandLogo`, `brandLogoUrls` (signs the thumbnail on the server), `logoUrl` in `listBrands`, `getBrand` and `listBrandOptions`; components `BrandAvatar`, `BrandSelect` (+ `brandSelectOptions`), the hook `useBrandOptions`, `BrandLogoField` in the Identity tab; the avatar in the brands list and in the brand header (`PageHeader` got a `leading` slot); `BrandSelect` replaced the raw selects of the dashboard, content, calendar, approvals, library, new content, case authorization and the sidebar switcher. **Not tested**: choosing and showing a real logo (the project has no brand, no file and no R2 yet), the select with avatars in the browser, and the portal (its brand lists do not show the avatar yet).

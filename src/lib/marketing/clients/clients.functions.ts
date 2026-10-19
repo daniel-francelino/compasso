@@ -63,7 +63,6 @@ export type ClientDetail = {
 const savedClientSchema = z.object({
   id: z.string().uuid(),
   version: z.number().int(),
-  brand_id: z.string().uuid().nullable(),
 });
 const idSchema = z.object({ id: z.string().uuid() });
 const versionSchema = z.object({ id: z.string().uuid(), version: z.number().int() });
@@ -219,31 +218,27 @@ export const findSimilarClients = createServerFn({ method: "GET" })
 
 export const saveClient = createServerFn({ method: "POST" })
   .validator(saveClientSchema)
-  .handler(
-    async ({ data }): Promise<Result<{ id: string; version: number; brandId: string | null }>> => {
-      const caller = await requireActionServer(
-        data.id === undefined ? Action.Clients.Create : Action.Clients.Update,
-      );
-      if (caller === null) return denied;
+  .handler(async ({ data }): Promise<Result<{ id: string; version: number }>> => {
+    const caller = await requireActionServer(
+      data.id === undefined ? Action.Clients.Create : Action.Clients.Update,
+    );
+    if (caller === null) return denied;
 
-      const { data: row, error } = await caller.supabase.rpc("client_save", {
-        p_client: {
-          ...(data.id === undefined ? {} : { id: data.id }),
-          name: data.name,
-          owner_user_id: data.ownerUserId ?? null,
-          internal_notes: data.internalNotes ?? null,
-          tags: data.tags,
-          ...(data.expectedVersion === undefined ? {} : { expected_version: data.expectedVersion }),
-        },
-        p_create_brand: data.createFirstBrand,
-      });
-      if (error) return fail(error);
-      const saved = parseOutput(savedClientSchema, row);
-      return saved.ok
-        ? { ok: true, id: saved.id, version: saved.version, brandId: saved.brand_id }
-        : saved;
-    },
-  );
+    const { data: row, error } = await caller.supabase.rpc("client_save", {
+      p_client: {
+        ...(data.id === undefined ? {} : { id: data.id }),
+        name: data.name,
+        owner_user_id: data.ownerUserId ?? null,
+        internal_notes: data.internalNotes ?? null,
+        tags: data.tags,
+        ...(data.expectedVersion === undefined ? {} : { expected_version: data.expectedVersion }),
+      },
+      p_create_brand: false,
+    });
+    if (error) return fail(error);
+    const saved = parseOutput(savedClientSchema, row);
+    return saved.ok ? { ok: true, id: saved.id, version: saved.version } : saved;
+  });
 
 export const setClientArchived = createServerFn({ method: "POST" })
   .validator(archiveClientSchema)

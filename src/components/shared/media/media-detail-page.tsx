@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { ShareDialog } from "@/components/shared/media/share-dialog";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { useRouter } from "@tanstack/react-router";
-import { Download, Replace, Trash2, Undo2, Save, Globe, RefreshCw } from "lucide-react";
+import { Download, Replace, Trash2, Undo2, Save, Globe, RefreshCw, Share2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -22,6 +23,7 @@ import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { formatBytes, formatDateTime } from "@/lib/shared/format";
+import { ShareKind } from "@/lib/shared/enums";
 import { MediaKind } from "@/lib/shared/media/limits";
 import {
   type MediaDetail,
@@ -142,6 +144,7 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
   const router = useRouter();
   const { run, busy } = useServerAction();
   const [replacing, setReplacing] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [trashing, setTrashing] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -187,6 +190,14 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
                   <Download aria-hidden="true" /> Baixar original
                 </a>
               </Button>
+            ) : null}
+            {can(auth, Action.Media.Share) && !detail.asset.trashed ? (
+              <IconButton
+                variant="outline"
+                label="Compartilhar"
+                icon={Share2}
+                onClick={() => setSharing(true)}
+              />
             ) : null}
             {canUpdate && can(auth, Action.Media.Upload) && !detail.asset.trashed ? (
               <IconButton
@@ -327,6 +338,13 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
           onFinished={() => void refresh()}
         />
       ) : null}
+
+      <ShareDialog
+        target={
+          sharing ? { kind: ShareKind.Asset, id: detail.asset.id, name: detail.asset.name } : null
+        }
+        onClose={() => setSharing(false)}
+      />
 
       <ConfirmDialog
         open={trashing}

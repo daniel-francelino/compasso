@@ -63,7 +63,7 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 | **Comments** | `comments.create_internal`, `comments.create_external` |
 | **Portal** | `portal.view` |
 | **Calendar** | `calendar.view`, `calendar.manage` |
-| **Media** | `media.view`, `media.upload`, `media.update`, `media.delete`, `media.publish` |
+| **Media** | `media.view`, `media.upload`, `media.update`, `media.delete`, `media.publish`, `media.share` |
 | **Site and CMS** | `site.view`, `site.edit`, `site.settings`, `site.structure`, `site.publish` |
 | **Notifications** | `notifications.configure` |
 | **Audit** | `audit.view` |
@@ -82,7 +82,7 @@ Dependencies (`requires`) stored in the catalog, for example:
 - `content.publish_manual` → `content.view`
 - `approvals.decide` → `portal.view`
 - `comments.create_external` → `portal.view`
-- `media.upload` → `media.view`; `media.update` → `media.view`; `media.publish` → `media.update`
+- `media.upload` → `media.view`; `media.update` → `media.view`; `media.publish` → `media.update`; `media.share` → `media.view`
 - `site.edit` → `site.view`; `site.structure` → `site.edit`; `site.publish` → `site.view`
 - `invitations.create` → `users.view`
 - `brands.manage_members` → `brands.update`
@@ -102,7 +102,7 @@ Only the system role `owner` has them; they **do not appear as an option** when 
 | Role | Type | Actions |
 |---|---|---|
 | `owner` ("Proprietário") | System, protected | All (implicit) |
-| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update`, `invitations.create`, `users.view` |
+| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update/share`, `invitations.create`, `users.view` |
 | `collaborator` ("Colaborador") | Pre-created, editable | `clients.view`, `brands.view`, `channels.view`, `content.view/create/update`, `approvals.view`, `comments.create_internal`, `calendar.view`, `media.view/upload` |
 | `external_approver` ("Aprovador externo") | Pre-created, editable, portal only | `portal.view`, `approvals.decide`, `comments.create_external` |
 | `external_commenter` ("Comentarista externo") | Pre-created, editable, portal only | `portal.view`, `comments.create_external` |

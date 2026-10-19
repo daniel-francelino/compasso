@@ -283,6 +283,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          logo_media_version_id: string | null
           name: string
           objectives: string | null
           organization_id: string
@@ -301,6 +302,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          logo_media_version_id?: string | null
           name: string
           objectives?: string | null
           organization_id: string
@@ -319,6 +321,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          logo_media_version_id?: string | null
           name?: string
           objectives?: string | null
           organization_id?: string
@@ -343,6 +346,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brands_logo_media_version_id_fkey"
+            columns: ["logo_media_version_id"]
+            isOneToOne: false
+            referencedRelation: "media_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -1156,6 +1166,201 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "media_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_share_events: {
+        Row: {
+          asset_id: string | null
+          created_at: string
+          id: number
+          share_id: string
+          type: string
+        }
+        Insert: {
+          asset_id?: string | null
+          created_at?: string
+          id?: never
+          share_id: string
+          type: string
+        }
+        Update: {
+          asset_id?: string | null
+          created_at?: string
+          id?: never
+          share_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_share_events_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_share_events_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "media_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_share_grants: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          share_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          share_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          share_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_share_grants_share_id_fkey"
+            columns: ["share_id"]
+            isOneToOne: false
+            referencedRelation: "media_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_shares: {
+        Row: {
+          allow_download: boolean
+          asset_id: string | null
+          brand_id: string | null
+          collection_id: string | null
+          created_at: string
+          created_by: string | null
+          download_count: number
+          expires_at: string | null
+          failed_attempts: number
+          has_password: boolean | null
+          id: string
+          include_subcollections: boolean
+          label: string
+          last_accessed_at: string | null
+          locked_until: string | null
+          max_downloads: number | null
+          message: string | null
+          organization_id: string
+          password_hash: string | null
+          pinned_version_id: string | null
+          revoked_at: string | null
+          scope: string
+          status: string
+          token: string
+        }
+        Insert: {
+          allow_download?: boolean
+          asset_id?: string | null
+          brand_id?: string | null
+          collection_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          download_count?: number
+          expires_at?: string | null
+          failed_attempts?: number
+          has_password?: boolean | null
+          id?: string
+          include_subcollections?: boolean
+          label: string
+          last_accessed_at?: string | null
+          locked_until?: string | null
+          max_downloads?: number | null
+          message?: string | null
+          organization_id: string
+          password_hash?: string | null
+          pinned_version_id?: string | null
+          revoked_at?: string | null
+          scope: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          allow_download?: boolean
+          asset_id?: string | null
+          brand_id?: string | null
+          collection_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          download_count?: number
+          expires_at?: string | null
+          failed_attempts?: number
+          has_password?: boolean | null
+          id?: string
+          include_subcollections?: boolean
+          label?: string
+          last_accessed_at?: string | null
+          locked_until?: string | null
+          max_downloads?: number | null
+          message?: string | null
+          organization_id?: string
+          password_hash?: string | null
+          pinned_version_id?: string | null
+          revoked_at?: string | null
+          scope?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_shares_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_shares_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_shares_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "media_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_shares_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_shares_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_shares_pinned_version_id_fkey"
+            columns: ["pinned_version_id"]
+            isOneToOne: false
+            referencedRelation: "media_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -2082,6 +2287,13 @@ export type Database = {
       }
       brand_delete: { Args: { p_brand: string | null}; Returns: undefined }
       brand_has_history: { Args: { p_brand: string | null}; Returns: boolean }
+      brand_logo_keys: {
+        Args: { p_brands: string[] | null}
+        Returns: {
+          brand_id: string
+          thumb_key: string
+        }[]
+      }
       brand_member_set: {
         Args: {          p_brand: string | null,          p_can_decide: boolean | null,          p_kind: string | null,          p_status: string | null,          p_user: string | null}
         Returns: undefined
@@ -2089,6 +2301,10 @@ export type Database = {
       brand_save: { Args: { p_brand: Json | null}; Returns: Json }
       brand_set_archived: {
         Args: { p_archived: boolean | null, p_brand: string | null}
+        Returns: Json
+      }
+      brand_set_logo: {
+        Args: { p_brand: string | null, p_version: string | null}
         Returns: Json
       }
       calendar_range_ok: {
@@ -2246,6 +2462,50 @@ export type Database = {
         Args: { p_asset: string | null, p_trashed: boolean | null}
         Returns: Json
       }
+      media_share_assert_scope: {
+        Args: { p_brand: string | null, p_scope: string | null}
+        Returns: undefined
+      }
+      media_share_create: { Args: { p_input: Json | null}; Returns: Json }
+      media_share_files: {
+        Args: { p_share: string | null}
+        Returns: {
+          asset_id: string
+          display_key: string
+          filename: string
+          height: number
+          mime: string
+          size_bytes: number
+          storage_key: string
+          thumb_key: string
+          title: string
+          version_id: string
+          width: number
+        }[]
+      }
+      media_share_gate: {
+        Args: { p_grant: string | null, p_token: string | null}
+        Returns: string
+      }
+      media_share_list: {
+        Args: { p_kind: string | null, p_target: string | null}
+        Returns: Json
+      }
+      media_share_public_file: {
+        Args: {          p_asset: string | null,          p_grant: string | null,          p_mode: string | null,          p_token: string | null}
+        Returns: Json
+      }
+      media_share_public_open: {
+        Args: { p_grant: string | null, p_token: string | null}
+        Returns: Json
+      }
+      media_share_public_unlock: {
+        Args: { p_password: string | null, p_token: string | null}
+        Returns: Json
+      }
+      media_share_revoke: { Args: { p_share: string | null}; Returns: undefined }
+      media_share_targets: { Args: never; Returns: Json }
+      media_share_update: { Args: { p_input: Json | null}; Returns: undefined }
       media_storage_keys: { Args: never; Returns: Json }
       media_storage_summary: { Args: never; Returns: Json }
       media_storage_used: { Args: never; Returns: number }

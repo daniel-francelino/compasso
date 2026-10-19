@@ -1,14 +1,17 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FileText, Plus, CircleX, CircleCheck, List, Columns3 } from "lucide-react";
 import { useState } from "react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
+import { IconButton } from "@/components/shared/admin/icon-button";
+import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
-import { SelectField, TextField } from "@/components/shared/admin/form-fields";
+import { TextField } from "@/components/shared/admin/form-fields";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { Button } from "@/components/shared/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import { ContentBoard } from "@/components/marketing/content/content-board";
 import { ItemFormDialog } from "@/components/marketing/content/item-form-dialog";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
@@ -20,7 +23,6 @@ import {
   listContentItems,
 } from "@/lib/marketing/content/content.functions";
 import { ContentStatusFilter } from "@/lib/marketing/content/schemas";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
@@ -37,7 +39,6 @@ import { unwrapResult } from "@/lib/shared/result-client";
 
 const ALL = "all";
 const VIEW_BOARD = "board";
-const VIEW_LIST = "list";
 
 const tabs = [
   { value: ContentStatusFilter.Active, label: "Ativos", icon: CircleCheck },
@@ -90,11 +91,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(list.sort ? { sort: list.sort.key, dir: list.sort.dir } : {}),
   };
 
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: fixedBrandId === undefined,
-  });
+  const brands = useBrandOptions(fixedBrandId === undefined);
   const channels = useQuery({
     queryKey: QueryKey.Channels.list(brandId ?? "", { status: "active" }),
     queryFn: async () =>
@@ -165,6 +162,85 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     },
   ];
 
+  const filterGroups: FilterGroup[] = [
+    ...(fixedBrandId === undefined
+      ? [
+          {
+            id: "brand",
+            label: "Marca",
+            value: list.filters.brand ?? ALL,
+            defaultValue: ALL,
+            emptyText: brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
+            options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
+            onChange: (value: string) => {
+              void list.setFilter("brand", value === ALL ? undefined : value);
+              void list.setFilter("channel", undefined);
+              void list.setFilter("owner", undefined);
+            },
+          },
+        ]
+      : []),
+    {
+      id: "channel",
+      label: "Canal",
+      value: list.filters.channel ?? ALL,
+      defaultValue: ALL,
+      emptyText:
+        brandId === undefined
+          ? "Escolha uma marca para filtrar por canal"
+          : channels.data?.length === 0
+            ? "Nenhum canal ativo nesta marca"
+            : undefined,
+      options: [
+        { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos os canais" },
+        ...(channels.data ?? []).map((channel) => ({
+          value: channel.id,
+          label: `${platformLabels[channel.platform]} · ${channel.profileName}`,
+        })),
+      ],
+      onChange: (value) => void list.setFilter("channel", value === ALL ? undefined : value),
+    },
+    {
+      id: "owner",
+      label: "Responsável",
+      value: list.filters.owner ?? ALL,
+      defaultValue: ALL,
+      emptyText:
+        brandId === undefined
+          ? "Escolha uma marca para filtrar por responsável"
+          : assignees.data?.length === 0
+            ? "Nenhuma pessoa disponível"
+            : undefined,
+      options: [
+        { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
+        ...(assignees.data ?? []).map((person) => ({ value: person.id, label: person.name })),
+      ],
+      onChange: (value) => void list.setFilter("owner", value === ALL ? undefined : value),
+    },
+    ...(board
+      ? []
+      : [
+          {
+            id: "editorial",
+            label: "Estado",
+            value: list.filters.editorial ?? ALL,
+            defaultValue: ALL,
+            options: editorialOptions,
+            onChange: (value: string) =>
+              void list.setFilter("editorial", value === ALL ? undefined : value),
+          },
+          {
+            id: "publication",
+            label: "Publicação",
+            value: list.filters.publication ?? ALL,
+            defaultValue: ALL,
+            options: publicationOptions,
+            onChange: (value: string) =>
+              void list.setFilter("publication", value === ALL ? undefined : value),
+          },
+        ]),
+  ];
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -180,25 +256,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           ) : null
         }
       />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs
-          value={board ? VIEW_BOARD : VIEW_LIST}
-          onValueChange={(value) =>
-            void list.setFilter("view", value === VIEW_BOARD ? VIEW_BOARD : undefined)
-          }
-        >
-          <TabsList>
-            <TabsTrigger value={VIEW_LIST}>
-              <List aria-hidden="true" />
-              Lista
-            </TabsTrigger>
-            <TabsTrigger value={VIEW_BOARD}>
-              <Columns3 aria-hidden="true" />
-              Quadro
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
       <ListToolbar
         search={list.search}
         onSearchChange={list.setSearch}
@@ -206,84 +263,42 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         {...(board
           ? {}
           : { statusOptions: tabs, status: list.status, onStatusChange: list.setStatus })}
+        extra={
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <ListFilters
+              groups={filterGroups}
+              extraActive={
+                (list.filters.tag ? 1 : 0) +
+                (board && list.filters.editorial ? 1 : 0) +
+                (board && list.filters.publication ? 1 : 0)
+              }
+              onClear={() => {
+                void list.setFilter("tag", undefined);
+                if (board) {
+                  void list.setFilter("editorial", undefined);
+                  void list.setFilter("publication", undefined);
+                }
+              }}
+            >
+              {board ? null : (
+                <TextField
+                  id="content-tag"
+                  label="Etiqueta"
+                  value={list.filters.tag ?? ""}
+                  onValueChange={(value) => void list.setFilter("tag", value)}
+                  maxLength={40}
+                />
+              )}
+            </ListFilters>
+            <IconButton
+              variant="outline"
+              label={board ? "Alternar para lista" : "Alternar para quadro"}
+              icon={board ? List : Columns3}
+              onClick={() => void list.setFilter("view", board ? undefined : VIEW_BOARD)}
+            />
+          </div>
+        }
       />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {fixedBrandId === undefined ? (
-          <SelectField
-            id="content-brand"
-            label="Marca"
-            value={brandId ?? ALL}
-            onValueChange={(value) => {
-              void list.setFilter("brand", value === ALL ? undefined : value);
-              void list.setFilter("channel", undefined);
-              void list.setFilter("owner", undefined);
-            }}
-            emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
-            options={[
-              { value: ALL, label: "Todas as marcas" },
-              ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
-            ]}
-          />
-        ) : null}
-        <SelectField
-          id="content-channel"
-          label="Canal"
-          value={list.filters.channel ?? ALL}
-          disabled={brandId === undefined}
-          onValueChange={(value) =>
-            void list.setFilter("channel", value === ALL ? undefined : value)
-          }
-          emptyText={channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined}
-          options={[
-            { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos os canais" },
-            ...(channels.data ?? []).map((channel) => ({
-              value: channel.id,
-              label: `${platformLabels[channel.platform]} · ${channel.profileName}`,
-            })),
-          ]}
-        />
-        <SelectField
-          id="content-owner"
-          label="Responsável"
-          value={list.filters.owner ?? ALL}
-          disabled={brandId === undefined}
-          onValueChange={(value) => void list.setFilter("owner", value === ALL ? undefined : value)}
-          emptyText={assignees.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined}
-          options={[
-            { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
-            ...(assignees.data ?? []).map((person) => ({ value: person.id, label: person.name })),
-          ]}
-        />
-        {board ? null : (
-          <>
-            <SelectField
-              id="content-editorial"
-              label="Estado"
-              value={list.filters.editorial ?? ALL}
-              onValueChange={(value) =>
-                void list.setFilter("editorial", value === ALL ? undefined : value)
-              }
-              options={editorialOptions}
-            />
-            <SelectField
-              id="content-publication"
-              label="Publicação"
-              value={list.filters.publication ?? ALL}
-              onValueChange={(value) =>
-                void list.setFilter("publication", value === ALL ? undefined : value)
-              }
-              options={publicationOptions}
-            />
-            <TextField
-              id="content-tag"
-              label="Etiqueta"
-              value={list.filters.tag ?? ""}
-              onValueChange={(value) => void list.setFilter("tag", value)}
-              maxLength={40}
-            />
-          </>
-        )}
-      </div>
       {board ? (
         <ContentBoard
           filters={{

@@ -74,6 +74,8 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `client_delete(p_client)` | `deleteClient` | `clients.delete` | `client.deleted` | `client_has_brands` |
 | `client_contact_save(p_contact jsonb)` / `client_contact_delete(p_contact)` | `saveClientContact`, `deleteClientContact` | `clients.update` | `contact.created`, `contact.updated`, `contact.deleted` | `contact_email_invalid` |
 | `brand_save(p_brand jsonb)` | `saveBrand` | `brands.create` / `brands.update` | `brand.created`, `brand.updated`, `brand.timezone_changed` | `brand_name_taken`, `conflict` |
+| `brand_set_logo(p_brand, p_version)` | `setBrandLogo` | `brands.update` (+ brand link) | `brand.updated` | `logo_invalid` |
+| `brand_logo_keys(p_brands)` | read by `listBrandOptions`, `listBrands`, `getBrand` (the server signs the thumbnail) | `brands.view` + brand link | — | — |
 | `brand_set_archived(p_brand, p_archived)` | `setBrandArchived` | `brands.update` | `brand.archived`, `brand.reactivated` | `conflict` |
 | `brand_delete(p_brand)` | `deleteBrand` | `brands.delete` | `brand.deleted` | `brand_not_empty` |
 | `brand_member_set(p_brand, p_user, p_kind, p_can_decide, p_status)` | `setBrandMember` | `brands.manage_members` | `brand.member_added`, `brand.member_revoked`, `brand.member_can_decide_changed` | `member_kind_mismatch`, `last_internal_member`, `approver_without_access` |
@@ -155,6 +157,9 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `media_publish_derivative(p_version)` | `publishMedia` | `media.publish` | `media.published` | `media_not_available` |
 | `media_withdraw_derivative(p_version)` | `withdrawMedia` | `media.publish` | `media.unpublished` | `media_in_use` |
 | `media_collection_save` / `media_collection_delete` / `media_collection_move_items` | `saveCollection`, `deleteCollection`, `moveToCollection` | `media.update` (delete: `media.delete`) | — | `invalid_input` |
+| `media_share_create(p_input)` / `media_share_update(p_input)` / `media_share_revoke(p_share)` | `createMediaShare`, `updateMediaShare`, `revokeMediaShare` | `media.share` (+ brand link; `site.view` for the site scope) | `media.share_created`, `media.share_revoked` (update is recorded only in `media_share_events`) | `share_invalid`, `share_invalid_expiry`, `password_weak`, `share_target_invalid`, `share_not_found`, `share_not_active` |
+| `media_share_list(p_kind, p_target)` / `media_share_targets()` | `listMediaShares`, `listShareTargets` | `media.share` / `media.view` | — | `share_target_invalid` |
+| `media_share_public_open(p_token, p_grant)` / `media_share_public_unlock(p_token, p_password)` / `media_share_public_file(p_token, p_grant, p_asset, p_mode)` | `openSharedMedia`, `unlockSharedMedia`, `getSharedFileUrl` (public, no session) | none: the secret, the status, the expiry, the lock, the download limit and the password session are checked inside the function; granted to `anon` | — | answers with a state value instead of raising |
 | `media_storage_used()`, `media_storage_summary()` (used and quota) | `getStorageSummary` | `media.view` | — | — |
 | `media_mark_failed(p_version, p_reason)` (author only; returns the object keys to delete; notifies `media.upload_failed`) | `abortUpload`, and `confirmUpload` on any validation failure | `media.upload` | — | `not_found` |
 | `media_expire_sessions()` (service role only; returns the keys of abandoned uploads) | cron route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |

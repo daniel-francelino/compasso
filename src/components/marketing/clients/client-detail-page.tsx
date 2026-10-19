@@ -74,24 +74,53 @@ function ActivityTab({ clientId }: { clientId: string }) {
   if (query.isPending) return <PageSkeleton rows={2} />;
   if (query.isError)
     return (
-      <p role="alert" className="text-sm text-destructive">
-        {query.error.message}
-      </p>
+      <SectionCard as="div" title="Histórico de atividade" icon={History}>
+        <p role="alert" className="text-sm text-destructive">
+          {query.error.message}
+        </p>
+      </SectionCard>
     );
   if (query.data.rows.length === 0) {
-    return <EmptyState icon={History} title="Sem atividade registrada" />;
+    return (
+      <SectionCard as="div" title="Histórico de atividade" icon={History}>
+        <EmptyState
+          icon={History}
+          title="Sem atividade registrada"
+          description="As alterações importantes deste cliente aparecerão aqui."
+        />
+      </SectionCard>
+    );
   }
   return (
-    <ul className="divide-y divide-border">
-      {query.data.rows.map((row) => (
-        <li key={row.id} className="flex flex-wrap justify-between gap-2 py-2 text-sm">
-          <span>{auditActionLabels[row.action as AuditActionKey] ?? row.action}</span>
-          <span className="text-muted-foreground">
-            {row.actorName ?? "Sistema"} · {formatDateTime(row.occurredAt)}
-          </span>
-        </li>
-      ))}
-    </ul>
+    <SectionCard as="div" title="Histórico de atividade" icon={History}>
+      <ol className="space-y-0">
+        {query.data.rows.map((row, index) => (
+          <li key={row.id} className="relative flex gap-4 pb-6 last:pb-0">
+            <div
+              aria-hidden="true"
+              className={`relative flex w-8 shrink-0 justify-center ${
+                index < query.data.rows.length - 1
+                  ? "before:absolute before:inset-y-2 before:w-px before:bg-border"
+                  : ""
+              }`}
+            >
+              <span className="relative mt-1 flex size-3 rounded-full border-2 border-primary bg-card" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1 border-b border-border pb-5 last:border-0 last:pb-0">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <p className="font-medium text-foreground">
+                  {auditActionLabels[row.action as AuditActionKey] ?? row.action}
+                </p>
+                <time dateTime={row.occurredAt} className="shrink-0 text-sm text-muted-foreground">
+                  {formatDateTime(row.occurredAt)}
+                </time>
+              </div>
+              <p className="text-sm text-muted-foreground">Por {row.actorName ?? "Sistema"}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </SectionCard>
   );
 }
 
@@ -221,9 +250,6 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
 
         <TabsContent value="brands" className="space-y-3">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
-            <p className="text-sm text-muted-foreground">
-              {client.brands.length === 1 ? "1 marca" : `${client.brands.length} marcas`}
-            </p>
             {can(auth, Action.Brands.Create) && !client.archived ? (
               <Button asChild>
                 <Link to={`${AppRoute.Brands}/new`} search={{ clientId: client.id }}>
@@ -262,9 +288,6 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
 
         <TabsContent value="contacts" className="space-y-3">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
-            <p className="text-sm text-muted-foreground">
-              {client.contacts.length === 1 ? "1 contato" : `${client.contacts.length} contatos`}
-            </p>
             {canUpdate ? (
               <Button onClick={() => setContactDialog({})}>
                 <Plus aria-hidden="true" /> Novo contato
@@ -324,7 +347,24 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
 
         <TabsContent value="notes">
           <SectionCard as="div" title="Notas internas">
-            <p className="whitespace-pre-wrap text-sm">{client.internalNotes ?? "Sem notas."}</p>
+            {client.internalNotes?.trim() ? (
+              <p className="whitespace-pre-wrap text-sm">{client.internalNotes}</p>
+            ) : (
+              <EmptyState
+                icon={StickyNote}
+                title="Nenhuma nota interna"
+                description="Adicione um contexto importante para a equipe sobre este cliente."
+                compact
+                action={
+                  canUpdate ? (
+                    <Button variant="outline" onClick={() => setEditing(true)}>
+                      <Pencil aria-hidden="true" />
+                      Adicionar nota
+                    </Button>
+                  ) : null
+                }
+              />
+            )}
             {client.tags.length > 0 ? (
               <p className="text-sm text-muted-foreground">Etiquetas: {client.tags.join(", ")}</p>
             ) : null}

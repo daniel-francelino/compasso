@@ -35,6 +35,10 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
 |---|---|---|---|---|
 | `MediaScope` | `site`, `brand` | `media_assets.scope`, `media_collections.scope` | "Site", "Marca" | media-library |
+| `MediaShareStatus` | `active`, `revoked`, `target_deleted` | `media_shares.status` | "Ativo", "Encerrado", "Arquivo removido" | media-library |
+| `ShareKind` | `asset`, `collection` | argument of `media_share_create` and `media_share_list` | — | media-library |
+| `SharePasswordAction` | `keep`, `set`, `clear` | `media_share_update` | — | media-library |
+| `PublicShareState` | `ok`, `not_found`, `revoked`, `unavailable`, `expired`, `locked`, `exhausted`, `password_required`, `wrong_password`, `download_disabled` | answer of the public share functions | see `publicShareStateMessages` | media-library |
 | `MediaVersionStatus` | `pending`, `processing`, `available`, `failed` | `media_versions.status` | "Enviando", "Processando", "Disponível", "Falhou" | media-library |
 | `UploadSessionStatus` | `open`, `confirmed`, `expired`, `failed` | `media_upload_sessions.status` | — (internal) | media-library |
 | `MediaUsageType` | `content_revision`, `site_page_revision`, `case_study`, `brand_identity`, `publication_evidence` | `media_usages.usage_type` | "Revisão de conteúdo", "Página do site", "Case", "Identidade da marca", "Evidência de publicação" | media-library |

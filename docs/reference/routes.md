@@ -38,6 +38,7 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/forbidden` | — | guard target |
 | `/admin/library` | `media.view` | media-library |
 | `/admin/library/$assetId` | `media.view` | media-library |
+| `/share/$token` | public (no session): the page of a share link; `noindex` | media-library |
 | `/admin/settings` | any settings action | organization-settings |
 | `/admin/settings/organization` | `settings.manage` | organization-settings |
 | `/admin/settings/users` | `users.view` | authentication |

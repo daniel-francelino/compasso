@@ -1,9 +1,11 @@
 import { ShieldOff, ShieldCheck } from "lucide-react";
+import { BrandSelect } from "@/components/shared/admin/brand-select";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
-import { SelectField, TextAreaField } from "@/components/shared/admin/form-fields";
+import { TextAreaField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { Button } from "@/components/shared/ui/button";
 import {
@@ -14,7 +16,6 @@ import {
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
 import { formatDate } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -33,11 +34,7 @@ export function CaseAuthorizationPanel({ pageId, canEdit }: { pageId: string; ca
     queryFn: async () =>
       unwrapResult(await getCaseAuthorization({ data: { pageId } })).authorization,
   });
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: canSeeBrands && canEdit && authorization.data === null,
-  });
+  const brands = useBrandOptions(canSeeBrands && canEdit && authorization.data === null);
 
   async function act(run: () => Promise<{ ok: boolean; message?: string }>, success: string) {
     if (busy) return;
@@ -82,12 +79,12 @@ export function CaseAuthorizationPanel({ pageId, canEdit }: { pageId: string; ca
         </div>
       ) : canEdit && canSeeBrands ? (
         <div className="space-y-3">
-          <SelectField
+          <BrandSelect
             id="case-brand"
             label="Marca do cliente"
             value={brandId}
             onValueChange={setBrandId}
-            options={(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name }))}
+            brands={brands.data}
             placeholder="Escolha a marca"
           />
           <TextAreaField

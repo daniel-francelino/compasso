@@ -77,11 +77,12 @@ In `src/components/shared/admin/` (generic, no business rules). Before creating 
 | `EmptyState` | Empty list, "no results" and error, with icon, text and action (for example "Tentar novamente") |
 | `ListSkeleton` / `FormSkeleton` / `PageSkeleton` | Skeletons that keep the height of the elements (initial loading; also use as `pendingComponent`) |
 | `PaginationBar` | Previous/next pagination with "Mostrando 1–10 de 57" |
-| `DataTable` / `DataTableRowActions` | Server-driven table with row actions (section 4) |
+| `DataTable` / `DataTableRowActions` | Server-driven table with row actions (section 4); `actionsMenu` keeps row actions in a three-dot dropdown even when there are two or fewer |
 | `ConfirmDialog` | Confirmation of destructive actions, identifying the record; stays open with the button in _loading_ and only closes if the action succeeds |
 | `ReasonDialog` | Confirmation that requires a written reason (reopen, cancel, request changes) |
 | `IconButton` | Icon-only button, with the name in a tooltip and as the accessible name |
 | `Field` / `PasswordField` | Field with label, required `*`, format hint, error next to the field (`aria-invalid`, `aria-describedby`) |
+| `TagInputField` | Editable tag list with Enter to add and a labeled remove button for each chip |
 | `FormError` | General form error (`role="alert"`) |
 | `SectionCard`, `FieldGroup`, `DetailRow`, `NoticeCard` | Cards of sections, groups of fields, label/value rows, page-wide notices |
 | `StatusBadge` | Single status badge with a `tone` (see [design-system.md](design-system.md)) |
@@ -157,3 +158,5 @@ Creating a record from a list uses a `Sheet` (`EditorSheet`): `onSaved` closes t
 - [ ] Layout tested on mobile, tablet and desktop.
 - [ ] Contrast and keyboard checked (see [color-palette.md](color-palette.md)).
 - [ ] Main flows and relevant failures covered by tests (pgTAP for rules, Playwright for flows).
+
+**Brand filter (2026-10-19).** `BrandSwitcher` is in the sidebar header, below the space name, only in the Marketing Management space and with `brands.view`; when the sidebar is collapsed to icons it is hidden. Open question: whether the sidebar should float over the page (absolute) instead of pushing it; today it pushes, and collapses to icons with the trigger in the top bar.

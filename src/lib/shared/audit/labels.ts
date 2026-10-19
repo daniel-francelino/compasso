@@ -50,6 +50,8 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Media.Unpublished]: "Arquivo retirado do site",
   [AuditAction.Media.DeletedPermanently]: "Arquivo excluído definitivamente",
   [AuditAction.Media.VersionReplaced]: "Versão do arquivo substituída",
+  [AuditAction.Media.ShareCreated]: "Link de compartilhamento criado",
+  [AuditAction.Media.ShareRevoked]: "Link de compartilhamento encerrado",
   [AuditAction.Site.PagePublished]: "Página do site publicada",
   [AuditAction.Site.PageUnpublished]: "Página do site despublicada",
   [AuditAction.Site.RolledBack]: "Site restaurado para versão anterior",

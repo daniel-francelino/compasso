@@ -1,10 +1,13 @@
 import { RotateCw } from "lucide-react";
+import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SelectField } from "@/components/shared/admin/form-fields";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
+import { ListFilters } from "@/components/shared/admin/list-filters";
 import { CalendarGrid } from "@/components/shared/calendar/calendar-grid";
 import { CalendarLegend } from "@/components/shared/calendar/calendar-legend";
 import { CalendarList } from "@/components/shared/calendar/calendar-list";
@@ -12,8 +15,6 @@ import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { toGridItem } from "@/components/shared/calendar/entry-items";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
-import { Checkbox } from "@/components/shared/ui/checkbox";
-import { Label } from "@/components/shared/ui/label";
 import { EntryDetails } from "@/components/marketing/calendar/entry-details";
 import {
   type RescheduleTarget,
@@ -28,7 +29,6 @@ import { getCalendarZone, listCalendarEntries } from "@/lib/marketing/calendar/c
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
 import { calendarAlerts } from "@/lib/shared/calendar/alerts";
 import { entryKey, isMovable } from "@/lib/shared/calendar/entries";
 import { rangeTitle } from "@/lib/shared/calendar/range";
@@ -68,6 +68,11 @@ const publicationOptions = [
     value,
     label: publicationStatusLabels[value],
   })),
+];
+
+const deadlineOptions = [
+  { value: ALL, label: "Todos os itens" },
+  { value: "deadlines", label: "Somente prazos" },
 ];
 
 const isDeadline = (entry: CalendarEntry): boolean =>
@@ -120,11 +125,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [target, setTarget] = useState<RescheduleTarget | null>(null);
 
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: fixedBrandId === undefined,
-  });
+  const brands = useBrandOptions(fixedBrandId === undefined);
   const channels = useQuery({
     queryKey: QueryKey.Channels.list(brandId ?? "", { status: "active" }),
     queryFn: async () =>
@@ -236,82 +237,93 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         description="O que está planejado, quando e em qual estado."
         breadcrumbs={fixedBrandId ? undefined : [{ label: "Calendário" }]}
       />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {fixedBrandId === undefined ? (
-          <SelectField
-            id="calendar-brand"
-            label="Marca"
-            value={brandId ?? ALL}
-            onValueChange={(value) => {
-              void state.setFilter("brand", value === ALL ? "" : value);
-              void state.setFilter("channel", "");
-              void state.setFilter("owner", "");
-            }}
-            emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
-            options={[
-              { value: ALL, label: "Todas as marcas" },
-              ...(brands.data ?? []).map((item) => ({ value: item.id, label: item.name })),
-            ]}
-          />
-        ) : null}
-        <SelectField
-          id="calendar-channel"
-          label="Canal"
-          value={state.search.channel ?? ALL}
-          disabled={brandId === undefined}
-          onValueChange={(value) => void state.setFilter("channel", value === ALL ? "" : value)}
-          emptyText={channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined}
-          options={[
-            { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos os canais" },
-            ...(channels.data ?? []).map((channel) => ({
-              value: channel.id,
-              label: `${platformLabels[channel.platform]} · ${channel.profileName}`,
-            })),
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <ListFilters
+          groups={[
+            ...(fixedBrandId === undefined
+              ? [
+                  {
+                    id: "brand",
+                    label: "Marca",
+                    value: brandId ?? ALL,
+                    defaultValue: ALL,
+                    emptyText: brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
+                    options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
+                    onChange: (value: string) => {
+                      void state.setFilter("brand", value === ALL ? "" : value);
+                      void state.setFilter("channel", "");
+                      void state.setFilter("owner", "");
+                    },
+                  },
+                ]
+              : []),
+            {
+              id: "channel",
+              label: "Canal",
+              value: state.search.channel ?? ALL,
+              defaultValue: ALL,
+              emptyText: channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined,
+              options: [
+                {
+                  value: ALL,
+                  label: brandId === undefined ? "Escolha uma marca" : "Todos os canais",
+                },
+                ...(channels.data ?? []).map((channel) => ({
+                  value: channel.id,
+                  label: `${platformLabels[channel.platform]} · ${channel.profileName}`,
+                })),
+              ],
+              onChange: (value) => void state.setFilter("channel", value === ALL ? "" : value),
+            },
+            {
+              id: "owner",
+              label: "Responsável",
+              value: state.search.owner ?? ALL,
+              defaultValue: ALL,
+              emptyText: owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined,
+              options: [
+                { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
+                ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),
+              ],
+              onChange: (value) => void state.setFilter("owner", value === ALL ? "" : value),
+            },
+            {
+              id: "editorial",
+              label: "Estado",
+              value: state.search.editorial ?? ALL,
+              defaultValue: ALL,
+              options: editorialOptions,
+              onChange: (value) => void state.setFilter("editorial", value === ALL ? "" : value),
+            },
+            {
+              id: "publication",
+              label: "Publicação",
+              value: state.search.publication ?? ALL,
+              defaultValue: ALL,
+              options: publicationOptions,
+              onChange: (value) => void state.setFilter("publication", value === ALL ? "" : value),
+            },
+            {
+              id: "deadlines",
+              label: "Itens exibidos",
+              value: state.search.deadlines ? "deadlines" : ALL,
+              defaultValue: ALL,
+              options: deadlineOptions,
+              onChange: (value) => void state.setDeadlinesOnly(value === "deadlines"),
+            },
           ]}
-        />
-        <SelectField
-          id="calendar-owner"
-          label="Responsável"
-          value={state.search.owner ?? ALL}
-          disabled={brandId === undefined}
-          onValueChange={(value) => void state.setFilter("owner", value === ALL ? "" : value)}
-          emptyText={owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined}
-          options={[
-            { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
-            ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),
-          ]}
-        />
-        <SelectField
-          id="calendar-editorial"
-          label="Estado"
-          value={state.search.editorial ?? ALL}
-          onValueChange={(value) => void state.setFilter("editorial", value === ALL ? "" : value)}
-          options={editorialOptions}
-        />
-        <SelectField
-          id="calendar-publication"
-          label="Publicação"
-          value={state.search.publication ?? ALL}
-          onValueChange={(value) => void state.setFilter("publication", value === ALL ? "" : value)}
-          options={publicationOptions}
         />
         {brandId === undefined ? (
-          <SelectField
-            id="calendar-zone"
-            label="Fuso horário do calendário"
-            value={activeZone}
-            onValueChange={(value) => void state.setZone(value)}
-            options={timezoneOptions()}
-          />
+          <div className="w-full sm:w-64">
+            <SelectField
+              id="calendar-zone"
+              label="Fuso horário do calendário"
+              value={activeZone}
+              onValueChange={(value) => void state.setZone(value)}
+              options={timezoneOptions()}
+            />
+          </div>
         ) : null}
-        <div className="flex items-end gap-2 pb-2">
-          <Checkbox
-            id="calendar-deadlines"
-            checked={state.search.deadlines === true}
-            onCheckedChange={(checked) => void state.setDeadlinesOnly(checked === true)}
-          />
-          <Label htmlFor="calendar-deadlines">Somente prazos</Label>
-        </div>
       </div>
       <CalendarToolbar
         title={title}

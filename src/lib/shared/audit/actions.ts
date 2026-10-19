@@ -69,6 +69,8 @@ export const AuditAction = {
     Unpublished: "media.unpublished",
     DeletedPermanently: "media.deleted_permanently",
     VersionReplaced: "media.version_replaced",
+    ShareCreated: "media.share_created",
+    ShareRevoked: "media.share_revoked",
   },
   Site: {
     PagePublished: "site.page_published",

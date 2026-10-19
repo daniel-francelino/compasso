@@ -95,7 +95,14 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `upload_size_mismatch` | invalid | "O tamanho do arquivo enviado é diferente do esperado." | `confirmUpload` |
 | `quota_exceeded` | invalid | "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite." | `media_request_upload` |
 | `media_version_immutable` | denied | "Esta versão do arquivo não pode ser alterada." | media version trigger |
+| `logo_invalid` | invalid | "O logo precisa ser uma imagem disponível desta marca." | `brand_set_logo` |
 | `media_in_use` | in_use | "O arquivo tem usos que impedem a exclusão." | `media_delete_permanently` |
+| `share_invalid` | invalid | "Confira os dados do link: nome, mensagem e limite de downloads." | `media_share_create`, `media_share_update` |
+| `share_invalid_expiry` | invalid | "A validade do link precisa ser uma data futura, de até 10 anos." | `media_share_create`, `media_share_update` |
+| `share_target_invalid` | invalid | "Este item não pode ser compartilhado agora." | `media_share_create`, `media_share_list` |
+| `share_not_found` | not_found | "Não encontramos este link." | `media_share_update`, `media_share_revoke` |
+| `share_not_active` | conflict | "Este link já foi encerrado." | `media_share_update`, `media_share_revoke` |
+| `password_weak` | invalid | "A senha do link precisa ter de 8 a 128 caracteres." | `media_share_create`, `media_share_update` |
 | `media_not_published` | invalid | "Há imagens que ainda não foram publicadas para o site." | `publish_site_page` |
 | `storage_unavailable` | unavailable | "Não foi possível acessar o armazenamento. Tente novamente." | storage layer |
 
@@ -104,7 +111,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | Code | Category | Message (pt-BR) | Raised by |
 |---|---|---|---|
 | `slug_taken` | invalid | "Já existe uma página com este endereço." | `site_page_save` |
-| `slug_reserved` | invalid | "Este endereço é reservado." | `site_page_save` |
+| `slug_reserved` | invalid | "Este endereço é reservado." | `site_page_save` (the first segments `admin`, `portal`, `api` and `share` are reserved; migration `20261019120120_site_reserved_share.sql`) |
 | `page_system_protected` | denied | "Esta página do sistema não pode ser excluída nem mudar de endereço." | page functions |
 | `page_has_history` | in_use | "Esta página já foi publicada ou autorizada. Tire do ar em vez de excluir." | `site_page_delete` |
 | `publish_checks_failed` | invalid | "Corrija os itens destacados antes de publicar." | `publish_site_page` |

@@ -47,6 +47,11 @@ export type SaveBrandInput = z.infer<typeof saveBrandSchema>;
 
 export const brandIdSchema = z.object({ id: z.string().uuid() });
 
+export const setBrandLogoSchema = z.object({
+  brandId: z.string().uuid(),
+  versionId: z.string().uuid().nullable(),
+});
+
 export const archiveBrandSchema = z.object({ id: z.string().uuid(), archived: z.boolean() });
 
 export const setMemberSchema = z.object({

@@ -1,4 +1,5 @@
 import { Plus, Trash2, Save } from "lucide-react";
+import { BrandLogoField } from "@/components/marketing/brands/brand-logo-field";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -219,11 +220,11 @@ export function BrandIdentityTab({ brandId }: { brandId: string }) {
   const auth = useAuth();
   const query = useBrand(brandId);
   if (!query.data) return <PageSkeleton rows={3} />;
+  const canEdit = can(auth, Action.Brands.Update) && !query.data.archived;
   return (
-    <IdentityForm
-      key={query.data.version}
-      brand={query.data}
-      canEdit={can(auth, Action.Brands.Update) && !query.data.archived}
-    />
+    <div className="space-y-6">
+      <BrandLogoField brand={query.data} canEdit={canEdit} />
+      <IdentityForm key={query.data.version} brand={query.data} canEdit={canEdit} />
+    </div>
   );
 }

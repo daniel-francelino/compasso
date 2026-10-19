@@ -1,4 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { Link } from "@tanstack/react-router";
 import { ClipboardCheck, TriangleAlert, Clock, Undo2, CircleCheck, Layers } from "lucide-react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
@@ -11,7 +13,6 @@ import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { type ApprovalRow, listApprovals } from "@/lib/marketing/approvals/approvals.functions";
 import { ApprovalFilter } from "@/lib/marketing/approvals/schemas";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
 import { platformLabels } from "@/lib/shared/labels";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
@@ -41,11 +42,7 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(brandId ? { brandId } : {}),
   };
 
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: fixedBrandId === undefined,
-  });
+  const brands = useBrandOptions(fixedBrandId === undefined);
   const query = useQuery({
     queryKey: QueryKey.Approvals.list(request),
     queryFn: async () => unwrapResult(await listApprovals({ data: request })),
@@ -117,10 +114,7 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
                   value: brandId ?? ALL,
                   defaultValue: ALL,
                   emptyText: brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
-                  options: [
-                    { value: ALL, label: "Todas as marcas" },
-                    ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
-                  ],
+                  options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
                   onChange: (value) =>
                     void list.setFilter("brand", value === ALL ? undefined : value),
                 },

@@ -119,3 +119,11 @@ Phase 4 (tasks P4-01 to P4-04, 2026-10-18).
 **Not tested.** The screens in a browser (grid, drag and drop, keyboard navigation, 360 px, the dialogs); the two-connection race of rescheduling against a decision; the real `pg_cron` and the Vercel schedule; daylight-saving cases in the real database (only the TypeScript converter was exercised); the `organizations` read used for the default zone. Listed in [../pending-external-setup.md](../pending-external-setup.md) (V19 to V21, D18 to D21).
 
 **Not done.** `dashboard_upcoming` and the "next publications" block of the dashboard; a calendar setting for the conflict limits and the week start; ICS export (out of the MVP).
+
+Phase 5 (calendar screen layout, 2026-10-19).
+
+**Files.** `src/components/marketing/calendar/calendar-page.tsx` now groups the brand, channel, owner, editorial status, publication status and deadline filters in the shared `ListFilters` popover. The calendar timezone remains visible for the all-brands view. `src/components/shared/calendar/calendar-toolbar.tsx` presents date navigation and view selection in a bordered toolbar section.
+
+**Validated.** Targeted ESLint for both changed components, TypeScript typecheck, and Prettier checks for both components and this document passed.
+
+**Not tested.** Browser rendering and filter/navigation interaction on desktop and mobile were not tested.

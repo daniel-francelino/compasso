@@ -1,10 +1,12 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft, TriangleAlert, RotateCw } from "lucide-react";
+import { ArrowRightLeft, CalendarClock, TriangleAlert, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { SectionCard } from "@/components/shared/admin/section-card";
+import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
+import { Badge } from "@/components/shared/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +29,7 @@ import { useAuth } from "@/lib/shared/auth/use-auth";
 import { DirectMoves } from "@/lib/shared/editorial/editorial";
 import { EditorialStatus } from "@/lib/shared/enums";
 import { formatInZone } from "@/lib/shared/format";
-import { editorialStatusLabels, platformLabels } from "@/lib/shared/labels";
+import { contentFormatLabels, editorialStatusLabels, platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -54,18 +56,28 @@ function Card({
   const targets = DirectMoves[card.editorialStatus];
   const movable = can(auth, Action.Content.Update) && targets.length > 0;
   return (
-    <li className="space-y-2 rounded-xl border border-border bg-card p-3">
+    <SectionCard
+      as="li"
+      padding="xs"
+      className="space-y-3 shadow-sm transition-shadow hover:shadow-md"
+    >
       <Link
         to="/admin/marketing/variants/$variantId"
         params={{ variantId: card.id }}
-        className="block font-medium text-primary underline-offset-4 hover:underline"
+        className="block font-medium leading-snug text-primary underline-offset-4 hover:underline"
       >
         {card.title}
       </Link>
-      <p className="text-xs text-muted-foreground">
-        {card.brandName} · {platformLabels[card.platform]} ({card.profileName})
-      </p>
-      <p className="text-xs text-muted-foreground">
+      <div className="flex flex-wrap gap-1.5">
+        <Badge variant="secondary" className="font-normal">
+          {contentFormatLabels[card.format]}
+        </Badge>
+        <Badge variant="outline" className="font-normal">
+          {platformLabels[card.platform]} · {card.profileName}
+        </Badge>
+      </div>
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
         {card.plannedAt !== null && card.plannedTimezone !== null
           ? formatInZone(card.plannedAt, card.plannedTimezone)
           : "Sem data prevista"}
@@ -96,7 +108,7 @@ function Card({
           </DropdownMenuLabel>
         </DropdownMenuContent>
       </DropdownMenu>
-    </li>
+    </SectionCard>
   );
 }
 
@@ -110,35 +122,38 @@ function Column({
   busy: boolean;
 }) {
   return (
-    <section
+    <SectionCard
+      as="section"
       aria-labelledby={`board-${column.status}`}
-      className="flex w-72 shrink-0 flex-col gap-3 rounded-2xl bg-muted p-3"
+      padding="xs"
+      className="flex max-h-[calc(100dvh-18rem)] min-h-64 w-[min(84vw,19rem)] shrink-0 snap-start flex-col gap-3 bg-muted/70"
     >
-      <h2
-        id={`board-${column.status}`}
-        className="flex items-center justify-between text-sm font-medium"
-      >
-        {editorialStatusLabels[column.status]}
-        <span className="text-muted-foreground">{column.total}</span>
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 id={`board-${column.status}`} className="min-w-0">
+          <EditorialStatusBadge status={column.status} />
+        </h2>
+        <Badge variant="secondary" aria-label={`${column.total} conteúdos`}>
+          {column.total}
+        </Badge>
+      </div>
       {column.cards.length === 0 ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="rounded-lg border border-dashed border-border bg-card/60 px-3 py-4 text-center text-xs text-muted-foreground">
           {REFUSED[column.status] ?? "Nada por aqui."}
         </p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
           {column.cards.map((card) => (
             <Card key={card.id} card={card} busy={busy} onMove={(to) => onMove(card, to)} />
           ))}
         </ul>
       )}
       {column.total > column.cards.length ? (
-        <p className="text-xs text-muted-foreground">
+        <p className="border-t border-border/70 pt-2 text-xs text-muted-foreground">
           Mostrando {column.cards.length} de {column.total}. Use a lista com o filtro de estado para
           ver todos.
         </p>
       ) : null}
-    </section>
+    </SectionCard>
   );
 }
 
@@ -160,9 +175,12 @@ export function ContentBoard({ filters }: { filters: BoardFilters }) {
 
   if (query.isPending) {
     return (
-      <div className="flex gap-3 overflow-x-auto" aria-busy="true">
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3" aria-busy="true">
         {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton key={index} className="h-64 w-72 shrink-0 rounded-2xl" />
+          <Skeleton
+            key={index}
+            className="h-72 w-[min(84vw,19rem)] shrink-0 snap-start rounded-2xl"
+          />
         ))}
       </div>
     );
@@ -185,7 +203,11 @@ export function ContentBoard({ filters }: { filters: BoardFilters }) {
     );
   }
   return (
-    <div className="flex gap-3 overflow-x-auto pb-2" role="group" aria-label="Quadro de conteúdos">
+    <div
+      className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3"
+      role="group"
+      aria-label="Quadro de conteúdos"
+    >
       {query.data.map((column) => (
         <Column
           key={column.status}

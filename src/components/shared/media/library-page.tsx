@@ -1,18 +1,24 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { BrandSelect } from "@/components/shared/admin/brand-select";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { useNavigate } from "@tanstack/react-router";
 import {
+  Eraser,
+  Files,
+  FolderMinus,
+  Globe,
+  HardDrive,
   ImageUp,
   Images,
-  ScanSearch,
-  Trash2,
-  Upload,
-  FolderMinus,
-  Eraser,
+  MoreVertical,
+  Pencil,
   RotateCw,
-  Globe,
+  Share2,
+  Trash2,
+  Undo2,
+  Upload,
   X,
-  Files,
 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -22,12 +28,19 @@ import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { PaginationBar } from "@/components/shared/admin/pagination-bar";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
-import { CollectionsPanel } from "@/components/shared/media/collections-panel";
+import { CollectionsGrid } from "@/components/shared/media/collections-grid";
 import { MediaGrid } from "@/components/shared/media/media-grid";
-import { StorageBar } from "@/components/shared/media/storage-bar";
+import { ShareDialog, type ShareTarget } from "@/components/shared/media/share-dialog";
 import { StorageCheckDialog } from "@/components/shared/media/storage-check-dialog";
 import { UploadDialog } from "@/components/shared/media/upload-dialog";
 import { Button } from "@/components/shared/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/shared/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -41,13 +54,13 @@ import { useServerAction } from "@/hooks/shared/use-server-action";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
-import { MediaScope } from "@/lib/shared/enums";
+import { MediaScope, ShareKind } from "@/lib/shared/enums";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { MediaKind } from "@/lib/shared/media/limits";
 import { moveToCollection } from "@/lib/shared/media/collections.functions";
 import { listMedia, trashMedia } from "@/lib/shared/media/media.functions";
 import { MediaSort, MediaStatusFilter } from "@/lib/shared/media/schemas";
+import { listShareTargets } from "@/lib/shared/media/sharing.functions";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -89,6 +102,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const [uploading, setUploading] = useState<{ scope: MediaScope; brandId?: string } | null>(null);
   const [trashing, setTrashing] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [sharing, setSharing] = useState<ShareTarget | null>(null);
 
   const scope: MediaScope | undefined = fixedBrandId
     ? MediaScope.Brand
@@ -111,17 +125,28 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(folder ? { collectionId: folder } : {}),
   };
 
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: fixedBrandId === undefined,
-  });
+  const brands = useBrandOptions(fixedBrandId === undefined);
   const query = useQuery({
     queryKey: QueryKey.Media.list(request),
     queryFn: async () => unwrapResult(await listMedia({ data: request })),
     placeholderData: keepPreviousData,
   });
 
+  const targets = useQuery({
+    queryKey: QueryKey.Media.shareTargets(),
+    queryFn: async () => unwrapResult(await listShareTargets()).targets,
+  });
+  const sharedAssetIds = new Set(
+    (targets.data ?? [])
+      .filter((item) => item.kind === ShareKind.Asset)
+      .map((item) => item.targetId),
+  );
+  const sharedCollectionIds = new Set(
+    (targets.data ?? [])
+      .filter((item) => item.kind === ShareKind.Collection)
+      .map((item) => item.targetId),
+  );
+  const canShare = can(auth, Action.Media.Share);
   const trashView = list.status === MediaStatusFilter.Trash;
   const canUpload = can(auth, Action.Media.Upload);
   const canDelete = can(auth, Action.Media.Delete);
@@ -144,14 +169,12 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
         breadcrumbs={fixedBrandId ? undefined : [{ label: "Biblioteca de Mídia" }]}
         actions={
           <>
-            {canDelete ? (
-              <IconButton
-                variant="outline"
-                label="Verificar com o bucket"
-                icon={ScanSearch}
-                onClick={() => setChecking(true)}
-              />
-            ) : null}
+            <IconButton
+              variant="outline"
+              label="Armazenamento"
+              icon={HardDrive}
+              onClick={() => setChecking(true)}
+            />
             {canUpload ? (
               <Button onClick={startUpload}>
                 <Upload aria-hidden="true" /> Enviar arquivos
@@ -160,88 +183,95 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
           </>
         }
       />
-      <StorageBar />
 
-      <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">
-        <aside className="space-y-4">
+      <div className="space-y-4">
+        <ListToolbar
+          search={list.search}
+          onSearchChange={list.setSearch}
+          searchLabel="Buscar por nome ou etiqueta"
+          statusOptions={tabs}
+          status={list.status}
+          onStatusChange={(value) => {
+            setSelected([]);
+            list.setStatus(value);
+          }}
+        />
+        <div className="grid gap-3 sm:grid-cols-4">
+          {fixedBrandId ? null : (
+            <SelectField
+              id="media-scope"
+              label="Origem"
+              value={scope ?? ALL}
+              onValueChange={(value) => {
+                void list.setFilter("scope", value === ALL ? undefined : value);
+                void list.setFilter("brand", undefined);
+                void list.setFilter("folder", undefined);
+              }}
+              options={[
+                { value: ALL, label: "Todas" },
+                { value: MediaScope.Brand, label: "Marcas" },
+                { value: MediaScope.Site, label: "Site" },
+              ]}
+            />
+          )}
+          {fixedBrandId === undefined && scope === MediaScope.Brand ? (
+            <BrandSelect
+              id="media-brand"
+              value={brandId ?? ALL}
+              onValueChange={(value) => {
+                void list.setFilter("brand", value === ALL ? undefined : value);
+                void list.setFilter("folder", undefined);
+              }}
+              brands={brands.data}
+              allLabel="Todas"
+              allValue={ALL}
+            />
+          ) : null}
+          <SelectField
+            id="media-kind"
+            label="Tipo"
+            value={kind ?? ALL}
+            onValueChange={(value) =>
+              void list.setFilter("kind", value === ALL ? undefined : value)
+            }
+            options={kindOptions}
+          />
+          <SelectField
+            id="media-order"
+            label="Ordenar por"
+            value={order}
+            onValueChange={(value) => void list.setFilter("order", value)}
+            options={orderOptions}
+          />
+        </div>
+
+        <section
+          aria-label="Arquivos"
+          className="space-y-4 rounded-2xl border border-border bg-muted/40 p-4 sm:p-5"
+        >
           {collectionsReady && scope ? (
-            <CollectionsPanel
+            <CollectionsGrid
               scope={scope}
               brandId={brandId}
               selectedId={folder}
+              sharedIds={sharedCollectionIds}
               onSelect={(id) => void list.setFilter("folder", id)}
+              onShare={
+                canShare
+                  ? (collection) =>
+                      setSharing({
+                        kind: ShareKind.Collection,
+                        id: collection.id,
+                        name: collection.name,
+                      })
+                  : undefined
+              }
             />
           ) : (
             <p className="text-sm text-muted-foreground">
               Escolha o site ou uma marca para ver as pastas.
             </p>
           )}
-        </aside>
-
-        <div className="space-y-4">
-          <ListToolbar
-            search={list.search}
-            onSearchChange={list.setSearch}
-            searchLabel="Buscar por nome ou etiqueta"
-            statusOptions={tabs}
-            status={list.status}
-            onStatusChange={(value) => {
-              setSelected([]);
-              list.setStatus(value);
-            }}
-          />
-          <div className="grid gap-3 sm:grid-cols-4">
-            {fixedBrandId ? null : (
-              <SelectField
-                id="media-scope"
-                label="Origem"
-                value={scope ?? ALL}
-                onValueChange={(value) => {
-                  void list.setFilter("scope", value === ALL ? undefined : value);
-                  void list.setFilter("brand", undefined);
-                  void list.setFilter("folder", undefined);
-                }}
-                options={[
-                  { value: ALL, label: "Todas" },
-                  { value: MediaScope.Brand, label: "Marcas" },
-                  { value: MediaScope.Site, label: "Site" },
-                ]}
-              />
-            )}
-            {fixedBrandId === undefined && scope === MediaScope.Brand ? (
-              <SelectField
-                id="media-brand"
-                label="Marca"
-                value={brandId ?? ALL}
-                onValueChange={(value) => {
-                  void list.setFilter("brand", value === ALL ? undefined : value);
-                  void list.setFilter("folder", undefined);
-                }}
-                emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
-                options={[
-                  { value: ALL, label: "Todas" },
-                  ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
-                ]}
-              />
-            ) : null}
-            <SelectField
-              id="media-kind"
-              label="Tipo"
-              value={kind ?? ALL}
-              onValueChange={(value) =>
-                void list.setFilter("kind", value === ALL ? undefined : value)
-              }
-              options={kindOptions}
-            />
-            <SelectField
-              id="media-order"
-              label="Ordenar por"
-              value={order}
-              onValueChange={(value) => void list.setFilter("order", value)}
-              options={orderOptions}
-            />
-          </div>
-
           {selected.length > 0 ? (
             <div
               className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted p-2 text-sm"
@@ -330,6 +360,59 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                   checked ? [...current, item.id] : current.filter((id) => id !== item.id),
                 )
               }
+              sharedIds={sharedAssetIds}
+              renderMenu={(item) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 bg-surface/90"
+                      aria-label={`Ações de ${item.name}`}
+                    >
+                      <MoreVertical aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onSelect={() =>
+                        void navigate({
+                          to: "/admin/library/$assetId",
+                          params: { assetId: item.id },
+                        })
+                      }
+                    >
+                      <Pencil aria-hidden="true" />
+                      Detalhes
+                    </DropdownMenuItem>
+                    {canShare && !trashView ? (
+                      <DropdownMenuItem
+                        onSelect={() =>
+                          setSharing({ kind: ShareKind.Asset, id: item.id, name: item.name })
+                        }
+                      >
+                        <Share2 aria-hidden="true" />
+                        Compartilhar
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canDelete ? (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className={trashView ? undefined : "text-destructive"}
+                          onSelect={() => {
+                            setSelected([item.id]);
+                            setTrashing(true);
+                          }}
+                        >
+                          {trashView ? <Undo2 aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+                          {trashView ? "Restaurar" : "Mover para a lixeira"}
+                        </DropdownMenuItem>
+                      </>
+                    ) : null}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               onOpen={(item) =>
                 void navigate({ to: "/admin/library/$assetId", params: { assetId: item.id } })
               }
@@ -344,7 +427,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
               disabled={query.isFetching}
             />
           ) : null}
-        </div>
+        </section>
       </div>
 
       <Dialog open={chooser} onOpenChange={setChooser}>
@@ -369,15 +452,14 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                 Site
               </Button>
             ) : null}
-            <SelectField
+            <BrandSelect
               id="chooser-brand"
-              label="Marca"
               value=""
               onValueChange={(value) => {
                 setChooser(false);
                 setUploading({ scope: MediaScope.Brand, brandId: value });
               }}
-              options={(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name }))}
+              brands={brands.data}
               placeholder="Escolha a marca"
             />
           </div>
@@ -422,7 +504,9 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
         }}
       />
 
-      <StorageCheckDialog open={checking} onOpenChange={setChecking} />
+      <StorageCheckDialog open={checking} onOpenChange={setChecking} canCheck={canDelete} />
+
+      <ShareDialog target={sharing} onClose={() => setSharing(null)} />
     </div>
   );
 }

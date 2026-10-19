@@ -40,7 +40,7 @@ insert into public.profiles (id, full_name, email, status)
 values ('00000000-0000-0000-0000-0000000000f1', 'Pending', 'pending@example.test', 'pending');
 
 select is((select count(*)::int from public.roles), 6, 'six roles are seeded');
-select is((select count(*)::int from public.actions), 46, 'the action catalog is seeded');
+select is((select count(*)::int from public.actions), 47, 'the action catalog is seeded');
 select is((select is_system from public.roles where key = 'owner'), true, 'owner is a system role');
 select is(
   (select count(*)::int from public.role_actions ra join public.roles r on r.id = ra.role_id where r.key = 'owner'),
@@ -56,7 +56,7 @@ select is(
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
 select is(public.is_admin(), true, 'owner is admin');
 select is(public.has_action('anything.at_all'), true, 'owner has any action, including future ones');
-select is(cardinality(public.my_actions()), 46, 'owner my_actions lists the whole catalog');
+select is(cardinality(public.my_actions()), 47, 'owner my_actions lists the whole catalog');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');

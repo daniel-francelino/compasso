@@ -199,6 +199,34 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite.",
   },
+  share_invalid: {
+    category: ErrorCode.Invalid,
+    message: "Confira os dados do link: nome, mensagem e limite de downloads.",
+  },
+  share_invalid_expiry: {
+    category: ErrorCode.Invalid,
+    message: "A validade do link precisa ser uma data futura, de até 10 anos.",
+  },
+  share_target_invalid: {
+    category: ErrorCode.Invalid,
+    message: "Este item não pode ser compartilhado agora.",
+  },
+  share_not_found: {
+    category: ErrorCode.NotFound,
+    message: "Não encontramos este link.",
+  },
+  share_not_active: {
+    category: ErrorCode.Conflict,
+    message: "Este link já foi encerrado.",
+  },
+  password_weak: {
+    category: ErrorCode.Invalid,
+    message: "A senha do link precisa ter de 8 a 128 caracteres.",
+  },
+  logo_invalid: {
+    category: ErrorCode.Invalid,
+    message: "O logo precisa ser uma imagem disponível desta marca.",
+  },
   media_in_use: {
     category: ErrorCode.InUse,
     message: "O arquivo tem usos que impedem a exclusão.",

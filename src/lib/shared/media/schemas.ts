@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MediaScope } from "@/lib/shared/enums";
+import { MediaScope, ShareKind, SharePasswordAction } from "@/lib/shared/enums";
 import { listRequestSchema } from "@/lib/shared/list-search";
 import { MEDIA_MIME_TYPES, MediaKind } from "@/lib/shared/media/limits";
 
@@ -87,4 +87,71 @@ export const collectionIdSchema = z.object({ id: z.string().uuid() });
 export const moveToCollectionSchema = z.object({
   collectionId: z.string().uuid().nullable(),
   assetIds: z.array(z.string().uuid()).min(1).max(200),
+});
+
+export const shareLabelSchema = z
+  .string()
+  .trim()
+  .min(1, "Informe o nome do link.")
+  .max(80, "O nome é longo demais.");
+export const shareMessageSchema = z.string().trim().max(500, "A mensagem é longa demais.");
+export const sharePasswordSchema = z
+  .string()
+  .min(8, "A senha precisa de pelo menos 8 caracteres.")
+  .max(128, "A senha é longa demais.");
+
+const shareOptionsShape = {
+  label: shareLabelSchema,
+  message: shareMessageSchema.optional(),
+  expiresAt: z.string().datetime().nullable(),
+  maxDownloads: z.number().int().min(1).max(10000).nullable(),
+  allowDownload: z.boolean(),
+};
+
+export const createShareSchema = z.object({
+  kind: z.nativeEnum(ShareKind),
+  targetId: z.string().uuid(),
+  ...shareOptionsShape,
+  password: sharePasswordSchema.optional(),
+  includeSubcollections: z.boolean().optional(),
+  followLatest: z.boolean().optional(),
+});
+
+export const updateShareSchema = z.object({
+  id: z.string().uuid(),
+  ...shareOptionsShape,
+  passwordAction: z.nativeEnum(SharePasswordAction),
+  password: sharePasswordSchema.optional(),
+});
+
+export const shareIdSchema = z.object({ id: z.string().uuid() });
+
+export const listSharesSchema = z.object({
+  kind: z.nativeEnum(ShareKind),
+  targetId: z.string().uuid(),
+});
+
+export const shareTokenSchema = z.string().regex(/^[0-9a-f]{64}$/);
+
+export const openSharedSchema = z.object({
+  token: shareTokenSchema,
+  grant: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .nullable(),
+});
+
+export const unlockSharedSchema = z.object({
+  token: shareTokenSchema,
+  password: z.string().min(1, "Informe a senha.").max(128),
+});
+
+export const sharedFileSchema = z.object({
+  token: shareTokenSchema,
+  grant: z
+    .string()
+    .regex(/^[0-9a-f]{64}$/)
+    .nullable(),
+  assetId: z.string().uuid(),
+  download: z.boolean(),
 });

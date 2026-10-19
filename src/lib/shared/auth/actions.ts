@@ -51,6 +51,7 @@ export const Action = {
     Update: "media.update",
     Delete: "media.delete",
     Publish: "media.publish",
+    Share: "media.share",
   },
   Site: {
     View: "site.view",

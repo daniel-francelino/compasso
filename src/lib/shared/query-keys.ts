@@ -99,6 +99,10 @@ export const QueryKey = {
     counts: (brand: string | undefined) => ["dashboard", "counts", brand ?? null] as const,
     mine: () => ["dashboard", "mine"] as const,
   },
+  Share: {
+    all: () => ["share"] as const,
+    open: (token: string, grant: string | null) => ["share", "open", token, grant] as const,
+  },
   Media: {
     all: () => ["media"] as const,
     list: (filters: Filters) => ["media", "list", filters] as const,
@@ -107,6 +111,8 @@ export const QueryKey = {
       ["media", "collections", scope, brandId ?? null] as const,
     storage: () => ["media", "storage"] as const,
     check: () => ["media", "check"] as const,
+    shares: (kind: string, targetId: string) => ["media", "shares", kind, targetId] as const,
+    shareTargets: () => ["media", "shares", "targets"] as const,
     signed: (versionIds: readonly string[], variant: string) =>
       ["media", "signed", versionIds, variant] as const,
   },

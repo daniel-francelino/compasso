@@ -54,14 +54,16 @@ export function DataTableRowActions<T>({
   label,
   actions,
   disabled = false,
+  forceMenu = false,
 }: {
   row: T;
   label: string;
   actions: DataTableAction<T>[];
   disabled?: boolean;
+  forceMenu?: boolean;
 }) {
   if (!actions.length) return null;
-  if (actions.length > 2) {
+  if (forceMenu || actions.length > 2) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -157,6 +159,7 @@ export function DataTable<T>({
   rowKey,
   rowLabel,
   actions,
+  actionsMenu = false,
   caption,
   loading = false,
   refreshing = false,
@@ -172,6 +175,7 @@ export function DataTable<T>({
   rowKey: (row: T) => string;
   rowLabel: (row: T) => string;
   actions?: ((row: T) => DataTableAction<T>[]) | undefined;
+  actionsMenu?: boolean;
   caption: string;
   loading?: boolean;
   refreshing?: boolean;
@@ -331,6 +335,7 @@ export function DataTable<T>({
                         row={row}
                         label={rowLabel(row)}
                         actions={actions(row)}
+                        forceMenu={actionsMenu}
                         disabled={refreshing}
                       />
                     </TableCell>

@@ -43,7 +43,7 @@ export const policySchemas = {
 export const policyDefaults = {
   [SettingKey.Approvals]: { deadlineDays: 3 },
   [SettingKey.Calendar]: { weekStartsOnMonday: true },
-  [SettingKey.Uploads]: { maxImageMb: 25, maxVideoMb: 100, maxDocumentMb: 50, quotaMb: 5120 },
+  [SettingKey.Uploads]: { maxImageMb: 25, maxVideoMb: 100, maxDocumentMb: 50, quotaMb: 10240 },
   [SettingKey.Urls]: { httpsOnly: true },
   [SettingKey.Retention]: { auditMonths: 24, notificationDays: 90 },
   [SettingKey.Invitations]: { expiresDays: 7 },

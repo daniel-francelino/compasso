@@ -1,4 +1,5 @@
 import { Link, Outlet } from "@tanstack/react-router";
+import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import {
   Archive,
   CalendarDays,
@@ -45,6 +46,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
     <div className="space-y-6">
       <PageHeader
         title={brand.name}
+        leading={<BrandAvatar name={brand.name} logoUrl={brand.logoUrl} size="lg" />}
         description={brand.clientName}
         breadcrumbs={[{ label: "Marcas", to: AppRoute.Brands }, { label: brand.name }]}
         actions={

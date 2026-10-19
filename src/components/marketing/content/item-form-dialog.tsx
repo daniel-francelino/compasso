@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { BrandSelect } from "@/components/shared/admin/brand-select";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { FileText } from "lucide-react";
 import { useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -16,7 +18,6 @@ import {
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
 import { saveItemSchema } from "@/lib/marketing/content/schemas";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -45,11 +46,7 @@ export function ItemFormDialog({
   const [tags, setTags] = useState(item?.tags.join(", ") ?? "");
   const [dueDate, setDueDate] = useState(item?.productionDueDate ?? "");
 
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: open && item === undefined && fixedBrandId === undefined,
-  });
+  const brands = useBrandOptions(open && item === undefined && fixedBrandId === undefined);
   const assignees = useQuery({
     queryKey: QueryKey.Content.assignees(brandId),
     queryFn: async () => unwrapResult(await listAssigneeOptions({ data: { brandId } })).people,
@@ -97,9 +94,8 @@ export function ItemFormDialog({
       }}
     >
       {item === undefined && fixedBrandId === undefined ? (
-        <SelectField
+        <BrandSelect
           id="item-brand"
-          label="Marca"
           required
           value={brandId}
           onValueChange={(value) => {
@@ -107,10 +103,7 @@ export function ItemFormDialog({
             setAssigneeId(NO_ASSIGNEE);
           }}
           placeholder="Escolha a marca"
-          options={(brands.data ?? []).map((brand) => ({
-            value: brand.id,
-            label: `${brand.name} · ${brand.clientName}`,
-          }))}
+          brands={brands.data}
           error={errors["brandId"]}
         />
       ) : null}

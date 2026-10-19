@@ -1,4 +1,6 @@
-import { FileText, Film, ImageOff } from "lucide-react";
+import { FileText, Film, ImageOff, Share2 } from "lucide-react";
+import type { ReactNode } from "react";
+import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Checkbox } from "@/components/shared/ui/checkbox";
 import { formatBytes } from "@/lib/shared/format";
 import { MediaKind } from "@/lib/shared/media/limits";
@@ -20,12 +22,16 @@ export function MediaGrid({
   onToggle,
   onOpen,
   openLabel = "Abrir",
+  sharedIds,
+  renderMenu,
 }: {
   items: MediaRow[];
   selectedIds: string[];
   onToggle: (item: MediaRow, checked: boolean) => void;
   onOpen: (item: MediaRow) => void;
   openLabel?: string;
+  sharedIds?: ReadonlySet<string>;
+  renderMenu?: (item: MediaRow) => ReactNode;
 }) {
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
@@ -46,6 +52,9 @@ export function MediaGrid({
                 onCheckedChange={(checked) => onToggle(item, checked === true)}
               />
             </div>
+            {renderMenu ? (
+              <div className="absolute right-1 top-1 z-10">{renderMenu(item)}</div>
+            ) : null}
             <button
               type="button"
               onClick={() => onOpen(item)}
@@ -57,6 +66,11 @@ export function MediaGrid({
               </span>
               <span className="block space-y-0.5 p-2">
                 <span className="block truncate text-sm font-medium">{item.name}</span>
+                {sharedIds?.has(item.id) ? (
+                  <StatusBadge tone="info" icon={Share2}>
+                    Compartilhado
+                  </StatusBadge>
+                ) : null}
                 <span className="block truncate text-xs text-muted-foreground">
                   {formatBytes(item.sizeBytes)}
                   {item.brandName ? ` · ${item.brandName}` : item.scope === "site" ? " · Site" : ""}

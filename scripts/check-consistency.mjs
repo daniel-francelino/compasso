@@ -43,7 +43,8 @@ report(
   difference(messageCodes, registryCodes),
 );
 
-const catalogBlock = sql.match(/v_catalog constant text\[\] := array\[([\s\S]*?)\];/)?.[1] ?? "";
+const catalogBlock =
+  [...sql.matchAll(/v_catalog constant text\[\] := array\[([\s\S]*?)\];/g)].at(-1)?.[1] ?? "";
 const sqlAudit = quoted(catalogBlock, /'([a-z_]+\.[a-z_]+)'/g);
 const tsAudit = quoted(read("src/lib/shared/audit/actions.ts"), /"([a-z_]+\.[a-z_]+)"/g);
 const docAudit = quoted(
@@ -79,6 +80,7 @@ const checkValues = (table, column, constant, file) => {
 };
 
 checkValues("profiles", "status", "ProfileStatus", "src/lib/shared/enums.ts");
+checkValues("media_shares", "status", "MediaShareStatus", "src/lib/shared/enums.ts");
 checkValues("profiles", "kind", "ProfileKind", "src/lib/shared/enums.ts");
 checkValues("audit_events", "actor_kind", "AuditActorKind", "src/lib/shared/enums.ts");
 checkValues("content_variants", "format", "ContentFormat", "src/lib/shared/enums.ts");
@@ -103,5 +105,5 @@ if (problems.length > 0) {
   process.exit(1);
 }
 console.log(
-  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 13 CHECK lists.`,
+  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 14 CHECK lists.`,
 );

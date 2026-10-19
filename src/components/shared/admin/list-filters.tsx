@@ -17,7 +17,7 @@ export type FilterGroup = {
   label: string;
   value: string;
   defaultValue: string;
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; icon?: ReactNode }[];
   emptyText?: string | undefined;
   onChange: (value: string) => void;
 };
@@ -95,7 +95,14 @@ export function ListFilters({
                 <SelectContent>
                   {group.options.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      {option.icon ? (
+                        <span className="flex items-center gap-2">
+                          {option.icon}
+                          {option.label}
+                        </span>
+                      ) : (
+                        option.label
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>

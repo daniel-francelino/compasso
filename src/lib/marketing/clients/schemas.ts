@@ -2,6 +2,8 @@ import { z } from "zod";
 import { listRequestSchema } from "@/lib/shared/list-search";
 
 export const ClientStatusFilter = { Active: "active", Archived: "archived" } as const;
+export const CLIENT_TAG_LIMIT = 20;
+export const CLIENT_TAG_LENGTH = 40;
 
 export const listClientsSchema = listRequestSchema.extend({
   ownerId: z.string().uuid().optional(),
@@ -17,9 +19,8 @@ export const saveClientSchema = z.object({
     .max(120, "O nome é longo demais."),
   ownerUserId: z.string().uuid().nullable().optional(),
   internalNotes: z.string().trim().max(5000, "As notas são longas demais.").optional(),
-  tags: z.array(z.string().trim().min(1).max(40)).max(20),
+  tags: z.array(z.string().trim().min(1).max(CLIENT_TAG_LENGTH)).max(CLIENT_TAG_LIMIT),
   expectedVersion: z.number().int().min(1).optional(),
-  createFirstBrand: z.boolean().default(false),
 });
 
 export type SaveClientInput = z.infer<typeof saveClientSchema>;

@@ -97,6 +97,40 @@ export const MediaScope = {
 } as const;
 export type MediaScope = ValueOf<typeof MediaScope>;
 
+export const MediaShareStatus = {
+  Active: "active",
+  Revoked: "revoked",
+  TargetDeleted: "target_deleted",
+} as const;
+export type MediaShareStatus = ValueOf<typeof MediaShareStatus>;
+
+export const ShareKind = {
+  Asset: "asset",
+  Collection: "collection",
+} as const;
+export type ShareKind = ValueOf<typeof ShareKind>;
+
+export const SharePasswordAction = {
+  Keep: "keep",
+  Set: "set",
+  Clear: "clear",
+} as const;
+export type SharePasswordAction = ValueOf<typeof SharePasswordAction>;
+
+export const PublicShareState = {
+  Ok: "ok",
+  NotFound: "not_found",
+  Revoked: "revoked",
+  Unavailable: "unavailable",
+  Expired: "expired",
+  Locked: "locked",
+  Exhausted: "exhausted",
+  PasswordRequired: "password_required",
+  WrongPassword: "wrong_password",
+  DownloadDisabled: "download_disabled",
+} as const;
+export type PublicShareState = ValueOf<typeof PublicShareState>;
+
 export const MediaVersionStatus = {
   Pending: "pending",
   Processing: "processing",

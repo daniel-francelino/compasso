@@ -1,20 +1,8 @@
 import { logError } from "@/lib/shared/logger";
+import { createRateLimiter } from "@/lib/shared/rate-limit.server";
 
 const VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_PER_WINDOW = 5;
-
-const attempts = new Map<string, number[]>();
-
-export const withinRateLimit = (key: string, now: number = Date.now()): boolean => {
-  const recent = (attempts.get(key) ?? []).filter((time) => now - time < WINDOW_MS);
-  if (recent.length >= MAX_PER_WINDOW) {
-    attempts.set(key, recent);
-    return false;
-  }
-  attempts.set(key, [...recent, now]);
-  return true;
-};
+export const withinRateLimit = createRateLimiter(5, 10 * 60 * 1000);
 
 export const turnstileConfigured = (): boolean =>
   (process.env["TURNSTILE_SECRET"] ?? "") !== "" &&

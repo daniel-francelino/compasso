@@ -4,9 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { SelectField, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import { TagInputField } from "@/components/shared/admin/tag-input-field";
 import { Button } from "@/components/shared/ui/button";
-import { Checkbox } from "@/components/shared/ui/checkbox";
-import { Label } from "@/components/shared/ui/label";
 import { useDebouncedValue } from "@/hooks/shared/use-debounced-value";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { useUnsavedChanges } from "@/hooks/shared/use-unsaved-changes";
@@ -16,7 +15,11 @@ import {
   listOwnerOptions,
   saveClient,
 } from "@/lib/marketing/clients/clients.functions";
-import { saveClientSchema } from "@/lib/marketing/clients/schemas";
+import {
+  CLIENT_TAG_LENGTH,
+  CLIENT_TAG_LIMIT,
+  saveClientSchema,
+} from "@/lib/marketing/clients/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -28,15 +31,14 @@ export function ClientForm({
   onCancel,
 }: {
   client?: ClientDetail;
-  onSaved: (saved: { id: string; brandId: string | null }) => void;
+  onSaved: (saved: { id: string }) => void;
   onCancel?: () => void;
 }) {
   const { formRef, errors, error, busy, submit } = useFormSubmit();
   const [name, setName] = useState(client?.name ?? "");
   const [ownerId, setOwnerId] = useState(client?.ownerUserId ?? NO_OWNER);
   const [notes, setNotes] = useState(client?.internalNotes ?? "");
-  const [tags, setTags] = useState(client?.tags.join(", ") ?? "");
-  const [createBrand, setCreateBrand] = useState(true);
+  const [tags, setTags] = useState(client?.tags ?? []);
   const debouncedName = useDebouncedValue(name.trim(), 400);
 
   const owners = useQuery({
@@ -57,7 +59,7 @@ export function ClientForm({
   const dirty =
     name !== (client?.name ?? "") ||
     notes !== (client?.internalNotes ?? "") ||
-    tags !== (client?.tags.join(", ") ?? "") ||
+    JSON.stringify(tags) !== JSON.stringify(client?.tags ?? []) ||
     ownerId !== (client?.ownerUserId ?? NO_OWNER);
   useUnsavedChanges(dirty && !busy);
 
@@ -75,14 +77,10 @@ export function ClientForm({
             name,
             ownerUserId: ownerId === NO_OWNER ? null : ownerId,
             internalNotes: notes,
-            tags: tags
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter((tag) => tag !== ""),
-            createFirstBrand: client === undefined && createBrand,
+            tags,
           },
           (data) => saveClient({ data }),
-          (result) => onSaved({ id: result.id, brandId: result.brandId }),
+          (result) => onSaved({ id: result.id }),
         );
       }}
     >
@@ -124,12 +122,14 @@ export function ClientForm({
           ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),
         ]}
       />
-      <TextField
+      <TagInputField
         id="client-tags"
         label="Etiquetas"
         value={tags}
         onValueChange={setTags}
-        hint="Separe por vírgula. Ex.: restaurante, local"
+        maxItems={CLIENT_TAG_LIMIT}
+        maxLength={CLIENT_TAG_LENGTH}
+        error={errors["tags"]}
       />
       <TextAreaField
         id="client-notes"
@@ -140,16 +140,6 @@ export function ClientForm({
         rows={4}
         error={errors["internalNotes"]}
       />
-      {client === undefined ? (
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="client-first-brand"
-            checked={createBrand}
-            onCheckedChange={(checked) => setCreateBrand(checked === true)}
-          />
-          <Label htmlFor="client-first-brand">Criar a primeira marca com o mesmo nome</Label>
-        </div>
-      ) : null}
       <FormError message={error} />
       <div className="flex flex-wrap justify-end gap-2">
         {onCancel ? (

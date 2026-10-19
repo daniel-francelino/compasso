@@ -18,6 +18,7 @@
 | `content_items`, `content_variants`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
 | `approval_requests`, `approval_decisions` | approvals | yes | `approvals.view` + `can_access_brand`; external only via `portal_*` |
 | `media_assets`, `media_versions`, `media_upload_sessions`, `media_collections`, `media_collection_items`, `media_usages` | media-library | scope `brand` or `site` | `media.view` + brand link (or `site.view` for site scope) |
+| `media_shares`, `media_share_grants`, `media_share_events` | media-library | share links of a file or a collection: secret `token`, optional expiry, password (bcrypt hash), download limit, lock after 5 wrong passwords; grants hold only the hash of a password session; events are the access timeline. `status` is `active`, `revoked` or `target_deleted` | `media.share` + brand link (or `site.view`); never readable by `anon` |
 | `sites`, `site_pages`, `site_page_revisions`, `site_entries`, `site_case_study_authorizations`, `site_redirects`, `contact_messages` | cms-site | no | `site.view` + specific `site.*`; **public read only through functions** |
 | `notification_kinds`, `notifications`, `notification_preferences` | notifications | `notifications.brand_id` | own rows + action + brand scope |
 | `email_outbox` | notifications | no | server only |
@@ -183,6 +184,7 @@ create table brands (
   objectives text,
   references_notes text,
   visual_identity jsonb not null default '{}',
+  logo_media_version_id uuid references media_versions(id),
   timezone text not null,
   version int not null default 1,
   archived_at timestamptz,

@@ -1,4 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import { Link } from "@tanstack/react-router";
 import { Archive, CircleCheck, Plus, Tag } from "lucide-react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
@@ -44,7 +45,7 @@ export function BrandsPage() {
   };
   const clients = useQuery({
     queryKey: QueryKey.Clients.list(CLIENT_OPTIONS),
-    queryFn: async () => unwrapResult(await listClients({ data: CLIENT_OPTIONS })).rows,
+    queryFn: async () => unwrapResult(await listClients({ data: CLIENT_OPTIONS })),
   });
 
   const query = useQuery({
@@ -58,13 +59,16 @@ export function BrandsPage() {
       id: "name",
       label: "Marca",
       cell: (row) => (
-        <Link
-          to="/admin/marketing/brands/$brandId"
-          params={{ brandId: row.id }}
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          {row.name}
-        </Link>
+        <span className="flex items-center gap-2">
+          <BrandAvatar name={row.name} logoUrl={row.logoUrl} size="sm" />
+          <Link
+            to="/admin/marketing/brands/$brandId"
+            params={{ brandId: row.id }}
+            className="font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {row.name}
+          </Link>
+        </span>
       ),
     },
     { id: "client", label: "Cliente", cell: (row) => row.clientName },
@@ -116,10 +120,11 @@ export function BrandsPage() {
                 label: "Cliente",
                 value: list.filters.client ?? ALL,
                 defaultValue: ALL,
-                emptyText: clients.data?.length === 0 ? "Nenhum cliente cadastrado" : undefined,
+                emptyText:
+                  clients.data?.rows.length === 0 ? "Nenhum cliente cadastrado" : undefined,
                 options: [
                   { value: ALL, label: "Todos" },
-                  ...(clients.data ?? []).map((client) => ({
+                  ...(clients.data?.rows ?? []).map((client) => ({
                     value: client.id,
                     label: client.name,
                   })),

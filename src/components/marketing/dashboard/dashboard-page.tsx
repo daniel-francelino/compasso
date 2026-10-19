@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { BrandSelect } from "@/components/shared/admin/brand-select";
+import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { Link } from "@tanstack/react-router";
 import {
   CircleCheck,
@@ -13,7 +15,6 @@ import {
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
-import { SelectField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { editorialStyle } from "@/components/shared/content/status-styles";
@@ -31,7 +32,6 @@ import {
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { listBrandOptions } from "@/lib/shared/brands/brand-options.functions";
 import { EditorialStatus } from "@/lib/shared/enums";
 import { formatDateOnly } from "@/lib/shared/format";
 import { dashboardReasonLabels, editorialStatusLabels, platformLabels } from "@/lib/shared/labels";
@@ -287,11 +287,7 @@ export function DashboardPage() {
   const auth = useAuth();
   const list = useListState<string>("");
   const brandId = list.filters.brand;
-  const brands = useQuery({
-    queryKey: QueryKey.Brands.options(),
-    queryFn: async () => unwrapResult(await listBrandOptions()).brands,
-    enabled: can(auth, Action.Brands.View),
-  });
+  const brands = useBrandOptions(can(auth, Action.Brands.View));
   const content = can(auth, Action.Content.View);
   const approvals = can(auth, Action.Approvals.View);
 
@@ -304,18 +300,15 @@ export function DashboardPage() {
       />
       {can(auth, Action.Brands.View) ? (
         <div className="max-w-xs">
-          <SelectField
+          <BrandSelect
             id="dashboard-brand"
-            label="Marca"
             value={brandId ?? ALL}
             onValueChange={(value) =>
               void list.setFilter("brand", value === ALL ? undefined : value)
             }
-            emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
-            options={[
-              { value: ALL, label: "Todas as marcas" },
-              ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
-            ]}
+            brands={brands.data}
+            allLabel="Todas as marcas"
+            allValue={ALL}
           />
         </div>
       ) : null}

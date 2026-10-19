@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
+import { BrandSwitcher } from "@/components/shared/admin/brand-switcher";
 import { type AdminSpace, adminSpaces, visibleGroups } from "@/components/shared/admin/nav-config";
 import {
   Sidebar,
@@ -14,7 +15,10 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/shared/ui/sidebar";
+import { Action } from "@/lib/shared/auth/actions";
+import { can } from "@/lib/shared/auth/permissions";
 import type { AuthState } from "@/lib/shared/auth/types";
+import { Space } from "@/lib/shared/enums";
 import { useSignOut } from "@/lib/shared/auth/use-sign-out";
 
 export function AppSidebar({ auth, space }: { auth: AuthState; space: AdminSpace }) {
@@ -29,10 +33,15 @@ export function AppSidebar({ auth, space }: { auth: AuthState; space: AdminSpace
         <p className="truncate px-2 text-xs text-sidebar-foreground">
           {adminSpaces.find((entry) => entry.key === space)?.title}
         </p>
+        {space === Space.Marketing && can(auth, Action.Brands.View) ? (
+          <div className="px-2 pt-2 group-data-[collapsible=icon]:hidden">
+            <BrandSwitcher />
+          </div>
+        ) : null}
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-0">
         {groups.map((group) => (
-          <SidebarGroup key={group.label ?? group.items[0]?.to}>
+          <SidebarGroup key={group.label ?? group.items[0]?.to} className="py-1">
             {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
             <SidebarGroupContent>
               <SidebarMenu>

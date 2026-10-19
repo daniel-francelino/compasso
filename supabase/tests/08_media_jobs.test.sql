@@ -22,7 +22,7 @@ from (values
 join public.roles r on r.key = u.role_key;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select is((public.media_storage_summary() ->> 'quota_bytes')::bigint, 5120::bigint * 1048576, 'the quota defaults to 5 GiB');
+select is((public.media_storage_summary() ->> 'quota_bytes')::bigint, 10240::bigint * 1048576, 'the quota defaults to 10 GiB');
 select is((public.media_storage_summary() ->> 'used_bytes')::bigint, 0::bigint, 'nothing is used at the start');
 select throws_ok($$select public.media_storage_keys()$$, 'denied', 'only people with media.delete list every storage key');
 select throws_ok($$select public.media_expire_sessions()$$, 'permission denied for function media_expire_sessions', 'clients cannot run the cleanup job');

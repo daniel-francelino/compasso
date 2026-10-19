@@ -22,6 +22,7 @@ import { Route as AdminPendingRouteImport } from './routes/admin/pending'
 import { Route as AdminRecoverPasswordRouteImport } from './routes/admin/recover-password'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin/reset-password'
 import { Route as PortalAppRouteImport } from './routes/portal/_app'
+import { Route as ShareTokenRouteImport } from './routes/share.$token'
 import { Route as AdminAppIndexRouteImport } from './routes/admin/_app/index'
 import { Route as AdminAppDesignRouteImport } from './routes/admin/_app/design'
 import { Route as AdminAppForbiddenRouteImport } from './routes/admin/_app/forbidden'
@@ -146,6 +147,11 @@ const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
 const PortalAppRoute = PortalAppRouteImport.update({
   id: '/portal/_app',
   path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminAppIndexRoute = AdminAppIndexRouteImport.update({
@@ -506,6 +512,7 @@ export interface FileRoutesByFullPath {
   '/admin/recover-password': typeof AdminRecoverPasswordRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/portal': typeof PortalAppRouteWithChildren
+  '/share/$token': typeof ShareTokenRoute
   '/': typeof siteIndexRoute
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
@@ -579,6 +586,7 @@ export interface FileRoutesByTo {
   '/admin/pending': typeof AdminPendingRoute
   '/admin/recover-password': typeof AdminRecoverPasswordRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
+  '/share/$token': typeof ShareTokenRoute
   '/': typeof siteIndexRoute
   '/admin/design': typeof AdminAppDesignRoute
   '/admin/forbidden': typeof AdminAppForbiddenRoute
@@ -654,6 +662,7 @@ export interface FileRoutesById {
   '/admin/recover-password': typeof AdminRecoverPasswordRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/portal/_app': typeof PortalAppRouteWithChildren
+  '/share/$token': typeof ShareTokenRoute
   '/(site)/': typeof siteIndexRoute
   '/admin/_app/design': typeof AdminAppDesignRoute
   '/admin/_app/forbidden': typeof AdminAppForbiddenRoute
@@ -731,6 +740,7 @@ export interface FileRouteTypes {
     | '/admin/recover-password'
     | '/admin/reset-password'
     | '/portal'
+    | '/share/$token'
     | '/'
     | '/admin/design'
     | '/admin/forbidden'
@@ -804,6 +814,7 @@ export interface FileRouteTypes {
     | '/admin/pending'
     | '/admin/recover-password'
     | '/admin/reset-password'
+    | '/share/$token'
     | '/'
     | '/admin/design'
     | '/admin/forbidden'
@@ -878,6 +889,7 @@ export interface FileRouteTypes {
     | '/admin/recover-password'
     | '/admin/reset-password'
     | '/portal/_app'
+    | '/share/$token'
     | '/(site)/'
     | '/admin/_app/design'
     | '/admin/_app/forbidden'
@@ -954,6 +966,7 @@ export interface RootRouteChildren {
   AdminRecoverPasswordRoute: typeof AdminRecoverPasswordRoute
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   PortalAppRoute: typeof PortalAppRouteWithChildren
+  ShareTokenRoute: typeof ShareTokenRoute
   siteIndexRoute: typeof siteIndexRoute
   AdminInviteTokenRoute: typeof AdminInviteTokenRoute
   ApiCronDueNotificationsRoute: typeof ApiCronDueNotificationsRoute
@@ -1052,6 +1065,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof PortalAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/share/$token': {
+      id: '/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/_app/': {
@@ -1659,6 +1679,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRecoverPasswordRoute: AdminRecoverPasswordRoute,
   AdminResetPasswordRoute: AdminResetPasswordRoute,
   PortalAppRoute: PortalAppRouteWithChildren,
+  ShareTokenRoute: ShareTokenRoute,
   siteIndexRoute: siteIndexRoute,
   AdminInviteTokenRoute: AdminInviteTokenRoute,
   ApiCronDueNotificationsRoute: ApiCronDueNotificationsRoute,
@@ -1670,11 +1691,10 @@ export const routeTree = rootRouteImport
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
+import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

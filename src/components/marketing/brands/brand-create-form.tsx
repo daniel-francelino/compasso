@@ -33,7 +33,7 @@ export function BrandCreateForm({
 
   const clients = useQuery({
     queryKey: QueryKey.Clients.list(CLIENT_OPTIONS),
-    queryFn: async () => unwrapResult(await listClients({ data: CLIENT_OPTIONS })).rows,
+    queryFn: async () => unwrapResult(await listClients({ data: CLIENT_OPTIONS })),
   });
 
   useUnsavedChanges(name !== "" && !busy);
@@ -59,7 +59,10 @@ export function BrandCreateForm({
         required
         value={clientId}
         onValueChange={setClientId}
-        options={(clients.data ?? []).map((client) => ({ value: client.id, label: client.name }))}
+        options={(clients.data?.rows ?? []).map((client) => ({
+          value: client.id,
+          label: client.name,
+        }))}
         placeholder={clients.isPending ? "Carregando…" : "Escolha o cliente"}
         error={errors["clientId"]}
       />

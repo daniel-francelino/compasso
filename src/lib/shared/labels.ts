@@ -12,9 +12,11 @@ import {
   EditorialStatus,
   InvitationStatus,
   LinkKind,
+  MediaShareStatus,
   Platform,
   ProfileKind,
   ProfileStatus,
+  PublicShareState,
   PublicationStatus,
   SectionAccent,
   SectionBackground,
@@ -184,4 +186,48 @@ export const sitePageStatusLabels: Record<SitePageStatus, string> = {
   [SitePageStatus.Draft]: "Fora do site",
   [SitePageStatus.Published]: "No ar",
   [SitePageStatus.Unpublished]: "Despublicada",
+};
+
+export const mediaShareStatusLabels: Record<MediaShareStatus, string> = {
+  [MediaShareStatus.Active]: "Ativo",
+  [MediaShareStatus.Revoked]: "Encerrado",
+  [MediaShareStatus.TargetDeleted]: "Arquivo removido",
+};
+
+export const publicShareStateMessages: Record<
+  Exclude<PublicShareState, typeof PublicShareState.Ok | typeof PublicShareState.PasswordRequired>,
+  { title: string; description: string }
+> = {
+  [PublicShareState.NotFound]: {
+    title: "Link não encontrado",
+    description: "Confira o endereço ou peça um novo link a quem compartilhou.",
+  },
+  [PublicShareState.Revoked]: {
+    title: "Link encerrado",
+    description: "Quem compartilhou encerrou este link.",
+  },
+  [PublicShareState.Unavailable]: {
+    title: "Arquivo indisponível",
+    description: "O que foi compartilhado não existe mais.",
+  },
+  [PublicShareState.Expired]: {
+    title: "Link expirado",
+    description: "A validade deste link terminou. Peça um novo a quem compartilhou.",
+  },
+  [PublicShareState.Locked]: {
+    title: "Acesso bloqueado por alguns minutos",
+    description: "Houve tentativas demais com senha errada. Tente de novo mais tarde.",
+  },
+  [PublicShareState.Exhausted]: {
+    title: "Limite de downloads atingido",
+    description: "Este link não aceita mais downloads. Peça um novo a quem compartilhou.",
+  },
+  [PublicShareState.WrongPassword]: {
+    title: "Senha incorreta",
+    description: "Confira a senha e tente de novo.",
+  },
+  [PublicShareState.DownloadDisabled]: {
+    title: "Download desativado",
+    description: "Este link permite só visualizar.",
+  },
 };

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { BrandMemberStatus, type ProfileKind } from "@/lib/shared/enums";
+import { brandLogoUrls } from "@/lib/shared/brands/brand-logos.server";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import {
   type Page,
@@ -21,6 +22,7 @@ import {
   listBrandsSchema,
   memberCandidatesSchema,
   saveBrandSchema,
+  setBrandLogoSchema,
   setMemberSchema,
   visualIdentitySchema,
   type VisualIdentity,
@@ -34,6 +36,7 @@ export type BrandRow = {
   channelCount: number;
   timezone: string;
   archived: boolean;
+  logoUrl: string | null;
 };
 
 export type BrandDetail = {
@@ -47,6 +50,8 @@ export type BrandDetail = {
   objectives: string | null;
   referencesNotes: string | null;
   visualIdentity: VisualIdentity;
+  logoVersionId: string | null;
+  logoUrl: string | null;
   timezone: string;
   version: number;
   archived: boolean;
@@ -100,6 +105,10 @@ export const listBrands = createServerFn({ method: "GET" })
     const { data: rows, count, error } = await query.order("name").range(from, to);
     if (error) return fail(error);
 
+    const logos = await brandLogoUrls(
+      caller.supabase,
+      (rows ?? []).map((row) => row.id),
+    );
     const mapped = (rows ?? []).map((row) => ({
       id: row.id,
       name: row.name,
@@ -108,6 +117,7 @@ export const listBrands = createServerFn({ method: "GET" })
       channelCount: row.channels[0]?.count ?? 0,
       timezone: row.timezone,
       archived: row.archived_at !== null,
+      logoUrl: logos.get(row.id) ?? null,
     }));
     return { ok: true, ...pageOf(mapped, count ?? 0, { page: data.page, pageSize: PAGE_SIZE }) };
   });
@@ -127,6 +137,7 @@ export const getBrand = createServerFn({ method: "GET" })
     if (row === null) return fail({ message: "not_found" });
 
     const identity = visualIdentitySchema.safeParse(row.visual_identity);
+    const logos = await brandLogoUrls(caller.supabase, [row.id]);
     return {
       ok: true,
       brand: {
@@ -142,6 +153,8 @@ export const getBrand = createServerFn({ method: "GET" })
         visualIdentity: identity.success
           ? identity.data
           : { colors: [], fonts: [], guidelinesUrl: "" },
+        logoVersionId: row.logo_media_version_id,
+        logoUrl: logos.get(row.id) ?? null,
         timezone: row.timezone,
         version: row.version,
         archived: row.archived_at !== null,
@@ -149,6 +162,19 @@ export const getBrand = createServerFn({ method: "GET" })
         memberCount: row.brand_members[0]?.count ?? 0,
       },
     };
+  });
+
+export const setBrandLogo = createServerFn({ method: "POST" })
+  .validator(setBrandLogoSchema)
+  .handler(async ({ data }): Promise<Result<{ id: string; version: number }>> => {
+    const caller = await requireActionServer(Action.Brands.Update);
+    if (caller === null) return denied;
+    const { data: row, error } = await caller.supabase.rpc("brand_set_logo", {
+      p_brand: data.brandId,
+      p_version: data.versionId,
+    });
+    if (error) return fail(error);
+    return parseOutput(savedSchema, row);
   });
 
 export const saveBrand = createServerFn({ method: "POST" })

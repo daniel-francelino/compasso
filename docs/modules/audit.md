@@ -86,6 +86,8 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `media.unpublished` | `media_version` | `media_withdraw_derivative` |
 | `media.deleted_permanently` | `media_asset` | `media_delete_permanently` |
 | `media.version_replaced` | `media_asset` | `media_replace_version` |
+| `media.share_created` | `media_share` | `media_share_create` |
+| `media.share_revoked` | `media_share` | `media_share_revoke` |
 | `site.page_published` | `site_page` | `publish_site_page` |
 | `site.page_unpublished` | `site_page` | `unpublish_site_page` |
 | `site.rolled_back` | `site_page` | `site_rollback` |

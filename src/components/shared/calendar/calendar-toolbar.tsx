@@ -38,7 +38,7 @@ export function CalendarToolbar({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" onClick={onToday}>
           <CalendarDays aria-hidden="true" />
