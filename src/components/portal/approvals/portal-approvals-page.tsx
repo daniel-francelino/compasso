@@ -13,10 +13,9 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PaginationBar } from "@/components/shared/admin/pagination-bar";
-import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
-import { RequestCard } from "@/components/portal/approvals/request-card";
+import { RequestCard, RequestListSkeleton } from "@/components/portal/approvals/request-card";
 import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { listPortalApprovals } from "@/lib/portal/approvals/portal.functions";
@@ -63,7 +62,7 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
           ))}
         </TabsList>
       </Tabs>
-      {query.isPending ? <ListSkeleton rows={3} /> : null}
+      {query.isPending ? <RequestListSkeleton rows={3} /> : null}
       {query.isError ? (
         <EmptyState
           icon={TriangleAlert}

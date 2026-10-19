@@ -46,11 +46,6 @@ export function RequestDecisionActions({ request }: { request: PortalRequest }) 
 
   return (
     <div className="space-y-2">
-      {error ? (
-        <Alert variant="destructive" role="alert">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
       <div className="flex flex-wrap gap-2" role="group" aria-label="Sua decisão">
         <Button type="button" variant="outline" disabled={busy} onClick={() => setAsking(true)}>
           <MessageSquareWarning aria-hidden="true" />
@@ -65,7 +60,19 @@ export function RequestDecisionActions({ request }: { request: PortalRequest }) 
         open={confirming}
         onOpenChange={setConfirming}
         title="Aprovar esta versão?"
-        description="A equipe será avisada de que você aprovou exatamente o conteúdo enviado. A decisão não pode ser desfeita por você."
+        description={
+          <div className="space-y-2">
+            <p>
+              A equipe será avisada de que você aprovou exatamente o conteúdo enviado. A decisão não
+              pode ser desfeita por você.
+            </p>
+            {error ? (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            ) : null}
+          </div>
+        }
         confirmLabel="Aprovar"
         busy={busy}
         onConfirm={() => decide(ApprovalOutcome.Approved, "")}
@@ -83,6 +90,11 @@ export function RequestDecisionActions({ request }: { request: PortalRequest }) 
           if (await decide(ApprovalOutcome.ChangesRequested, draft.text.trim())) setAsking(false);
         }}
       >
+        {error ? (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
         <TextAreaField
           id={`portal-changes-${request.id}`}
           label="O que precisa mudar"
