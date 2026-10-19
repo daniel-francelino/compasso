@@ -8,7 +8,7 @@
   --violet-deep: #43238a;
   --violet-bright: #8b5ce6;
   --orchid: #d9a8ee;
-  --orchid-light: #f1d3f2;
+  --orchid-light: #ebe1fa;
   --rose: #f9c4d2;
   --peach: #fddccb;
   --coral: #ff9a7c;
@@ -16,11 +16,11 @@
   --sage: #dce8da;
   --cactus: #2f5a2b;
 
-  --ivory: #fff8f4;
-  --surface: #fffcfa;
-  --cream: #fdebe3;
-  --line: #ebd3dc;
-  --line-strong: #8a5d74;
+  --ivory: #f7f4fb;
+  --surface: #fffdfe;
+  --cream: #f2eef8;
+  --line: #e2daea;
+  --line-strong: #7a6e90;
 
   --warning: #5e3c00;
   --danger: #9b1c14;
@@ -45,7 +45,7 @@
   --input: var(--line-strong);
   --ring: var(--violet);
 
-  --sidebar: var(--peach);
+  --sidebar: var(--surface);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--violet);
   --sidebar-primary-foreground: var(--ivory);

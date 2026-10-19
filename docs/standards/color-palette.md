@@ -6,15 +6,15 @@
 
 | Token | Hex | Origin in the image | Role |
 |---|---|---|---|
-| `ink` | `#14245C` | Navy text "Marketing • Social Media" | Main text (deep navy, not black) |
+| `ink` | `#7A6E90` | Navy text "Marketing • Social Media" | Main text (deep navy, not black) |
 | `ink-soft` | `#2F3A75` | Lighter step of the same navy | Secondary text, captions |
 | `violet` | `#5B33B0` | Purple patches, bottom right | Primary color: main action, links, focus |
 | `violet-deep` | `#43238A` | Deeper step of the violet | Hover and pressed state of the primary action; links on tinted backgrounds |
 | `violet-bright` | `#8B5CE6` | Brightest purple of the patches | **Ornaments and large shapes only** (never text) |
 | `orchid` | `#D9A8EE` | Star sparkles | Ornaments, highlights, emphasis badges |
-| `orchid-light` | `#F1D3F2` | Background of the text labels | Highlight backgrounds, active menu item |
+| `orchid-light` | `#EBE1FA` | Background of the text labels | Highlight backgrounds, active menu item |
 | `rose` | `#F9C4D2` | Center of the gradient | Secondary backgrounds, soft emphasis |
-| `peach` | `#FDDCCB` | Top left of the gradient | Section backgrounds, sidebar |
+| `peach` | `#FDDCCB` | Top left of the gradient | Section backgrounds, ornaments |
 | `coral` | `#FF9A7C` | Orange patch, top corner | Warm accent: ornaments, indicators (fill only) |
 | `coral-dark` | `#8F2A17` | Coral with text-grade contrast | Text and icons for soft alerts, soft destructive action |
 | `sage` | `#DCE8DA` | Grey-green, top left corner | Soft background for success and confirmations |
@@ -24,11 +24,11 @@
 
 | Token | Hex | Role |
 |---|---|---|
-| `ivory` | `#FFF8F4` | Page background |
-| `surface` | `#FFFCFA` | Cards, panels, popovers |
-| `cream` | `#FDEBE3` | Secondary backgrounds, `muted`, alternate table rows |
-| `line` | `#EBD3DC` | Decorative dividers and card borders |
-| `line-strong` | `#8A5D74` | **Interactive borders** (inputs, checkboxes, outlined buttons); contrast above 3:1 as required for UI components |
+| `ivory` | `#F7F4FB` | Page background (a soft lilac-tinted neutral, so cards and the sidebar stand out from it) |
+| `surface` | `#FFFDFE` | Cards, panels, popovers |
+| `cream` | `#F2EEF8` | Secondary backgrounds, `muted`, alternate table rows |
+| `line` | `#E2DAEA` | Decorative dividers and card borders |
+| `line-strong` | `#7A6E90` | **Interactive borders** (inputs, checkboxes, outlined buttons): a calm grey-violet, contrast 3.98 or more on every surface (the minimum for UI components is 3) |
 
 ## 3. State colors
 
@@ -57,51 +57,51 @@ Publication statuses (`unplanned`, `planned`, `published_manually`, `cancelled`)
 
 ## 5. Verified contrast (WCAG 2.1 relative luminance formula)
 
-Thresholds: AA is 4.5 for normal text; AAA is 7. UI components need 3 or more. Target of this palette: **7 or more for body text on page and card surfaces (the only exception is `cactus` on `cream`, 6.94); 6 or more for text on tinted badges**.
+Thresholds: AA is 4.5 for normal text; AAA is 7. UI components need 3 or more. Target of this palette: **7 or more for body text on page and card surfaces (no exception now: the lowest is `cactus` on `cream`, 7.01); 6 or more for text on tinted badges**.
 
 ### Text on the main surfaces
 
 | Text on background | Ratio |
 |---|---|
-| `ink` on `ivory` | 13.91 |
-| `ink` on `surface` | 14.31 |
-| `ink` on `cream` | 12.65 |
-| `ink-soft` on `ivory` | 10.08 |
-| `ink-soft` on `surface` | 10.37 |
-| `ink-soft` on `cream` | 9.16 |
-| `violet` on `ivory` (links) | 7.85 |
-| `violet` on `surface` (links) | 8.08 |
-| `violet` on `cream` (links) | 7.14 |
-| `ivory` on `violet` (primary button) | 7.85 |
-| `ivory` on `violet-deep` (button hover) | 10.83 |
-| `ivory` on `danger` (destructive button) | 7.78 |
-| `danger` on `ivory` | 7.78 |
-| `danger` on `cream` | 7.07 |
-| `coral-dark` on `ivory` | 7.96 |
-| `coral-dark` on `cream` | 7.23 |
-| `cactus` on `ivory` | 7.63 |
-| `cactus` on `cream` | 6.94 |
-| `warning` on `ivory` | 9.42 |
-| `warning` on `cream` | 8.56 |
+| `ink` on `ivory` | 13.43 |
+| `ink` on `surface` | 14.43 |
+| `ink` on `cream` | 12.78 |
+| `ink-soft` on `ivory` | 9.73 |
+| `ink-soft` on `surface` | 10.46 |
+| `ink-soft` on `cream` | 9.26 |
+| `violet` on `ivory` (links) | 7.58 |
+| `violet` on `surface` (links) | 8.15 |
+| `violet` on `cream` (links) | 7.21 |
+| `ivory` on `violet` (primary button) | 7.58 |
+| `ivory` on `violet-deep` (button hover) | 10.45 |
+| `ivory` on `danger` (destructive button) | 7.51 |
+| `danger` on `ivory` | 7.51 |
+| `danger` on `cream` | 7.14 |
+| `coral-dark` on `ivory` | 7.68 |
+| `coral-dark` on `cream` | 7.31 |
+| `cactus` on `ivory` | 7.37 |
+| `cactus` on `cream` | 7.01 |
+| `warning` on `ivory` | 9.09 |
+| `warning` on `cream` | 8.65 |
 
 ### Text on tinted backgrounds (badges, highlights, sidebar)
 
 | Text on background | Ratio |
 |---|---|
 | `ink` on `peach` | 11.33 |
-| `ink` on `orchid-light` | 10.68 |
+| `ink` on `orchid-light` | 11.61 |
 | `ink` on `rose` | 9.64 |
 | `ink` on `sage` | 11.55 |
 | `ink` on `orchid` | 7.51 |
 | `ink` on `coral` | 7.08 |
 | `ink-soft` on `peach` | 8.21 |
-| `ink-soft` on `orchid-light` | 7.74 |
+| `ink-soft` on `orchid-light` | 8.41 |
 | `ink-soft` on `rose` | 6.99 |
-| `violet-deep` on `orchid-light` | 8.31 |
+| `violet-deep` on `orchid-light` | 9.04 |
 | `violet-deep` on `peach` | 8.82 |
 | `violet-deep` on `rose` | 7.50 |
 | `violet` on `peach` | 6.39 |
-| `violet` on `orchid-light` | 6.03 |
+| `violet` on `orchid-light` | 6.55 |
 | `warning` on `peach` | 7.67 |
 | `coral-dark` on `peach` | 6.48 |
 | `cactus` on `sage` | 6.34 |
@@ -110,9 +110,9 @@ Thresholds: AA is 4.5 for normal text; AAA is 7. UI components need 3 or more. T
 
 | Element | Ratio |
 |---|---|
-| `line-strong` on `ivory` (input border) | 5.13 |
-| `line-strong` on `surface` | 5.27 |
-| `violet-bright` on `ivory` (large ornaments) | 4.19 |
+| `line-strong` on `ivory` (input border) | 4.32 |
+| `line-strong` on `surface` | 4.65 |
+| `violet-bright` on `ivory` (large ornaments) | 4.04 |
 
 ### Usage rules derived from the table
 
@@ -123,6 +123,10 @@ Thresholds: AA is 4.5 for normal text; AAA is 7. UI components need 3 or more. T
 - Focus rings use `violet` with a 2 px offset in `ivory`, so they stay visible on every surface.
 - Input, checkbox and outlined-button borders use `line-strong`; `line` is for decoration only.
 - Disabled elements keep at least 4.5:1 for their text, and are also marked by a "disabled" appearance beyond color (opacity is not enough on its own).
+
+### Review of 2026-10-19
+
+The first palette used a peach sidebar, a pink page and a plum input border: three warm, saturated surfaces that blurred together and competed with the violet of the brand. Decision: **cool, quiet neutrals for the structure and the warm colors only for emphasis**. The page (`ivory`) is a soft lilac neutral, cards (`surface`) are lighter than the page, the sidebar uses `surface` with a `line` border (the active item is `orchid-light` with `ink`), and the input border is the calmer `line-strong`. `peach`, `rose`, `coral` and `sage` keep their values and their role in statuses, badges and ornaments. Every ratio below was recomputed with the same formula; 40 rows changed.
 
 ## 6. Decorative gradient (public site only)
 
@@ -144,7 +148,7 @@ Organic patches are section illustrations using `coral` and `violet-bright`. Tex
   --violet-deep: #43238a;
   --violet-bright: #8b5ce6;
   --orchid: #d9a8ee;
-  --orchid-light: #f1d3f2;
+  --orchid-light: #ebe1fa;
   --rose: #f9c4d2;
   --peach: #fddccb;
   --coral: #ff9a7c;
@@ -152,11 +156,11 @@ Organic patches are section illustrations using `coral` and `violet-bright`. Tex
   --sage: #dce8da;
   --cactus: #2f5a2b;
 
-  --ivory: #fff8f4;
-  --surface: #fffcfa;
-  --cream: #fdebe3;
-  --line: #ebd3dc;
-  --line-strong: #8a5d74;
+  --ivory: #f7f4fb;
+  --surface: #fffdfe;
+  --cream: #f2eef8;
+  --line: #e2daea;
+  --line-strong: #7a6e90;
 
   --warning: #5e3c00;
   --danger: #9b1c14;
@@ -181,7 +185,7 @@ Organic patches are section illustrations using `coral` and `violet-bright`. Tex
   --input: var(--line-strong);
   --ring: var(--violet);
 
-  --sidebar: var(--peach);
+  --sidebar: var(--surface);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--violet);
   --sidebar-primary-foreground: var(--ivory);
