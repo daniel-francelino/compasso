@@ -53,4 +53,15 @@ export const signPortalSchema = z.object({
   variant: z.nativeEnum(MediaVariant),
 });
 
+export const signPortalPreviewSchema = z.object({
+  requests: z
+    .array(
+      z.object({
+        revisionId: z.string().uuid(),
+        versionIds: z.array(z.string().uuid()).min(1).max(20),
+      }),
+    )
+    .max(50),
+});
+
 export const PORTAL_PAGE_SIZE = 20;

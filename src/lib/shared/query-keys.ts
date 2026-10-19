@@ -70,6 +70,8 @@ export const QueryKey = {
       ["portal", "calendar", brandId, filters] as const,
     urls: (revisionId: string, variant: string, versionIds: readonly string[]) =>
       ["portal", "urls", revisionId, variant, versionIds] as const,
+    previewUrls: (requests: readonly { revisionId: string; versionIds: readonly string[] }[]) =>
+      ["portal", "preview-urls", requests] as const,
   },
   Calendar: {
     all: () => ["calendar"] as const,

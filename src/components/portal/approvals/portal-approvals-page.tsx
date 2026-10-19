@@ -17,6 +17,7 @@ import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import { RequestCard } from "@/components/portal/approvals/request-card";
+import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { listPortalApprovals } from "@/lib/portal/approvals/portal.functions";
 import { PORTAL_PAGE_SIZE, PortalApprovalFilter } from "@/lib/portal/approvals/schemas";
@@ -39,6 +40,7 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
     queryFn: async () => unwrapResult(await listPortalApprovals({ data: request })),
     placeholderData: keepPreviousData,
   });
+  const previewUrls = usePortalPreviewUrls(query.data?.rows ?? []);
 
   return (
     <div className="space-y-6">
@@ -86,7 +88,12 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
         <>
           <ul className="space-y-3">
             {query.data.rows.map((row) => (
-              <RequestCard key={row.id} request={row} brandId={brandId} />
+              <RequestCard
+                key={row.id}
+                request={row}
+                brandId={brandId}
+                mediaUrls={previewUrls.data}
+              />
             ))}
           </ul>
           <PaginationBar

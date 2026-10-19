@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { EXTERNAL_URL_SECONDS } from "@/lib/shared/media/limits";
@@ -23,6 +24,7 @@ import {
   portalRequestSchema,
   portalItemSchema,
   signPortalSchema,
+  signPortalPreviewSchema,
 } from "@/lib/portal/approvals/schemas";
 import {
   portalApprovalSchema,
@@ -45,6 +47,7 @@ import type {
 const toRequest = (row: PortalRequestRow): PortalRequest => ({
   id: row.id,
   itemId: row.item_id,
+  revisionId: row.revision_id,
   status: row.status,
   title: row.title,
   channels: row.channels.map((channel) => ({
@@ -56,12 +59,24 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
     plannedAt: channel.planned_at ?? null,
     plannedTimezone: channel.planned_timezone ?? null,
   })),
+  media: row.media.map((item) => ({
+    versionId: item.version_id,
+    position: item.position,
+    altText: item.alt_text,
+    mimeType: item.mime_type,
+    width: item.width,
+    height: item.height,
+    name: item.name,
+    hasThumb: item.has_thumb,
+    hasDisplay: item.has_display,
+  })),
   brandTimezone: row.brand_timezone,
   revisionNo: row.revision_no,
   dueDate: row.due_date,
   requestedAt: row.requested_at,
   decidedAt: row.decided_at,
   isMine: row.is_mine,
+  canDecide: row.can_decide,
   approverName: row.approver_name,
 });
 
@@ -306,6 +321,44 @@ export const signPortalMedia = createServerFn({ method: "POST" })
     const signed = await storage.signUrls(parsed.list.map(keyOf), EXTERNAL_URL_SECONDS);
     const urls: Record<string, string> = {};
     for (const row of parsed.list) {
+      const key = keyOf(row);
+      const url = key === null ? undefined : signed.get(key);
+      if (url !== undefined) urls[row.version_id] = url;
+    }
+    return { ok: true, urls };
+  });
+
+export const signPortalPreviewMedia = createServerFn({ method: "POST" })
+  .validator(signPortalPreviewSchema)
+  .handler(async ({ data }): Promise<Result<{ urls: Record<string, string> }>> => {
+    const caller = await requireActionServer(Action.Portal.View);
+    if (caller === null) return denied;
+    const storage = serverStorage();
+    if (storage === null) return fail({ message: "storage_unavailable" });
+
+    const lookups = await Promise.all(
+      data.requests.map(async (request) => {
+        const { data: rows, error } = await caller.supabase.rpc("portal_media_urls", {
+          p_revision: request.revisionId,
+          p_version_ids: request.versionIds,
+        });
+        if (error) return fail(error);
+        return parseOutput(portalMediaKeysSchema, { list: rows });
+      }),
+    );
+    const media: z.infer<typeof portalMediaKeysSchema>["list"] = [];
+    for (const lookup of lookups) {
+      if (!lookup.ok) return lookup;
+      media.push(...lookup.list);
+    }
+
+    const keyOf = (row: (typeof media)[number]): string | null => row.thumb_key ?? row.display_key;
+    const signed = await storage.signUrls(
+      media.map(keyOf).filter((key): key is string => key !== null),
+      EXTERNAL_URL_SECONDS,
+    );
+    const urls: Record<string, string> = {};
+    for (const row of media) {
       const key = keyOf(row);
       const url = key === null ? undefined : signed.get(key);
       if (url !== undefined) urls[row.version_id] = url;

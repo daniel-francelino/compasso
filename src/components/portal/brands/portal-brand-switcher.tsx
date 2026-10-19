@@ -39,7 +39,7 @@ export function PortalBrandSwitcher() {
     staleTime: BRANDS_STALE_MS,
   });
 
-  if (query.isPending) return <Skeleton className="h-10 w-48" />;
+  if (query.isPending) return <Skeleton className="h-11 w-full" />;
   const brands = query.data ?? [];
   const current = brands.find((brand) => brand.id === brandId);
   const [only] = brands;
@@ -59,7 +59,7 @@ export function PortalBrandSwitcher() {
         <Button
           type="button"
           variant="ghost"
-          className="h-auto min-h-11 max-w-72 justify-between gap-3 px-2 py-1.5"
+          className="h-auto min-h-11 w-full justify-between gap-3 px-2 py-1.5"
           aria-label="Trocar de marca"
         >
           {current ? (

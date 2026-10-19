@@ -14,15 +14,30 @@ export const portalChannelSchema = z.object({
 export const portalRequestRowSchema = z.object({
   id: z.string().uuid(),
   item_id: z.string().uuid(),
+  revision_id: z.string().uuid(),
   status: z.nativeEnum(ApprovalRequestStatus),
   title: z.string(),
   channels: z.array(portalChannelSchema),
+  media: z.array(
+    z.object({
+      version_id: z.string().uuid(),
+      position: z.number().int(),
+      alt_text: z.string().nullable(),
+      mime_type: z.string(),
+      width: z.number().int().nullable(),
+      height: z.number().int().nullable(),
+      name: z.string(),
+      has_thumb: z.boolean(),
+      has_display: z.boolean(),
+    }),
+  ),
   brand_timezone: z.string().nullable(),
   revision_no: z.number().int(),
   due_date: z.string().nullable(),
   requested_at: z.string(),
   decided_at: z.string().nullable(),
   is_mine: z.boolean(),
+  can_decide: z.boolean(),
   approver_name: z.string().nullable(),
 });
 

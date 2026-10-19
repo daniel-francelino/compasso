@@ -132,7 +132,7 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `portal_list_comments(p_item)` | `listPortalComments` | link | — | — | `not_found` |
 | `portal_add_comment(p_item, p_body)` | `addPortalComment` | `comments.create_external` | `comment.created` | `comment.created` | `invalid_input` |
 | `portal_list_calendar(p_brand, p_from, p_to)` | `listPortalCalendar` | link to the brand; returns `{ brand_timezone, entries }` with one entry per channel row of the latest version of each content that has a request that is not cancelled (date, status and title from the snapshot); range at most 100 days | — | — | `not_found`, `invalid_input` |
-| `portal_media_urls(p_revision, p_version_ids uuid[])` (checks, then the server signs) | `signPortalMedia` | revision shared with the person | — | — | `denied` |
+| `portal_media_urls(p_revision, p_version_ids uuid[])` (checks, then the server signs; `signPortalPreviewMedia` batches thumbnail signing for listing previews) | `signPortalMedia`, `signPortalPreviewMedia` | revision shared with the person | — | — | `denied` |
 
 ## 6. Calendar and dashboard (modules: calendar, dashboard)
 

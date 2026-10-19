@@ -15,6 +15,7 @@ import { RecordUnavailable } from "@/components/shared/admin/record-unavailable"
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
 import { RequestCard } from "@/components/portal/approvals/request-card";
+import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
 import { listPortalApprovals, listPortalPending } from "@/lib/portal/approvals/portal.functions";
 import { nextPlanned } from "@/lib/portal/approvals/planned";
 import { PortalApprovalFilter } from "@/lib/portal/approvals/schemas";
@@ -33,6 +34,7 @@ function Section({
   emptyTitle,
   emptyDescription,
   count,
+  loading = false,
 }: {
   title: string;
   icon: LucideIcon;
@@ -41,7 +43,9 @@ function Section({
   emptyTitle: string;
   emptyDescription: string;
   count?: number;
+  loading?: boolean;
 }) {
+  const previewUrls = usePortalPreviewUrls(requests);
   return (
     <section className="space-y-3" aria-label={title}>
       <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
@@ -53,12 +57,19 @@ function Section({
           </span>
         ) : null}
       </h2>
-      {requests.length === 0 ? (
+      {loading ? (
+        <ListSkeleton rows={2} height="h-44" />
+      ) : requests.length === 0 ? (
         <EmptyState icon={Icon} title={emptyTitle} description={emptyDescription} />
       ) : (
         <ul className="space-y-3">
           {requests.map((request) => (
-            <RequestCard key={request.id} request={request} brandId={brandId} />
+            <RequestCard
+              key={request.id}
+              request={request}
+              brandId={brandId}
+              mediaUrls={previewUrls.data}
+            />
           ))}
         </ul>
       )}
@@ -90,7 +101,6 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
       ).rows,
   });
 
-  if (pending.isPending) return <ListSkeleton rows={3} />;
   if (pending.isError) {
     return (
       <RecordUnavailable
@@ -102,8 +112,9 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
     );
   }
 
-  const mine = pending.data.filter((request) => request.isMine);
-  const others = pending.data.filter((request) => !request.isMine);
+  const requests = pending.data ?? [];
+  const mine = requests.filter((request) => request.isMine);
+  const others = requests.filter((request) => !request.isMine);
   const upcoming = (approved.data ?? [])
     .filter((request) => {
       const planned = nextPlanned(request);
@@ -139,6 +150,7 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
         requests={mine}
         emptyTitle="Nada pendente por aqui"
         emptyDescription="Quando a equipe enviar um conteúdo para a sua decisão, ele aparece aqui."
+        loading={pending.isPending}
       />
       {others.length > 0 ? (
         <Section
@@ -148,6 +160,7 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
           requests={others}
           emptyTitle=""
           emptyDescription=""
+          loading={pending.isPending}
         />
       ) : null}
       <Section
@@ -157,6 +170,7 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
         requests={upcoming}
         emptyTitle="Nenhuma publicação com data futura"
         emptyDescription="Os conteúdos aprovados com data marcada aparecem aqui."
+        loading={approved.isPending}
       />
       <Section
         title="Decisões recentes"
@@ -165,6 +179,7 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
         requests={recent}
         emptyTitle="Ainda não há decisões"
         emptyDescription="As aprovações e os pedidos de alteração ficam registrados aqui."
+        loading={approved.isPending || decided.isPending}
       />
     </div>
   );

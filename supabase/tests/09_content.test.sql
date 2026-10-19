@@ -1,6 +1,6 @@
 begin;
 
-select plan(180);
+select plan(184);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -206,6 +206,10 @@ select is((public.portal_list_brands() -> 0 ->> 'pending_count')::int, 1, 'the p
 select is(jsonb_array_length(public.portal_list_brands()), 1, 'and only the linked brand');
 select is(jsonb_array_length(public.portal_list_pending(current_setting('t.brand')::uuid)), 1, 'the pending list has the current request');
 select is(jsonb_array_length(public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 -> 'channels'), 1, 'and the channels of the content');
+select is((public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 ->> 'revision_id')::uuid, (current_setting('t.sub2')::jsonb ->> 'revision_id')::uuid, 'the list identifies the exact shared revision');
+select is(jsonb_array_length(public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 -> 'media'), 2, 'the list includes safe preview media metadata');
+select is((public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 ->> 'can_decide')::boolean, true, 'the designated approver can decide from the list');
+select ok(position('storage_key' in public.portal_list_pending(current_setting('t.brand')::uuid)::text) = 0, 'the preview list exposes no storage keys');
 select throws_ok(format($$select public.portal_list_pending('%s')$$, current_setting('t.brandB')), 'not_found', 'another brand is not found');
 select is((public.portal_get_approval(current_setting('t.req2')::uuid) ->> 'can_decide')::boolean, true, 'the designated approver can decide');
 select is(jsonb_array_length(public.portal_get_approval(current_setting('t.req2')::uuid) -> 'media'), 2, 'the screen shows the revision files');

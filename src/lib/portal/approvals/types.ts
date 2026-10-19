@@ -40,15 +40,18 @@ export type PortalChannel = {
 export type PortalRequest = {
   id: string;
   itemId: string;
+  revisionId: string;
   status: ApprovalRequestStatus;
   title: string;
   channels: PortalChannel[];
+  media: PortalMedia[];
   brandTimezone: string | null;
   revisionNo: number;
   dueDate: string | null;
   requestedAt: string;
   decidedAt: string | null;
   isMine: boolean;
+  canDecide: boolean;
   approverName: string | null;
 };
 
