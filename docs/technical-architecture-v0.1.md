@@ -942,7 +942,7 @@ Security headers applied on the server (middleware or Nitro config) and, on Verc
 {
   "crons": [
     { "path": "/api/cron/media-cleanup", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/email-outbox", "schedule": "*/10 * * * *" }
+    { "path": "/api/cron/email-outbox", "schedule": "0 8 * * *" }
   ],
   "headers": [
     { "source": "/(.*)", "headers": [
