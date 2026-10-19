@@ -5,6 +5,7 @@ import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { CalendarGrid } from "@/components/shared/calendar/calendar-grid";
 import { CalendarList } from "@/components/shared/calendar/calendar-list";
 import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
+import { PortalCalendarEntryPreview } from "@/components/portal/calendar/portal-calendar-entry-preview";
 import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { requestStyle } from "@/components/shared/content/status-styles";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
@@ -109,6 +110,9 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
       ) : state.view === CalendarView.List ? (
         <CalendarList
           items={items}
+          renderItem={(item, trigger) => (
+            <PortalCalendarEntryPreview item={item}>{trigger}</PortalCalendarEntryPreview>
+          )}
           onSelect={(key) =>
             void navigate({
               to: "/portal/brands/$brandId/approvals/$requestId",
@@ -121,6 +125,9 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
           label={`Calendário, ${title}`}
           days={state.range.days}
           items={items}
+          renderItem={(item, trigger) => (
+            <PortalCalendarEntryPreview item={item}>{trigger}</PortalCalendarEntryPreview>
+          )}
           today={todayInZone(zone)}
           month={state.view === CalendarView.Month ? state.anchor.slice(0, 7) : null}
           compact={state.view === CalendarView.Month}

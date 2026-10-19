@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
+import { PortalBreadcrumbs } from "@/components/portal/portal-breadcrumbs";
 import { Separator } from "@/components/shared/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/shared/ui/sidebar";
 import { useAuth } from "@/lib/shared/auth/use-auth";
@@ -19,7 +20,7 @@ export function PortalShell({ children }: { children: ReactNode }) {
         <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-border bg-background px-4 pointer-coarse:h-16">
           <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
           <Separator orientation="vertical" className="h-5" />
-          <p className="heading-card text-foreground">Portal do Cliente</p>
+          <PortalBreadcrumbs />
         </header>
         <main
           id="main-content"

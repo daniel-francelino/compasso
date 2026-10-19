@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { EntryChip } from "@/components/shared/calendar/entry-chip";
 import { Button } from "@/components/shared/ui/button";
@@ -26,6 +26,7 @@ export function CalendarGrid({
   onOpenDay,
   onDropKey,
   renderDayAction,
+  renderItem,
 }: {
   label: string;
   days: string[];
@@ -37,6 +38,7 @@ export function CalendarGrid({
   onOpenDay: (day: string) => void;
   onDropKey?: ((key: string, day: string) => void) | undefined;
   renderDayAction?: ((day: string) => ReactNode) | undefined;
+  renderItem?: ((item: GridItem, trigger: ReactNode) => ReactNode) | undefined;
 }) {
   const [focused, setFocused] = useState(days.includes(today) ? today : (days[0] ?? today));
   const [over, setOver] = useState<string | null>(null);
@@ -125,9 +127,14 @@ export function CalendarGrid({
                   {Number(day.slice(8))}
                 </span>
               </div>
-              {shown.map((item) => (
-                <EntryChip key={item.key} item={item} onSelect={onSelect} />
-              ))}
+              {shown.map((item) => {
+                const trigger = <EntryChip item={item} onSelect={onSelect} />;
+                return (
+                  <Fragment key={item.key}>
+                    {renderItem ? renderItem(item, trigger) : trigger}
+                  </Fragment>
+                );
+              })}
               {hidden > 0 ? (
                 <Button
                   type="button"
