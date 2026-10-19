@@ -3,6 +3,7 @@ import { BrandLogoField } from "@/components/marketing/brands/brand-logo-field";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { TextAreaField, TextField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
@@ -129,10 +130,12 @@ function IdentityForm({ brand, canEdit }: { brand: BrandDetail; canEdit: boolean
       />
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">Cores da marca</p>
-        <p className="text-xs text-muted-foreground">
-          Servem de referência para a equipe. Não alteram as cores do Compasso.
-        </p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium">Cores da marca</p>
+          <InfoTip label="Ajuda sobre as cores">
+            Servem de referência para a equipe. Não alteram as cores do Compasso.
+          </InfoTip>
+        </div>
         {colors.map((color, index) => (
           <div key={index} className="flex items-end gap-2">
             <span

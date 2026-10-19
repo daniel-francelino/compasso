@@ -12,6 +12,7 @@ import {
 } from "@/components/shared/admin/form-fields";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { PasswordField } from "@/components/shared/admin/auth-shell";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Checkbox } from "@/components/shared/ui/checkbox";
 import { Label } from "@/components/shared/ui/label";
@@ -225,6 +226,7 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
       <TextAreaField
         id="share-message"
         label="Mensagem para quem receber"
+        tip={{ label: "Ajuda sobre a mensagem", content: "Aparece no topo da página do link." }}
         value={message}
         onValueChange={setMessage}
         maxLength={500}
@@ -235,6 +237,10 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
         <SelectField
           id="share-expiry"
           label="Validade"
+          tip={{
+            label: "Ajuda sobre a validade",
+            content: "Depois dessa data o link para de abrir sozinho.",
+          }}
           value={expiry}
           onValueChange={setExpiry}
           options={expiryOptions}
@@ -242,6 +248,7 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
         <NumberField
           id="share-max"
           label="Limite de downloads"
+          hint="Quando o limite é atingido, o link deixa de permitir downloads. Deixe vazio para não limitar."
           value={maxDownloads}
           onValueChange={setMaxDownloads}
           placeholder="Sem limite"
@@ -251,6 +258,7 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
       <PasswordField
         id="share-new-password"
         label="Senha (opcional)"
+        hint="Pelo menos 8 caracteres. Quem abrir o link precisa digitar a senha. Depois de 5 erros, o acesso é bloqueado por 15 minutos."
         autoComplete="new-password"
         value={password}
         error={errors["password"]}
@@ -264,6 +272,9 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
             onCheckedChange={(checked) => setAllowDownload(checked === true)}
           />
           <Label htmlFor="share-download">Permitir download</Label>
+          <InfoTip label="Ajuda sobre o download">
+            Sem isso, quem recebe só consegue ver os arquivos.
+          </InfoTip>
         </div>
         {isAsset ? (
           <div className="flex items-center gap-2">
@@ -273,6 +284,9 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
               onCheckedChange={(checked) => setFollowLatest(checked === true)}
             />
             <Label htmlFor="share-latest">Mostrar sempre a versão mais recente</Label>
+            <InfoTip label="Ajuda sobre a versão">
+              Se você enviar uma versão nova do arquivo, o link passa a mostrá-la.
+            </InfoTip>
           </div>
         ) : (
           <div className="flex items-center gap-2">

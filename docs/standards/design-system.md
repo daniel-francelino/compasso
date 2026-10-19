@@ -112,6 +112,7 @@ Usage rules:
 
 - **Dates** with `DatePickerField` and **date-times** with `DateTimeField` (which always shows the time zone); never the native field. **Phone** with `PhoneField`.
 - **Field hint:** `InfoTip`; **field warning:** `WarningTip` (warning tone = look at it, danger tone = blocks).
+- **Where the hint goes:** extra information about a field is never a paragraph under the input. The `hint` prop of `TextField`, `NumberField`, `DateField`, `DateTimeField`, `TagInputField`, `Field` and `PasswordField` renders an `InfoTip` (information icon with tooltip) next to the label; `tip` does the same for fields without `hint`. Under the input stay only the error, the character counter, the empty-select text (`emptyText`) and the time zone of a date-time. For a checkbox or a group title, place an `InfoTip` next to its label.
 - **Toast** only through the global `Toaster`. Do not build toasts by hand.
 
 ## 6. Back office components (`shared/admin`)

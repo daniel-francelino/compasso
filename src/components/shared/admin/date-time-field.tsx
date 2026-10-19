@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { hintTip } from "@/components/shared/admin/field-tip";
 import { FieldLabel, FieldMessage } from "@/components/shared/admin/form-fields";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
@@ -74,7 +75,9 @@ export function DateTimeField({
   const message = nonexistent ? NONEXISTENT_TIME : occurrences ? AMBIGUOUS_TIME : error;
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel htmlFor={id} tip={hintTip(label, hint)}>
+        {label}
+      </FieldLabel>
       <Input
         id={id}
         type="datetime-local"
@@ -106,7 +109,7 @@ export function DateTimeField({
           ))}
         </RadioGroup>
       ) : null}
-      <FieldMessage error={message} hint={hint} />
+      <FieldMessage error={message} />
     </div>
   );
 }

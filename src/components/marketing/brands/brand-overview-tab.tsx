@@ -1,13 +1,14 @@
+import { AudioLines, Building2, Clock3, PanelsTopLeft, Target, UsersRound } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
 import { useBrand } from "@/hooks/marketing/use-brand";
 
 const fields = [
-  ["description", "Sobre a marca"],
-  ["targetAudience", "Público"],
-  ["toneOfVoice", "Tom de voz"],
-  ["objectives", "Objetivos"],
+  ["description", "Sobre a marca", Building2],
+  ["targetAudience", "Público", UsersRound],
+  ["toneOfVoice", "Tom de voz", AudioLines],
+  ["objectives", "Objetivos", Target],
 ] as const;
 
 export function BrandOverviewTab({ brandId }: { brandId: string }) {
@@ -17,10 +18,13 @@ export function BrandOverviewTab({ brandId }: { brandId: string }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <SectionCard as="div" title="Resumo">
+      <SectionCard as="div" title="Resumo" icon={Building2}>
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-muted-foreground">Cliente</dt>
+            <dt className="flex items-center gap-1.5 text-muted-foreground">
+              <Building2 className="size-3.5" aria-hidden="true" />
+              Cliente
+            </dt>
             <dd>
               <Link
                 to="/admin/marketing/clients/$clientId"
@@ -32,23 +36,35 @@ export function BrandOverviewTab({ brandId }: { brandId: string }) {
             </dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Fuso horário</dt>
+            <dt className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock3 className="size-3.5" aria-hidden="true" />
+              Fuso horário
+            </dt>
             <dd>{brand.timezone.replaceAll("_", " ")}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Canais</dt>
+            <dt className="flex items-center gap-1.5 text-muted-foreground">
+              <PanelsTopLeft className="size-3.5" aria-hidden="true" />
+              Canais
+            </dt>
             <dd>{brand.channelCount}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Membros</dt>
+            <dt className="flex items-center gap-1.5 text-muted-foreground">
+              <UsersRound className="size-3.5" aria-hidden="true" />
+              Membros
+            </dt>
             <dd>{brand.memberCount}</dd>
           </div>
         </dl>
       </SectionCard>
-      <SectionCard as="div" title="Identidade">
-        {fields.map(([key, label]) => (
+      <SectionCard as="div" title="Identidade" icon={AudioLines}>
+        {fields.map(([key, label, Icon]) => (
           <div key={key} className="text-sm">
-            <p className="text-muted-foreground">{label}</p>
+            <p className="flex items-center gap-1.5 text-muted-foreground">
+              <Icon className="size-3.5" aria-hidden="true" />
+              {label}
+            </p>
             <p className="whitespace-pre-wrap">{brand[key] ?? "—"}</p>
           </div>
         ))}

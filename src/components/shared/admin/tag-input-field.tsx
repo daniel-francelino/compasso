@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { useState, type KeyboardEvent } from "react";
+import { hintTip } from "@/components/shared/admin/field-tip";
 import { FieldLabel, FieldMessage } from "@/components/shared/admin/form-fields";
 import { Input } from "@/components/shared/ui/input";
 
@@ -40,7 +41,12 @@ export function TagInputField({
 
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel
+        htmlFor={id}
+        tip={hintTip(label, `Até ${maxItems} etiquetas. Digite e pressione Enter para adicionar.`)}
+      >
+        {label}
+      </FieldLabel>
       <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-md border border-input bg-background px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
         {value.map((tag) => (
           <span
@@ -72,10 +78,7 @@ export function TagInputField({
           onKeyDown={handleKeyDown}
         />
       </div>
-      <FieldMessage
-        error={error}
-        hint={`Até ${maxItems} etiquetas. Digite e pressione Enter para adicionar.`}
-      />
+      <FieldMessage error={error} />
     </div>
   );
 }

@@ -145,12 +145,10 @@ function LimitedCollectionForm({ sectionId, kind, content, onChange }: Props) {
       <NumberField
         id={`${sectionId}-limit`}
         label="Quantos itens mostrar"
+        hint={`Os itens vêm das telas de ${kind === SectionKind.ServicesGrid ? "Serviços" : "Depoimentos"}.`}
         value={String(value.limit)}
         onValueChange={(limit) => set({ limit: Math.min(24, Math.max(1, Number(limit) || 6)) })}
       />
-      <p className="text-xs text-muted-foreground">
-        Os itens vêm das telas de {kind === SectionKind.ServicesGrid ? "Serviços" : "Depoimentos"}.
-      </p>
     </div>
   );
 }

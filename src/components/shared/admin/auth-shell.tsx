@@ -1,5 +1,6 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState, type ComponentProps, type ReactNode } from "react";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -45,20 +46,18 @@ function FieldFrame({
 }: FieldExtras & { required?: boolean | undefined; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>
-        {label}
-        {required ? (
-          <span aria-hidden className="ml-0.5 text-destructive">
-            *
-          </span>
-        ) : null}
-      </Label>
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={id}>
+          {label}
+          {required ? (
+            <span aria-hidden className="ml-0.5 text-destructive">
+              *
+            </span>
+          ) : null}
+        </Label>
+        {hint ? <InfoTip label={`Ajuda sobre ${label}`}>{hint}</InfoTip> : null}
+      </div>
       {children}
-      {hint && !error ? (
-        <p id={`${id}-hint`} className="text-xs text-muted-foreground">
-          {hint}
-        </p>
-      ) : null}
       {error ? (
         <p id={`${id}-error`} className="text-xs text-destructive">
           {error}
@@ -68,8 +67,7 @@ function FieldFrame({
   );
 }
 
-const describedBy = (id: string, error?: string, hint?: string) =>
-  error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+const describedBy = (id: string, error?: string) => (error ? `${id}-error` : undefined);
 
 export function Field({ id, label, error, hint, ...props }: FieldExtras & ComponentProps<"input">) {
   return (
@@ -80,7 +78,7 @@ export function Field({ id, label, error, hint, ...props }: FieldExtras & Compon
         className="h-11 md:h-10"
         aria-invalid={error ? true : undefined}
         aria-required={props.required}
-        aria-describedby={describedBy(id, error, hint)}
+        aria-describedby={describedBy(id, error)}
         {...props}
         required={false}
       />
@@ -107,7 +105,7 @@ export function PasswordField({
           className="h-11 pr-11 md:h-10"
           aria-invalid={error ? true : undefined}
           aria-required={props.required}
-          aria-describedby={describedBy(id, error, hint)}
+          aria-describedby={describedBy(id, error)}
           {...props}
           required={false}
         />

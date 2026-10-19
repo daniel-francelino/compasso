@@ -1,4 +1,5 @@
 import type { ReactNode, Ref } from "react";
+import { hintTip } from "@/components/shared/admin/field-tip";
 import { InfoTip } from "@/components/shared/admin/info-tip";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
@@ -92,7 +93,7 @@ export function TextField({
 }) {
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id} required={required} tip={tip}>
+      <FieldLabel htmlFor={id} required={required} tip={tip ?? hintTip(label, hint)}>
         {label}
       </FieldLabel>
       <Input
@@ -113,7 +114,7 @@ export function TextField({
       />
       <FieldMessage
         error={error}
-        hint={counter && maxLength ? `${value.length}/${maxLength} caracteres` : hint}
+        hint={counter && maxLength ? `${value.length}/${maxLength} caracteres` : undefined}
       />
     </div>
   );
@@ -147,7 +148,7 @@ export function NumberField({
   return (
     <div className="space-y-1.5">
       {label ? (
-        <FieldLabel htmlFor={id} tip={tip}>
+        <FieldLabel htmlFor={id} tip={tip ?? hintTip(label, hint)}>
           {label}
         </FieldLabel>
       ) : null}
@@ -162,15 +163,12 @@ export function NumberField({
         disabled={disabled}
         aria-label={label ? undefined : ariaLabel}
         aria-invalid={error ? true : undefined}
-        aria-describedby={error || hint ? `${id}-message` : undefined}
+        aria-describedby={error ? `${id}-message` : undefined}
         onChange={(event) => onValueChange(event.target.value)}
       />
-      {error || hint ? (
-        <p
-          id={`${id}-message`}
-          className={cn("text-xs", error ? "text-destructive" : "text-muted-foreground")}
-        >
-          {error ?? hint}
+      {error ? (
+        <p id={`${id}-message`} className="text-xs text-destructive">
+          {error}
         </p>
       ) : null}
     </div>
@@ -307,7 +305,7 @@ export function DateField({
 }) {
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id} required={required}>
+      <FieldLabel htmlFor={id} required={required} tip={hintTip(label, hint)}>
         {label}
       </FieldLabel>
       <Input
@@ -322,7 +320,7 @@ export function DateField({
         aria-required={required}
         onChange={(event) => onValueChange(event.target.value)}
       />
-      <FieldMessage error={error} hint={hint} />
+      <FieldMessage error={error} />
     </div>
   );
 }
