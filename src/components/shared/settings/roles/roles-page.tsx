@@ -11,6 +11,7 @@ import { RoleEditor } from "@/components/shared/settings/roles/role-editor";
 import { Button } from "@/components/shared/ui/button";
 import { useEditorSheet } from "@/hooks/shared/use-editor-sheet";
 import { useServerAction } from "@/hooks/shared/use-server-action";
+import { ROLE_DESCRIPTION_LABELS } from "@/lib/shared/auth/role-matrix";
 import { type RoleRow, deleteRole, listRoles } from "@/lib/shared/auth/roles.functions";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -104,7 +105,9 @@ export function RolesPage() {
               }
             >
               {role.description ? (
-                <p className="text-sm text-muted-foreground">{role.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {ROLE_DESCRIPTION_LABELS[role.key] ?? role.description}
+                </p>
               ) : null}
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 {role.isSystem ? (

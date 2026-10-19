@@ -11,6 +11,7 @@ import { Switch } from "@/components/shared/ui/switch";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import {
   MODULE_LABELS,
+  ACTION_DESCRIPTION_LABELS,
   groupByModule,
   visibleActions,
   withDependencies,
@@ -193,7 +194,7 @@ export function RoleEditor({
                           onCheckedChange={(checked) => toggle(action.key, checked === true)}
                         />
                         <Label htmlFor={`action-${action.key}`} className="font-normal">
-                          {action.description}
+                          {ACTION_DESCRIPTION_LABELS[action.key] ?? action.description}
                         </Label>
                       </li>
                     ))}

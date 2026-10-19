@@ -264,3 +264,7 @@ The role selector lists **roles** (from the `roles` table). Whoever has `invitat
 3. Does the catalog cover what is wanted? Is any action missing (for example `content.assign`, `reports.view`)?
 4. Is an additional pre-created role wanted (for example "Contador/Leitor" with read-only access)?
 5. Should the manager be able to **skip an approval** (explicit action, with a reason and audit)? Out of the MVP; it would be a new action `approvals.override`.
+
+## Implementation status
+
+2026-10-19: The roles screen and role editor display pre-created role descriptions and action descriptions in Brazilian Portuguese through the frontend catalog, without changing stored role or action data. Files: `src/lib/shared/auth/role-matrix.ts`, `src/components/shared/settings/roles/roles-page.tsx`, `src/components/shared/settings/roles/role-editor.tsx`. Validation performed: ESLint, TypeScript, Prettier, `npm run check:docs` and `git diff --check`. **Not tested**: role screens in a browser.

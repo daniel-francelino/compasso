@@ -4,12 +4,18 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormActions } from "@/components/shared/admin/form-actions";
-import { TextField } from "@/components/shared/admin/form-fields";
+import { IconTile } from "@/components/shared/admin/icon-tile";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
-import { policyFields } from "@/components/shared/settings/organization/policy-fields";
+import {
+  type PolicyField,
+  policyFields,
+  policyGroups,
+} from "@/components/shared/settings/organization/policy-fields";
 import { Button } from "@/components/shared/ui/button";
+import { Input } from "@/components/shared/ui/input";
 import { Switch } from "@/components/shared/ui/switch";
 import { Label } from "@/components/shared/ui/label";
 import { useUnsavedChanges } from "@/hooks/shared/use-unsaved-changes";
@@ -26,6 +32,56 @@ type Draft = Record<string, string | number | boolean>;
 
 const isDirty = (setting: SettingRecord, draft: Draft | undefined): boolean =>
   draft !== undefined && JSON.stringify(draft) !== JSON.stringify(setting.value);
+
+function PolicyRow({
+  id,
+  field,
+  value,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  field: PolicyField;
+  value: string | number | boolean | undefined;
+  disabled: boolean;
+  onChange: (value: string | number | boolean) => void;
+}) {
+  return (
+    <li className="grid gap-2 py-3 md:grid-cols-[minmax(0,1fr)_14rem] md:items-center md:gap-6">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <Label htmlFor={id} className="text-sm font-medium">
+          {field.label}
+        </Label>
+        {field.description ? (
+          <InfoTip label={`Sobre: ${field.label}`}>{field.description}</InfoTip>
+        ) : null}
+      </div>
+      {field.type === "boolean" ? (
+        <div className="md:justify-self-end">
+          <Switch id={id} checked={value === true} disabled={disabled} onCheckedChange={onChange} />
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <Input
+            id={id}
+            className={field.type === "number" ? "h-11 w-28 md:h-10" : "h-11 md:h-10"}
+            inputMode={field.type === "number" ? "numeric" : "text"}
+            value={String(value ?? "")}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange(
+                field.type === "number"
+                  ? Number(event.target.value.replace(/D/g, ""))
+                  : event.target.value,
+              )
+            }
+          />
+          {field.unit ? <span className="text-sm text-muted-foreground">{field.unit}</span> : null}
+        </div>
+      )}
+    </li>
+  );
+}
 
 function PoliciesForm({ settings }: { settings: SettingRecord[] }) {
   const queryClient = useQueryClient();
@@ -79,54 +135,41 @@ function PoliciesForm({ settings }: { settings: SettingRecord[] }) {
         event.preventDefault();
         void save();
       }}
-      className="space-y-6"
+      className="space-y-8"
     >
       {settings.map((setting) => {
+        const group = policyGroups[setting.key];
         const draft = drafts[setting.key] ?? {};
         return (
           <section
             key={setting.key}
             aria-labelledby={`policy-${setting.key}`}
-            className="space-y-3 border-b border-border pb-6 last:border-b-0 last:pb-0"
+            className="space-y-2 border-b border-border pb-8 last:border-b-0 last:pb-0"
           >
-            <h2 id={`policy-${setting.key}`} className="heading-card text-foreground">
-              {policyLabels[setting.key]}
-            </h2>
-            <div className="space-y-3">
-              {policyFields[setting.key].map((field) => {
-                const value = draft[field.name];
-                const id = `${setting.key}-${field.name}`;
-                if (field.type === "boolean") {
-                  return (
-                    <div key={field.name} className="flex items-center justify-between gap-3">
-                      <Label htmlFor={id}>{field.label}</Label>
-                      <Switch
-                        id={id}
-                        checked={value === true}
-                        onCheckedChange={(checked) => setField(setting.key, field.name, checked)}
-                      />
-                    </div>
-                  );
-                }
-                return (
-                  <TextField
-                    key={field.name}
-                    id={id}
-                    label={field.label}
-                    inputMode={field.type === "number" ? "numeric" : "text"}
-                    value={String(value ?? "")}
-                    hint={field.hint}
-                    onValueChange={(text) =>
-                      setField(
-                        setting.key,
-                        field.name,
-                        field.type === "number" ? Number(text.replace(/\D/g, "")) : text,
-                      )
-                    }
-                  />
-                );
-              })}
+            <div className="flex items-center gap-3">
+              <IconTile icon={group.icon} />
+              <div className="min-w-0">
+                <h2
+                  id={`policy-${setting.key}`}
+                  className="text-base font-semibold text-foreground"
+                >
+                  {policyLabels[setting.key]}
+                </h2>
+                <p className="text-sm text-muted-foreground">{group.description}</p>
+              </div>
             </div>
+            <ul className="divide-y divide-border pl-0 md:pl-13">
+              {policyFields[setting.key].map((field) => (
+                <PolicyRow
+                  key={field.name}
+                  id={`${setting.key}-${field.name}`}
+                  field={field}
+                  value={draft[field.name]}
+                  disabled={busy}
+                  onChange={(value) => setField(setting.key, field.name, value)}
+                />
+              ))}
+            </ul>
           </section>
         );
       })}
