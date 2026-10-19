@@ -1,6 +1,31 @@
 import type { ApprovalOutcome, ApprovalRequestStatus } from "@/lib/shared/enums";
 
-export type PortalBrand = { id: string; name: string; pendingCount: number };
+export type PortalBrand = {
+  id: string;
+  name: string;
+  clientName: string;
+  logoUrl: string | null;
+  pendingCount: number;
+};
+
+export type PortalBrandChannel = {
+  platform: string;
+  profileName: string;
+  profileUrl: string | null;
+};
+
+export type PortalBrandProfile = {
+  id: string;
+  name: string;
+  clientName: string;
+  logoUrl: string | null;
+  description: string | null;
+  targetAudience: string | null;
+  toneOfVoice: string | null;
+  objectives: string | null;
+  timezone: string;
+  channels: PortalBrandChannel[];
+};
 
 export type PortalChannel = {
   rowId: string;

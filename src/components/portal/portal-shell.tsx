@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Bell, LogOut, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
+import { PortalBrandSwitcher } from "@/components/portal/brands/portal-brand-switcher";
 import { Button } from "@/components/shared/ui/button";
 import { useUnreadCount } from "@/hooks/shared/use-notifications";
 import { useAuth } from "@/lib/shared/auth/use-auth";
@@ -32,9 +33,13 @@ export function PortalShell({ children }: { children: ReactNode }) {
       </a>
       <header className="border-b border-border bg-background">
         <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-2">
-          <Link to={AppRoute.Portal} className="heading-card text-foreground">
-            Portal do Cliente
-          </Link>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1">
+            <Link to={AppRoute.Portal} className="heading-card text-foreground">
+              Portal do Cliente
+            </Link>
+            <span aria-hidden="true" className="hidden h-6 w-px bg-border sm:block" />
+            <PortalBrandSwitcher />
+          </div>
           <nav aria-label="Portal" className="flex flex-wrap items-center gap-1">
             <Button asChild variant="ghost" className="min-h-11">
               <Link to="/portal/notifications">

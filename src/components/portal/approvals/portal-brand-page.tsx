@@ -1,6 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, CalendarDays, ArrowRight } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarClock,
+  CalendarDays,
+  CircleCheck,
+  ClipboardCheck,
+  Hourglass,
+  type LucideIcon,
+} from "lucide-react";
+import { PortalBrandHeader } from "@/components/portal/brands/portal-brand-header";
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
@@ -17,20 +27,34 @@ const RECENT = 5;
 
 function Section({
   title,
+  icon: Icon,
   brandId,
   requests,
-  empty,
+  emptyTitle,
+  emptyDescription,
+  count,
 }: {
   title: string;
+  icon: LucideIcon;
   brandId: string;
   requests: PortalRequest[];
-  empty: string;
+  emptyTitle: string;
+  emptyDescription: string;
+  count?: number;
 }) {
   return (
     <section className="space-y-3" aria-label={title}>
-      <h2 className="heading-card">{title}</h2>
+      <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+        <Icon className="size-5 text-muted-foreground" aria-hidden="true" />
+        {title}
+        {count !== undefined && count > 0 ? (
+          <span className="rounded-full bg-violet px-2 text-xs font-medium text-primary-foreground">
+            {count}
+          </span>
+        ) : null}
+      </h2>
       {requests.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{empty}</p>
+        <EmptyState icon={Icon} title={emptyTitle} description={emptyDescription} />
       ) : (
         <ul className="space-y-3">
           {requests.map((request) => (
@@ -92,55 +116,56 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="heading-page">Painel</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline">
-            <Link to="/portal/brands/$brandId/calendar" params={{ brandId }}>
-              <CalendarDays aria-hidden="true" />
-              Ver calendário
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
-              <ArrowRight aria-hidden="true" />
-              Ver todas as aprovações
-            </Link>
-          </Button>
-        </div>
+      <PortalBrandHeader brandId={brandId} />
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline">
+          <Link to="/portal/brands/$brandId/calendar" params={{ brandId }}>
+            <CalendarDays aria-hidden="true" />
+            Ver calendário
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
+            <ArrowRight aria-hidden="true" />
+            Ver todas as aprovações
+          </Link>
+        </Button>
       </div>
       <Section
-        title={`Aguardando você (${mine.length})`}
+        title="Aguardando você"
+        icon={ClipboardCheck}
+        count={mine.length}
         brandId={brandId}
         requests={mine}
-        empty="Nada pendente por aqui."
+        emptyTitle="Nada pendente por aqui"
+        emptyDescription="Quando a equipe enviar um conteúdo para a sua decisão, ele aparece aqui."
       />
       {others.length > 0 ? (
         <Section
           title="Pendentes com outras pessoas"
+          icon={Hourglass}
           brandId={brandId}
           requests={others}
-          empty=""
+          emptyTitle=""
+          emptyDescription=""
         />
       ) : null}
       <Section
         title="Próximas publicações"
+        icon={CalendarClock}
         brandId={brandId}
         requests={upcoming}
-        empty="Nenhuma publicação aprovada com data futura."
+        emptyTitle="Nenhuma publicação com data futura"
+        emptyDescription="Os conteúdos aprovados com data marcada aparecem aqui."
       />
       <Section
         title="Decisões recentes"
+        icon={CircleCheck}
         brandId={brandId}
         requests={recent}
-        empty="Ainda não há decisões."
+        emptyTitle="Ainda não há decisões"
+        emptyDescription="As aprovações e os pedidos de alteração ficam registrados aqui."
       />
-      <Button asChild variant="ghost">
-        <Link to={AppRoute.Portal}>
-          <ArrowLeft aria-hidden="true" />
-          Trocar de marca
-        </Link>
-      </Button>
     </div>
   );
 }

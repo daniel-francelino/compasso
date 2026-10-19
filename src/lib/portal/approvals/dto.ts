@@ -30,7 +30,30 @@ export type PortalRequestRow = z.infer<typeof portalRequestRowSchema>;
 
 export const portalBrandsSchema = z.object({
   list: z.array(
-    z.object({ id: z.string().uuid(), name: z.string(), pending_count: z.number().int() }),
+    z.object({
+      id: z.string().uuid(),
+      name: z.string(),
+      client_name: z.string(),
+      pending_count: z.number().int(),
+    }),
+  ),
+});
+
+export const portalBrandProfileSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  client_name: z.string(),
+  description: z.string().nullable(),
+  target_audience: z.string().nullable(),
+  tone_of_voice: z.string().nullable(),
+  objectives: z.string().nullable(),
+  timezone: z.string(),
+  channels: z.array(
+    z.object({
+      platform: z.string(),
+      profile_name: z.string(),
+      profile_url: z.string().nullable(),
+    }),
   ),
 });
 

@@ -13,6 +13,7 @@ const sizes = {
   sm: "size-6 text-[0.625rem]",
   md: "size-8 text-xs",
   lg: "size-12 text-sm",
+  xl: "size-16 text-lg",
 } as const;
 
 export function BrandAvatar({

@@ -60,6 +60,7 @@ export const QueryKey = {
   Portal: {
     all: () => ["portal"] as const,
     brands: () => ["portal", "brands"] as const,
+    brand: (brandId: string) => ["portal", "brand", brandId] as const,
     pending: (brandId: string) => ["portal", "pending", brandId] as const,
     approvals: (brandId: string, filters: Filters) =>
       ["portal", "approvals", brandId, filters] as const,

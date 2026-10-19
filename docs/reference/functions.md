@@ -121,7 +121,9 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 
 | SQL function | Server function | Extra requirement | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
-| `portal_list_brands()` | `listPortalBrands` | — | — | — | — |
+| `portal_list_brands()` (returns the client name too) | `listPortalBrands` | — | — | — | — |
+| `portal_get_brand(p_brand)` | `getPortalBrand` | — | — | — | `not_found` |
+| `portal_brand_logo_keys(p_brands uuid[])` (the server signs the thumbnails) | `listPortalBrands`, `getPortalBrand` | — | — | — | — |
 | `portal_list_pending(p_brand)` | `listPortalPending` | link to brand | — | — | `not_found` |
 | `portal_list_approvals(p_brand, p_status, p_page, p_page_size)` | `listPortalApprovals` | link to brand; status filter `pending`, `approved`, `changes_requested`, `superseded` (cancelled requests never appear) | — | — | `not_found`, `invalid_input` |
 | `portal_get_approval(p_request)` | `getPortalApproval` | link to the request's brand; request shared with the person | — | — | `not_found` |

@@ -11,6 +11,7 @@ import {
   pageOf,
   parseOutput,
 } from "@/lib/shared/server-utils";
+import { portalBrandLogoUrls } from "@/lib/portal/brands/brand-logos.server";
 import { serverStorage } from "@/lib/shared/storage/server-storage.server";
 import {
   PORTAL_PAGE_SIZE,
@@ -25,6 +26,7 @@ import {
 } from "@/lib/portal/approvals/schemas";
 import {
   portalApprovalSchema,
+  portalBrandProfileSchema,
   portalBrandsSchema,
   portalCommentsSchema,
   portalMediaKeysSchema,
@@ -35,6 +37,7 @@ import {
 import type {
   PortalApproval,
   PortalBrand,
+  PortalBrandProfile,
   PortalComment,
   PortalRequest,
 } from "@/lib/portal/approvals/types";
@@ -73,16 +76,55 @@ export const listPortalBrands = createServerFn({ method: "GET" }).handler(
     if (error) return fail(error);
     const parsed = parseOutput(portalBrandsSchema, { list: data });
     if (!parsed.ok) return parsed;
+    const logos = await portalBrandLogoUrls(
+      caller.supabase,
+      parsed.list.map((row) => row.id),
+    );
     return {
       ok: true,
       brands: parsed.list.map((row) => ({
         id: row.id,
         name: row.name,
+        clientName: row.client_name,
+        logoUrl: logos.get(row.id) ?? null,
         pendingCount: row.pending_count,
       })),
     };
   },
 );
+
+export const getPortalBrand = createServerFn({ method: "GET" })
+  .validator(portalBrandSchema)
+  .handler(async ({ data }): Promise<Result<{ brand: PortalBrandProfile }>> => {
+    const caller = await requireActionServer(Action.Portal.View);
+    if (caller === null) return denied;
+    const { data: row, error } = await caller.supabase.rpc("portal_get_brand", {
+      p_brand: data.brandId,
+    });
+    if (error) return fail(error);
+    const parsed = parseOutput(portalBrandProfileSchema, row);
+    if (!parsed.ok) return parsed;
+    const logos = await portalBrandLogoUrls(caller.supabase, [parsed.id]);
+    return {
+      ok: true,
+      brand: {
+        id: parsed.id,
+        name: parsed.name,
+        clientName: parsed.client_name,
+        logoUrl: logos.get(parsed.id) ?? null,
+        description: parsed.description,
+        targetAudience: parsed.target_audience,
+        toneOfVoice: parsed.tone_of_voice,
+        objectives: parsed.objectives,
+        timezone: parsed.timezone,
+        channels: parsed.channels.map((channel) => ({
+          platform: channel.platform,
+          profileName: channel.profile_name,
+          profileUrl: channel.profile_url,
+        })),
+      },
+    };
+  });
 
 export const listPortalPending = createServerFn({ method: "GET" })
   .validator(portalBrandSchema)

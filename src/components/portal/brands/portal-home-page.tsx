@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate } from "@tanstack/react-router";
 import { Building2, TriangleAlert, RotateCw } from "lucide-react";
+import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
@@ -57,11 +58,19 @@ export function PortalHomePage() {
               params={{ brandId: brand.id }}
               className="block min-h-11 rounded-md hover:underline"
             >
-              <span className="block font-medium">{brand.name}</span>
-              <span className="text-sm text-muted-foreground">
-                {brand.pendingCount === 0
-                  ? "Nada pendente"
-                  : `${brand.pendingCount} aguardando você`}
+              <span className="flex items-center gap-3">
+                <BrandAvatar name={brand.name} logoUrl={brand.logoUrl} size="lg" />
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{brand.name}</span>
+                  <span className="block truncate text-sm text-muted-foreground">
+                    {brand.clientName}
+                  </span>
+                  <span className="block text-sm text-muted-foreground">
+                    {brand.pendingCount === 0
+                      ? "Nada pendente"
+                      : `${brand.pendingCount} aguardando você`}
+                  </span>
+                </span>
               </span>
             </Link>
           </SectionCard>

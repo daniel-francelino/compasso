@@ -32,7 +32,7 @@ Technically the external role has **no `select` policy** on any internal table; 
 | Route | Screen |
 |---|---|
 | `/portal` | Brand selection (only linked brands). With a single brand, it goes straight to it |
-| `/portal/brands/$brandId` | **Painel**: pending approvals first (with deadlines), then upcoming planned posts, then recent decisions; calendar shortcut |
+| `/portal/brands/$brandId` | **Painel**: a header with the brand logo, name, client, time zone and the registered brand data the person may see (description, target audience, tone of voice, objectives, active channels with their links), then pending approvals first (with deadlines), upcoming planned posts and recent decisions; calendar shortcut |
 | `/portal/brands/$brandId/calendar` | Read-only calendar of shared contents (month/week/list; list by default on mobile) |
 | `/portal/brands/$brandId/approvals` | List of requests with filters: Pendentes, Aprovadas, Alterações solicitadas, Substituídas |
 | `/portal/brands/$brandId/approvals/$requestId` | **Review and decision** |
@@ -64,9 +64,15 @@ Technically the external role has **no `select` policy** on any internal table; 
 - **External comments:** a thread below the content; the person adds comments (`comments.create_external`); the team sees them with an "Externo" badge.
 - **History:** previous revisions of the same content with their decisions (only those shared with the person).
 
+### Brand switcher
+
+The portal header holds a **brand switcher** (popover "Suas marcas"): the current brand with its logo, name and client, and the list of the brands the person is linked to, each with its logo and the count of requests waiting for the person. Choosing one opens that brand's panel. With a single brand the header shows its identity without a menu. There is no "Trocar de marca" button on the pages. The logo is a short signed URL (120 s) of the thumbnail, issued after the database confirms the link.
+
+Brand data the external user reads (function `portal_get_brand`): name, client name, description, target audience, tone of voice, objectives, time zone and the active channels (platform, profile name, public link). **Not exposed**: reference notes, the visual identity record, internal notes, members.
+
 ### Dashboard
 
-Shows, by brand: "Aguardando você (N)" with deadline and age, "Próximas publicações" (read-only), "Decisões recentes". Empty states are friendly and actionable ("Nada pendente por aqui").
+Shows, by brand: "Aguardando você (N)" with deadline and age, "Próximas publicações" (read-only), "Decisões recentes". Every section has an icon and uses `EmptyState` (icon, title, one-line description), for example "Nada pendente por aqui".
 
 ## Rules
 
@@ -83,7 +89,7 @@ Shows, by brand: "Aguardando você (N)" with deadline and age, "Próximas public
 
 > Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
 
-All reads and writes go through: `portal_list_brands()`, `portal_list_pending(p_brand)`, `portal_get_approval(p_request)`, `portal_list_calendar(p_brand, p_from, p_to)`, `portal_list_comments(p_item)`, `portal_add_comment(p_item, p_body)`, `portal_decide_approval(p_request, p_outcome, p_comment)`, `portal_record_view(p_request)`. Each checks `has_action('portal.view')` and the active external link; outputs are validated with zod on the server (`parseOutput`) and returned as explicit DTOs (never full rows).
+All reads and writes go through: `portal_list_brands()`, `portal_get_brand(p_brand)`, `portal_brand_logo_keys(p_brands)`, `portal_list_pending(p_brand)`, `portal_get_approval(p_request)`, `portal_list_calendar(p_brand, p_from, p_to)`, `portal_list_comments(p_item)`, `portal_add_comment(p_item, p_body)`, `portal_decide_approval(p_request, p_outcome, p_comment)`, `portal_record_view(p_request)`. Each checks `has_action('portal.view')` and the active external link; outputs are validated with zod on the server (`parseOutput`) and returned as explicit DTOs (never full rows).
 
 Code layout: `components/portal/{brands,approvals,calendar,comments}`, `lib/portal/{brands,approvals,calendar,comments}` (server functions `*.functions.ts`), `hooks/portal/...`; shared pieces (`shared/preview`, `shared/calendar`, `shared/editorial`, `shared/media` for signed URLs) are imported from `shared`.
 
@@ -121,3 +127,5 @@ Phase 3 (task P3-05, 2026-10-18). Done: migration `20261018100920_portal_functio
 Validation performed: pgTAP (brand A versus brand B on every function, designated approver, member without `can_decide`, commenter, internal manager refused, revoked link, no storage key or internal text in the DTO, superseded revision, signing only for files of a shared revision); typecheck, lint, build; the unauthenticated redirects of the portal routes in Playwright. **Not tested**: the portal in a browser at 360 px and with the keyboard (acceptance criterion), the invite → approve flow with real accounts, the signed file URLs against a real bucket. **Not done**: anonymous links (out of scope).
 
 Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (returns the brand zone and one entry per content that has a request that is not cancelled, with date, status and title taken from the snapshot of its latest request; never drafts, owners, internal deadlines or comments), the server function `listPortalCalendar`, the page `/portal/brands/$brandId/calendar` (month, week and list, read-only, a click opens the approval screen) and a "Ver calendário" link on the brand panel. Tested with the SQL assertions of `11_calendar.test.sql` (brand A versus brand B, the team refused, no internal field in the output); **not tested** in a browser (V20).
+
+2026-10-19: Portal layout refresh. Migration `20261019140000_portal_brand_profile.sql` (not yet applied to the linked project): `portal_list_brands` now also returns the client name, new `portal_get_brand` and `portal_brand_logo_keys`. Server: `getPortalBrand`, logos signed in `src/lib/portal/brands/brand-logos.server.ts`, `QueryKey.Portal.brand`. UI: `PortalBrandSwitcher` and `PortalBrandHeader` (`src/components/portal/brands/`), icons on every section of the panel, `EmptyState` on the empty sections, the "Trocar de marca" button removed, logos on the brand selection page, `BrandAvatar` size `xl`. Validation performed: 25 SQL assertions in `18_brand_logo.test.sql` (753 in total, 0 failures; linked external user, external user of another brand, internal manager, anon, unknown brand, no internal field in the output), typecheck, lint. **Not tested**: the portal in a browser (switcher, logos, 360 px), the signed logo URL against the real bucket, the migration against the linked project.
