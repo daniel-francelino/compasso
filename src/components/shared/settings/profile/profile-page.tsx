@@ -1,3 +1,4 @@
+import { Save, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError, PasswordField } from "@/components/shared/admin/auth-shell";
@@ -47,6 +48,7 @@ function NameForm({ initialName }: { initialName: string }) {
       />
       <FormError message={error} />
       <Button type="submit" loading={busy} disabled={busy || fullName === initialName}>
+        <Save aria-hidden="true" />
         Salvar
       </Button>
     </SectionCard>
@@ -96,6 +98,7 @@ function PasswordForm() {
       />
       <FormError message={error} />
       <Button type="submit" loading={busy} disabled={busy || password === ""}>
+        <KeyRound aria-hidden="true" />
         Alterar senha
       </Button>
     </SectionCard>

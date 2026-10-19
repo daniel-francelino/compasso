@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { Download, Replace, Trash2, Undo2 } from "lucide-react";
+import { Download, Replace, Trash2, Undo2, Save, Globe, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -128,6 +128,7 @@ function MetadataForm({ detail, canEdit }: { detail: MediaDetail; canEdit: boole
       <FormError message={error} />
       {canEdit ? (
         <Button type="submit" loading={busy} disabled={busy || !dirty}>
+          <Save aria-hidden="true" />
           Salvar
         </Button>
       ) : null}
@@ -269,6 +270,7 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
                       ).then(refresh)
                     }
                   >
+                    <Globe aria-hidden="true" />
                     {version.published ? "Retirar do site" : "Publicar para o site"}
                   </Button>
                 ) : null}
@@ -290,6 +292,7 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
                       ).then(refresh)
                     }
                   >
+                    <RefreshCw aria-hidden="true" />
                     Usar esta versão
                   </Button>
                 ) : null}

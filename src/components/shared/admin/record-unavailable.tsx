@@ -1,5 +1,5 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
-import { FileQuestion } from "lucide-react";
+import { FileQuestion, ArrowLeft } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { Button } from "@/components/shared/ui/button";
 
@@ -21,7 +21,10 @@ export function RecordUnavailable({
       description={message}
       action={
         <Button asChild>
-          <Link to={backTo}>{backLabel}</Link>
+          <Link to={backTo}>
+            <ArrowLeft aria-hidden="true" />
+            {backLabel}
+          </Link>
         </Button>
       }
     />

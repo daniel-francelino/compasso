@@ -1,3 +1,4 @@
+import { Save } from "lucide-react";
 import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { AuthShell, FormError, PasswordField } from "@/components/shared/admin/auth-shell";
@@ -57,6 +58,7 @@ function ResetPasswordPage() {
         />
         <FormError message={error} />
         <Button type="submit" className="h-11 w-full md:h-10" disabled={busy}>
+          <Save aria-hidden="true" />
           {busy ? "Salvando…" : "Salvar senha"}
         </Button>
       </form>

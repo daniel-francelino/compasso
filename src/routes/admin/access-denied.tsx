@@ -1,3 +1,4 @@
+import { LogOut } from "lucide-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AuthShell } from "@/components/shared/admin/auth-shell";
 import { Button } from "@/components/shared/ui/button";
@@ -24,6 +25,7 @@ function AccessDeniedPage() {
       }
     >
       <Button variant="outline" className="h-11 w-full md:h-10" onClick={signOut}>
+        <LogOut aria-hidden="true" />
         Sair
       </Button>
     </AuthShell>

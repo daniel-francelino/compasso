@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCw } from "lucide-react";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { CalendarGrid } from "@/components/shared/calendar/calendar-grid";
 import { CalendarList } from "@/components/shared/calendar/calendar-list";
@@ -96,6 +96,7 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
           <AlertDescription className="flex flex-wrap items-center gap-3">
             {query.error.message}
             <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
+              <RotateCw aria-hidden="true" />
               Tentar de novo
             </Button>
           </AlertDescription>

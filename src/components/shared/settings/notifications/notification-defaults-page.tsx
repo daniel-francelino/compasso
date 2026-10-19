@@ -1,3 +1,4 @@
+import { Save } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -72,6 +73,7 @@ function KindCard({ kind }: { kind: KindDefaults }) {
             )
           }
         >
+          <Save aria-hidden="true" />
           Salvar
         </Button>
       </div>

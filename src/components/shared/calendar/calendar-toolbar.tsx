@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
@@ -28,6 +28,7 @@ export function CalendarToolbar({
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" onClick={onToday}>
+          <CalendarDays aria-hidden="true" />
           Hoje
         </Button>
         <Button

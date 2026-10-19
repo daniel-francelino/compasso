@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Plus, Rocket, Save } from "lucide-react";
+import { ExternalLink, Plus, Rocket, Save, Settings2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddSectionDialog } from "@/components/cms/page-editor/add-section-dialog";
@@ -256,6 +256,7 @@ function PageEditor({ data, pages }: { data: PageEditorData; pages: PageOption[]
             variant={selected === PAGE_TAB ? "default" : "ghost"}
             onClick={() => setSelected(PAGE_TAB)}
           >
+            <Settings2 aria-hidden="true" />
             Configurações da página
           </Button>
         </SectionCard>

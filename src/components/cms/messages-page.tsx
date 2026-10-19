@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail } from "lucide-react";
+import { Mail, Check, Save, RotateCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
@@ -77,11 +77,13 @@ function MessageCard({ message }: { message: MessageRow }) {
               disabled={busy}
               onClick={() => void set(status)}
             >
+              <Check aria-hidden="true" />
               Marcar como {contactMessageStatusLabels[status].toLowerCase()}
             </Button>
           ))}
         {note !== (message.note ?? "") ? (
           <Button type="button" size="sm" disabled={busy} onClick={() => void set(message.status)}>
+            <Save aria-hidden="true" />
             Salvar nota
           </Button>
         ) : null}
@@ -128,6 +130,7 @@ export function MessagesPage() {
         <div className="space-y-3">
           <p className="text-sm text-danger">{messages.error.message}</p>
           <Button type="button" variant="outline" onClick={() => void messages.refetch()}>
+            <RotateCw aria-hidden="true" />
             Tentar novamente
           </Button>
         </div>

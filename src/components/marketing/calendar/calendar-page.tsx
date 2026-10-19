@@ -1,3 +1,4 @@
+import { RotateCw } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -336,6 +337,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           <AlertDescription className="flex flex-wrap items-center gap-3">
             {query.error.message}
             <Button type="button" variant="outline" size="sm" onClick={() => void query.refetch()}>
+              <RotateCw aria-hidden="true" />
               Tentar de novo
             </Button>
           </AlertDescription>

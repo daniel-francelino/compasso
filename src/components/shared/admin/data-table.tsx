@@ -1,4 +1,11 @@
-import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, type LucideIcon } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  MoreHorizontal,
+  type LucideIcon,
+  RotateCw,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { Button } from "@/components/shared/ui/button";
@@ -283,6 +290,7 @@ export function DataTable<T>({
                   <p role="alert">{error}</p>
                   {onRetry ? (
                     <Button className="mt-3" variant="outline" onClick={onRetry}>
+                      <RotateCw aria-hidden="true" />
                       Tentar novamente
                     </Button>
                   ) : null}

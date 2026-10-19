@@ -1,3 +1,4 @@
+import { Save } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -85,6 +86,7 @@ function PolicyCard({ setting }: { setting: SettingRecord }) {
       </div>
       <FormError message={error} />
       <Button type="submit" loading={busy} disabled={!dirty || !parsed.success || busy}>
+        <Save aria-hidden="true" />
         Salvar
       </Button>
     </SectionCard>

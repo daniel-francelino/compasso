@@ -1,3 +1,4 @@
+import { Save } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -57,6 +58,7 @@ function LeadDays({
         disabled={busy || invalid || text === initial}
         onClick={() => onSave(text.trim() === "" ? null : parsed)}
       >
+        <Save aria-hidden="true" />
         Salvar prazos
       </Button>
       {invalid ? (

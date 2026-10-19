@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Bell } from "lucide-react";
+import { Bell, CheckCheck, ArrowRight } from "lucide-react";
 import { NotificationItem } from "@/components/shared/notifications/notification-item";
 import { Button } from "@/components/shared/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
@@ -52,6 +52,7 @@ export function NotificationBell({ userId }: { userId: string }) {
             onClick={() => void actions.readAll()}
             disabled={unread === 0 || actions.busy}
           >
+            <CheckCheck aria-hidden="true" />
             Marcar todos como lidos
           </Button>
         </div>
@@ -77,7 +78,10 @@ export function NotificationBell({ userId }: { userId: string }) {
         ) : null}
         <div className="border-t border-border p-2 text-center">
           <Button asChild variant="ghost" size="sm">
-            <Link to={AppRoute.Notifications}>Ver todos</Link>
+            <Link to={AppRoute.Notifications}>
+              <ArrowRight aria-hidden="true" />
+              Ver todos
+            </Link>
           </Button>
         </div>
       </PopoverContent>

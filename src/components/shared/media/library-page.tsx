@@ -1,6 +1,17 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ImageUp, Images, ScanSearch, Trash2, Upload } from "lucide-react";
+import {
+  ImageUp,
+  Images,
+  ScanSearch,
+  Trash2,
+  Upload,
+  FolderMinus,
+  Eraser,
+  RotateCw,
+  Globe,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { EmptyState } from "@/components/shared/admin/empty-state";
@@ -252,6 +263,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                     ).then(() => setSelected([]))
                   }
                 >
+                  <FolderMinus aria-hidden="true" />
                   Tirar das pastas
                 </Button>
               ) : null}
@@ -266,6 +278,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                 </Button>
               ) : null}
               <Button size="sm" variant="ghost" onClick={() => setSelected([])}>
+                <Eraser aria-hidden="true" />
                 Limpar seleção
               </Button>
             </div>
@@ -277,7 +290,12 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
               icon={Images}
               title="Não foi possível carregar a biblioteca"
               description={query.error.message}
-              action={<Button onClick={() => void query.refetch()}>Tentar novamente</Button>}
+              action={
+                <Button onClick={() => void query.refetch()}>
+                  <RotateCw aria-hidden="true" />
+                  Tentar novamente
+                </Button>
+              }
             />
           ) : null}
           {query.data && rows.length === 0 ? (
@@ -341,6 +359,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                   setUploading({ scope: MediaScope.Site });
                 }}
               >
+                <Globe aria-hidden="true" />
                 Site
               </Button>
             ) : null}
@@ -358,6 +377,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setChooser(false)}>
+              <X aria-hidden="true" />
               Cancelar
             </Button>
           </DialogFooter>

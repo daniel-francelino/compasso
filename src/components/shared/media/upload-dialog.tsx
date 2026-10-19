@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, FileUp, Loader2, X } from "lucide-react";
+import { CircleAlert, CircleCheck, FileUp, Loader2, X, Upload, RotateCw } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "@/components/shared/ui/button";
 import {
@@ -141,6 +141,7 @@ export function UploadDialog({
             upload.add(single ? files.slice(0, 1) : files);
           }}
         >
+          <Upload aria-hidden="true" />
           Escolher arquivos ou soltar aqui
         </Button>
 
@@ -158,10 +159,12 @@ export function UploadDialog({
         <DialogFooter>
           {failed > 0 && !upload.busy ? (
             <Button variant="outline" onClick={upload.retryFailed}>
+              <RotateCw aria-hidden="true" />
               Tentar de novo os que falharam
             </Button>
           ) : null}
           <Button variant="outline" onClick={() => close(false)} disabled={upload.busy}>
+            <X aria-hidden="true" />
             Fechar
           </Button>
           <Button
@@ -169,6 +172,7 @@ export function UploadDialog({
             loading={upload.busy}
             disabled={queued === 0 || upload.busy}
           >
+            <Upload aria-hidden="true" />
             Enviar {queued > 0 ? `(${queued})` : ""}
           </Button>
         </DialogFooter>

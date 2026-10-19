@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, CheckCheck, Eraser } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { EditorSheet } from "@/components/shared/admin/editor-sheet";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -171,6 +171,7 @@ export function RoleEditor({
                       size="sm"
                       onClick={() => setModule(keys, true)}
                     >
+                      <CheckCheck aria-hidden="true" />
                       Selecionar tudo
                     </Button>
                     <Button
@@ -179,6 +180,7 @@ export function RoleEditor({
                       size="sm"
                       onClick={() => setModule(keys, false)}
                     >
+                      <Eraser aria-hidden="true" />
                       Limpar
                     </Button>
                   </div>

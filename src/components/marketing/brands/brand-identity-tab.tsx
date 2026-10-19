@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Save } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -207,6 +207,7 @@ function IdentityForm({ brand, canEdit }: { brand: BrandDetail; canEdit: boolean
       <FormError message={error} />
       {canEdit ? (
         <Button type="submit" loading={busy} disabled={busy || !dirty}>
+          <Save aria-hidden="true" />
           Salvar
         </Button>
       ) : null}

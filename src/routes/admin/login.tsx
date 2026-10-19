@@ -1,3 +1,4 @@
+import { LogIn } from "lucide-react";
 import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
@@ -74,6 +75,7 @@ function LoginPage() {
         />
         <FormError message={error} />
         <Button type="submit" className="h-11 w-full md:h-10" disabled={busy}>
+          <LogIn aria-hidden="true" />
           {busy ? "Entrando…" : "Entrar"}
         </Button>
       </form>

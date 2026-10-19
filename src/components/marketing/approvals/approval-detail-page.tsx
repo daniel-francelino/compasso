@@ -1,6 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { BellRing, Eye, Replace, Send, TriangleAlert, UserCog, XCircle } from "lucide-react";
+import {
+  BellRing,
+  Eye,
+  Replace,
+  Send,
+  TriangleAlert,
+  UserCog,
+  XCircle,
+  ArrowRight,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
@@ -183,6 +192,7 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
                 to="/admin/marketing/variants/$variantId"
                 params={{ variantId: request.variantId }}
               >
+                <ArrowRight aria-hidden="true" />
                 Abrir variante
               </Link>
             </Button>

@@ -1,3 +1,4 @@
+import { Check, Trash2, X } from "lucide-react";
 import type { ReactNode } from "react";
 import {
   AlertDialog,
@@ -39,7 +40,10 @@ export function ConfirmDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={busy}>
+            <X aria-hidden="true" />
+            Cancelar
+          </AlertDialogCancel>
           <Button
             variant={destructive ? "destructive" : "default"}
             disabled={busy}
@@ -47,6 +51,7 @@ export function ConfirmDialog({
               if (await onConfirm()) onOpenChange(false);
             }}
           >
+            {destructive ? <Trash2 aria-hidden="true" /> : <Check aria-hidden="true" />}
             {busy ? "Processando…" : confirmLabel}
           </Button>
         </AlertDialogFooter>

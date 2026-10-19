@@ -1,3 +1,4 @@
+import { KeyRound } from "lucide-react";
 import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { AuthShell, Field, FormError, PasswordField } from "@/components/shared/admin/auth-shell";
@@ -85,6 +86,7 @@ function InvitePage() {
         />
         <FormError message={error} />
         <Button type="submit" className="h-11 w-full md:h-10" disabled={busy}>
+          <KeyRound aria-hidden="true" />
           {busy ? "Criando acesso…" : "Criar acesso"}
         </Button>
       </form>

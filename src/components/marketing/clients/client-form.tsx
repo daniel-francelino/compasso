@@ -1,3 +1,4 @@
+import { X, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -152,10 +153,12 @@ export function ClientForm({
       <div className="flex flex-wrap justify-end gap-2">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
+            <X aria-hidden="true" />
             Cancelar
           </Button>
         ) : null}
         <Button type="submit" loading={busy} disabled={busy}>
+          <Plus aria-hidden="true" />
           {client ? "Salvar" : "Criar cliente"}
         </Button>
       </div>

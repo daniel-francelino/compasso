@@ -1,3 +1,4 @@
+import { ShieldOff, ShieldCheck } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -74,6 +75,7 @@ export function CaseAuthorizationPanel({ pageId, canEdit }: { pageId: string; ca
                 void act(() => withdrawCaseStudy({ data: { pageId } }), "Autorização retirada.")
               }
             >
+              <ShieldOff aria-hidden="true" />
               Retirar autorização
             </Button>
           ) : null}
@@ -107,6 +109,7 @@ export function CaseAuthorizationPanel({ pageId, canEdit }: { pageId: string; ca
               )
             }
           >
+            <ShieldCheck aria-hidden="true" />
             Registrar autorização
           </Button>
         </div>

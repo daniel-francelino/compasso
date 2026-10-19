@@ -1,3 +1,4 @@
+import { Eraser } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { Button } from "@/components/shared/ui/button";
@@ -25,6 +26,7 @@ export function SearchableEmptyState({
       action={
         search ? (
           <Button variant="outline" onClick={onClearSearch}>
+            <Eraser aria-hidden="true" />
             Limpar pesquisa
           </Button>
         ) : undefined

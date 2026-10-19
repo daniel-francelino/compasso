@@ -1,4 +1,4 @@
-import { ListFilter } from "lucide-react";
+import { ListFilter, Eraser, Check } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/shared/ui/badge";
 import { Button } from "@/components/shared/ui/button";
@@ -104,9 +104,11 @@ export function ListFilters({
         </div>
         <div className="flex items-center justify-between gap-2 border-t border-border px-4 py-3">
           <Button type="button" variant="ghost" size="sm" onClick={clear}>
+            <Eraser aria-hidden="true" />
             Limpar
           </Button>
           <Button type="button" size="sm" onClick={apply}>
+            <Check aria-hidden="true" />
             Aplicar
           </Button>
         </div>

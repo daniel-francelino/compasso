@@ -1,6 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ClipboardCheck, TriangleAlert, UserRound, Workflow, type LucideIcon } from "lucide-react";
+import {
+  ClipboardCheck,
+  TriangleAlert,
+  UserRound,
+  Workflow,
+  type LucideIcon,
+  RotateCw,
+  ArrowRight,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SelectField } from "@/components/shared/admin/form-fields";
@@ -54,6 +62,7 @@ function Block({
         <div role="alert" className="space-y-2 text-sm">
           <p className="text-destructive">{error}</p>
           <Button size="sm" variant="outline" onClick={onRetry}>
+            <RotateCw aria-hidden="true" />
             Tentar novamente
           </Button>
         </div>
@@ -161,7 +170,10 @@ function PendingBlock({ brandId }: { brandId: string | undefined }) {
       )}
       {(query.data?.total ?? 0) > PENDING_ROWS ? (
         <Button asChild variant="outline" size="sm">
-          <Link to={AppRoute.Approvals}>Ver todas ({query.data?.total})</Link>
+          <Link to={AppRoute.Approvals}>
+            <ArrowRight aria-hidden="true" />
+            Ver todas ({query.data?.total})
+          </Link>
         </Button>
       ) : null}
     </Block>

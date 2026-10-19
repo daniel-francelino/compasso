@@ -1,3 +1,4 @@
+import { Send } from "lucide-react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AuthShell, Field, FormError } from "@/components/shared/admin/auth-shell";
@@ -65,6 +66,7 @@ function RecoverPasswordPage() {
         />
         <FormError message={error} />
         <Button type="submit" className="h-11 w-full md:h-10" disabled={busy}>
+          <Send aria-hidden="true" />
           {busy ? "Enviando…" : "Enviar link"}
         </Button>
       </form>

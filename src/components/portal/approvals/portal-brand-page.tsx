@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarDays, ArrowRight } from "lucide-react";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
@@ -95,11 +95,13 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
             <Link to="/portal/brands/$brandId/calendar" params={{ brandId }}>
+              <CalendarDays aria-hidden="true" />
               Ver calendário
             </Link>
           </Button>
           <Button asChild variant="outline">
             <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
+              <ArrowRight aria-hidden="true" />
               Ver todas as aprovações
             </Link>
           </Button>

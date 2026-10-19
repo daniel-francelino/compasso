@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ScanSearch } from "lucide-react";
+import { ScanSearch, RotateCw, X } from "lucide-react";
 import { Button } from "@/components/shared/ui/button";
 import {
   Dialog,
@@ -79,9 +79,13 @@ export function StorageCheckDialog({
             onClick={() => void query.refetch()}
             disabled={query.isFetching}
           >
+            <RotateCw aria-hidden="true" />
             Verificar de novo
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Fechar</Button>
+          <Button onClick={() => onOpenChange(false)}>
+            <X aria-hidden="true" />
+            Fechar
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

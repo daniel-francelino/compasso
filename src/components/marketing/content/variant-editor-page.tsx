@@ -326,9 +326,11 @@ function Editor({ variant }: { variant: VariantDetail }) {
             {conflict ? (
               <span className="mt-2 flex flex-wrap gap-2">
                 <Button type="button" size="sm" onClick={() => void save(true)} disabled={saving}>
+                  <Save aria-hidden="true" />
                   Manter meu texto e salvar por cima
                 </Button>
                 <Button type="button" size="sm" variant="outline" onClick={reload}>
+                  <RotateCcw aria-hidden="true" />
                   Descartar e recarregar
                 </Button>
               </span>

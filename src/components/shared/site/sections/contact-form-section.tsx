@@ -1,3 +1,4 @@
+import { Send } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import type { SiteRenderContext } from "@/components/shared/site/site-context";
@@ -164,6 +165,7 @@ export function ContactFormSection({
           </p>
         )}
         <Button type="submit" loading={state === "sending"}>
+          <Send aria-hidden="true" />
           Enviar mensagem
         </Button>
       </form>

@@ -1,3 +1,4 @@
+import { X, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -87,9 +88,11 @@ export function BrandCreateForm({
       <FormError message={error} />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
+          <X aria-hidden="true" />
           Cancelar
         </Button>
         <Button type="submit" loading={busy} disabled={busy}>
+          <Plus aria-hidden="true" />
           Criar marca
         </Button>
       </div>

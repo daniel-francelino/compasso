@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { Archive, Trash2, Undo2 } from "lucide-react";
+import { Archive, Trash2, Undo2, Save } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -94,6 +94,7 @@ function SettingsForm({ brand }: { brand: BrandDetail }) {
       ) : null}
       <FormError message={error} />
       <Button type="submit" loading={busy} disabled={busy || !dirty}>
+        <Save aria-hidden="true" />
         Salvar
       </Button>
     </SectionCard>

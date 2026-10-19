@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Pencil, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
+import { Copy, Pencil, Plus, ShieldCheck, Trash2, Users, RotateCw } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { EmptyState } from "@/components/shared/admin/empty-state";
@@ -47,7 +47,12 @@ export function RolesPage() {
           icon={ShieldCheck}
           title="Não foi possível carregar os perfis"
           description={query.error.message}
-          action={<Button onClick={() => void query.refetch()}>Tentar novamente</Button>}
+          action={
+            <Button onClick={() => void query.refetch()}>
+              <RotateCw aria-hidden="true" />
+              Tentar novamente
+            </Button>
+          }
         />
       ) : null}
 

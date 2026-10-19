@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ShieldAlert } from "lucide-react";
+import { ShieldAlert, House } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { Button } from "@/components/shared/ui/button";
@@ -19,7 +19,10 @@ function ForbiddenPage() {
         description="Peça acesso a quem administra o Compasso, se precisar dela."
         action={
           <Button asChild>
-            <Link to={AppRoute.Admin}>Voltar ao início</Link>
+            <Link to={AppRoute.Admin}>
+              <House aria-hidden="true" />
+              Voltar ao início
+            </Link>
           </Button>
         }
       />

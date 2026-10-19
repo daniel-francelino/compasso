@@ -1,3 +1,4 @@
+import { Images, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { TextField } from "@/components/shared/admin/form-fields";
 import { MediaPicker } from "@/components/shared/media/media-picker";
@@ -42,6 +43,7 @@ export function ImageField({
           />
         ) : null}
         <Button type="button" variant="outline" onClick={() => setPicking(true)}>
+          <Images aria-hidden="true" />
           {value.mediaVersionId ? "Trocar imagem" : "Escolher da biblioteca"}
         </Button>
         {value.mediaVersionId ? (
@@ -50,6 +52,7 @@ export function ImageField({
             variant="ghost"
             onClick={() => onChange({ mediaVersionId: null, alt: "", decorative: false })}
           >
+            <Trash2 aria-hidden="true" />
             Remover
           </Button>
         ) : null}

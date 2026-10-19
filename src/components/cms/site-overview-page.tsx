@@ -1,3 +1,4 @@
+import { RotateCw, LayoutTemplate, Mail, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -31,6 +32,7 @@ export function SiteOverviewPage() {
       <div className="space-y-3">
         <p className="text-sm text-danger">{overview.error.message}</p>
         <Button type="button" variant="outline" onClick={() => void overview.refetch()}>
+          <RotateCw aria-hidden="true" />
           Tentar novamente
         </Button>
       </div>
@@ -74,13 +76,20 @@ export function SiteOverviewPage() {
       ) : null}
       <div className="flex flex-wrap gap-3">
         <Button asChild>
-          <Link to="/admin/site/pages">Ver páginas</Link>
+          <Link to="/admin/site/pages">
+            <LayoutTemplate aria-hidden="true" />
+            Ver páginas
+          </Link>
         </Button>
         <Button asChild variant="outline">
-          <Link to="/admin/site/messages">Ver mensagens</Link>
+          <Link to="/admin/site/messages">
+            <Mail aria-hidden="true" />
+            Ver mensagens
+          </Link>
         </Button>
         <Button asChild variant="outline">
           <a href="/" target="_blank" rel="noopener noreferrer">
+            <ExternalLink aria-hidden="true" />
             Ver site
           </a>
         </Button>

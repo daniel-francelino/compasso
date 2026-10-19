@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import { Bell, CheckCheck, RotateCw } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -46,6 +46,7 @@ export function NotificationsPage() {
         description="O que precisa da sua atenção."
         actions={
           <Button variant="outline" onClick={() => void actions.readAll()} disabled={actions.busy}>
+            <CheckCheck aria-hidden="true" />
             Marcar todos como lidos
           </Button>
         }
@@ -65,7 +66,12 @@ export function NotificationsPage() {
           icon={Bell}
           title="Não foi possível carregar os avisos"
           description={query.error.message}
-          action={<Button onClick={() => void query.refetch()}>Tentar novamente</Button>}
+          action={
+            <Button onClick={() => void query.refetch()}>
+              <RotateCw aria-hidden="true" />
+              Tentar novamente
+            </Button>
+          }
         />
       ) : null}
       {query.data?.rows.length === 0 ? (

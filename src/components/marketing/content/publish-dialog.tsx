@@ -1,4 +1,4 @@
-import { Megaphone } from "lucide-react";
+import { Megaphone, Images, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -88,12 +88,14 @@ export function PublishDialog({
         <p className="text-sm font-medium">Comprovante (opcional)</p>
         <div className="flex flex-wrap items-center gap-2">
           <Button type="button" variant="outline" onClick={() => setPicking(true)}>
+            <Images aria-hidden="true" />
             Escolher da biblioteca
           </Button>
           {evidence ? (
             <>
               <span className="truncate text-sm">{evidence.name}</span>
               <Button type="button" variant="ghost" size="sm" onClick={() => setEvidence(null)}>
+                <Trash2 aria-hidden="true" />
                 Remover
               </Button>
             </>

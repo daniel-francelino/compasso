@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Images, Upload } from "lucide-react";
+import { Images, Upload, X, Check } from "lucide-react";
 import { useState } from "react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { MediaGrid } from "@/components/shared/media/media-grid";
@@ -145,9 +145,11 @@ export function MediaPicker({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <X aria-hidden="true" />
               Cancelar
             </Button>
             <Button onClick={confirm} disabled={selected.length === 0}>
+              <Check aria-hidden="true" />
               Usar {selected.length > 0 ? `(${selected.length})` : ""}
             </Button>
           </DialogFooter>

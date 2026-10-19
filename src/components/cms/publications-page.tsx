@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Undo2, History } from "lucide-react";
+import { Undo2, History, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -47,6 +47,7 @@ function Revisions({ pageId, status }: { pageId: string; status: SitePageStatus 
     <div className="space-y-4">
       {status === SitePageStatus.Published ? (
         <Button type="button" variant="outline" onClick={() => setUnpublishing(true)}>
+          <EyeOff aria-hidden="true" />
           Tirar do ar
         </Button>
       ) : null}

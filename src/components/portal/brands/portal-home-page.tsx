@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, Navigate } from "@tanstack/react-router";
-import { Building2, TriangleAlert } from "lucide-react";
+import { Building2, TriangleAlert, RotateCw } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
@@ -22,7 +22,12 @@ export function PortalHomePage() {
         icon={TriangleAlert}
         title="Não foi possível carregar suas marcas"
         description={query.error.message}
-        action={<Button onClick={() => void query.refetch()}>Tentar novamente</Button>}
+        action={
+          <Button onClick={() => void query.refetch()}>
+            <RotateCw aria-hidden="true" />
+            Tentar novamente
+          </Button>
+        }
       />
     );
   }

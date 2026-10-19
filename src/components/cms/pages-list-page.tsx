@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FilePlus, Trash2, LayoutTemplate } from "lucide-react";
+import { FilePlus, Trash2, LayoutTemplate, RotateCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -143,6 +143,7 @@ export function PagesListPage() {
         <div className="space-y-3">
           <p className="text-sm text-danger">{pages.error.message}</p>
           <Button type="button" variant="outline" onClick={() => void pages.refetch()}>
+            <RotateCw aria-hidden="true" />
             Tentar novamente
           </Button>
         </div>
