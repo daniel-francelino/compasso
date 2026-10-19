@@ -248,3 +248,5 @@ Phase 1 (task P1-09, 2026-10-18). Migration `20261018100400_notifications.sql` (
 ### Phase 5 addition (tasks P5-02 and P5-05, 2026-10-19)
 
 `site.published` and `site.contact_message` are now `available`. `site.published` is written inside `publish_site_page`, `site_rollback` and `publish_site_settings` (key per revision or settings version) and goes to people with `site.publish`; `site.contact_message` is written by `site_contact_submit` (the public function) and goes to people with `site.view`. **Not tested** with real accounts and the bell (V22, V25).
+
+2026-10-19: Removed the “Avisos” item from the admin sidebar; users can still open the notifications page from “Ver todas” in the header bell. Files: `src/components/shared/admin/nav-config.ts`. Validation performed: ESLint, Prettier, `npm run check:docs` and `git diff --check`. **Not tested**: navigation in a browser.

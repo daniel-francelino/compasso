@@ -1,6 +1,5 @@
 import {
   ArrowRightLeft,
-  Bell,
   BellRing,
   Building2,
   Briefcase,
@@ -192,9 +191,7 @@ export const navGroups: NavGroup[] = [
   {
     space: Space.Shared,
     label: "Minha conta",
-    items: [
-      { title: "Meu perfil", icon: UserRound, to: AppRoute.Profile },
-    ],
+    items: [{ title: "Meu perfil", icon: UserRound, to: AppRoute.Profile }],
   },
   {
     space: Space.Shared,
