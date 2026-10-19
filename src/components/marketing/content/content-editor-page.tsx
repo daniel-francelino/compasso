@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ContentEditor } from "@/components/marketing/content/content-editor";
+import { ContentEditorSkeleton } from "@/components/marketing/content/content-editor-skeleton";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
-import { PageSkeleton } from "@/components/shared/admin/skeletons";
 import { draftOf, emptyDraft } from "@/hooks/marketing/use-content-draft";
 import { getCalendarNote } from "@/lib/marketing/calendar/notes.functions";
 import { getContentItem } from "@/lib/marketing/content/content.functions";
@@ -16,7 +16,7 @@ function ExistingContent({ itemId }: { itemId: string }) {
     queryKey: QueryKey.Content.item(itemId),
     queryFn: async () => unwrapResult(await getContentItem({ data: { id: itemId } })).item,
   });
-  if (existing.isPending) return <PageSkeleton />;
+  if (existing.isPending) return <ContentEditorSkeleton />;
   if (existing.isError) {
     return (
       <RecordUnavailable
@@ -42,10 +42,12 @@ function NewContent({
   brandId,
   sourceNoteId,
   day,
+  onSaved,
 }: {
   brandId: string | undefined;
   sourceNoteId: string | undefined;
   day: string | undefined;
+  onSaved?: (() => void) | undefined;
 }) {
   const note = useQuery({
     queryKey: QueryKey.Calendar.note(sourceNoteId ?? ""),
@@ -53,7 +55,7 @@ function NewContent({
       unwrapResult(await getCalendarNote({ data: { id: sourceNoteId ?? "" } })).note,
     enabled: sourceNoteId !== undefined,
   });
-  if (sourceNoteId !== undefined && note.isPending) return <PageSkeleton />;
+  if (sourceNoteId !== undefined && note.isPending) return <ContentEditorSkeleton isNew />;
   const seed = emptyDraft(note.data?.brandId ?? brandId ?? "");
   if (note.data) {
     seed.title = note.data.title;
@@ -67,6 +69,7 @@ function NewContent({
       seed={seed}
       sourceNote={note.data?.id}
       defaultDay={day ?? noteDay}
+      onSaved={onSaved}
     />
   );
 }
@@ -76,12 +79,14 @@ export function ContentEditorPage({
   brandId,
   sourceNoteId,
   day,
+  onSaved,
 }: {
   itemId?: string | undefined;
   brandId?: string | undefined;
   sourceNoteId?: string | undefined;
   day?: string | undefined;
+  onSaved?: (() => void) | undefined;
 }) {
   if (itemId !== undefined) return <ExistingContent itemId={itemId} />;
-  return <NewContent brandId={brandId} sourceNoteId={sourceNoteId} day={day} />;
+  return <NewContent brandId={brandId} sourceNoteId={sourceNoteId} day={day} onSaved={onSaved} />;
 }

@@ -17,8 +17,6 @@ export const calendarSearchSchema = z.object({
   editorial: z.nativeEnum(EditorialStatus).optional().catch(undefined),
   publication: z.nativeEnum(PublicationStatus).optional().catch(undefined),
   deadlines: z.boolean().optional().catch(undefined),
-  ideas: z.boolean().optional().catch(undefined),
-  dates: z.boolean().optional().catch(undefined),
 });
 
 export type CalendarSearch = z.infer<typeof calendarSearchSchema>;

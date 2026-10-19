@@ -10,6 +10,7 @@ import {
   acceptInvitationSchema,
   createInvitationSchema,
   invitationIdSchema,
+  resendInvitationSchema,
   invitationTokenSchema,
 } from "@/lib/shared/auth/schemas";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
@@ -36,19 +37,44 @@ const inviteLink = (token: string): string => `${siteOrigin()}${AppRoute.Admin}/
 
 const expiresAt = (): string => new Date(Date.now() + INVITATION_DAYS * DAY_MS).toISOString();
 
+type Delivery = { id: string; link: string; expiresAt: string; emailSent: boolean };
+
+const deliver = async (input: {
+  id: string;
+  token: string;
+  to: string;
+  inviterName: string;
+  sendEmail: boolean;
+  expiresAt: string;
+}): Promise<Delivery> => {
+  const link = inviteLink(input.token);
+  const sent = input.sendEmail
+    ? await sendEmail(
+        invitationEmail({
+          to: input.to,
+          link,
+          inviterName: input.inviterName,
+          days: INVITATION_DAYS,
+        }),
+      )
+    : null;
+  return { id: input.id, link, expiresAt: input.expiresAt, emailSent: sent?.ok === true };
+};
+
 export const createInvitation = createServerFn({ method: "POST" })
   .validator(createInvitationSchema)
-  .handler(async ({ data }): Promise<Result<{ id: string; emailSent: boolean }>> => {
+  .handler(async ({ data }): Promise<Result<Delivery>> => {
     const caller = await requireActionServer(Action.Invitations.Create);
     if (caller === null) return denied;
 
     const { token, hash } = newInvitationToken();
+    const expires = expiresAt();
     const { data: row, error } = await caller.supabase.rpc("invitation_create", {
       p_email: data.email,
       p_role: data.roleId,
       p_grants: grantsToJson(data.grants),
       p_token_hash: hash,
-      p_expires_at: expiresAt(),
+      p_expires_at: expires,
     });
     if (error) return fail(error);
     const created = parseOutput(createdSchema, row);
@@ -59,15 +85,15 @@ export const createInvitation = createServerFn({ method: "POST" })
       .select("full_name")
       .eq("id", caller.userId)
       .maybeSingle();
-    const sent = await sendEmail(
-      invitationEmail({
-        to: data.email,
-        link: inviteLink(token),
-        inviterName: inviter?.full_name ?? FALLBACK_INVITER,
-        days: INVITATION_DAYS,
-      }),
-    );
-    return { ok: true, id: created.id, emailSent: sent.ok };
+    const delivery = await deliver({
+      id: created.id,
+      token,
+      to: data.email,
+      inviterName: inviter?.full_name ?? FALLBACK_INVITER,
+      sendEmail: data.sendEmail,
+      expiresAt: expires,
+    });
+    return { ok: true, ...delivery };
   });
 
 export const revokeInvitation = createServerFn({ method: "POST" })
@@ -81,8 +107,8 @@ export const revokeInvitation = createServerFn({ method: "POST" })
   });
 
 export const resendInvitation = createServerFn({ method: "POST" })
-  .validator(invitationIdSchema)
-  .handler(async ({ data }): Promise<Result<{ id: string; emailSent: boolean }>> => {
+  .validator(resendInvitationSchema)
+  .handler(async ({ data }): Promise<Result<Delivery>> => {
     const caller = await requireActionServer(Action.Invitations.Create);
     if (caller === null) return denied;
 
@@ -98,26 +124,27 @@ export const resendInvitation = createServerFn({ method: "POST" })
     if (!grants.success) return fail({ message: "unknown" });
 
     const { token, hash } = newInvitationToken();
+    const expires = expiresAt();
     const { data: row, error } = await caller.supabase.rpc("invitation_create", {
       p_email: old.email,
       p_role: old.role_id,
       p_grants: grants.data,
       p_token_hash: hash,
-      p_expires_at: expiresAt(),
+      p_expires_at: expires,
     });
     if (error) return fail(error);
     const created = parseOutput(createdSchema, row);
     if (!created.ok) return created;
 
-    const sent = await sendEmail(
-      invitationEmail({
-        to: old.email,
-        link: inviteLink(token),
-        inviterName: FALLBACK_INVITER,
-        days: INVITATION_DAYS,
-      }),
-    );
-    return { ok: true, id: created.id, emailSent: sent.ok };
+    const delivery = await deliver({
+      id: created.id,
+      token,
+      to: old.email,
+      inviterName: FALLBACK_INVITER,
+      sendEmail: data.sendEmail,
+      expiresAt: expires,
+    });
+    return { ok: true, ...delivery };
   });
 
 export const previewInvitation = createServerFn({ method: "GET" })

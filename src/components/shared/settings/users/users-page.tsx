@@ -6,7 +6,8 @@ import {
   MailPlus,
   Pause,
   Play,
-  RefreshCw,
+  Link2,
+  Mail,
   Trash2,
   UserCog,
   CircleOff,
@@ -25,6 +26,10 @@ import { StatusBadge } from "@/components/shared/admin/status-badge";
 import type { StatusTone } from "@/components/shared/admin/status-tones";
 import { ChangeRoleDialog } from "@/components/shared/settings/users/change-role-dialog";
 import { InviteDialog } from "@/components/shared/settings/users/invite-dialog";
+import {
+  type InviteLink,
+  InviteLinkDialog,
+} from "@/components/shared/settings/users/invite-link-dialog";
 import { Button } from "@/components/shared/ui/button";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { useServerAction } from "@/hooks/shared/use-server-action";
@@ -74,6 +79,7 @@ export function UsersPage() {
   const list = useListState<string>(UsersTab.Active);
   const { run, busy } = useServerAction();
   const [inviting, setInviting] = useState(false);
+  const [shownLink, setShownLink] = useState<InviteLink | null>(null);
   const [changing, setChanging] = useState<UserRow | null>(null);
   const [toggling, setToggling] = useState<UserRow | null>(null);
   const [revoking, setRevoking] = useState<InvitationRow | null>(null);
@@ -158,18 +164,33 @@ export function UsersPage() {
     ];
   };
 
+  const reissue = async (item: InvitationRow, sendEmail: boolean) => {
+    const result = await run(() => resendInvitation({ data: { id: item.id, sendEmail } }), {
+      invalidate: [QueryKey.Users.all()],
+    });
+    if (!result.ok) return;
+    setShownLink({
+      email: item.email,
+      link: result.link,
+      expiresAt: result.expiresAt,
+      emailSent: result.emailSent,
+    });
+  };
+
   const invitationActions = (row: InvitationRow): DataTableAction<InvitationRow>[] => {
     if (!canInvite || row.status === InvitationStatus.Revoked) return [];
     const actions: DataTableAction<InvitationRow>[] = [
       {
+        id: "new-link",
+        label: "Gerar novo link",
+        icon: Link2,
+        onSelect: (item) => void reissue(item, false),
+      },
+      {
         id: "resend",
-        label: "Reenviar",
-        icon: RefreshCw,
-        onSelect: (item) =>
-          void run(() => resendInvitation({ data: { id: item.id } }), {
-            success: "Novo convite enviado.",
-            invalidate: [QueryKey.Users.all()],
-          }),
+        label: "Reenviar por e-mail",
+        icon: Mail,
+        onSelect: (item) => void reissue(item, true),
       },
     ];
     if (row.status === InvitationStatus.Pending) {
@@ -263,9 +284,13 @@ export function UsersPage() {
         <InviteDialog
           open
           onOpenChange={setInviting}
-          onCreated={() => void users.refetch().then(() => invitations.refetch())}
+          onCreated={(invite) => {
+            setShownLink(invite);
+            void users.refetch().then(() => invitations.refetch());
+          }}
         />
       ) : null}
+      <InviteLinkDialog invite={shownLink} onClose={() => setShownLink(null)} />
       <ChangeRoleDialog user={changing} onOpenChange={(open) => !open && setChanging(null)} />
       <ConfirmDialog
         open={toggling !== null}

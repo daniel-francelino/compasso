@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, FileText, ImageOff } from "lucide-react";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Button } from "@/components/shared/ui/button";
 import { ContentFormat, Platform } from "@/lib/shared/enums";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
@@ -68,6 +69,7 @@ export function ChannelPreview({
   caption,
   callToAction,
   media,
+  brandLogoUrl,
   showCounter = false,
 }: {
   platform: Platform;
@@ -76,6 +78,7 @@ export function ChannelPreview({
   caption: string;
   callToAction: string | null;
   media: PreviewMedia[];
+  brandLogoUrl?: string | null;
   showCounter?: boolean;
 }) {
   const [index, setIndex] = useState(0);
@@ -95,12 +98,14 @@ export function ChannelPreview({
       aria-label={`Pré-visualização no ${platformLabels[platform]}`}
     >
       <figcaption className="flex items-center gap-2 border-b border-border p-3">
-        <span
-          aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground"
-        >
-          {profileName.replace("@", "").slice(0, 1).toUpperCase()}
-        </span>
+        <Avatar className="size-8 shrink-0">
+          {brandLogoUrl ? (
+            <AvatarImage src={brandLogoUrl} alt="" className="object-contain" />
+          ) : null}
+          <AvatarFallback className="bg-muted text-xs font-medium text-muted-foreground">
+            {profileName.replace("@", "").slice(0, 1).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{profileName}</span>
           <span className="block text-xs text-muted-foreground">

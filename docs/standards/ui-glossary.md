@@ -84,6 +84,7 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Remind / reassign the approver | "Reenviar lembrete" / "Reatribuir aprovador" |
 | Cancel an item | "Cancelar conteúdo" / "Cancelar pedido" |
 | Resend | "Reenviar" |
+| Access link (invitation) | "Link de acesso" / "Gerar novo link" / "Reenviar por e-mail" |
 | Invite | "Convidar" |
 | Publish (site) | "Publicar" |
 | Roll back | "Restaurar esta versão" |

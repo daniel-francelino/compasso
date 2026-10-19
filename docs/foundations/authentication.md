@@ -45,13 +45,13 @@ Rules:
 Own table `invitations` (not only Supabase's `inviteUserByEmail`), because we need to grant specific brands, expire, revoke and control use.
 
 1. Whoever has `invitations.create` fills in: email, role, brands and, for external users, whether they may **decide** approvals (`can_decide`).
-2. The server creates a random 32-byte token (base64url), stores **only its SHA-256 hash**, sets `expires_at` (7 days) and sends the email with `/admin/invite/<token>`.
+2. The server creates a random 32-byte token (base64url), stores **only its SHA-256 hash**, sets `expires_at` (7 days) and returns the link `/admin/invite/<token>` to the person who invited. Sending the email is **optional** (a switch in the dialog, off by default): with it off, the person copies the link and hands it to the invitee through any channel (for example WhatsApp). The link is shown only once, in the "Link de acesso" dialog, because only the hash is stored.
 3. The recipient opens the page: the server validates the hash, the expiry and the `pending` status, and shows the invited email.
 4. They set a password (minimum 10 characters). Acceptance requires the **authenticated email to equal the invited email**.
 5. In one transaction (RPC `accept_invitation`): mark the invitation `accepted`, create the profile `approved` with the role, create the `brand_members`, write the audit event, notify the inviter (`invitation.accepted`).
 6. Revoking an invitation makes it `revoked`. An accepted invitation cannot be reused. Re-inviting the same email creates a new invitation and revokes the previous pending one.
 
-Email delivery failure never blocks the process: the invitation stays visible in Settings with a "Reenviar" action.
+Email delivery failure never blocks the process. The invitation stays visible in Settings with two actions that issue a **new** link (the previous pending invitation is revoked): "Gerar novo link" (shows it to copy, no email) and "Reenviar por e-mail" (sends it and also shows it).
 
 ## 5. Screens
 
@@ -66,14 +66,14 @@ All under `/admin` (the portal uses the same login), in Brazilian Portuguese and
 | `/admin/reset-password` | With a valid link | Sets a new password |
 | `/admin/pending` | Authenticated, `pending` | Request status; sign-out button |
 | `/admin/access-denied` | Authenticated, `rejected`/`suspended` | Message suited to the status |
-| `/admin/settings/users` | `users.view`; specific actions to manage | List of users and invitations; invite, resend, revoke, change role, change brand links, suspend, reactivate |
+| `/admin/settings/users` | `users.view`; specific actions to manage | List of users and invitations; invite (copyable link, optional email), new link, resend by email, revoke, change role, change brand links, suspend, reactivate |
 | `/admin/profile` | Approved | Change name and password |
 
 ### "Users" screen (Settings)
 
 - Tabs: **Ativos**, **Convites pendentes** (with counter), **Suspensos**.
 - Each row: name, email, creation date, status, role, brands.
-- Actions: **Invite**, **Resend**, **Revoke invitation**, **Change role**, **Edit brand links** (`brands.manage_members`), **Suspend**, **Reactivate**.
+- Actions: **Invite** (generates the access link; email optional), **New link**, **Resend by email**, **Revoke invitation**, **Change role**, **Edit brand links** (`brands.manage_members`), **Suspend**, **Reactivate**.
 - Protections: nobody changes their **own role** or suspends themselves; the system **never removes or suspends the last active Owner**.
 - Each decision is recorded (who, when, what) in `profile_audit`.
 

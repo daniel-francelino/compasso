@@ -52,8 +52,6 @@ export const useCalendarState = (zone: string) => {
     setFilter: (key: "brand" | "channel" | "owner" | "editorial" | "publication", value: string) =>
       update({ [key]: value === "" ? undefined : value }),
     setDeadlinesOnly: (value: boolean) => update({ deadlines: value ? true : undefined }),
-    setIdeasVisible: (value: boolean) => update({ ideas: value ? undefined : false }),
-    setDatesVisible: (value: boolean) => update({ dates: value ? undefined : false }),
     setZone: (value: string) => update({ zone: value }),
   };
 };

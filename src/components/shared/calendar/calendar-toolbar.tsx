@@ -27,6 +27,7 @@ export function CalendarToolbar({
   onNext,
   onToday,
   children,
+  actions,
 }: {
   title: string;
   view: CalendarView;
@@ -36,6 +37,7 @@ export function CalendarToolbar({
   onNext: () => void;
   onToday: () => void;
   children?: ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
@@ -83,6 +85,7 @@ export function CalendarToolbar({
             </TabsList>
           </Tabs>
         ) : null}
+        {actions}
       </div>
     </div>
   );

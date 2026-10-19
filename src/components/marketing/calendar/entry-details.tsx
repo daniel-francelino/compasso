@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   Archive,
   CalendarClock,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import { WhyDisabled } from "@/components/shared/admin/why-disabled";
 import { entrySubtitle } from "@/components/shared/calendar/entry-items";
+import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
 import {
@@ -20,12 +22,17 @@ import {
   DialogTitle,
 } from "@/components/shared/ui/dialog";
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
+import { getContentItem } from "@/lib/marketing/content/content.functions";
 import { type CalendarAlert, CalendarEntryKind } from "@/lib/shared/enums";
 import { formatDateOnly, formatInZone } from "@/lib/shared/format";
+import { QueryKey } from "@/lib/shared/query-keys";
+import { unwrapResult } from "@/lib/shared/result-client";
 import {
   calendarAlertLabels,
   calendarEntryKindLabels,
   calendarNoteRepeatLabels,
+  contentFormatLabels,
+  platformLabels,
 } from "@/lib/shared/labels";
 
 export function EntryDetails({
@@ -56,6 +63,15 @@ export function EntryDetails({
         ? formatDateOnly(entry.date)
         : "—";
   const isNote = entry.kind === CalendarEntryKind.Idea || entry.kind === CalendarEntryKind.Date;
+  const content = useQuery({
+    queryKey: QueryKey.Content.item(entry.itemId ?? ""),
+    queryFn: async () =>
+      unwrapResult(await getContentItem({ data: { id: entry.itemId ?? "" } })).item,
+    enabled: entry.itemId !== null && entry.platform !== null,
+  });
+  const channel =
+    content.data?.channels.find((item) => item.id === entry.channelRowId) ??
+    content.data?.channels.find((item) => item.platform === entry.platform);
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
@@ -65,6 +81,33 @@ export function EntryDetails({
             {calendarEntryKindLabels[entry.kind]} · {entrySubtitle(entry, zone)}
           </DialogDescription>
         </DialogHeader>
+        {entry.platform !== null && entry.format !== null ? (
+          <section
+            className="rounded-lg border border-border bg-surface p-3"
+            aria-label="Prévia do conteúdo"
+          >
+            <div className="flex items-center gap-3">
+              <PlatformIcon platform={entry.platform} className="size-5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">
+                  {platformLabels[entry.platform]} · {entry.profileName ?? "Canal"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Formato: {contentFormatLabels[entry.format]}
+                </p>
+              </div>
+            </div>
+            {channel?.caption ? (
+              <p className="mt-3 line-clamp-4 whitespace-pre-wrap break-words border-t border-border pt-3 text-sm">
+                {channel.caption}
+              </p>
+            ) : content.isLoading ? (
+              <p className="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">
+                Carregando prévia…
+              </p>
+            ) : null}
+          </section>
+        ) : null}
         <dl className="grid gap-2 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <dt className="text-muted-foreground">Quando</dt>

@@ -25,6 +25,7 @@
 | Date, time zone and number formatting | `src/lib/shared/format.ts` |
 | Fonts | `<link>` in `src/routes/__root.tsx` (**never** a remote `@import` in the CSS) |
 | Logo | `src/assets/shared/` (fixed asset; do not recolor or distort) |
+| Browser favicon | `public/favicon.ico` (static asset linked by `src/routes/__root.tsx`) |
 
 Stack: Tailwind CSS v4 (`@theme inline` in CSS, no `tailwind.config`), Radix UI, `class-variance-authority` (variants), `lucide-react` (icons), `sonner` (toasts), Tiptap (formatted text). The public site may use `motion` for entrance animations.
 
@@ -112,7 +113,7 @@ Usage rules:
 
 - **Dates** with `DatePickerField` and **date-times** with `DateTimeField` (which always shows the time zone); never the native field. **Phone** with `PhoneField`.
 - **Field hint:** `InfoTip`; **field warning:** `WarningTip` (warning tone = look at it, danger tone = blocks).
-- **Where the hint goes:** extra information about a field is never a paragraph under the input. The `hint` prop of `TextField`, `NumberField`, `DatePickerField`, `DateTimeField`, `TagInputField`, `Field` and `PasswordField` renders an `InfoTip` (information icon with tooltip) next to the label; `tip` does the same for fields without `hint`. Under the input stay only the error, the character counter, the empty-select text (`emptyText`) and the time zone of a date-time. For a checkbox or a group title, place an `InfoTip` next to its label.
+- **Where the hint goes:** extra information about a field is never a paragraph under the input. The `hint` prop of `TextField`, `NumberField`, `DatePickerField`, `DateTimeField`, `TagInputField`, `Field` and `PasswordField` renders an `InfoTip` (information icon with tooltip) next to the label; `tip` does the same for fields without `hint`. Under the input stay only the error, the character counter and the empty-select text (`emptyText`); date-time zones appear in an info tooltip beside the label. For a checkbox or a group title, place an `InfoTip` next to its label.
 - **Tags** (client, content item, media) with `TagInputField` (chips, Enter to add), never a comma-separated text field.
 - **Formatted text** (briefing) with `RichTextEditor` (`shared/admin`, Tiptap: bold, italic, heading, lists, undo/redo; no links, no HTML) and displayed with `RichTextView`, which renders the stored JSON by node type. The format is `RichDoc` (`lib/shared/rich-text/types.ts`): a closed set of nodes and marks validated by zod on the server.
 - **Toast** only through the global `Toaster`. Do not build toasts by hand.

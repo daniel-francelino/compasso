@@ -5,6 +5,7 @@ import {
   Calendar,
   FileImage,
   Hammer,
+  MessageSquare,
   Radio,
   RotateCcw,
   Save,
@@ -27,6 +28,7 @@ import { RevisionHistory } from "@/components/marketing/content/revision-history
 import { ContentBanners } from "@/components/marketing/content/content-banners";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -80,7 +82,7 @@ const FALLBACK_ZONE = "America/Sao_Paulo";
 
 const MOVE_LABELS: Partial<Record<EditorialStatus, { label: string; icon: LucideIcon }>> = {
   [EditorialStatus.InProduction]: { label: "Iniciar produção", icon: Hammer },
-  [EditorialStatus.InternalReview]: { label: "Enviar para revisão interna", icon: Send },
+  [EditorialStatus.InternalReview]: { label: "Enviar para revisão interna", icon: MessageSquare },
 };
 
 const RESUME_FROM: readonly EditorialStatus[] = [
@@ -110,11 +112,13 @@ export function ContentEditor({
   seed,
   sourceNote,
   defaultDay,
+  onSaved,
 }: {
   content: ContentDetail | undefined;
   seed: DraftValues;
   sourceNote: string | undefined;
   defaultDay: string | undefined;
+  onSaved?: (() => void) | undefined;
 }) {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -244,6 +248,11 @@ export function ContentEditor({
         draft.markSaved();
         toast.success("Conteúdo salvo.");
         void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() });
+        if (isNew && onSaved) {
+          void queryClient.invalidateQueries({ queryKey: QueryKey.Calendar.all() });
+          onSaved();
+          return;
+        }
         if (isNew) {
           void navigate({
             to: "/admin/marketing/content/$itemId",
@@ -303,21 +312,34 @@ export function ContentEditor({
         void save(false);
       }}
     >
-      <PageHeader
-        title={isNew ? "Novo conteúdo" : values.title || "Conteúdo"}
-        description={
-          isNew
-            ? "Escreva uma vez e escolha onde vai sair. Cada canal só muda o que for diferente."
-            : (content?.brandName ?? "")
-        }
-        breadcrumbs={[
-          { label: "Conteúdos", to: AppRoute.Content },
-          { label: isNew ? "Novo conteúdo" : values.title || "Conteúdo" },
-        ]}
-        actions={content ? <EditorialStatusBadge status={editorialStatus} /> : null}
-      />
+      {onSaved ? (
+        <header className="flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="heading-page text-foreground">
+              {isNew ? "Novo conteúdo" : values.title || "Conteúdo"}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Escreva uma vez e escolha onde vai sair. Cada canal só muda o que for diferente.
+            </p>
+          </div>
+        </header>
+      ) : (
+        <PageHeader
+          title={isNew ? "Novo conteúdo" : values.title || "Conteúdo"}
+          description={
+            isNew
+              ? "Escreva uma vez e escolha onde vai sair. Cada canal só muda o que for diferente."
+              : (content?.brandName ?? "")
+          }
+          breadcrumbs={[
+            { label: "Conteúdos", to: AppRoute.Content },
+            { label: isNew ? "Novo conteúdo" : values.title || "Conteúdo" },
+          ]}
+          actions={content ? <EditorialStatusBadge status={editorialStatus} /> : null}
+        />
+      )}
       <div
-        className="flex flex-wrap items-center justify-end gap-2"
+        className="flex flex-wrap items-center justify-end gap-1.5"
         role="group"
         aria-label="Ações do conteúdo"
       >
@@ -333,6 +355,7 @@ export function ContentEditor({
               <Button
                 type="button"
                 variant="outline"
+                size="sm"
                 disabled={draft.dirty || acting}
                 onClick={() => void move(to)}
               >
@@ -343,35 +366,37 @@ export function ContentEditor({
           );
         })}
         {canSubmit ? (
-          <Button type="button" onClick={() => setSubmitting(true)} disabled={acting}>
+          <Button type="button" size="sm" onClick={() => setSubmitting(true)} disabled={acting}>
             <Send aria-hidden="true" />
             Enviar para aprovação
           </Button>
         ) : null}
         {canReopen && content !== undefined ? (
-          <Button
-            type="button"
+          <IconButton
             variant="outline"
+            icon={RotateCcw}
+            label="Reabrir conteúdo"
             onClick={() => setReopening(true)}
             disabled={acting}
-          >
-            <RotateCcw aria-hidden="true" />
-            Reabrir
-          </Button>
+          />
         ) : null}
         {canCancel ? (
-          <Button
-            type="button"
+          <IconButton
             variant="outline"
+            icon={Ban}
+            label="Cancelar conteúdo"
+            destructive
             onClick={() => setCancelling(true)}
             disabled={acting}
-          >
-            <Ban aria-hidden="true" />
-            Cancelar conteúdo
-          </Button>
+          />
         ) : null}
         {editable ? (
-          <Button type="submit" loading={saving} disabled={saving || (!isNew && !draft.dirty)}>
+          <Button
+            type="submit"
+            size="sm"
+            loading={saving}
+            disabled={saving || (!isNew && !draft.dirty)}
+          >
             <Save aria-hidden="true" />
             {isNew ? "Criar conteúdo" : "Salvar"}
           </Button>
@@ -479,6 +504,7 @@ export function ContentEditor({
               format={previewRow.format}
               caption={previewRow.caption === "" ? values.caption : previewRow.caption}
               callToAction={values.callToAction === "" ? null : values.callToAction}
+              brandLogoUrl={brand.data?.logoUrl ?? null}
               showCounter
               media={values.files.map((file) => ({
                 versionId: file.mediaVersionId,

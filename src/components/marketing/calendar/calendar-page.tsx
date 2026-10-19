@@ -1,9 +1,9 @@
-import { CalendarClock, CalendarDays, Globe, Lightbulb, RotateCw } from "lucide-react";
+import { CalendarClock, Globe, RotateCw } from "lucide-react";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useSearch } from "@tanstack/react-router";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -16,8 +16,16 @@ import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { toGridItem } from "@/components/shared/calendar/entry-items";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/shared/ui/dialog";
 import { DayAddMenu } from "@/components/marketing/calendar/day-add-menu";
 import { EntryDetails } from "@/components/marketing/calendar/entry-details";
+import { ContentEditorPage } from "@/components/marketing/content/content-editor-page";
 import { type NoteDialogTarget, NoteDialog } from "@/components/marketing/calendar/note-dialog";
 import {
   type RescheduleTarget,
@@ -35,6 +43,7 @@ import { useServerAction } from "@/hooks/shared/use-server-action";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
+import { GuardContext } from "@/hooks/shared/use-unsaved-changes";
 import { calendarAlerts } from "@/lib/shared/calendar/alerts";
 import { entryKey, isMovable } from "@/lib/shared/calendar/entries";
 import { rangeTitle } from "@/lib/shared/calendar/range";
@@ -120,11 +129,11 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const raw = calendarSearchSchema.parse(useSearch({ strict: false }));
   const brandId = fixedBrandId ?? raw.brand;
-  const navigate = useNavigate();
   const { run, busy } = useServerAction();
   const canManage = can(auth, Action.Calendar.Manage) && can(auth, Action.Content.Update);
   const canNote = can(auth, Action.Calendar.Manage);
   const canCreate = can(auth, Action.Content.Create);
+  const unsavedGuard = useContext(GuardContext);
 
   const brand = useBrand(brandId ?? "", brandId !== undefined);
   const [browserZone, setBrowserZone] = useState("UTC");
@@ -136,6 +145,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const [undatedOpen, setUndatedOpen] = useState(true);
   const [noteTarget, setNoteTarget] = useState<NoteDialogTarget | null>(null);
   const [archiving, setArchiving] = useState<CalendarEntry | null>(null);
+  const [scheduledDay, setScheduledDay] = useState<string | null>(null);
 
   useEffect(() => {
     setUndatedOpen(readStored(StoredKey.CalendarUndatedOpen, z.boolean(), true));
@@ -149,6 +159,11 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     const next = !undatedOpen;
     setUndatedOpen(next);
     writeStored(StoredKey.CalendarUndatedOpen, next);
+  }
+
+  async function requestCloseScheduler() {
+    if (unsavedGuard && !(await unsavedGuard.confirmDiscard())) return;
+    setScheduledDay(null);
   }
 
   const brands = useBrandOptions(fixedBrandId === undefined);
@@ -173,10 +188,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(state.search.owner ? { ownerId: state.search.owner } : {}),
     ...(state.search.editorial ? { editorial: state.search.editorial } : {}),
     ...(state.search.publication ? { publication: state.search.publication } : {}),
-    notes: [
-      ...(state.search.ideas === false ? [] : [CalendarNoteKind.Idea]),
-      ...(state.search.dates === false ? [] : [CalendarNoteKind.Date]),
-    ],
+    notes: [CalendarNoteKind.Idea, CalendarNoteKind.Date],
   };
   const query = useQuery({
     queryKey: QueryKey.Calendar.entries(request),
@@ -293,12 +305,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
       day={day}
       canSchedule={canCreate}
       canNote={canNote}
-      onSchedule={(chosen) =>
-        void navigate({
-          to: "/admin/marketing/content/new",
-          search: { day: chosen, ...(brandId ? { brand: brandId } : {}) },
-        })
-      }
+      onSchedule={setScheduledDay}
       onNote={(kind, chosen) => setNoteTarget({ kind, day: chosen, brandId, note: undefined })}
     />
   );
@@ -310,109 +317,6 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         description="O que está planejado, quando e em qual estado."
         breadcrumbs={fixedBrandId ? undefined : [{ label: "Calendário" }]}
       />
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <ListFilters
-          groups={[
-            ...(fixedBrandId === undefined
-              ? [
-                  {
-                    id: "brand",
-                    label: "Marca",
-                    value: brandId ?? ALL,
-                    defaultValue: ALL,
-                    emptyText: brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
-                    options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
-                    onChange: (value: string) => {
-                      void state.setFilter("brand", value === ALL ? "" : value);
-                      void state.setFilter("channel", "");
-                      void state.setFilter("owner", "");
-                    },
-                  },
-                ]
-              : []),
-            {
-              id: "channel",
-              label: "Canal",
-              value: state.search.channel ?? ALL,
-              defaultValue: ALL,
-              emptyText: channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined,
-              options: [
-                {
-                  value: ALL,
-                  label: brandId === undefined ? "Escolha uma marca" : "Todos os canais",
-                },
-                ...(channels.data ?? []).map((channel) => ({
-                  value: channel.id,
-                  label: `${platformLabels[channel.platform]} · ${channel.profileName}`,
-                })),
-              ],
-              onChange: (value) => void state.setFilter("channel", value === ALL ? "" : value),
-            },
-            {
-              id: "owner",
-              label: "Responsável",
-              value: state.search.owner ?? ALL,
-              defaultValue: ALL,
-              emptyText: owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined,
-              options: [
-                { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
-                ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),
-              ],
-              onChange: (value) => void state.setFilter("owner", value === ALL ? "" : value),
-            },
-            {
-              id: "editorial",
-              label: "Estado",
-              value: state.search.editorial ?? ALL,
-              defaultValue: ALL,
-              options: editorialOptions,
-              onChange: (value) => void state.setFilter("editorial", value === ALL ? "" : value),
-            },
-            {
-              id: "publication",
-              label: "Publicação",
-              value: state.search.publication ?? ALL,
-              defaultValue: ALL,
-              options: publicationOptions,
-              onChange: (value) => void state.setFilter("publication", value === ALL ? "" : value),
-            },
-            {
-              id: "deadlines",
-              label: "Itens exibidos",
-              value: state.search.deadlines ? "deadlines" : ALL,
-              defaultValue: ALL,
-              options: deadlineOptions,
-              onChange: (value) => void state.setDeadlinesOnly(value === "deadlines"),
-            },
-          ]}
-        />
-        <div className="flex flex-wrap items-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            aria-pressed={state.search.dates !== false}
-            onClick={() => void state.setDatesVisible(state.search.dates === false)}
-          >
-            <CalendarDays aria-hidden="true" />
-            Datas
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            aria-pressed={state.search.ideas !== false}
-            onClick={() => void state.setIdeasVisible(state.search.ideas === false)}
-          >
-            <Lightbulb aria-hidden="true" />
-            Ideias
-          </Button>
-          <IconButton
-            variant="outline"
-            icon={CalendarClock}
-            label={undatedOpen ? "Ocultar conteúdos sem data" : "Mostrar conteúdos sem data"}
-            onClick={toggleUndated}
-          />
-        </div>
-      </div>
       <CalendarToolbar
         title={title}
         view={state.view}
@@ -421,6 +325,98 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         onPrevious={() => void state.shift(-1)}
         onNext={() => void state.shift(1)}
         onToday={() => void state.goToday()}
+        actions={
+          <div className="flex items-center gap-2">
+            <ListFilters
+              groups={[
+                ...(fixedBrandId === undefined
+                  ? [
+                      {
+                        id: "brand",
+                        label: "Marca",
+                        value: brandId ?? ALL,
+                        defaultValue: ALL,
+                        emptyText:
+                          brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
+                        options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
+                        onChange: (value: string) => {
+                          void state.setFilter("brand", value === ALL ? "" : value);
+                          void state.setFilter("channel", "");
+                          void state.setFilter("owner", "");
+                        },
+                      },
+                    ]
+                  : []),
+                {
+                  id: "channel",
+                  label: "Canal",
+                  value: state.search.channel ?? ALL,
+                  defaultValue: ALL,
+                  emptyText:
+                    channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined,
+                  options: [
+                    {
+                      value: ALL,
+                      label: brandId === undefined ? "Escolha uma marca" : "Todos os canais",
+                    },
+                    ...(channels.data ?? []).map((channel) => ({
+                      value: channel.id,
+                      label: `${platformLabels[channel.platform]} · ${channel.profileName}`,
+                    })),
+                  ],
+                  onChange: (value) => void state.setFilter("channel", value === ALL ? "" : value),
+                },
+                {
+                  id: "owner",
+                  label: "Responsável",
+                  value: state.search.owner ?? ALL,
+                  defaultValue: ALL,
+                  emptyText: owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined,
+                  options: [
+                    { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
+                    ...(owners.data ?? []).map((person) => ({
+                      value: person.id,
+                      label: person.name,
+                    })),
+                  ],
+                  onChange: (value) => void state.setFilter("owner", value === ALL ? "" : value),
+                },
+                {
+                  id: "editorial",
+                  label: "Estado",
+                  value: state.search.editorial ?? ALL,
+                  defaultValue: ALL,
+                  options: editorialOptions,
+                  onChange: (value) =>
+                    void state.setFilter("editorial", value === ALL ? "" : value),
+                },
+                {
+                  id: "publication",
+                  label: "Publicação",
+                  value: state.search.publication ?? ALL,
+                  defaultValue: ALL,
+                  options: publicationOptions,
+                  onChange: (value) =>
+                    void state.setFilter("publication", value === ALL ? "" : value),
+                },
+                {
+                  id: "deadlines",
+                  label: "Itens exibidos",
+                  value: state.search.deadlines ? "deadlines" : ALL,
+                  defaultValue: ALL,
+                  options: deadlineOptions,
+                  onChange: (value) => void state.setDeadlinesOnly(value === "deadlines"),
+                },
+              ]}
+            />
+            <IconButton
+              variant="outline"
+              icon={CalendarClock}
+              label={undatedOpen ? "Ocultar conteúdos sem data" : "Mostrar conteúdos sem data"}
+              onClick={toggleUndated}
+            />
+          </div>
+        }
       >
         <p
           className="flex items-center gap-1.5 text-xs text-muted-foreground"
@@ -537,6 +533,24 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           onOpenChange={(open) => !open && setTarget(null)}
         />
       ) : null}
+      <Dialog
+        open={scheduledDay !== null}
+        onOpenChange={(open) => !open && void requestCloseScheduler()}
+      >
+        <DialogContent className="!fixed !inset-0 !left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-full !max-w-none !translate-x-0 !translate-y-0 !overflow-y-auto !rounded-none !p-4 sm:!p-6">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Agendar conteúdo</DialogTitle>
+            <DialogDescription>Crie o conteúdo sem sair do calendário.</DialogDescription>
+          </DialogHeader>
+          {scheduledDay !== null ? (
+            <ContentEditorPage
+              brandId={brandId}
+              day={scheduledDay}
+              onSaved={() => setScheduledDay(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

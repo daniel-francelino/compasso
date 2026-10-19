@@ -29,11 +29,17 @@ export const createInvitationSchema = z.object({
     .max(254, "O e-mail é longo demais."),
   roleId: z.string().uuid("Escolha um perfil."),
   grants: z.array(invitationGrantSchema).max(50),
+  sendEmail: z.boolean(),
 });
 
 export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
 
 export const invitationIdSchema = z.object({ id: z.string().uuid() });
+
+export const resendInvitationSchema = z.object({
+  id: z.string().uuid(),
+  sendEmail: z.boolean(),
+});
 
 export const invitationTokenSchema = z.object({ token: z.string().min(20).max(100) });
 

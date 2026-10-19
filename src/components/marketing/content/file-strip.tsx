@@ -1,5 +1,7 @@
 import { EmptyState } from "@/components/shared/admin/empty-state";
-import { ArrowDown, ArrowUp, Film, FileText, Images, Trash2 } from "lucide-react";
+import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
+import { isSortable, useSortable } from "@dnd-kit/react/sortable";
+import { Film, FileText, GripVertical, Images, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { FieldGroup } from "@/components/shared/admin/field-group";
 import { FieldMessage } from "@/components/shared/admin/form-fields";
@@ -20,6 +22,84 @@ function Thumb({ item, url }: { item: FileItem; url: string | undefined }) {
   }
   const Icon = item.kind === MediaKind.Video ? Film : FileText;
   return <Icon className="size-6 text-muted-foreground" aria-hidden="true" />;
+}
+
+function SortableMediaItem({
+  item,
+  index,
+  url,
+  disabled,
+  onAltTextChange,
+  onRemove,
+}: {
+  item: FileItem;
+  index: number;
+  url: string | undefined;
+  disabled: boolean;
+  onAltTextChange: (altText: string) => void;
+  onRemove: () => void;
+}) {
+  const { ref, handleRef, isDragging, isDropping, isDropTarget } = useSortable({
+    id: item.mediaVersionId,
+    index,
+    disabled,
+    transition: { duration: 220, easing: "cubic-bezier(0.2, 0, 0, 1)", idle: true },
+  });
+
+  return (
+    <li
+      ref={ref}
+      className={
+        "flex gap-3 rounded-xl border border-border bg-card p-2 " +
+        (isDragging ? "z-10 opacity-70 shadow-lg " : "") +
+        (isDropping ? "transition-shadow " : "") +
+        (isDropTarget ? "ring-2 ring-primary/40 " : "")
+      }
+    >
+      <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
+        <Thumb item={item} url={url} />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        <p className="truncate text-sm font-medium">
+          {index + 1}. {item.name}
+        </p>
+        <Label htmlFor={`alt-${item.mediaVersionId}`} className="sr-only">
+          Texto alternativo de {item.name}
+        </Label>
+        <Input
+          id={`alt-${item.mediaVersionId}`}
+          value={item.altText}
+          maxLength={300}
+          placeholder="Texto alternativo (descreva a imagem)"
+          disabled={disabled}
+          onChange={(event) => onAltTextChange(event.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Button
+          ref={handleRef}
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="cursor-grab touch-none active:cursor-grabbing"
+          aria-label={`Reordenar ${item.name}`}
+          disabled={disabled}
+        >
+          <GripVertical aria-hidden="true" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={`Remover ${item.name}`}
+          disabled={disabled}
+          onClick={onRemove}
+        >
+          <Trash2 aria-hidden="true" />
+        </Button>
+      </div>
+    </li>
+  );
 }
 
 export function FileStrip({
@@ -44,15 +124,20 @@ export function FileStrip({
     MediaVariant.Thumb,
   );
 
-  const move = (index: number, delta: number) => {
-    const target = index + delta;
-    if (target < 0 || target >= items.length) return;
+  const move = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
     const next = [...items];
-    const [moved] = next.splice(index, 1);
+    const [moved] = next.splice(fromIndex, 1);
     if (moved === undefined) return;
-    next.splice(target, 0, moved);
+    next.splice(toIndex, 0, moved);
     onChange(next);
   };
+
+  function handleDragEnd(event: DragEndEvent) {
+    if (event.canceled || !isSortable(event.operation.source)) return;
+    const { initialIndex, index } = event.operation.source;
+    move(initialIndex, index);
+  }
 
   return (
     <FieldGroup legend={`Arquivos (${items.length}/${rule.max})`} gap="sm" disabled={disabled}>
@@ -64,79 +149,33 @@ export function FileStrip({
           description="Anexe imagens ou vídeos da biblioteca."
         />
       ) : (
-        <ol className="space-y-2">
-          {items.map((item, index) => (
-            <li
-              key={item.mediaVersionId}
-              className="flex gap-3 rounded-xl border border-border p-2"
-            >
-              <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
-                <Thumb item={item} url={urls.data?.[item.mediaVersionId]} />
-              </span>
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <p className="truncate text-sm font-medium">
-                  {index + 1}. {item.name}
-                </p>
-                <Label htmlFor={`alt-${item.mediaVersionId}`} className="sr-only">
-                  Texto alternativo de {item.name}
-                </Label>
-                <Input
-                  id={`alt-${item.mediaVersionId}`}
-                  value={item.altText}
-                  maxLength={300}
-                  placeholder="Texto alternativo (descreva a imagem)"
-                  onChange={(event) =>
-                    onChange(
-                      items.map((candidate) =>
-                        candidate.mediaVersionId === item.mediaVersionId
-                          ? { ...candidate, altText: event.target.value }
-                          : candidate,
-                      ),
-                    )
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-9"
-                  aria-label={`Mover ${item.name} para cima`}
-                  disabled={index === 0}
-                  onClick={() => move(index, -1)}
-                >
-                  <ArrowUp aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-9"
-                  aria-label={`Mover ${item.name} para baixo`}
-                  disabled={index === items.length - 1}
-                  onClick={() => move(index, 1)}
-                >
-                  <ArrowDown aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-9"
-                  aria-label={`Remover ${item.name}`}
-                  onClick={() =>
-                    onChange(
-                      items.filter((candidate) => candidate.mediaVersionId !== item.mediaVersionId),
-                    )
-                  }
-                >
-                  <Trash2 aria-hidden="true" />
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <DragDropProvider onDragEnd={handleDragEnd}>
+          <ol className="space-y-2">
+            {items.map((item, index) => (
+              <SortableMediaItem
+                key={item.mediaVersionId}
+                item={item}
+                index={index}
+                url={urls.data?.[item.mediaVersionId]}
+                disabled={disabled}
+                onAltTextChange={(altText) =>
+                  onChange(
+                    items.map((candidate) =>
+                      candidate.mediaVersionId === item.mediaVersionId
+                        ? { ...candidate, altText }
+                        : candidate,
+                    ),
+                  )
+                }
+                onRemove={() =>
+                  onChange(
+                    items.filter((candidate) => candidate.mediaVersionId !== item.mediaVersionId),
+                  )
+                }
+              />
+            ))}
+          </ol>
+        </DragDropProvider>
       )}
       <Button
         type="button"

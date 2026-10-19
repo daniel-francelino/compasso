@@ -34,7 +34,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 
 | SQL function | Server function | Act. | Audit / log | Errors |
 |---|---|---|---|---|
-| `invitation_create(p_email, p_role, p_grants jsonb, p_token_hash, p_expires_at)` | `createInvitation` (generates token, sends email) | `invitations.create` (+ role assignable) | `invitation.created` | `role_not_assignable`, `invalid_input` |
+| `invitation_create(p_email, p_role, p_grants jsonb, p_token_hash, p_expires_at)` | `createInvitation` (generates token, returns the link, sends email only when `sendEmail` is true) | `invitations.create` (+ role assignable) | `invitation.created` | `role_not_assignable`, `invalid_input` |
 | `invitation_revoke(p_invitation)` | `revokeInvitation` | `invitations.create` | `invitation.revoked` | `not_found` |
 | `accept_invitation(p_token_hash text)` | `acceptInvitation` (service role; creates the auth user) | none (token) | `invitation.accepted`; Notif. `invitation.accepted` | `invitation_invalid`, `invitation_email_mismatch` |
 | `profile_set_access(p_profile, p_status, p_role default null)` | `setUserAccess` | `users.manage` / `users.approve` | `profile_audit` | `last_owner`, `self_change_forbidden`, `role_not_assignable` |
@@ -56,7 +56,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 |---|---|---|
 | `listUsers`, `listInvitations` | `users.view` | paginated, filtered on the server (RLS) |
 | `listRoles` (with the action catalog), `listAssignableRoles` | `roles.manage` / `invitations.create` | assignable roles hide the owner role and administration-only roles for non-owners |
-| `previewInvitation`, `resendInvitation` | none (token) / `invitations.create` | preview uses the service role and reveals only the invited e-mail and role name; resend creates a new invitation (revokes the pending one) |
+| `previewInvitation`, `resendInvitation` | none (token) / `invitations.create` | preview uses the service role and reveals only the invited e-mail and role name; resend (`{ id, sendEmail }`) creates a new invitation (revokes the pending one) and returns the new link, sending email only when `sendEmail` is true |
 | `getOrganization`, `listSettings`, `saveSetting` | `settings.manage` | `saveSetting` validates each policy group with zod before `organization_setting_save` |
 | `listAuditEvents` | `audit.view` | calls `audit_list`; filters: domain, period, actor, brand, entity |
 | `listNotifications`, `countUnread`, `markRead`, `markAllRead`, `snoozeNotification`, `listPreferences`, `savePreference` | approved account | own rows only; RLS applies (update limited to `read_at` and `snoozed_until`) |
