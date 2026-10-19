@@ -118,6 +118,7 @@ export function ClientForm({
         label="Responsável interno"
         value={ownerId}
         onValueChange={setOwnerId}
+        emptyText={owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined}
         options={[
           { value: NO_OWNER, label: "Sem responsável" },
           ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),

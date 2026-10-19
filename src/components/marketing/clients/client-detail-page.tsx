@@ -1,6 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Archive, MailPlus, Pencil, Plus, Trash2, Undo2, History, Tag, Users } from "lucide-react";
+import {
+  Archive,
+  MailPlus,
+  Pencil,
+  Plus,
+  Trash2,
+  Undo2,
+  History,
+  Tag,
+  Users,
+  StickyNote,
+} from "lucide-react";
 import { useState } from "react";
 import { ClientForm } from "@/components/marketing/clients/client-form";
 import { ContactDialog } from "@/components/marketing/clients/contact-dialog";
@@ -8,6 +19,7 @@ import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
@@ -159,21 +171,26 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         actions={
           canUpdate ? (
             <>
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Pencil aria-hidden="true" /> Editar
-              </Button>
-              <Button variant="outline" onClick={() => setArchiving(true)}>
-                {client.archived ? <Undo2 aria-hidden="true" /> : <Archive aria-hidden="true" />}
-                {client.archived ? "Reativar" : "Arquivar"}
-              </Button>
+              <IconButton
+                variant="outline"
+                label="Editar cliente"
+                icon={Pencil}
+                onClick={() => setEditing(true)}
+              />
+              <IconButton
+                variant="outline"
+                label={client.archived ? "Reativar cliente" : "Arquivar cliente"}
+                icon={client.archived ? Undo2 : Archive}
+                onClick={() => setArchiving(true)}
+              />
               {can(auth, Action.Clients.Delete) && client.brands.length === 0 ? (
-                <Button
+                <IconButton
                   variant="outline"
-                  className="text-destructive"
+                  destructive
+                  label="Excluir cliente"
+                  icon={Trash2}
                   onClick={() => setDeleting(true)}
-                >
-                  <Trash2 aria-hidden="true" /> Excluir
-                </Button>
+                />
               ) : null}
             </>
           ) : null
@@ -182,22 +199,39 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
 
       <Tabs defaultValue="brands">
         <TabsList>
-          <TabsTrigger value="brands">Marcas</TabsTrigger>
-          <TabsTrigger value="contacts">Contatos</TabsTrigger>
+          <TabsTrigger value="brands">
+            <Tag aria-hidden="true" />
+            Marcas
+          </TabsTrigger>
+          <TabsTrigger value="contacts">
+            <Users aria-hidden="true" />
+            Contatos
+          </TabsTrigger>
           {can(auth, Action.Audit.View) ? (
-            <TabsTrigger value="activity">Atividade</TabsTrigger>
+            <TabsTrigger value="activity">
+              <History aria-hidden="true" />
+              Atividade
+            </TabsTrigger>
           ) : null}
-          <TabsTrigger value="notes">Notas</TabsTrigger>
+          <TabsTrigger value="notes">
+            <StickyNote aria-hidden="true" />
+            Notas
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="brands" className="space-y-3">
-          {can(auth, Action.Brands.Create) && !client.archived ? (
-            <Button asChild variant="outline">
-              <Link to={`${AppRoute.Brands}/new`} search={{ clientId: client.id }}>
-                <Plus aria-hidden="true" /> Nova marca
-              </Link>
-            </Button>
-          ) : null}
+          <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
+            <p className="text-sm text-muted-foreground">
+              {client.brands.length === 1 ? "1 marca" : `${client.brands.length} marcas`}
+            </p>
+            {can(auth, Action.Brands.Create) && !client.archived ? (
+              <Button asChild>
+                <Link to={`${AppRoute.Brands}/new`} search={{ clientId: client.id }}>
+                  <Plus aria-hidden="true" /> Nova marca
+                </Link>
+              </Button>
+            ) : null}
+          </div>
           {client.brands.length === 0 ? (
             <EmptyState
               icon={Tag}
@@ -227,11 +261,16 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         </TabsContent>
 
         <TabsContent value="contacts" className="space-y-3">
-          {canUpdate ? (
-            <Button variant="outline" onClick={() => setContactDialog({})}>
-              <Plus aria-hidden="true" /> Novo contato
-            </Button>
-          ) : null}
+          <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
+            <p className="text-sm text-muted-foreground">
+              {client.contacts.length === 1 ? "1 contato" : `${client.contacts.length} contatos`}
+            </p>
+            {canUpdate ? (
+              <Button onClick={() => setContactDialog({})}>
+                <Plus aria-hidden="true" /> Novo contato
+              </Button>
+            ) : null}
+          </div>
           <DataTable
             caption="Contatos"
             rows={client.contacts}

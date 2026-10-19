@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Trash2,
   UserCog,
+  CircleOff,
 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -63,9 +64,9 @@ const invitationTone: Record<InvitationStatus, StatusTone> = {
 };
 
 const tabs = [
-  { value: UsersTab.Active, label: "Ativos" },
-  { value: INVITATIONS_TAB, label: "Convites" },
-  { value: UsersTab.Inactive, label: "Suspensos" },
+  { value: UsersTab.Active, label: "Ativos", icon: CircleCheck },
+  { value: INVITATIONS_TAB, label: "Convites", icon: MailPlus },
+  { value: UsersTab.Inactive, label: "Suspensos", icon: CircleOff },
 ];
 
 export function UsersPage() {

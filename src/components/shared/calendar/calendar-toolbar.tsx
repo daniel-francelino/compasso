@@ -1,9 +1,22 @@
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+  type LucideIcon,
+  List,
+  CalendarRange,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import { CalendarView } from "@/lib/shared/enums";
 import { calendarViewLabels } from "@/lib/shared/labels";
+
+const viewIcons: Record<CalendarView, LucideIcon> = {
+  [CalendarView.Month]: CalendarDays,
+  [CalendarView.Week]: CalendarRange,
+  [CalendarView.List]: List,
+};
 
 export function CalendarToolbar({
   title,
@@ -58,11 +71,15 @@ export function CalendarToolbar({
         {showViews ? (
           <Tabs value={view} onValueChange={(value) => onViewChange(value as CalendarView)}>
             <TabsList>
-              {Object.values(CalendarView).map((value) => (
-                <TabsTrigger key={value} value={value}>
-                  {calendarViewLabels[value]}
-                </TabsTrigger>
-              ))}
+              {Object.values(CalendarView).map((value) => {
+                const Icon = viewIcons[value];
+                return (
+                  <TabsTrigger key={value} value={value}>
+                    <Icon aria-hidden="true" />
+                    {calendarViewLabels[value]}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
           </Tabs>
         ) : null}

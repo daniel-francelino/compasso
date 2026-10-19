@@ -39,8 +39,8 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const tabs = [
-  { value: ChannelStatusFilter.Active, label: "Ativos" },
-  { value: ChannelStatusFilter.Archived, label: "Arquivados" },
+  { value: ChannelStatusFilter.Active, label: "Ativos", icon: CircleCheck },
+  { value: ChannelStatusFilter.Archived, label: "Arquivados", icon: Archive },
 ];
 
 export function ChannelsTab({ brandId }: { brandId: string }) {

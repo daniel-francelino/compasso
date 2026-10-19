@@ -1,4 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ImageUp,
@@ -11,6 +12,7 @@ import {
   RotateCw,
   Globe,
   X,
+  Files,
 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -52,8 +54,8 @@ import { unwrapResult } from "@/lib/shared/result-client";
 const ALL = "all";
 
 const tabs = [
-  { value: MediaStatusFilter.Active, label: "Arquivos" },
-  { value: MediaStatusFilter.Trash, label: "Lixeira" },
+  { value: MediaStatusFilter.Active, label: "Arquivos", icon: Files },
+  { value: MediaStatusFilter.Trash, label: "Lixeira", icon: Trash2 },
 ];
 
 const kindOptions = [
@@ -143,9 +145,12 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
         actions={
           <>
             {canDelete ? (
-              <Button variant="outline" onClick={() => setChecking(true)}>
-                <ScanSearch aria-hidden="true" /> Verificar com o bucket
-              </Button>
+              <IconButton
+                variant="outline"
+                label="Verificar com o bucket"
+                icon={ScanSearch}
+                onClick={() => setChecking(true)}
+              />
             ) : null}
             {canUpload ? (
               <Button onClick={startUpload}>
@@ -212,6 +217,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                   void list.setFilter("brand", value === ALL ? undefined : value);
                   void list.setFilter("folder", undefined);
                 }}
+                emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
                 options={[
                   { value: ALL, label: "Todas" },
                   ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),

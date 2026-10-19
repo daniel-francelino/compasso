@@ -28,8 +28,8 @@ const isPlatform = (value: string | undefined): value is Platform =>
   Object.values(Platform).some((platform) => platform === value);
 
 const tabs = [
-  { value: BrandStatusFilter.Active, label: "Ativas" },
-  { value: BrandStatusFilter.Archived, label: "Arquivadas" },
+  { value: BrandStatusFilter.Active, label: "Ativas", icon: CircleCheck },
+  { value: BrandStatusFilter.Archived, label: "Arquivadas", icon: Archive },
 ];
 
 export function BrandsPage() {
@@ -116,6 +116,7 @@ export function BrandsPage() {
                 label: "Cliente",
                 value: list.filters.client ?? ALL,
                 defaultValue: ALL,
+                emptyText: clients.data?.length === 0 ? "Nenhum cliente cadastrado" : undefined,
                 options: [
                   { value: ALL, label: "Todos" },
                   ...(clients.data ?? []).map((client) => ({

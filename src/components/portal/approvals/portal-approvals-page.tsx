@@ -1,6 +1,16 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ClipboardCheck, TriangleAlert, RotateCw } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardCheck,
+  TriangleAlert,
+  RotateCw,
+  Clock,
+  Undo2,
+  CircleCheck,
+  Layers,
+  List,
+} from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PaginationBar } from "@/components/shared/admin/pagination-bar";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
@@ -14,11 +24,11 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const tabs = [
-  { value: PortalApprovalFilter.All, label: "Todas" },
-  { value: PortalApprovalFilter.Pending, label: "Pendentes" },
-  { value: PortalApprovalFilter.Approved, label: "Aprovadas" },
-  { value: PortalApprovalFilter.ChangesRequested, label: "Alterações solicitadas" },
-  { value: PortalApprovalFilter.Superseded, label: "Substituídas" },
+  { value: PortalApprovalFilter.All, label: "Todas", icon: List },
+  { value: PortalApprovalFilter.Pending, label: "Pendentes", icon: Clock },
+  { value: PortalApprovalFilter.Approved, label: "Aprovadas", icon: CircleCheck },
+  { value: PortalApprovalFilter.ChangesRequested, label: "Alterações solicitadas", icon: Undo2 },
+  { value: PortalApprovalFilter.Superseded, label: "Substituídas", icon: Layers },
 ];
 
 export function PortalApprovalsPage({ brandId }: { brandId: string }) {
@@ -45,6 +55,7 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
         <TabsList className="h-auto flex-wrap">
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value} className="min-h-11">
+              <tab.icon aria-hidden="true" />
               {tab.label}
             </TabsTrigger>
           ))}

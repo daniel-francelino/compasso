@@ -1,5 +1,15 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, Check, Save, RotateCw } from "lucide-react";
+import {
+  Mail,
+  Check,
+  Save,
+  RotateCw,
+  List,
+  MailX,
+  type LucideIcon,
+  MailCheck,
+  MailPlus,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
@@ -18,6 +28,12 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const ALL = "all";
+
+const contactMessageIcons: Record<ContactMessageStatus, LucideIcon> = {
+  [ContactMessageStatus.New]: MailPlus,
+  [ContactMessageStatus.Answered]: MailCheck,
+  [ContactMessageStatus.Discarded]: MailX,
+};
 const PAGE_SIZE = 20;
 
 function MessageCard({ message }: { message: MessageRow }) {
@@ -117,12 +133,19 @@ export function MessagesPage() {
         }}
       >
         <TabsList>
-          <TabsTrigger value={ALL}>Todas</TabsTrigger>
-          {Object.values(ContactMessageStatus).map((value) => (
-            <TabsTrigger key={value} value={value}>
-              {contactMessageStatusLabels[value]}
-            </TabsTrigger>
-          ))}
+          <TabsTrigger value={ALL}>
+            <List aria-hidden="true" />
+            Todas
+          </TabsTrigger>
+          {Object.values(ContactMessageStatus).map((value) => {
+            const Icon = contactMessageIcons[value];
+            return (
+              <TabsTrigger key={value} value={value}>
+                <Icon aria-hidden="true" />
+                {contactMessageStatusLabels[value]}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
       {messages.isPending ? <ListSkeleton rows={3} height="h-28" /> : null}

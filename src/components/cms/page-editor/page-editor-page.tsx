@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ExternalLink, Plus, Rocket, Save, Settings2 } from "lucide-react";
+import { ExternalLink, Plus, Rocket, Save, Settings2, ListTree, Eye } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AddSectionDialog } from "@/components/cms/page-editor/add-section-dialog";
@@ -263,8 +263,14 @@ function PageEditor({ data, pages }: { data: PageEditorData; pages: PageOption[]
         <div className="space-y-4">
           <Tabs defaultValue="fields">
             <TabsList>
-              <TabsTrigger value="fields">Campos</TabsTrigger>
-              <TabsTrigger value="preview">Pré-visualização</TabsTrigger>
+              <TabsTrigger value="fields">
+                <ListTree aria-hidden="true" />
+                Campos
+              </TabsTrigger>
+              <TabsTrigger value="preview">
+                <Eye aria-hidden="true" />
+                Pré-visualização
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="fields" className="space-y-4">
               {selected === PAGE_TAB || section === null ? (

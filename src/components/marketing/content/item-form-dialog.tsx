@@ -148,6 +148,7 @@ export function ItemFormDialog({
           value={assigneeId}
           onValueChange={setAssigneeId}
           disabled={brandId === ""}
+          emptyText={assignees.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined}
           options={[
             { value: NO_ASSIGNEE, label: "Sem responsável" },
             ...(assignees.data ?? []).map((person) => ({ value: person.id, label: person.name })),

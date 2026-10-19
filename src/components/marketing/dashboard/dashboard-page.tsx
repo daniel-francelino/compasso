@@ -311,6 +311,7 @@ export function DashboardPage() {
             onValueChange={(value) =>
               void list.setFilter("brand", value === ALL ? undefined : value)
             }
+            emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
             options={[
               { value: ALL, label: "Todas as marcas" },
               ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),

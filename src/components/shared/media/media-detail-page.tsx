@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { useRouter } from "@tanstack/react-router";
 import { Download, Replace, Trash2, Undo2, Save, Globe, RefreshCw } from "lucide-react";
 import { useState } from "react";
@@ -188,23 +189,21 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
               </Button>
             ) : null}
             {canUpdate && can(auth, Action.Media.Upload) && !detail.asset.trashed ? (
-              <Button variant="outline" onClick={() => setReplacing(true)}>
-                <Replace aria-hidden="true" /> Nova versão
-              </Button>
+              <IconButton
+                variant="outline"
+                label="Nova versão"
+                icon={Replace}
+                onClick={() => setReplacing(true)}
+              />
             ) : null}
             {canDelete ? (
-              <Button
+              <IconButton
                 variant="outline"
-                className="text-destructive"
+                destructive={!detail.asset.trashed}
+                label={detail.asset.trashed ? "Restaurar da lixeira" : "Mover para a lixeira"}
+                icon={detail.asset.trashed ? Undo2 : Trash2}
                 onClick={() => setTrashing(true)}
-              >
-                {detail.asset.trashed ? (
-                  <Undo2 aria-hidden="true" />
-                ) : (
-                  <Trash2 aria-hidden="true" />
-                )}
-                {detail.asset.trashed ? "Restaurar" : "Mover para a lixeira"}
-              </Button>
+              />
             ) : null}
           </>
         }

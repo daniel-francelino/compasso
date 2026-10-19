@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Bell, CheckCheck, RotateCw } from "lucide-react";
+import { Bell, CheckCheck, RotateCw, BellDot, List, AlarmClockOff } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -19,9 +19,9 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const tabs = [
-  { value: NotificationFilter.All, label: "Todas" },
-  { value: NotificationFilter.Unread, label: "Não lidas" },
-  { value: NotificationFilter.Snoozed, label: "Adiadas" },
+  { value: NotificationFilter.All, label: "Todas", icon: List },
+  { value: NotificationFilter.Unread, label: "Não lidas", icon: BellDot },
+  { value: NotificationFilter.Snoozed, label: "Adiadas", icon: AlarmClockOff },
 ];
 
 const isFilter = (value: string): value is NotificationFilter =>

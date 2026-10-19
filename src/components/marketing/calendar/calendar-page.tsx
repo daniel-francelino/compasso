@@ -247,6 +247,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
               void state.setFilter("channel", "");
               void state.setFilter("owner", "");
             }}
+            emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
             options={[
               { value: ALL, label: "Todas as marcas" },
               ...(brands.data ?? []).map((item) => ({ value: item.id, label: item.name })),
@@ -259,6 +260,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           value={state.search.channel ?? ALL}
           disabled={brandId === undefined}
           onValueChange={(value) => void state.setFilter("channel", value === ALL ? "" : value)}
+          emptyText={channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined}
           options={[
             { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos os canais" },
             ...(channels.data ?? []).map((channel) => ({
@@ -273,6 +275,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           value={state.search.owner ?? ALL}
           disabled={brandId === undefined}
           onValueChange={(value) => void state.setFilter("owner", value === ALL ? "" : value)}
+          emptyText={owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined}
           options={[
             { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
             ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),

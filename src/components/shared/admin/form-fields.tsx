@@ -231,6 +231,7 @@ export function SelectField({
   error,
   disabled,
   triggerClassName,
+  emptyText,
 }: {
   id: string;
   label: string;
@@ -239,6 +240,7 @@ export function SelectField({
   value: string;
   onValueChange: (value: string) => void;
   options: SelectOption[];
+  emptyText?: string | undefined;
   placeholder?: string;
   error?: string | undefined;
   disabled?: boolean;
@@ -249,7 +251,11 @@ export function SelectField({
       <FieldLabel htmlFor={id} required={required} tip={tip}>
         {label}
       </FieldLabel>
-      <Select value={value} onValueChange={onValueChange} disabled={disabled ?? false}>
+      <Select
+        value={value}
+        onValueChange={onValueChange}
+        disabled={(disabled ?? false) || emptyText !== undefined}
+      >
         <SelectTrigger
           id={id}
           className={triggerClassName}
@@ -273,7 +279,7 @@ export function SelectField({
           ))}
         </SelectContent>
       </Select>
-      <FieldMessage error={error} />
+      <FieldMessage error={error} hint={emptyText} />
     </div>
   );
 }

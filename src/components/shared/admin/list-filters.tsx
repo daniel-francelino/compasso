@@ -18,6 +18,7 @@ export type FilterGroup = {
   value: string;
   defaultValue: string;
   options: { value: string; label: string }[];
+  emptyText?: string | undefined;
   onChange: (value: string) => void;
 };
 
@@ -83,6 +84,7 @@ export function ListFilters({
               <Label htmlFor={`filter-${group.id}`}>{group.label}</Label>
               <Select
                 value={valueOf(group)}
+                disabled={group.emptyText !== undefined}
                 onValueChange={(value) =>
                   setDraft((current) => ({ ...current, [group.id]: value }))
                 }
@@ -98,6 +100,9 @@ export function ListFilters({
                   ))}
                 </SelectContent>
               </Select>
+              {group.emptyText ? (
+                <p className="text-xs text-muted-foreground">{group.emptyText}</p>
+              ) : null}
             </div>
           ))}
           {children}

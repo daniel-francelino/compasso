@@ -28,8 +28,8 @@ import { AppRoute } from "@/lib/shared/routes";
 const ALL = "all";
 
 const tabs = [
-  { value: ClientStatusFilter.Active, label: "Ativos" },
-  { value: ClientStatusFilter.Archived, label: "Arquivados" },
+  { value: ClientStatusFilter.Active, label: "Ativos", icon: CircleCheck },
+  { value: ClientStatusFilter.Archived, label: "Arquivados", icon: Archive },
 ];
 
 export function ClientsPage() {
@@ -117,6 +117,7 @@ export function ClientsPage() {
                 label: "Responsável",
                 value: list.filters.owner ?? ALL,
                 defaultValue: ALL,
+                emptyText: owners.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined,
                 options: [
                   { value: ALL, label: "Todos" },
                   ...(owners.data ?? []).map((person) => ({

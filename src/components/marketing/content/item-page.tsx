@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Ban, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -125,22 +126,30 @@ export function ItemPage({ itemId }: { itemId: string }) {
               </StatusBadge>
             ) : null}
             {can(auth, Action.Content.Update) && !item.cancelled ? (
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Pencil aria-hidden="true" />
-                Editar
-              </Button>
+              <IconButton
+                variant="outline"
+                label="Editar conteúdo"
+                icon={Pencil}
+                onClick={() => setEditing(true)}
+              />
             ) : null}
             {can(auth, Action.Content.Cancel) && !item.cancelled ? (
-              <Button variant="outline" onClick={() => setCancelling(true)}>
-                <Ban aria-hidden="true" />
-                Cancelar conteúdo
-              </Button>
+              <IconButton
+                variant="outline"
+                destructive
+                label="Cancelar conteúdo"
+                icon={Ban}
+                onClick={() => setCancelling(true)}
+              />
             ) : null}
             {can(auth, Action.Content.Delete) && item.variants.length === 0 ? (
-              <Button variant="outline" onClick={() => setDeleting(true)}>
-                <Trash2 aria-hidden="true" />
-                Excluir
-              </Button>
+              <IconButton
+                variant="outline"
+                destructive
+                label="Excluir conteúdo"
+                icon={Trash2}
+                onClick={() => setDeleting(true)}
+              />
             ) : null}
           </>
         }

@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ClipboardCheck, TriangleAlert } from "lucide-react";
+import { ClipboardCheck, TriangleAlert, Clock, Undo2, CircleCheck, Layers } from "lucide-react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
 import { ListFilters } from "@/components/shared/admin/list-filters";
@@ -21,11 +21,11 @@ import { unwrapResult } from "@/lib/shared/result-client";
 const ALL = "all";
 
 const tabs = [
-  { value: ApprovalFilter.Pending, label: "Pendentes" },
-  { value: ApprovalFilter.Overdue, label: "Atrasadas" },
-  { value: ApprovalFilter.Approved, label: "Aprovadas" },
-  { value: ApprovalFilter.ChangesRequested, label: "Alterações solicitadas" },
-  { value: ApprovalFilter.Superseded, label: "Substituídas" },
+  { value: ApprovalFilter.Pending, label: "Pendentes", icon: Clock },
+  { value: ApprovalFilter.Overdue, label: "Atrasadas", icon: TriangleAlert },
+  { value: ApprovalFilter.Approved, label: "Aprovadas", icon: CircleCheck },
+  { value: ApprovalFilter.ChangesRequested, label: "Alterações solicitadas", icon: Undo2 },
+  { value: ApprovalFilter.Superseded, label: "Substituídas", icon: Layers },
 ];
 
 const ageInDays = (requestedAt: string): number =>
@@ -116,6 +116,7 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
                   label: "Marca",
                   value: brandId ?? ALL,
                   defaultValue: ALL,
+                  emptyText: brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
                   options: [
                     { value: ALL, label: "Todas as marcas" },
                     ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),

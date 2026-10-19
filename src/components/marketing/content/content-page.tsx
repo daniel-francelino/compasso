@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FileText, Plus } from "lucide-react";
+import { FileText, Plus, CircleX, CircleCheck, List, Columns3 } from "lucide-react";
 import { useState } from "react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
@@ -40,8 +40,8 @@ const VIEW_BOARD = "board";
 const VIEW_LIST = "list";
 
 const tabs = [
-  { value: ContentStatusFilter.Active, label: "Ativos" },
-  { value: ContentStatusFilter.Cancelled, label: "Cancelados" },
+  { value: ContentStatusFilter.Active, label: "Ativos", icon: CircleCheck },
+  { value: ContentStatusFilter.Cancelled, label: "Cancelados", icon: CircleX },
 ];
 
 const editorialOptions = [
@@ -188,8 +188,14 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           }
         >
           <TabsList>
-            <TabsTrigger value={VIEW_LIST}>Lista</TabsTrigger>
-            <TabsTrigger value={VIEW_BOARD}>Quadro</TabsTrigger>
+            <TabsTrigger value={VIEW_LIST}>
+              <List aria-hidden="true" />
+              Lista
+            </TabsTrigger>
+            <TabsTrigger value={VIEW_BOARD}>
+              <Columns3 aria-hidden="true" />
+              Quadro
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -212,6 +218,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
               void list.setFilter("channel", undefined);
               void list.setFilter("owner", undefined);
             }}
+            emptyText={brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined}
             options={[
               { value: ALL, label: "Todas as marcas" },
               ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
@@ -226,6 +233,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           onValueChange={(value) =>
             void list.setFilter("channel", value === ALL ? undefined : value)
           }
+          emptyText={channels.data?.length === 0 ? "Nenhum canal ativo nesta marca" : undefined}
           options={[
             { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos os canais" },
             ...(channels.data ?? []).map((channel) => ({
@@ -240,6 +248,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           value={list.filters.owner ?? ALL}
           disabled={brandId === undefined}
           onValueChange={(value) => void list.setFilter("owner", value === ALL ? undefined : value)}
+          emptyText={assignees.data?.length === 0 ? "Nenhuma pessoa disponível" : undefined}
           options={[
             { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
             ...(assignees.data ?? []).map((person) => ({ value: person.id, label: person.name })),

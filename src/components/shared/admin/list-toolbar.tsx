@@ -1,8 +1,9 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Input } from "@/components/shared/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 
-export type StatusOption = { value: string; label: string };
+export type StatusOption = { value: string; label: string; icon?: LucideIcon };
 
 export function ListToolbar({
   search,
@@ -30,6 +31,7 @@ export function ListToolbar({
           <TabsList>
             {statusOptions.map((option) => (
               <TabsTrigger key={option.value} value={option.value}>
+                {option.icon ? <option.icon aria-hidden="true" /> : null}
                 {option.label}
               </TabsTrigger>
             ))}

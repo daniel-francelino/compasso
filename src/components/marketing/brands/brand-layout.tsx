@@ -1,5 +1,16 @@
 import { Link, Outlet } from "@tanstack/react-router";
-import { Archive } from "lucide-react";
+import {
+  Archive,
+  CalendarDays,
+  ClipboardCheck,
+  FileText,
+  Images,
+  LayoutDashboard,
+  Palette,
+  Radio,
+  Settings2,
+  Users,
+} from "lucide-react";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
@@ -11,7 +22,7 @@ import { useAuth } from "@/lib/shared/auth/use-auth";
 import { AppRoute } from "@/lib/shared/routes";
 
 const tabClass =
-  "inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-muted-foreground hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground";
+  "inline-flex min-h-11 items-center gap-1.5 rounded-md px-3 [&_svg]:size-4 [&_svg]:shrink-0 text-sm font-medium text-muted-foreground hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground";
 
 export function BrandLayout({ brandId }: { brandId: string }) {
   const auth = useAuth();
@@ -54,6 +65,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
           activeOptions={{ exact: true }}
           className={tabClass}
         >
+          <LayoutDashboard aria-hidden="true" />
           Visão geral
         </Link>
         {can(auth, Action.Channels.View) ? (
@@ -62,6 +74,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             params={{ brandId }}
             className={tabClass}
           >
+            <Radio aria-hidden="true" />
             Canais
           </Link>
         ) : null}
@@ -71,6 +84,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             params={{ brandId }}
             className={tabClass}
           >
+            <FileText aria-hidden="true" />
             Conteúdos
           </Link>
         ) : null}
@@ -80,6 +94,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             params={{ brandId }}
             className={tabClass}
           >
+            <CalendarDays aria-hidden="true" />
             Calendário
           </Link>
         ) : null}
@@ -89,6 +104,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             params={{ brandId }}
             className={tabClass}
           >
+            <ClipboardCheck aria-hidden="true" />
             Aprovações
           </Link>
         ) : null}
@@ -98,6 +114,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             params={{ brandId }}
             className={tabClass}
           >
+            <Images aria-hidden="true" />
             Biblioteca
           </Link>
         ) : null}
@@ -106,6 +123,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
           params={{ brandId }}
           className={tabClass}
         >
+          <Users aria-hidden="true" />
           Membros
         </Link>
         <Link
@@ -113,6 +131,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
           params={{ brandId }}
           className={tabClass}
         >
+          <Palette aria-hidden="true" />
           Identidade
         </Link>
         {can(auth, Action.Brands.Update) ? (
@@ -121,6 +140,7 @@ export function BrandLayout({ brandId }: { brandId: string }) {
             params={{ brandId }}
             className={tabClass}
           >
+            <Settings2 aria-hidden="true" />
             Configurações
           </Link>
         ) : null}
