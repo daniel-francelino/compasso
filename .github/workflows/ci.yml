@@ -45,6 +45,10 @@ jobs:
       - run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,mailpit
       - run: supabase test db
       - run: npm run db:types
+      - uses: actions/upload-artifact@v4
+        with:
+          name: database-types
+          path: src/lib/shared/supabase/database.types.ts
       - name: Generated types are committed
         run: git diff --exit-code src/lib/shared/supabase/database.types.ts
 
