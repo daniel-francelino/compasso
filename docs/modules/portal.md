@@ -57,7 +57,7 @@ Technically the external role has **no `select` policy** on any internal table; 
 └───────────────────────────────────────────────┘
 ```
 
-- **Preview by channel** from `shared/preview`: aspect ratio, caption truncation ("ver mais"), carousel navigation, video player without autoplay; the caption and files are shown in full below.
+- **Preview by channel** from `shared/preview`: each tab identifies both the platform and format so separate formats on the same network are distinguishable; it also provides aspect ratio, caption truncation ("ver mais"), carousel navigation and a video player without autoplay; the caption and files are shown in full below.
 - **Files** open through short signed URLs (2 minutes) requested on demand.
 - **Decision buttons** are at the bottom (sticky on mobile), 44 px targets. "Aprovar" asks for a light confirmation; "Pedir alterações" opens a required comment field (minimum 5 characters). Both are disabled while the request is running and re-enabled with the data preserved if it fails.
 - **States:** pending (decision available); decided (read-only, with the decision and its comment); superseded (banner "Esta versão foi atualizada" with a link to the current request); cancelled; approver without `can_decide` (the screen shows the content and comments but no decision buttons, with the message "Você pode comentar, mas a decisão é de {nome}"); no access ("Você não tem acesso a esta marca").
@@ -146,6 +146,8 @@ Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (r
 2026-10-19: Approval previews now reuse the linked brand profile query and pass its signed brand logo to the channel avatar. No migration. Validation performed: targeted lint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: portal browser rendering with a configured logo and real signed URL.
 2026-10-19: Added portal breadcrumbs for the home, brand panel, calendar, approval list and review routes, plus notifications and profile. The linked brand name comes from the cached portal brand profile. No migration. Validation performed: targeted lint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: breadcrumb navigation in a browser.
 2026-10-20: Portal calendar items now load the shared approval revision on hover or keyboard focus and show its channel preview, signed media and caption; selecting an item still opens its review. No migration. Validation performed: targeted lint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: hover/focus preview in a browser.
+2026-10-20: Shared channel and revision previews now show a dash when the caption is empty. Validation performed: targeted ESLint, Prettier and `git diff --check`. **Not tested**: browser rendering.
+2026-10-20: Revision preview tabs now include the format label alongside the platform so multiple formats on the same network can be distinguished. Validation performed: targeted ESLint, typecheck, Prettier and `git diff --check`. **Not tested**: browser rendering.
 
 2026-10-19: The portal layout now has the back-office shell with a side menu: `PortalShell` (`SidebarProvider`, top bar) and `PortalSidebar` (`src/components/portal/portal-sidebar.tsx`); the old top navigation (Avisos, Meu perfil, Sair) moved into the menu. Validation performed: typecheck, build, lint of the changed files. **Not tested**: the menu in a browser (desktop, tablet, 360 px drawer), keyboard navigation, the active state of each item.
 

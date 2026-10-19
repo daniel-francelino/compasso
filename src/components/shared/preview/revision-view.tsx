@@ -55,7 +55,7 @@ export function RevisionView({
             {channels.map((channel) => (
               <TabsTrigger key={channel.rowId} value={channel.rowId}>
                 <PlatformIcon platform={channel.platform} />
-                {platformLabels[channel.platform]}
+                {platformLabels[channel.platform]} · {contentFormatLabels[channel.format]}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -97,7 +97,7 @@ export function RevisionView({
           ) : null}
           <SectionCard title="Legenda completa" padding="sm">
             {text === "" ? (
-              <p className="text-sm text-muted-foreground">Sem legenda.</p>
+              <p className="text-sm text-muted-foreground">-</p>
             ) : (
               <p className="whitespace-pre-wrap break-words text-sm">{text}</p>
             )}

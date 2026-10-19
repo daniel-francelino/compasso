@@ -159,7 +159,7 @@ export function ChannelPreview({
       ) : null}
       <div className={cn("space-y-2 text-sm", compact ? "p-2 text-xs" : "p-3")}>
         {caption === "" ? (
-          <p className="text-muted-foreground">Sem legenda.</p>
+          <p className="text-muted-foreground">-</p>
         ) : (
           <p className={cn("whitespace-pre-wrap break-words", compact && "line-clamp-2")}>
             {text}
