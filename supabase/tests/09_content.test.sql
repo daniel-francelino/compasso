@@ -72,7 +72,7 @@ select set_config('t.mediaB', pg_temp.upload('00000000-0000-0000-0000-0000000000
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.item', public.content_item_save(format('{"brand_id":"%s","title":"Lançamento de outono","tags":["Outono"," outono ","Campanha"]}', current_setting('t.brand'))::jsonb) ->> 'id', true);
-select is((select tags from public.content_items where id = current_setting('t.item')::uuid), array['Campanha', 'Outono', 'outono'], 'tags are trimmed and deduplicated');
+select is((select array_agg(t order by t collate "C") from public.content_items i, unnest(i.tags) t where i.id = current_setting('t.item')::uuid), array['Campanha', 'Outono', 'outono'], 'tags are trimmed and deduplicated');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"x"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'a title below two characters is refused');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Com responsavel","assignee_id":"00000000-0000-0000-0000-0000000000b2"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'an assignee who is not linked to the brand is refused');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Outra marca"}'::jsonb)$$, current_setting('t.brandB')), 'not_found', 'an item cannot be created on a brand the person is not linked to');
@@ -145,8 +145,8 @@ reset role;
 select throws_ok(format($$update public.content_revisions set snapshot = '{}' where id = '%s'$$, current_setting('t.rev1')), 'record_immutable', 'a revision cannot be updated');
 select throws_ok(format($$delete from public.content_revision_media where revision_id = '%s'$$, current_setting('t.rev1')), 'record_immutable', 'revision files cannot be deleted');
 select throws_ok(format($$update public.approval_requests set approver_user_id = '00000000-0000-0000-0000-0000000000d2' where id = '%s'$$, current_setting('t.req1')), 'record_immutable', 'the approver of a request cannot be rewritten');
-select throws_ok($$insert into public.content_variants (brand_id, content_item_id, channel_id, format) values (current_setting('t.brandB')::uuid, current_setting('t.item')::uuid, current_setting('t.channelB')::uuid, 'text')$$, '23503', 'a variant cannot point to an item of another brand');
-select throws_ok(format($$update public.content_variants set channel_id = '%s' where id = '%s'$$, current_setting('t.channelB'), current_setting('t.v1')), '23503', 'nor to a channel of another brand');
+select throws_ok($$insert into public.content_variants (brand_id, content_item_id, channel_id, format) values (current_setting('t.brandB')::uuid, current_setting('t.item')::uuid, current_setting('t.channelB')::uuid, 'text')$$, '23503', null, 'a variant cannot point to an item of another brand');
+select throws_ok(format($$update public.content_variants set channel_id = '%s' where id = '%s'$$, current_setting('t.channelB'), current_setting('t.v1')), '23503', null, 'nor to a channel of another brand');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
 select lives_ok(format($$select public.media_set_trashed(a.id, true) from public.media_versions v join public.media_assets a on a.id = v.asset_id where v.id = '%s'$$, current_setting('t.media1')), 'the owner trashes a used file');
