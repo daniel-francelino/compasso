@@ -6,6 +6,8 @@
 
 Show **what is planned, when and in which state**, for one brand or for all the authorized brands, and let the team move dates safely. Each entry is a **variant** (one channel, one occurrence). Production and approval **deadlines** are shown apart from the publication date.
 
+Admin calendar screens use all available content width for the calendar grid and its undated-content panel.
+
 Included: month, week and list views, filters, items without a date, drag to reschedule with confirmation, time zones and daylight saving, shareable URLs, portal calendar. Not included in the MVP: free-form events and tasks, external calendar sync (Google/ICS export is a later option), automatic publishing, resource planning.
 
 ## What appears on the calendar
@@ -127,3 +129,5 @@ Phase 5 (calendar screen layout, 2026-10-19).
 **Validated.** Targeted ESLint for both changed components, TypeScript typecheck, and Prettier checks for both components and this document passed.
 
 **Not tested.** Browser rendering and filter/navigation interaction on desktop and mobile were not tested.
+
+2026-10-19: Admin calendar routes use the full available admin content width. Validation performed: pending. **Not tested**: browser rendering.

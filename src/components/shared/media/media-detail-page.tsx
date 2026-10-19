@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { TextField } from "@/components/shared/admin/form-fields";
+import { TagInputField } from "@/components/shared/admin/tag-input-field";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
@@ -80,8 +81,8 @@ function MetadataForm({ detail, canEdit }: { detail: MediaDetail; canEdit: boole
   const { formRef, errors, error, busy, submit } = useFormSubmit();
   const { run } = useServerAction();
   const [name, setName] = useState(detail.asset.name);
-  const [tags, setTags] = useState(detail.asset.tags.join(", "));
-  const dirty = name !== detail.asset.name || tags !== detail.asset.tags.join(", ");
+  const [tags, setTags] = useState<string[]>(detail.asset.tags);
+  const dirty = name !== detail.asset.name || tags.join("|") !== detail.asset.tags.join("|");
   useUnsavedChanges(dirty && !busy);
 
   return (
@@ -97,10 +98,7 @@ function MetadataForm({ detail, canEdit }: { detail: MediaDetail; canEdit: boole
           {
             id: detail.asset.id,
             displayName: name,
-            tags: tags
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter((tag) => tag !== ""),
+            tags,
             expectedVersion: detail.asset.version,
           },
           (data) => run(() => updateMedia({ data }), { invalidate: [QueryKey.Media.all()] }),
@@ -120,13 +118,15 @@ function MetadataForm({ detail, canEdit }: { detail: MediaDetail; canEdit: boole
         disabled={!canEdit}
         error={errors["displayName"]}
       />
-      <TextField
+      <TagInputField
         id="media-tags"
         label="Etiquetas"
         value={tags}
         onValueChange={setTags}
+        maxItems={20}
+        maxLength={40}
         disabled={!canEdit}
-        hint="Separe por vírgula."
+        error={errors["tags"]}
       />
       <FormError message={error} />
       {canEdit ? (

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
-import { DateField } from "@/components/shared/admin/form-fields";
+import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { deadlineSchema, rescheduleSchema } from "@/lib/marketing/calendar/schemas";
@@ -165,11 +165,11 @@ export function RescheduleDialog({
           <p className="text-sm text-muted-foreground">
             Prazo atual: {formatDateOnly(deadline?.currentDate ?? date)}
           </p>
-          <DateField
+          <DatePickerField
             id="reschedule-deadline"
             label="Novo prazo"
             value={date}
-            onValueChange={setDate}
+            onChange={setDate}
             error={errors["date"]}
           />
         </>

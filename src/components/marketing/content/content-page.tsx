@@ -1,24 +1,53 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FileText, Plus, CircleX, CircleCheck, List, Columns3 } from "lucide-react";
+import {
+  Ban,
+  Columns3,
+  CircleCheck,
+  CircleX,
+  Eye,
+  FileText,
+  List,
+  LoaderCircle,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
-import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
+import {
+  type DataTableAction,
+  type DataTableColumn,
+  DataTable,
+} from "@/components/shared/admin/data-table";
+import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
 import { TextField } from "@/components/shared/admin/form-fields";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
+import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { Button } from "@/components/shared/ui/button";
 import { ContentBoard } from "@/components/marketing/content/content-board";
 import { ItemFormDialog } from "@/components/marketing/content/item-form-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/shared/ui/dialog";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { useListState } from "@/hooks/shared/use-list-state";
+import { useServerAction } from "@/hooks/shared/use-server-action";
 import { listChannels } from "@/lib/marketing/channels/channels.functions";
 import {
   type ContentItemRow,
+  cancelContentItem,
+  deleteContentItem,
+  getContentItem,
   listAssigneeOptions,
   listContentItems,
 } from "@/lib/marketing/content/content.functions";
@@ -73,8 +102,13 @@ const nextPlanned = (row: ContentItemRow): string => {
 export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const list = useListState<string>(ContentStatusFilter.Active);
   const [creating, setCreating] = useState(false);
+  const [cancelling, setCancelling] = useState<ContentItemRow | null>(null);
+  const [deleting, setDeleting] = useState<ContentItemRow | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const { run, busy } = useServerAction();
   const brandId = fixedBrandId ?? list.filters.brand;
   const board = list.filters.view === VIEW_BOARD;
 
@@ -111,6 +145,12 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     placeholderData: keepPreviousData,
     enabled: !board,
   });
+  const editingQuery = useQuery({
+    queryKey: QueryKey.Content.item(editingId ?? ""),
+    queryFn: async () => unwrapResult(await getContentItem({ data: { id: editingId ?? "" } })).item,
+    enabled: editingId !== null,
+  });
+  const invalidate = [QueryKey.Content.all(), QueryKey.Dashboard.all()];
 
   const columns: DataTableColumn<ContentItemRow>[] = [
     {
@@ -160,6 +200,45 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       sortable: true,
       cell: (row) => (row.productionDueDate ? formatDateOnly(row.productionDueDate) : "—"),
     },
+  ];
+
+  const actions = (row: ContentItemRow): DataTableAction<ContentItemRow>[] => [
+    ...(fixedBrandId && can(auth, Action.Content.Update)
+      ? [
+          {
+            id: "edit",
+            label: "Editar conteúdo",
+            icon: Pencil,
+            onSelect: (item: ContentItemRow) => setEditingId(item.id),
+          },
+        ]
+      : []),
+    {
+      id: "open",
+      label: "Abrir conteúdo",
+      icon: Eye,
+      onSelect: (item) =>
+        void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: item.id } }),
+    },
+    ...(can(auth, Action.Content.Cancel) && !row.cancelled
+      ? [{ id: "cancel", label: "Cancelar conteúdo", icon: Ban, onSelect: setCancelling }]
+      : []),
+    ...(can(auth, Action.Content.Delete)
+      ? [
+          {
+            id: "delete",
+            label: "Excluir conteúdo",
+            icon: Trash2,
+            destructive: true,
+            disabled: row.variants.length > 0,
+            disabledReason:
+              row.variants.length > 0
+                ? "Conteúdos com variantes não podem ser excluídos."
+                : undefined,
+            onSelect: setDeleting,
+          },
+        ]
+      : []),
   ];
 
   const filterGroups: FilterGroup[] = [
@@ -315,6 +394,8 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           columns={columns}
           rowKey={(row) => row.id}
           rowLabel={(row) => row.title}
+          actionsMenu
+          actions={actions}
           sort={{ current: list.sort, onToggle: list.toggleSort }}
           loading={query.isPending}
           refreshing={query.isFetching}
@@ -338,6 +419,38 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           }}
         />
       )}
+      <ReasonDialog
+        open={cancelling !== null}
+        onOpenChange={(open) => !open && setCancelling(null)}
+        title={`Cancelar “${cancelling?.title ?? ""}”?`}
+        description="As variantes ainda não publicadas serão canceladas e os pedidos pendentes ao cliente também. O histórico é mantido."
+        confirmLabel="Cancelar conteúdo"
+        onSubmit={async (reason) => {
+          if (cancelling === null) return false;
+          const result = await run(
+            () => cancelContentItem({ data: { id: cancelling.id, reason } }),
+            { invalidate, success: "Conteúdo cancelado." },
+          );
+          return result.ok ? null : result.message;
+        }}
+      />
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={`Excluir “${deleting?.title ?? ""}”?`}
+        description="Este conteúdo ainda não tem variantes, então pode ser excluído. Esta ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        destructive
+        busy={busy}
+        onConfirm={async () => {
+          if (deleting === null) return false;
+          const result = await run(() => deleteContentItem({ data: { id: deleting.id } }), {
+            invalidate,
+            success: "Conteúdo excluído.",
+          });
+          return result.ok;
+        }}
+      />
       {creating ? (
         <ItemFormDialog
           open
@@ -347,6 +460,45 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
             void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: saved.id } })
           }
         />
+      ) : null}
+      {editingId !== null && editingQuery.data ? (
+        <ItemFormDialog
+          key={editingQuery.data.id}
+          open
+          item={editingQuery.data}
+          fixedBrandId={fixedBrandId}
+          fullScreen
+          onOpenChange={(open) => !open && setEditingId(null)}
+          onSaved={() => {
+            setEditingId(null);
+            void Promise.all(
+              invalidate.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+            );
+          }}
+        />
+      ) : editingId !== null ? (
+        <Dialog open onOpenChange={(open) => !open && setEditingId(null)}>
+          <DialogContent className="h-dvh max-h-dvh w-screen max-w-none rounded-none border-0 p-5 sm:max-w-none sm:rounded-none sm:p-8">
+            <DialogHeader>
+              <DialogTitle>Editar conteúdo</DialogTitle>
+              <DialogDescription>
+                {editingQuery.isError
+                  ? "Não foi possível carregar este conteúdo. Tente novamente."
+                  : "Carregando conteúdo…"}
+              </DialogDescription>
+            </DialogHeader>
+            {editingQuery.isError ? (
+              <Button variant="outline" onClick={() => void editingQuery.refetch()}>
+                Tentar novamente
+              </Button>
+            ) : (
+              <LoaderCircle
+                className="size-5 animate-spin text-muted-foreground"
+                aria-hidden="true"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       ) : null}
     </div>
   );

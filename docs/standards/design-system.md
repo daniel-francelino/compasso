@@ -61,7 +61,7 @@ Heading utilities (no size tokens scattered around): `heading-page`, `heading-se
 
 ### 3.3 Spacing, radii, shadows
 
-- **Spacing:** Tailwind default scale. Between blocks of a back office page `space-y-6`; inside a form `space-y-5`; inside a field `space-y-1.5`. Back office content width: max **72 rem**; forms and dialogs `max-w-md`–`max-w-4xl`. Public site sections: `px-6 py-24 lg:py-32`, container `mx-auto max-w-6xl`.
+- **Spacing:** Tailwind default scale. Between blocks of a back office page `space-y-6`; inside a form `space-y-5`; inside a field `space-y-1.5`. Back office content width: max **72 rem** by default; brand detail pages, content screens and calendar screens may use all available width. Forms and dialogs `max-w-md`–`max-w-4xl`. Public site sections: `px-6 py-24 lg:py-32`, container `mx-auto max-w-6xl`.
 - **Radii** (`--radius: 0.75rem`): `rounded-md` for buttons, fields and badges of the back office; `rounded-xl` for cards; `rounded-2xl` for panels and empty states; `rounded-full` for pills and avatars.
 - **Shadows:** the Tailwind scale only (`shadow-sm`, `shadow`, `shadow-md`, `shadow-lg`). On the public site, warm shadows may use brand tokens with opacity.
 
@@ -112,7 +112,9 @@ Usage rules:
 
 - **Dates** with `DatePickerField` and **date-times** with `DateTimeField` (which always shows the time zone); never the native field. **Phone** with `PhoneField`.
 - **Field hint:** `InfoTip`; **field warning:** `WarningTip` (warning tone = look at it, danger tone = blocks).
-- **Where the hint goes:** extra information about a field is never a paragraph under the input. The `hint` prop of `TextField`, `NumberField`, `DateField`, `DateTimeField`, `TagInputField`, `Field` and `PasswordField` renders an `InfoTip` (information icon with tooltip) next to the label; `tip` does the same for fields without `hint`. Under the input stay only the error, the character counter, the empty-select text (`emptyText`) and the time zone of a date-time. For a checkbox or a group title, place an `InfoTip` next to its label.
+- **Where the hint goes:** extra information about a field is never a paragraph under the input. The `hint` prop of `TextField`, `NumberField`, `DatePickerField`, `DateTimeField`, `TagInputField`, `Field` and `PasswordField` renders an `InfoTip` (information icon with tooltip) next to the label; `tip` does the same for fields without `hint`. Under the input stay only the error, the character counter, the empty-select text (`emptyText`) and the time zone of a date-time. For a checkbox or a group title, place an `InfoTip` next to its label.
+- **Tags** (client, content item, media) with `TagInputField` (chips, Enter to add), never a comma-separated text field.
+- **Formatted text** (briefing) with `RichTextEditor` (`shared/admin`, Tiptap: bold, italic, heading, lists, undo/redo; no links, no HTML) and displayed with `RichTextView`, which renders the stored JSON by node type. The format is `RichDoc` (`lib/shared/rich-text/types.ts`): a closed set of nodes and marks validated by zod on the server.
 - **Toast** only through the global `Toaster`. Do not build toasts by hand.
 
 ## 6. Back office components (`shared/admin`)
@@ -124,7 +126,7 @@ Generic, no business rule. Full list and props are in each file.
 | **Structure** | `PageHeader`, `AppSidebar` + `nav-config.ts`, `AuthShell`, `SpaceSwitcher`, `BrandSwitcher`, `BrandAvatar`, `BrandSelect` | Header, menu, space and brand switching; the avatar of a brand (logo or initials) and the select that shows it |
 | **Lists** | `ListToolbar`, `ListContent`, `ListFilters`, `DataTable`, `PaginationBar`, `SearchableEmptyState` | Search, filters, table, pagination |
 | **Forms** | `TextField`, `TextAreaField`, `NumberField`, `SelectField`, `PhoneField`, `DateTimeField`, `Field`, `FormError`, `EditorSheet` | Fields with label, hint, error and counter |
-| **Content and approvals** | `ChannelPreview`, `RevisionView` (`shared/preview`), `EditorialStatusBadge`, `PublicationStatusBadge`, `RequestStatusBadge` (`shared/content`), `DateTimeField`, `DateField` | Platform preview with carousel and caption truncation; the exact revision (preview, full caption, files, planned date with zone) used by the team and the portal; status badges; date-time field that always shows the time zone, refuses a time that does not exist (daylight saving) and asks which occurrence when a time happens twice; date-only field |
+| **Content and approvals** | `ChannelPreview`, `RevisionView` (`shared/preview`), `EditorialStatusBadge`, `PublicationStatusBadge`, `RequestStatusBadge` (`shared/content`), `DateTimeField`, `DatePickerField` | Platform preview with carousel and caption truncation; the exact revision (preview, full caption, files, planned date with zone) used by the team and the portal; status badges; date-time field that always shows the time zone, refuses a time that does not exist (daylight saving) and asks which occurrence when a time happens twice; date-only field with a calendar popover (`DatePickerField`, `shared/ui`, value `yyyy-MM-dd`, optional `clearable` and `minDate`; the native date input no longer exists) |
 | **Cards and detail** | `SectionCard`, `DetailRow`, `NoticeCard`, `StatusBadge` | Section card (title, icon, actions), label/value row, page-wide notice, status badge |
 | **Groups of fields** | `FieldGroup` | `<fieldset>` with legend (icon, hint, `hideLegend`), variants `plain` / `section` / `boxed`, a single spacing between fields (`gap` md = 16 px, sm = 8 px) and native `disabled`. Do not write `<fieldset>` + `<legend>` by hand |
 | **Feedback** | `EmptyState`, `RecordUnavailable`, `ListSkeleton`, `FormSkeleton`, `PageSkeleton`, `InfoTip`, `WarningTip`, `WhyDisabled` | Empty, error, loading and explanation states |

@@ -23,7 +23,7 @@ import {
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { EmptyState } from "@/components/shared/admin/empty-state";
-import { SelectField } from "@/components/shared/admin/form-fields";
+import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { PaginationBar } from "@/components/shared/admin/pagination-bar";
@@ -154,6 +154,69 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const collectionsReady =
     scope === MediaScope.Site || (scope === MediaScope.Brand && brandId !== undefined);
   const rows = query.data?.rows ?? [];
+  const filterGroups: FilterGroup[] = [
+    ...(fixedBrandId
+      ? []
+      : [
+          {
+            id: "scope",
+            label: "Origem",
+            value: scope ?? ALL,
+            defaultValue: ALL,
+            options: [
+              { value: ALL, label: "Todas" },
+              { value: MediaScope.Brand, label: "Marcas" },
+              { value: MediaScope.Site, label: "Site" },
+            ],
+            onChange: (value: string) => {
+              void list.setFilter("scope", value === ALL ? undefined : value);
+              void list.setFilter("brand", undefined);
+              void list.setFilter("folder", undefined);
+            },
+          },
+          ...(scope === MediaScope.Brand
+            ? [
+                {
+                  id: "brand",
+                  label: "Marca",
+                  value: brandId ?? ALL,
+                  defaultValue: ALL,
+                  options: [],
+                  render: (value: string, onValueChange: (value: string) => void) => (
+                    <BrandSelect
+                      id="media-brand-filter"
+                      value={value}
+                      onValueChange={onValueChange}
+                      brands={brands.data}
+                      allLabel="Todas"
+                      allValue={ALL}
+                    />
+                  ),
+                  onChange: (value: string) => {
+                    void list.setFilter("brand", value === ALL ? undefined : value);
+                    void list.setFilter("folder", undefined);
+                  },
+                },
+              ]
+            : []),
+        ]),
+    {
+      id: "kind",
+      label: "Tipo",
+      value: kind ?? ALL,
+      defaultValue: ALL,
+      options: kindOptions,
+      onChange: (value: string) => void list.setFilter("kind", value === ALL ? undefined : value),
+    },
+    {
+      id: "order",
+      label: "Ordenar por",
+      value: order,
+      defaultValue: MediaSort.Newest,
+      options: orderOptions,
+      onChange: (value: string) => void list.setFilter("order", value),
+    },
+  ];
 
   const startUpload = () => {
     if (scope === MediaScope.Site) setUploading({ scope });
@@ -195,55 +258,13 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
             setSelected([]);
             list.setStatus(value);
           }}
+          extra={
+            <ListFilters
+              groups={filterGroups}
+              onClear={() => void list.setFilter("folder", undefined)}
+            />
+          }
         />
-        <div className="grid gap-3 sm:grid-cols-4">
-          {fixedBrandId ? null : (
-            <SelectField
-              id="media-scope"
-              label="Origem"
-              value={scope ?? ALL}
-              onValueChange={(value) => {
-                void list.setFilter("scope", value === ALL ? undefined : value);
-                void list.setFilter("brand", undefined);
-                void list.setFilter("folder", undefined);
-              }}
-              options={[
-                { value: ALL, label: "Todas" },
-                { value: MediaScope.Brand, label: "Marcas" },
-                { value: MediaScope.Site, label: "Site" },
-              ]}
-            />
-          )}
-          {fixedBrandId === undefined && scope === MediaScope.Brand ? (
-            <BrandSelect
-              id="media-brand"
-              value={brandId ?? ALL}
-              onValueChange={(value) => {
-                void list.setFilter("brand", value === ALL ? undefined : value);
-                void list.setFilter("folder", undefined);
-              }}
-              brands={brands.data}
-              allLabel="Todas"
-              allValue={ALL}
-            />
-          ) : null}
-          <SelectField
-            id="media-kind"
-            label="Tipo"
-            value={kind ?? ALL}
-            onValueChange={(value) =>
-              void list.setFilter("kind", value === ALL ? undefined : value)
-            }
-            options={kindOptions}
-          />
-          <SelectField
-            id="media-order"
-            label="Ordenar por"
-            value={order}
-            onValueChange={(value) => void list.setFilter("order", value)}
-            options={orderOptions}
-          />
-        </div>
 
         <section
           aria-label="Arquivos"
@@ -267,11 +288,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
                   : undefined
               }
             />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Escolha o site ou uma marca para ver as pastas.
-            </p>
-          )}
+          ) : null}
           {selected.length > 0 ? (
             <div
               className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted p-2 text-sm"
@@ -418,7 +435,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
               }
             />
           ) : null}
-          {query.data ? (
+          {query.data && query.data.total > 0 ? (
             <PaginationBar
               page={list.page}
               pageSize={PAGE_SIZE}

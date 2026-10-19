@@ -13,6 +13,7 @@ import { blockedDestination, homeFor } from "@/lib/shared/auth/redirect";
 import { getAuthState } from "@/lib/shared/auth/session.functions";
 import { ProfileKind } from "@/lib/shared/enums";
 import { AppRoute } from "@/lib/shared/routes";
+import { cn } from "@/lib/shared/utils";
 
 export const Route = createFileRoute("/admin/_app")({
   beforeLoad: async ({ location }) => {
@@ -38,6 +39,20 @@ function AdminLayout() {
   const space = useAdminSpace();
   const fullScreen = useRouterState({
     select: (state) => state.matches.some((match) => match.staticData.fullScreen === true),
+  });
+  const fullWidth = useRouterState({
+    select: (state) => {
+      const pathname = state.location.pathname;
+      const brandDetail =
+        pathname.startsWith("/admin/marketing/brands/") &&
+        pathname !== "/admin/marketing/brands/new";
+      return (
+        brandDetail ||
+        pathname.startsWith("/admin/marketing/content") ||
+        pathname.startsWith("/admin/marketing/variants/") ||
+        pathname.startsWith("/admin/marketing/calendar")
+      );
+    },
   });
 
   if (fullScreen) {
@@ -72,7 +87,10 @@ function AdminLayout() {
           <main
             id="main-content"
             tabIndex={-1}
-            className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 outline-none sm:px-6 sm:py-8"
+            className={cn(
+              "w-full flex-1 px-4 py-6 outline-none sm:px-6 sm:py-8",
+              fullWidth ? "max-w-none" : "mx-auto max-w-6xl",
+            )}
           >
             <Outlet />
           </main>

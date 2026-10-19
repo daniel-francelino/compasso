@@ -10,6 +10,7 @@ import {
 } from "@/lib/shared/enums";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { personNames } from "@/lib/shared/people.server";
+import { type RichDoc, isRichDocEmpty, richDocFromStored } from "@/lib/shared/rich-text/types";
 import {
   type Page,
   type Result,
@@ -61,7 +62,7 @@ export type ContentItemRow = {
 
 export type ContentItemDetail = ContentItemRow & {
   objective: string | null;
-  briefing: string;
+  briefing: RichDoc | null;
   internalNotes: string | null;
   assigneeId: string | null;
   version: number;
@@ -88,10 +89,6 @@ const BOARD_CARDS_PER_COLUMN = 30;
 const ID_FILTER_LIMIT = 1000;
 
 const savedSchema = z.object({ id: z.string().uuid(), version: z.number().int() });
-const textOf = (value: unknown): string => {
-  const parsed = z.object({ text: z.string() }).safeParse(value);
-  return parsed.success ? parsed.data.text : "";
-};
 const firstMediaVersion = (value: unknown): string | null => {
   const parsed = z.array(z.object({ media_version_id: z.string().uuid() })).safeParse(value);
   return parsed.success ? (parsed.data[0]?.media_version_id ?? null) : null;
@@ -244,7 +241,7 @@ export const getContentItem = createServerFn({ method: "GET" })
         brandName: row.brands?.name ?? "",
         brandTimezone: row.brands?.timezone ?? "America/Sao_Paulo",
         objective: row.objective,
-        briefing: textOf(row.briefing),
+        briefing: richDocFromStored(row.briefing),
         internalNotes: row.internal_notes,
         assigneeId: row.assignee_id,
         assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
@@ -266,7 +263,7 @@ export const saveContentItem = createServerFn({ method: "POST" })
     );
     if (caller === null) return denied;
     const briefing =
-      data.briefing === undefined || data.briefing === "" ? null : { text: data.briefing };
+      data.briefing === undefined || isRichDocEmpty(data.briefing) ? null : data.briefing;
     const { data: row, error } = await caller.supabase.rpc("content_item_save", {
       p_item: {
         ...(data.id === undefined ? {} : { id: data.id }),

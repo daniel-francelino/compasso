@@ -32,6 +32,7 @@ import { useAuth } from "@/lib/shared/auth/use-auth";
 import { formatDateOnly, formatInZone } from "@/lib/shared/format";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 import { MediaVariant } from "@/lib/shared/media/schemas";
+import { RichTextView } from "@/components/shared/admin/rich-text-view";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
@@ -170,7 +171,9 @@ export function ItemPage({ itemId }: { itemId: string }) {
           </div>
           <div className="sm:col-span-2">
             <dt className="text-muted-foreground">Briefing (interno)</dt>
-            <dd className="whitespace-pre-wrap">{item.briefing === "" ? "—" : item.briefing}</dd>
+            <dd>
+              <RichTextView doc={item.briefing} />
+            </dd>
           </div>
           <div className="sm:col-span-2">
             <dt className="text-muted-foreground">Notas internas</dt>

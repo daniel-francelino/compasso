@@ -58,6 +58,11 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Concept | UI text |
 |---|---|
 | Create | "Novo cliente", "Nova marca", "Novo canal", "Novo conteúdo", "Nova página" |
+| Open record | "Abrir marca", "Abrir conteúdo" |
+| Edit content | "Editar conteúdo" |
+| Edit brand | "Editar marca" |
+| Cancel content | "Cancelar conteúdo" |
+| Delete content | "Excluir conteúdo" |
 | Save | "Salvar" (while running: "Salvando…") |
 | Cancel (close without saving) | "Cancelar" in forms; **"Voltar"** in dialogs |
 | Confirm | The action verb itself ("Arquivar", "Excluir", "Reabrir"); never "OK" or "Sim" |

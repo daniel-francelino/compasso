@@ -65,7 +65,7 @@ Cancelling the selection associates nothing. A completed upload and a saved asso
 
 Routes: `/admin/library` and `/admin/library/$assetId`; menu entry "Biblioteca de Mídia"; the Marketing and Site spaces also open it filtered by brand or by site.
 
-- Grid/list with thumbnail, name, type, size, status and date; search by name/tag; filters by type, scope, usage and status; sorting by newest, oldest, name and size. Pagination, search and filters on the server.
+- Grid/list with thumbnail, name, type, size, status and date; search by name/tag; type, scope, brand and sorting filters are grouped in the shared "Filtros" dropdown. Pagination, search and filters on the server.
 - Record with preview, metadata, versions, tags, author and accessible usages. Files without preview have an icon and an authorized download action.
 - Batch changes only for eligible files, indicating the ones that failed.
 - Do not play audio/video automatically; keyboard control; reordering by buttons as well as dragging.
@@ -184,6 +184,12 @@ Viewing an image already associated inside a record requires reading that record
 ## Implementation status
 
 Phase 2 (tasks P2-01 to P2-04, 2026-10-18). Done: migrations `20261018100800_media.sql`, `…100810_media_functions.sql`, `…100820_media_summary_and_jobs.sql` (assets, immutable versions, upload sessions with idempotency, quota, collections up to 3 levels, usages with `restrict`, trash and permanent deletion with in-use checks, replacement of the current version, cleanup of expired sessions); tests `supabase/tests/07_media.test.sql` (55 assertions) and `08_media_jobs.test.sql` (7); storage layer in `src/lib/shared/storage/*`; `src/lib/shared/media/*` (limits, content inspection, upload and library server functions, collections, cron cleanup); screens `/admin/library`, `/admin/library/$assetId` and the brand tab `/admin/marketing/brands/$brandId/library` (grid, search, filters, trash, folders, storage bar, "Verificar com o bucket", versions, metadata, download, replace) and `MediaPicker`.
+
+2026-10-19: Moved the media library's scope, brand, type and sort controls into the shared "Filtros" dropdown. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
+
+2026-10-19: Hid the pagination footer when the media library has no files, leaving only its empty state. Validation performed: targeted ESLint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
+
+2026-10-19: Removed the prompt to choose a site or brand when no collection scope is selected. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
 
 Validation performed: 62 SQL assertions on PGlite; 20 Vitest tests (content inspection, server-side upload validation with a fake storage, presigning, and the real `aws4fetch` code against a fake S3 server: HEAD, Range, streamed checksum, list, delete); typecheck, lint, build; guard redirects and the cron 401 in Playwright. **Not tested**: a real R2 bucket (presigned PUT from a browser, CORS, `Range` reads), the screens in a browser with data, canvas thumbnails and video covers, a 50 MiB PDF in a Vercel function, the daily cron on Vercel. **Not done**: the `media.publish` flow and public derivatives (phase 5), the "used in" list with names (only a count is shown until the content module exists), reordering inside the picker (needed by the variant editor, phase 3), batch edit of tags, malware scanning, reconciliation of orphan objects without a database row (the check screen only reports them).
 

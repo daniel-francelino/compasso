@@ -1,16 +1,28 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
-import { Link } from "@tanstack/react-router";
-import { Archive, CircleCheck, Plus, Tag } from "lucide-react";
-import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Archive, CircleCheck, Eye, Pencil, Plus, Tag, Trash2, Undo2 } from "lucide-react";
+import { useState } from "react";
+import {
+  type DataTableAction,
+  type DataTableColumn,
+  DataTable,
+} from "@/components/shared/admin/data-table";
+import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
 import { ListFilters } from "@/components/shared/admin/list-filters";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Button } from "@/components/shared/ui/button";
+import { useServerAction } from "@/hooks/shared/use-server-action";
 import { useListState } from "@/hooks/shared/use-list-state";
-import { type BrandRow, listBrands } from "@/lib/marketing/brands/brands.functions";
+import {
+  type BrandRow,
+  deleteBrand,
+  listBrands,
+  setBrandArchived,
+} from "@/lib/marketing/brands/brands.functions";
 import { listClients } from "@/lib/marketing/clients/clients.functions";
 import { Platform } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
@@ -35,6 +47,10 @@ const tabs = [
 
 export function BrandsPage() {
   const auth = useAuth();
+  const navigate = useNavigate();
+  const { run, busy } = useServerAction();
+  const [archiving, setArchiving] = useState<BrandRow | null>(null);
+  const [deleting, setDeleting] = useState<BrandRow | null>(null);
   const list = useListState<string>(BrandStatusFilter.Active);
   const request = {
     search: list.debouncedSearch,
@@ -86,6 +102,50 @@ export function BrandsPage() {
         </StatusBadge>
       ),
     },
+  ];
+
+  const actions = (row: BrandRow): DataTableAction<BrandRow>[] => [
+    {
+      id: "open",
+      label: "Abrir marca",
+      icon: Eye,
+      onSelect: (brand) =>
+        void navigate({ to: "/admin/marketing/brands/$brandId", params: { brandId: brand.id } }),
+    },
+    ...(can(auth, Action.Brands.Update)
+      ? [
+          {
+            id: "edit",
+            label: "Editar marca",
+            icon: Pencil,
+            onSelect: (brand: BrandRow) =>
+              void navigate({
+                to: "/admin/marketing/brands/$brandId/settings",
+                params: { brandId: brand.id },
+              }),
+          },
+          {
+            id: "archive",
+            label: row.archived ? "Reativar marca" : "Arquivar marca",
+            icon: row.archived ? Undo2 : Archive,
+            onSelect: setArchiving,
+          },
+        ]
+      : []),
+    ...(can(auth, Action.Brands.Delete)
+      ? [
+          {
+            id: "delete",
+            label: "Excluir marca",
+            icon: Trash2,
+            destructive: true,
+            disabled: row.channelCount > 0,
+            disabledReason:
+              row.channelCount > 0 ? "Marcas com canais não podem ser excluídas." : undefined,
+            onSelect: setDeleting,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -157,6 +217,8 @@ export function BrandsPage() {
         columns={columns}
         rowKey={(row) => row.id}
         rowLabel={(row) => row.name}
+        actionsMenu
+        actions={actions}
         loading={query.isPending}
         refreshing={query.isFetching}
         error={query.error?.message ?? null}
@@ -175,6 +237,46 @@ export function BrandsPage() {
           pageSize: PAGE_SIZE,
           total: query.data?.total ?? 0,
           onPageChange: list.setPage,
+        }}
+      />
+      <ConfirmDialog
+        open={archiving !== null}
+        onOpenChange={(open) => !open && setArchiving(null)}
+        title={archiving?.archived ? "Reativar marca" : "Arquivar marca"}
+        description={
+          archiving?.archived
+            ? "A marca volta a aceitar novos conteúdos."
+            : "A marca deixa de aceitar novos conteúdos. O histórico continua disponível."
+        }
+        confirmLabel={archiving?.archived ? "Reativar" : "Arquivar"}
+        busy={busy}
+        onConfirm={async () => {
+          if (archiving === null) return false;
+          const result = await run(
+            () => setBrandArchived({ data: { id: archiving.id, archived: !archiving.archived } }),
+            {
+              success: archiving.archived ? "Marca reativada." : "Marca arquivada.",
+              invalidate: [QueryKey.Brands.all()],
+            },
+          );
+          return result.ok;
+        }}
+      />
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={`Excluir “${deleting?.name ?? ""}”?`}
+        description="Esta ação não pode ser desfeita. Só é possível excluir marcas sem canais ou histórico."
+        confirmLabel="Excluir"
+        destructive
+        busy={busy}
+        onConfirm={async () => {
+          if (deleting === null) return false;
+          const result = await run(() => deleteBrand({ data: { id: deleting.id } }), {
+            success: "Marca excluída.",
+            invalidate: [QueryKey.Brands.all()],
+          });
+          return result.ok;
         }}
       />
     </div>

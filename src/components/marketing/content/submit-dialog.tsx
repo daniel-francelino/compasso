@@ -5,7 +5,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
-import { DateField, SelectField, TextAreaField } from "@/components/shared/admin/form-fields";
+import { SelectField, TextAreaField } from "@/components/shared/admin/form-fields";
+import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { submitSchema } from "@/lib/marketing/content/schemas";
 import type { VariantDetail } from "@/lib/marketing/content/types";
@@ -152,12 +153,12 @@ export function SubmitDialog({
           error={errors["approverId"]}
         />
       )}
-      <DateField
+      <DatePickerField
         id="submit-due"
         label="Prazo para a resposta"
         value={effectiveDue}
-        min={today}
-        onValueChange={setDueDate}
+        minDate={today}
+        onChange={setDueDate}
         error={errors["dueDate"]}
       />
       <TextAreaField

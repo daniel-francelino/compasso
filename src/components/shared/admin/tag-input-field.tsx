@@ -12,6 +12,7 @@ export function TagInputField({
   maxItems,
   maxLength,
   error,
+  disabled = false,
 }: {
   id: string;
   label: string;
@@ -20,9 +21,11 @@ export function TagInputField({
   maxItems: number;
   maxLength: number;
   error?: string | undefined;
+  disabled?: boolean;
 }) {
   const [draft, setDraft] = useState("");
   const isFull = value.length >= maxItems;
+  const locked = disabled || isFull;
   const addTag = () => {
     const tag = draft.trim();
     if (tag === "" || value.some((item) => item.toLowerCase() === tag.toLowerCase())) {
@@ -56,6 +59,7 @@ export function TagInputField({
             {tag}
             <button
               type="button"
+              disabled={disabled}
               className="inline-flex size-5 items-center justify-center rounded-sm hover:bg-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               aria-label={`Remover etiqueta ${tag}`}
               onClick={() => onValueChange(value.filter((item) => item !== tag))}
@@ -70,7 +74,7 @@ export function TagInputField({
           value={draft}
           maxLength={maxLength}
           placeholder={isFull ? "Limite de etiquetas atingido" : "Digite e pressione Enter"}
-          disabled={isFull}
+          disabled={locked}
           className="h-7 min-w-32 flex-1 border-0 px-0 shadow-none focus-visible:ring-0"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-message` : undefined}

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { CommentVisibility, ContentFormat, EditorialStatus } from "@/lib/shared/enums";
 import { listRequestSchema } from "@/lib/shared/list-search";
+import { richDocSchema } from "@/lib/shared/rich-text/types";
 
 export const ContentStatusFilter = { Active: "active", Cancelled: "cancelled" } as const;
 
@@ -38,7 +39,7 @@ export const saveItemSchema = z.object({
     .min(2, "O título precisa ter ao menos 2 letras.")
     .max(140, "O título é longo demais."),
   objective: z.string().trim().max(2000, "O objetivo é longo demais.").optional(),
-  briefing: z.string().trim().max(8000, "O briefing é longo demais.").optional(),
+  briefing: richDocSchema.nullable().optional(),
   internalNotes: z.string().trim().max(4000, "As notas são longas demais.").optional(),
   assigneeId: z.string().uuid().nullable().optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20),

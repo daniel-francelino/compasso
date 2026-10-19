@@ -28,7 +28,7 @@
   - In icon mode, clicking an item with sub-items opens the sidebar first.
   - Footer with the account: name, profile, "Meu perfil" and "Sair".
 - **Header**: sidebar button, space and brand selectors, notification bell (always in the same position).
-- **Content**: maximum width of 72 rem, responsive margins, `id="main-content"` and a "Pular para o conteúdo" link for keyboard users.
+- **Content**: maximum width of 72 rem by default, responsive margins, `id="main-content"` and a "Pular para o conteúdo" link for keyboard users. Brand detail pages, content screens and calendar screens use all available width because their dense grids and data benefit from the extra room.
 - **Inside the layout**: non-existent pages ("Página não encontrada"), errors ("Algo deu errado" + try again) and missing permission ("Sem acesso a esta área") appear **in the same layout**, with a way to continue.
 - **Feedback**: _toast_ notifications (Sonner) in the top-right corner.
 - **Session**: if the session ends without the person asking (expired, revoked, another tab), go to the login with the current page as the return destination.

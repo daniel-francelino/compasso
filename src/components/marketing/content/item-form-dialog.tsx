@@ -5,12 +5,10 @@ import { FileText } from "lucide-react";
 import { useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
-import {
-  DateField,
-  SelectField,
-  TextAreaField,
-  TextField,
-} from "@/components/shared/admin/form-fields";
+import { SelectField, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import { RichTextEditor } from "@/components/shared/admin/rich-text-editor";
+import { TagInputField } from "@/components/shared/admin/tag-input-field";
+import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import {
   type ContentItemDetail,
@@ -18,6 +16,7 @@ import {
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
 import { saveItemSchema } from "@/lib/marketing/content/schemas";
+import type { RichDoc } from "@/lib/shared/rich-text/types";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -29,21 +28,23 @@ export function ItemFormDialog({
   item,
   fixedBrandId,
   onSaved,
+  fullScreen = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item?: ContentItemDetail | undefined;
   fixedBrandId?: string | undefined;
   onSaved: (saved: { id: string }) => void;
+  fullScreen?: boolean;
 }) {
   const { formRef, errors, error, busy, submit } = useFormSubmit();
   const [brandId, setBrandId] = useState(item?.brandId ?? fixedBrandId ?? "");
   const [title, setTitle] = useState(item?.title ?? "");
   const [objective, setObjective] = useState(item?.objective ?? "");
-  const [briefing, setBriefing] = useState(item?.briefing ?? "");
+  const [briefing, setBriefing] = useState<RichDoc | null>(item?.briefing ?? null);
   const [notes, setNotes] = useState(item?.internalNotes ?? "");
   const [assigneeId, setAssigneeId] = useState(item?.assigneeId ?? NO_ASSIGNEE);
-  const [tags, setTags] = useState(item?.tags.join(", ") ?? "");
+  const [tags, setTags] = useState<string[]>(item?.tags ?? []);
   const [dueDate, setDueDate] = useState(item?.productionDueDate ?? "");
 
   const brands = useBrandOptions(open && item === undefined && fixedBrandId === undefined);
@@ -62,7 +63,11 @@ export function ItemFormDialog({
       description="O conteúdo é a ideia. Depois você cria uma variante para cada canal."
       submitLabel={item ? "Salvar" : "Criar conteúdo"}
       busy={busy}
-      size="max-w-xl"
+      size={
+        fullScreen
+          ? "h-dvh max-h-dvh w-screen max-w-none rounded-none border-0 p-5 sm:max-w-none sm:rounded-none sm:p-8"
+          : "max-w-xl"
+      }
       form={{
         ref: formRef,
         noValidate: true,
@@ -78,10 +83,7 @@ export function ItemFormDialog({
               briefing,
               internalNotes: notes,
               assigneeId: assigneeId === NO_ASSIGNEE ? null : assigneeId,
-              tags: tags
-                .split(",")
-                .map((tag) => tag.trim())
-                .filter((tag) => tag !== ""),
+              tags,
               productionDueDate: dueDate === "" ? null : dueDate,
             },
             (data) => saveContentItem({ data }),
@@ -125,13 +127,11 @@ export function ItemFormDialog({
         maxLength={2000}
         error={errors["objective"]}
       />
-      <TextAreaField
+      <RichTextEditor
         id="item-briefing"
         label="Briefing (interno)"
         value={briefing}
         onValueChange={setBriefing}
-        maxLength={8000}
-        rows={4}
         error={errors["briefing"]}
       />
       <div className="grid gap-4 sm:grid-cols-2">
@@ -148,20 +148,23 @@ export function ItemFormDialog({
           ]}
           error={errors["assigneeId"]}
         />
-        <DateField
+        <DatePickerField
           id="item-due"
           label="Prazo de produção"
           value={dueDate}
-          onValueChange={setDueDate}
+          onChange={setDueDate}
+          clearable
           error={errors["productionDueDate"]}
         />
       </div>
-      <TextField
+      <TagInputField
         id="item-tags"
         label="Etiquetas"
         value={tags}
         onValueChange={setTags}
-        hint="Separe por vírgula. Ex.: campanha, outono"
+        maxItems={20}
+        maxLength={40}
+        error={errors["tags"]}
       />
       <TextAreaField
         id="item-notes"

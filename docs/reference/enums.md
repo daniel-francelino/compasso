@@ -18,6 +18,8 @@
 |---|---|---|---|---|
 | `EditorialStatus` | `draft`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `cancelled` | `content_variants.editorial_status` | "Rascunho", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Cancelado" | content |
 | `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_variants.publication_status` | "Não planejada", "Planejada", "Publicada manualmente", "Cancelada" | content |
+| `RichNodeType` | `doc`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `hardBreak`, `text` | Tiptap JSON of `content_items.briefing` (not a database column check; validated by zod in `lib/shared/rich-text/types.ts`) | (not shown) | content |
+| `RichMarkType` | `bold`, `italic` | Marks allowed in that JSON | (not shown) | content |
 | `ContentFormat` | `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` | `content_variants.format` | "Imagem", "Carrossel", "Vídeo", "Texto", "Story", "Reel", "Artigo", "Outro" | content |
 | `ApprovalRequestStatus` | `pending`, `approved`, `changes_requested`, `superseded`, `cancelled` | `approval_requests.status` | "Pendente", "Aprovada", "Alterações solicitadas", "Substituída", "Cancelada" | approvals |
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |

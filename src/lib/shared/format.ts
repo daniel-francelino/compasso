@@ -1,4 +1,4 @@
-const LOCALE = "pt-BR";
+export const LOCALE = "pt-BR";
 const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 type Instant = string | number | Date;

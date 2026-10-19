@@ -19,6 +19,7 @@ export type FilterGroup = {
   defaultValue: string;
   options: { value: string; label: string; icon?: ReactNode }[];
   emptyText?: string | undefined;
+  render?: (value: string, onValueChange: (value: string) => void) => ReactNode;
   onChange: (value: string) => void;
 };
 
@@ -81,35 +82,43 @@ export function ListFilters({
         <div className="max-h-[70vh] space-y-4 overflow-y-auto p-4">
           {groups.map((group) => (
             <div key={group.id} className="space-y-1.5">
-              <Label htmlFor={`filter-${group.id}`}>{group.label}</Label>
-              <Select
-                value={valueOf(group)}
-                disabled={group.emptyText !== undefined}
-                onValueChange={(value) =>
-                  setDraft((current) => ({ ...current, [group.id]: value }))
-                }
-              >
-                <SelectTrigger id={`filter-${group.id}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {group.options.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.icon ? (
-                        <span className="flex items-center gap-2">
-                          {option.icon}
-                          {option.label}
-                        </span>
-                      ) : (
-                        option.label
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {group.emptyText ? (
-                <p className="text-xs text-muted-foreground">{group.emptyText}</p>
-              ) : null}
+              {group.render ? (
+                group.render(valueOf(group), (value) =>
+                  setDraft((current) => ({ ...current, [group.id]: value })),
+                )
+              ) : (
+                <>
+                  <Label htmlFor={`filter-${group.id}`}>{group.label}</Label>
+                  <Select
+                    value={valueOf(group)}
+                    disabled={group.emptyText !== undefined}
+                    onValueChange={(value) =>
+                      setDraft((current) => ({ ...current, [group.id]: value }))
+                    }
+                  >
+                    <SelectTrigger id={`filter-${group.id}`}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {group.options.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.icon ? (
+                            <span className="flex items-center gap-2">
+                              {option.icon}
+                              {option.label}
+                            </span>
+                          ) : (
+                            option.label
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {group.emptyText ? (
+                    <p className="text-xs text-muted-foreground">{group.emptyText}</p>
+                  ) : null}
+                </>
+              )}
             </div>
           ))}
           {children}
