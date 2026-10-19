@@ -7,6 +7,7 @@ import { ContentFormat, Platform } from "@/lib/shared/enums";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 import { MediaKind } from "@/lib/shared/media/limits";
 import { platformDescriptors } from "@/lib/shared/preview/platforms";
+import { cn } from "@/lib/shared/utils";
 
 export type PreviewMedia = {
   versionId: string;
@@ -71,6 +72,7 @@ export function ChannelPreview({
   media,
   brandLogoUrl,
   showCounter = false,
+  compact = false,
 }: {
   platform: Platform;
   profileName: string;
@@ -80,6 +82,7 @@ export function ChannelPreview({
   media: PreviewMedia[];
   brandLogoUrl?: string | null;
   showCounter?: boolean;
+  compact?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -88,17 +91,21 @@ export function ChannelPreview({
   const visible = descriptor.visibleCaption;
   const truncated = visible !== null && !expanded && caption.length > visible;
   const text = truncated ? `${caption.slice(0, visible)}…` : caption;
+  const tall = TALL_FORMATS.includes(format);
+  const width = compact ? (tall ? "max-w-44" : "max-w-64") : "max-w-sm";
   const overLimit = descriptor.captionLimit !== null && caption.length > descriptor.captionLimit;
 
   return (
     <SectionCard
       as="figure"
       padding="none"
-      className="mx-auto w-full max-w-sm overflow-hidden"
+      className={cn("mx-auto w-full overflow-hidden", width)}
       aria-label={`Pré-visualização no ${platformLabels[platform]}`}
     >
-      <figcaption className="flex items-center gap-2 border-b border-border p-3">
-        <Avatar className="size-8 shrink-0">
+      <figcaption
+        className={cn("flex items-center gap-2 border-b border-border", compact ? "p-2" : "p-3")}
+      >
+        <Avatar className={cn("shrink-0", compact ? "size-6" : "size-8")}>
           {brandLogoUrl ? (
             <AvatarImage src={brandLogoUrl} alt="" className="object-contain" />
           ) : null}
@@ -150,13 +157,13 @@ export function ChannelPreview({
           ) : null}
         </div>
       ) : null}
-      <div className="space-y-2 p-3 text-sm">
+      <div className={cn("space-y-2 text-sm", compact ? "p-2 text-xs" : "p-3")}>
         {caption === "" ? (
           <p className="text-muted-foreground">Sem legenda.</p>
         ) : (
-          <p className="whitespace-pre-wrap break-words">
+          <p className={cn("whitespace-pre-wrap break-words", compact && "line-clamp-2")}>
             {text}
-            {truncated ? (
+            {truncated && !compact ? (
               <button
                 type="button"
                 className="ml-1 text-muted-foreground underline underline-offset-2"

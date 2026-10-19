@@ -38,7 +38,7 @@ export function RequestPreview({
   const format = current.format as ContentFormat;
   const zone = current.plannedTimezone ?? request.brandTimezone ?? DEFAULT_ZONE;
   return (
-    <div className="mx-auto w-full min-w-0 max-w-sm space-y-3">
+    <div className="mx-auto w-full min-w-0 max-w-64 space-y-2">
       {request.channels.length > 1 ? (
         <Tabs value={current.rowId} onValueChange={setActive}>
           <TabsList className="h-auto max-w-full flex-wrap justify-start">
@@ -52,7 +52,7 @@ export function RequestPreview({
           </TabsList>
         </Tabs>
       ) : null}
-      <p className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1.5 text-sm text-foreground">
+      <p className="flex items-center justify-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs text-foreground">
         <CalendarClock className="size-4 text-muted-foreground" aria-hidden="true" />
         {current.plannedAt
           ? `Publicação: ${formatInZone(current.plannedAt, zone)}`
@@ -65,6 +65,7 @@ export function RequestPreview({
         format={format}
         caption={current.caption ?? ""}
         callToAction={null}
+        compact
         media={request.media.map((item) => ({
           versionId: item.versionId,
           kind: kindOfMime(item.mimeType),
