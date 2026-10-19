@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
@@ -9,6 +10,7 @@ import {
   UserCog,
   XCircle,
   ArrowRight,
+  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -285,7 +287,12 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
       ) : null}
       <SectionCard title="Comentários do cliente">
         {request.comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum comentário externo.</p>
+          <EmptyState
+            compact
+            icon={MessageSquare}
+            title="Nenhum comentário"
+            description="O cliente ainda não comentou."
+          />
         ) : (
           <ul className="space-y-2">
             {request.comments.map((comment) => (

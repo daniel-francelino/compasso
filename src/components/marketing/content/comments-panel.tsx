@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { useQuery } from "@tanstack/react-query";
 import { Globe, MessageSquare, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -97,7 +98,12 @@ export function CommentsPanel({ variantId }: { variantId: string }) {
         </p>
       ) : null}
       {query.data && query.data.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum comentário ainda.</p>
+        <EmptyState
+          compact
+          icon={MessageSquare}
+          title="Nenhum comentário"
+          description="Seja a primeira pessoa a comentar."
+        />
       ) : null}
       {query.data && query.data.length > 0 ? (
         <ul className="space-y-2">

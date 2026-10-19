@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import {
+  CircleCheck,
   ClipboardCheck,
   TriangleAlert,
   UserRound,
@@ -10,10 +11,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SelectField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
+import { editorialStyle } from "@/components/shared/content/status-styles";
 import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
 import { Skeleton } from "@/components/shared/ui/skeleton";
@@ -88,7 +91,12 @@ function AttentionBlock({ brandId }: { brandId: string | undefined }) {
       onRetry={() => void query.refetch()}
     >
       {query.data?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nada precisa de atenção agora.</p>
+        <EmptyState
+          compact
+          icon={CircleCheck}
+          title="Tudo em dia"
+          description="Nada precisa de atenção agora."
+        />
       ) : (
         <ul className="space-y-2">
           {query.data?.map((item) => (
@@ -139,7 +147,12 @@ function PendingBlock({ brandId }: { brandId: string | undefined }) {
       onRetry={() => void query.refetch()}
     >
       {query.data?.rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum pedido aguardando o cliente.</p>
+        <EmptyState
+          compact
+          icon={ClipboardCheck}
+          title="Nenhum pedido pendente"
+          description="Nenhum pedido aguardando o cliente."
+        />
       ) : (
         <ul className="space-y-2">
           {query.data?.rows.slice(0, PENDING_ROWS).map((row) => (
@@ -180,6 +193,11 @@ function PendingBlock({ brandId }: { brandId: string | undefined }) {
   );
 }
 
+function StatusIcon({ status }: { status: EditorialStatus }) {
+  const Icon = editorialStyle(status).icon;
+  return <Icon className="size-3.5 shrink-0" aria-hidden="true" />;
+}
+
 function CountsBlock({ brandId }: { brandId: string | undefined }) {
   const query = useQuery({
     queryKey: QueryKey.Dashboard.counts(brandId),
@@ -209,7 +227,10 @@ function CountsBlock({ brandId }: { brandId: string | undefined }) {
               <span className="block text-2xl font-semibold text-foreground">
                 {query.data?.[status] ?? 0}
               </span>
-              <span className="text-xs">{editorialStatusLabels[status]}</span>
+              <span className="flex items-center gap-1.5 text-xs">
+                <StatusIcon status={status} />
+                {editorialStatusLabels[status]}
+              </span>
             </Link>
           </li>
         ))}
@@ -233,7 +254,12 @@ function MineBlock() {
       onRetry={() => void query.refetch()}
     >
       {query.data?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Você não é responsável por nenhum conteúdo.</p>
+        <EmptyState
+          compact
+          icon={UserRound}
+          title="Nada com você"
+          description="Você não é responsável por nenhum conteúdo."
+        />
       ) : (
         <ul className="space-y-2">
           {query.data?.map((item) => (

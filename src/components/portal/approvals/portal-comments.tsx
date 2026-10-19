@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { useQuery } from "@tanstack/react-query";
 import { MessageSquare, Send } from "lucide-react";
 import { useState } from "react";
@@ -53,7 +54,12 @@ export function PortalComments({ variantId }: { variantId: string }) {
         </p>
       ) : null}
       {query.data?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum comentário ainda.</p>
+        <EmptyState
+          compact
+          icon={MessageSquare}
+          title="Nenhum comentário"
+          description="Escreva abaixo se quiser comentar."
+        />
       ) : null}
       {query.data && query.data.length > 0 ? (
         <ul className="space-y-2">

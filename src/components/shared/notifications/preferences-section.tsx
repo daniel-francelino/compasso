@@ -1,4 +1,5 @@
-import { Save } from "lucide-react";
+import { EmptyState } from "@/components/shared/admin/empty-state";
+import { Save, BellOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -103,9 +104,12 @@ export function PreferencesSection() {
         </p>
       ) : null}
       {query.data?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nenhum tipo de aviso disponível para você ainda.
-        </p>
+        <EmptyState
+          compact
+          icon={BellOff}
+          title="Nenhum aviso configurável"
+          description="Nenhum tipo de aviso disponível para você ainda."
+        />
       ) : null}
       <ul className="divide-y divide-border">
         {(query.data ?? []).map((row) => (

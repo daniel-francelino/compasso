@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { Link } from "@tanstack/react-router";
 import { History } from "lucide-react";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -13,9 +14,12 @@ export function RevisionHistory({ requests }: { requests: RequestRow[] }) {
   return (
     <SectionCard title="Versões enviadas e decisões" icon={History}>
       {requests.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nenhuma versão foi enviada ao cliente ainda.
-        </p>
+        <EmptyState
+          compact
+          icon={History}
+          title="Nenhuma versão enviada"
+          description="Nenhuma versão foi enviada ao cliente ainda."
+        />
       ) : (
         <ol className="space-y-3">
           {requests.map((request) => (

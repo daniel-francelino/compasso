@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { ArrowDown, ArrowUp, Film, FileText, Images, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { FieldGroup } from "@/components/shared/admin/field-group";
@@ -56,7 +57,12 @@ export function FileStrip({
   return (
     <FieldGroup legend={`Arquivos (${items.length}/${rule.max})`} gap="sm" disabled={disabled}>
       {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum arquivo anexado.</p>
+        <EmptyState
+          compact
+          icon={Images}
+          title="Nenhum arquivo"
+          description="Anexe imagens ou vídeos da biblioteca."
+        />
       ) : (
         <ol className="space-y-2">
           {items.map((item, index) => (

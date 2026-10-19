@@ -1,4 +1,5 @@
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/shared/admin/empty-state";
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Trash2, LayoutTemplate } from "lucide-react";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { componentRegistry } from "@/lib/shared/content/registry";
 import type { DraftSection } from "@/lib/shared/content/schemas";
@@ -24,7 +25,14 @@ export function SectionList({
   onRemove: (id: string) => void;
 }) {
   if (sections.length === 0) {
-    return <p className="text-sm text-muted-foreground">Nenhuma seção ainda.</p>;
+    return (
+      <EmptyState
+        compact
+        icon={LayoutTemplate}
+        title="Nenhuma seção"
+        description="Adicione a primeira seção desta página."
+      />
+    );
   }
   return (
     <ol className="space-y-2">
