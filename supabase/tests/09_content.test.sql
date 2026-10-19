@@ -1,6 +1,6 @@
 begin;
 
-select plan(184);
+select plan(185);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -230,6 +230,7 @@ select isnt((select viewed_at from public.approval_requests where id = current_s
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d2');
 select throws_ok(format($$select public.portal_decide_approval('%s', 'approved', null)$$, current_setting('t.req2')), 'not_designated_approver', 'another member cannot decide');
 select is((public.portal_get_approval(current_setting('t.req2')::uuid) ->> 'can_decide')::boolean, false, 'and does not get the decision controls');
+select is((public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 ->> 'can_decide')::boolean, false, 'the list also hides decisions from another member');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d3');

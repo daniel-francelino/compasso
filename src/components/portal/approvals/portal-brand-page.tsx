@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import {
-  ArrowRight,
   CalendarClock,
-  CalendarDays,
   CircleCheck,
   ClipboardCheck,
   Hourglass,
@@ -12,7 +9,6 @@ import {
 import { PortalBrandHeader } from "@/components/portal/brands/portal-brand-header";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
-import { Button } from "@/components/shared/ui/button";
 import { RequestCard, RequestListSkeleton } from "@/components/portal/approvals/request-card";
 import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
 import { listPortalApprovals, listPortalPending } from "@/lib/portal/approvals/portal.functions";
@@ -127,20 +123,6 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
   return (
     <div className="space-y-8">
       <PortalBrandHeader brandId={brandId} />
-      <div className="flex flex-wrap gap-2">
-        <Button asChild variant="outline">
-          <Link to="/portal/brands/$brandId/calendar" params={{ brandId }}>
-            <CalendarDays aria-hidden="true" />
-            Ver calendário
-          </Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
-            <ArrowRight aria-hidden="true" />
-            Ver todas as aprovações
-          </Link>
-        </Button>
-      </div>
       <Section
         title="Aguardando você"
         icon={ClipboardCheck}

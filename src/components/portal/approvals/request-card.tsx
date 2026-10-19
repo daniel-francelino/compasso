@@ -68,7 +68,7 @@ export function RequestCard({
           </p>
           <RequestDecisionActions request={request} />
         </div>
-        <RequestPreview request={request} urls={mediaUrls} />
+        <RequestPreview request={request} brandId={brandId} urls={mediaUrls} />
       </div>
     </SectionCard>
   );
