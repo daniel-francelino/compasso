@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import type { ReactNode } from "react";
 import { Input } from "@/components/shared/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 
@@ -12,6 +12,7 @@ export function ListToolbar({
   status,
   onStatusChange,
   hideSearch = false,
+  extra,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -20,6 +21,7 @@ export function ListToolbar({
   status?: string;
   onStatusChange?: (value: string) => void;
   hideSearch?: boolean;
+  extra?: ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -36,22 +38,20 @@ export function ListToolbar({
       ) : (
         <span />
       )}
-      {hideSearch ? null : (
-        <div className="relative w-full sm:w-72">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+        {extra}
+        {hideSearch ? null : (
           <Input
             type="search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={searchLabel}
             aria-label={searchLabel}
-            className="h-11 pl-9 md:h-10"
+            maxLength={80}
+            className="sm:w-72"
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

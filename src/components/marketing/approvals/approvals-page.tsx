@@ -2,8 +2,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ClipboardCheck, TriangleAlert } from "lucide-react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
-import { EmptyState } from "@/components/shared/admin/empty-state";
-import { SelectField } from "@/components/shared/admin/form-fields";
+import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
+import { ListFilters } from "@/components/shared/admin/list-filters";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
@@ -107,23 +107,27 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
         statusOptions={tabs}
         status={list.status}
         onStatusChange={list.setStatus}
+        extra={
+          fixedBrandId === undefined ? (
+            <ListFilters
+              groups={[
+                {
+                  id: "brand",
+                  label: "Marca",
+                  value: brandId ?? ALL,
+                  defaultValue: ALL,
+                  options: [
+                    { value: ALL, label: "Todas as marcas" },
+                    ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
+                  ],
+                  onChange: (value) =>
+                    void list.setFilter("brand", value === ALL ? undefined : value),
+                },
+              ]}
+            />
+          ) : undefined
+        }
       />
-      {fixedBrandId === undefined ? (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <SelectField
-            id="approvals-brand"
-            label="Marca"
-            value={brandId ?? ALL}
-            onValueChange={(value) =>
-              void list.setFilter("brand", value === ALL ? undefined : value)
-            }
-            options={[
-              { value: ALL, label: "Todas as marcas" },
-              ...(brands.data ?? []).map((brand) => ({ value: brand.id, label: brand.name })),
-            ]}
-          />
-        </div>
-      ) : null}
       <DataTable
         caption="Aprovações"
         rows={query.data?.rows ?? []}
@@ -135,14 +139,13 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
         error={query.error?.message ?? null}
         onRetry={() => void query.refetch()}
         empty={
-          <EmptyState
+          <SearchableEmptyState
             icon={ClipboardCheck}
-            title={list.debouncedSearch ? "Nenhum pedido encontrado" : "Nada por aqui"}
-            description={
-              list.debouncedSearch
-                ? "Tente outro título."
-                : "Quando uma versão for enviada ao cliente, o pedido aparece aqui."
-            }
+            search={list.debouncedSearch}
+            onClearSearch={() => list.setSearch("")}
+            emptyTitle="Nada por aqui"
+            emptyDescription="Quando uma versão for enviada ao cliente, o pedido aparece aqui."
+            noResultsDescription="Tente outro título."
           />
         }
         pagination={{

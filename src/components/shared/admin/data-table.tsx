@@ -212,6 +212,8 @@ export function DataTable<T>({
     );
   }
 
+  if (!loading && !error && rows.length === 0 && empty !== undefined) return <>{empty}</>;
+
   return (
     <div className="space-y-4" aria-busy={loading || refreshing}>
       <SectionCard as="div" padding="none" className="overflow-hidden">

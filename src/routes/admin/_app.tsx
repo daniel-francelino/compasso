@@ -2,6 +2,8 @@ import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/rea
 import { AdminErrorPage, AdminNotFoundPage } from "@/components/shared/admin/admin-fallbacks";
 import { BrandSwitcher } from "@/components/shared/admin/brand-switcher";
 import { AppSidebar } from "@/components/shared/admin/app-sidebar";
+import { availableSpaces } from "@/components/shared/admin/nav-config";
+import { SpaceSwitcher } from "@/components/shared/admin/space-switcher";
 import { AppBreadcrumbs, BreadcrumbProvider } from "@/components/shared/admin/page-header";
 import { NotificationBell } from "@/components/shared/notifications/notification-bell";
 import { Separator } from "@/components/shared/ui/separator";
@@ -36,7 +38,7 @@ export const Route = createFileRoute("/admin/_app")({
 
 function AdminLayout() {
   const { auth } = Route.useRouteContext();
-  const { space, change } = useAdminSpace();
+  const space = useAdminSpace();
   const fullScreen = useRouterState({
     select: (state) => state.matches.some((match) => match.staticData.fullScreen === true),
   });
@@ -61,13 +63,14 @@ function AdminLayout() {
         >
           Saltar para o conteúdo
         </a>
-        <AppSidebar auth={auth} space={space} onSpaceChange={change} />
+        <AppSidebar auth={auth} space={space} />
         <SidebarInset>
           <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-border bg-background px-4 pointer-coarse:h-16">
             <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
             <Separator orientation="vertical" className="h-5" />
             <AppBreadcrumbs />
             {space === Space.Marketing && can(auth, Action.Brands.View) ? <BrandSwitcher /> : null}
+            <SpaceSwitcher spaces={availableSpaces(auth)} current={space} />
             {auth.user ? <NotificationBell userId={auth.user.id} /> : null}
           </header>
           <main

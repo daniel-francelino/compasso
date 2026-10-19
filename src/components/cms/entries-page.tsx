@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Layers } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ImageField } from "@/components/cms/fields/image-field";
@@ -233,7 +233,11 @@ export function EntriesPage({ kind }: { kind: SiteEntryKind }) {
       {entries.isPending ? <ListSkeleton rows={3} height="h-14" /> : null}
       {entries.isError ? <p className="text-sm text-danger">{entries.error.message}</p> : null}
       {entries.data && entries.data.length === 0 ? (
-        <EmptyState title={`Nenhum ${titles[kind].one} ainda`} description={titles[kind].empty} />
+        <EmptyState
+          icon={Layers}
+          title={`Nenhum ${titles[kind].one} ainda`}
+          description={titles[kind].empty}
+        />
       ) : null}
       {entries.data && entries.data.length > 0 ? (
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">

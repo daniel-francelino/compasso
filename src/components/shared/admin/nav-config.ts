@@ -51,10 +51,29 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-export const adminSpaces: { key: AdminSpace; title: string }[] = [
-  { key: Space.Marketing, title: "Gestão de Marketing" },
-  { key: Space.Cms, title: "Site e CMS" },
+export type SpaceEntry = {
+  key: AdminSpace;
+  title: string;
+  icon: LucideIcon;
+  to: keyof FileRoutesByTo;
+};
+
+export const adminSpaces: SpaceEntry[] = [
+  {
+    key: Space.Marketing,
+    title: "Gestão de Marketing",
+    icon: LayoutDashboard,
+    to: AppRoute.Marketing,
+  },
+  { key: Space.Cms, title: "Site e CMS", icon: Globe, to: AppRoute.Site },
 ];
+
+export const spaceOfPath = (pathname: string): AdminSpace | null => {
+  if (pathname === AppRoute.Site || pathname.startsWith(`${AppRoute.Site}/`)) return Space.Cms;
+  if (pathname === AppRoute.Marketing || pathname.startsWith(`${AppRoute.Marketing}/`))
+    return Space.Marketing;
+  return null;
+};
 
 export const navGroups: NavGroup[] = [
   {
@@ -202,3 +221,10 @@ export const visibleGroups = (auth: AuthState, space: AdminSpace): NavGroup[] =>
     .filter((group) => group.space === space || group.space === Space.Shared)
     .map((group) => ({ ...group, items: group.items.filter((item) => isVisible(item, auth)) }))
     .filter((group) => group.items.length > 0);
+
+export const availableSpaces = (auth: AuthState): SpaceEntry[] =>
+  adminSpaces.filter((entry) =>
+    navGroups.some(
+      (group) => group.space === entry.key && group.items.some((item) => isVisible(item, auth)),
+    ),
+  );

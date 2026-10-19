@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, TriangleAlert } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PaginationBar } from "@/components/shared/admin/pagination-bar";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
@@ -53,6 +53,7 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
       {query.isPending ? <ListSkeleton rows={3} /> : null}
       {query.isError ? (
         <EmptyState
+          icon={TriangleAlert}
           title="Não foi possível carregar as aprovações"
           description={query.error.message}
           action={<Button onClick={() => void query.refetch()}>Tentar novamente</Button>}

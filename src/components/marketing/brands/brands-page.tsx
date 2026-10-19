@@ -2,13 +2,13 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Archive, CircleCheck, Plus, Tag } from "lucide-react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
+import { ListFilters } from "@/components/shared/admin/list-filters";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Button } from "@/components/shared/ui/button";
 import { useListState } from "@/hooks/shared/use-list-state";
-import { SelectField } from "@/components/shared/admin/form-fields";
 import { type BrandRow, listBrands } from "@/lib/marketing/brands/brands.functions";
 import { listClients } from "@/lib/marketing/clients/clients.functions";
 import { Platform } from "@/lib/shared/enums";
@@ -108,36 +108,43 @@ export function BrandsPage() {
         statusOptions={tabs}
         status={list.status}
         onStatusChange={list.setStatus}
+        extra={
+          <ListFilters
+            groups={[
+              {
+                id: "client",
+                label: "Cliente",
+                value: list.filters.client ?? ALL,
+                defaultValue: ALL,
+                options: [
+                  { value: ALL, label: "Todos" },
+                  ...(clients.data ?? []).map((client) => ({
+                    value: client.id,
+                    label: client.name,
+                  })),
+                ],
+                onChange: (value) =>
+                  void list.setFilter("client", value === ALL ? undefined : value),
+              },
+              {
+                id: "platform",
+                label: "Plataforma",
+                value: list.filters.platform ?? ALL,
+                defaultValue: ALL,
+                options: [
+                  { value: ALL, label: "Todas" },
+                  ...Object.values(Platform).map((platform) => ({
+                    value: platform,
+                    label: platformLabels[platform],
+                  })),
+                ],
+                onChange: (value) =>
+                  void list.setFilter("platform", value === ALL ? undefined : value),
+              },
+            ]}
+          />
+        }
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField
-          id="brands-client"
-          label="Cliente"
-          value={list.filters.client ?? ALL}
-          onValueChange={(value) =>
-            void list.setFilter("client", value === ALL ? undefined : value)
-          }
-          options={[
-            { value: ALL, label: "Todos" },
-            ...(clients.data ?? []).map((client) => ({ value: client.id, label: client.name })),
-          ]}
-        />
-        <SelectField
-          id="brands-platform"
-          label="Plataforma"
-          value={list.filters.platform ?? ALL}
-          onValueChange={(value) =>
-            void list.setFilter("platform", value === ALL ? undefined : value)
-          }
-          options={[
-            { value: ALL, label: "Todas" },
-            ...Object.values(Platform).map((platform) => ({
-              value: platform,
-              label: platformLabels[platform],
-            })),
-          ]}
-        />
-      </div>
       <DataTable
         caption="Marcas"
         rows={query.data?.rows ?? []}
@@ -149,12 +156,12 @@ export function BrandsPage() {
         error={query.error?.message ?? null}
         onRetry={() => void query.refetch()}
         empty={
-          <EmptyState
+          <SearchableEmptyState
             icon={Tag}
-            title={list.debouncedSearch ? "Nenhuma marca encontrada" : "Nenhuma marca ainda"}
-            description={
-              list.debouncedSearch ? "Tente outro nome." : "Crie a primeira marca de um cliente."
-            }
+            search={list.debouncedSearch}
+            onClearSearch={() => list.setSearch("")}
+            emptyTitle="Nenhuma marca ainda"
+            emptyDescription="Crie a primeira marca de um cliente."
           />
         }
         pagination={{

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { FileText, Plus } from "lucide-react";
 import { useState } from "react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
 import { SelectField, TextField } from "@/components/shared/admin/form-fields";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -297,14 +297,13 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           error={query.error?.message ?? null}
           onRetry={() => void query.refetch()}
           empty={
-            <EmptyState
+            <SearchableEmptyState
               icon={FileText}
-              title={list.debouncedSearch ? "Nenhum conteúdo encontrado" : "Nenhum conteúdo ainda"}
-              description={
-                list.debouncedSearch
-                  ? "Tente outro título ou limpe os filtros."
-                  : "Crie o primeiro conteúdo para começar a planejar as publicações."
-              }
+              search={list.debouncedSearch}
+              onClearSearch={() => list.setSearch("")}
+              emptyTitle="Nenhum conteúdo ainda"
+              emptyDescription="Crie o primeiro conteúdo para começar a planejar as publicações."
+              noResultsDescription="Tente outro título ou limpe os filtros."
             />
           }
           pagination={{

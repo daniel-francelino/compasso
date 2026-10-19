@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, Briefcase } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
@@ -28,6 +28,7 @@ export function PortfolioPage() {
       {pages.isError ? <p className="text-sm text-danger">{pages.error.message}</p> : null}
       {pages.data && cases.length === 0 ? (
         <EmptyState
+          icon={Briefcase}
           title="Nenhum case ainda"
           description="Crie uma página do tipo “Case” em Páginas e registre a autorização do cliente nela."
         />

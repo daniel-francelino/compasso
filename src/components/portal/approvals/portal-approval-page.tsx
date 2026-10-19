@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PortalComments } from "@/components/portal/approvals/portal-comments";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { TextAreaField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -185,14 +185,11 @@ export function PortalApprovalPage({ brandId, requestId }: { brandId: string; re
   if (query.isPending) return <PageSkeleton />;
   if (query.isError || approval === undefined) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Você não tem acesso a esta marca"
-        description="Este pedido não existe ou não está disponível para você."
-        action={
-          <Button asChild>
-            <Link to="/portal">Voltar</Link>
-          </Button>
-        }
+        message="Este pedido não existe ou não está disponível para você."
+        backTo={"/portal"}
+        backLabel="Voltar"
       />
     );
   }

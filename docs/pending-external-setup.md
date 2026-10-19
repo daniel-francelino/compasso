@@ -85,6 +85,7 @@ Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 b
 | D26 | Settings (contacts, menu, SEO defaults, announcement) are published as a whole with no history; rollback exists for pages only | Keep for the MVP |
 | D27 | The state "Entra na próxima publicação" and scheduled publication are not built (phase F) | Keep |
 | D28 | `contact_messages.email` is `text` in lower case instead of `citext` (the extension is not available in the offline verifier) | Revisit when the real database exists; `citext` is a drop-in change |
+| D29 | Filters that depend on each other (brand → channel → owner in content and calendar; origin → brand → folder in the library; subject and dates in the audit) stay as permanent rows instead of the `ListFilters` popover, because the popover edits a draft and cannot refresh the dependent options until it is applied | Decide: keep the rows, or let `ListFilters` apply each change at once |
 | D2 | `audit_write` raises `invalid_input` for an action outside the catalog (no dedicated code) | Keep: it is a programming error, not a user-facing one |
 | D3 | The audit read policy is organization-level only until migration 6 (`can_access_brand`) replaces it | Keep; P1-03 must replace it (noted in [reference/data-model.md](reference/data-model.md)) |
 | D4 | Migration "3 invitations" is built in P1-01, so its file will be dated after migration 4 | Keep; the order in the registry is logical, the filename order is chronological |

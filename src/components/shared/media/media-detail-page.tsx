@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { Download, Replace, Trash2, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { TextField } from "@/components/shared/admin/form-fields";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -150,14 +151,11 @@ export function MediaDetailPage({ assetId }: { assetId: string }) {
   if (query.isPending) return <PageSkeleton />;
   if (query.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Arquivo não encontrado"
-        description="Ele não existe ou você não tem acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Library}>Voltar para a biblioteca</Link>
-          </Button>
-        }
+        message="Ele não existe ou você não tem acesso."
+        backTo={AppRoute.Library}
+        backLabel="Voltar para a biblioteca"
       />
     );
   }

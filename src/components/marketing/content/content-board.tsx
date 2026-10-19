@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -171,6 +171,7 @@ export function ContentBoard({ filters }: { filters: BoardFilters }) {
     return (
       <SectionCard>
         <EmptyState
+          icon={TriangleAlert}
           title="Não foi possível carregar o quadro"
           description={query.error.message}
           action={<Button onClick={() => void query.refetch()}>Tentar novamente</Button>}

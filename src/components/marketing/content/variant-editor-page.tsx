@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
 import {
   Ban,
   Hammer,
@@ -18,7 +17,7 @@ import { PublishDialog } from "@/components/marketing/content/publish-dialog";
 import { RevisionHistory } from "@/components/marketing/content/revision-history";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { VariantFields } from "@/components/marketing/content/variant-fields";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
@@ -428,14 +427,11 @@ export function VariantEditorPage({ variantId }: { variantId: string }) {
   if (query.isPending) return <PageSkeleton />;
   if (query.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Variante não encontrada"
-        description="Ela não existe ou você não tem acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Content}>Voltar para conteúdos</Link>
-          </Button>
-        }
+        message="Ela não existe ou você não tem acesso."
+        backTo={AppRoute.Content}
+        backLabel="Voltar para conteúdos"
       />
     );
   }

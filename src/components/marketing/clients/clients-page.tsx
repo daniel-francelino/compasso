@@ -2,13 +2,14 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Archive, Building2, CircleCheck, Plus } from "lucide-react";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
+import { ListFilters } from "@/components/shared/admin/list-filters";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Button } from "@/components/shared/ui/button";
 import { useListState } from "@/hooks/shared/use-list-state";
-import { SelectField, TextField } from "@/components/shared/admin/form-fields";
+import { TextField } from "@/components/shared/admin/form-fields";
 import {
   type ClientRow,
   listClients,
@@ -108,26 +109,38 @@ export function ClientsPage() {
         statusOptions={tabs}
         status={list.status}
         onStatusChange={list.setStatus}
+        extra={
+          <ListFilters
+            groups={[
+              {
+                id: "owner",
+                label: "Responsável",
+                value: list.filters.owner ?? ALL,
+                defaultValue: ALL,
+                options: [
+                  { value: ALL, label: "Todos" },
+                  ...(owners.data ?? []).map((person) => ({
+                    value: person.id,
+                    label: person.name,
+                  })),
+                ],
+                onChange: (value) =>
+                  void list.setFilter("owner", value === ALL ? undefined : value),
+              },
+            ]}
+            extraActive={list.filters.tag ? 1 : 0}
+            onClear={() => void list.setFilter("tag", undefined)}
+          >
+            <TextField
+              id="clients-tag"
+              label="Etiqueta"
+              value={list.filters.tag ?? ""}
+              onValueChange={(value) => void list.setFilter("tag", value)}
+              maxLength={40}
+            />
+          </ListFilters>
+        }
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField
-          id="clients-owner"
-          label="Responsável"
-          value={list.filters.owner ?? ALL}
-          onValueChange={(value) => void list.setFilter("owner", value === ALL ? undefined : value)}
-          options={[
-            { value: ALL, label: "Todos" },
-            ...(owners.data ?? []).map((person) => ({ value: person.id, label: person.name })),
-          ]}
-        />
-        <TextField
-          id="clients-tag"
-          label="Etiqueta"
-          value={list.filters.tag ?? ""}
-          onValueChange={(value) => void list.setFilter("tag", value)}
-          maxLength={40}
-        />
-      </div>
       <DataTable
         caption="Clientes"
         rows={query.data?.rows ?? []}
@@ -139,14 +152,12 @@ export function ClientsPage() {
         error={query.error?.message ?? null}
         onRetry={() => void query.refetch()}
         empty={
-          <EmptyState
+          <SearchableEmptyState
             icon={Building2}
-            title={list.debouncedSearch ? "Nenhum cliente encontrado" : "Nenhum cliente ainda"}
-            description={
-              list.debouncedSearch
-                ? "Tente outro nome."
-                : "Cadastre o primeiro cliente para começar a organizar as marcas."
-            }
+            search={list.debouncedSearch}
+            onClearSearch={() => list.setSearch("")}
+            emptyTitle="Nenhum cliente ainda"
+            emptyDescription="Cadastre o primeiro cliente para começar a organizar as marcas."
           />
         }
         pagination={{

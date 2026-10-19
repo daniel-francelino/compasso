@@ -1,7 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
-import { SpaceSwitcher } from "@/components/shared/admin/space-switcher";
-import { type AdminSpace, visibleGroups } from "@/components/shared/admin/nav-config";
+import { type AdminSpace, adminSpaces, visibleGroups } from "@/components/shared/admin/nav-config";
 import {
   Sidebar,
   SidebarContent,
@@ -18,24 +17,18 @@ import {
 import type { AuthState } from "@/lib/shared/auth/types";
 import { useSignOut } from "@/lib/shared/auth/use-sign-out";
 
-export function AppSidebar({
-  auth,
-  space,
-  onSpaceChange,
-}: {
-  auth: AuthState;
-  space: AdminSpace;
-  onSpaceChange: (space: AdminSpace) => void;
-}) {
+export function AppSidebar({ auth, space }: { auth: AuthState; space: AdminSpace }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const signOut = useSignOut();
   const groups = visibleGroups(auth, space);
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="gap-3">
+      <SidebarHeader className="gap-0.5">
         <p className="heading-card px-2 pt-1 text-sidebar-foreground">Compasso</p>
-        <SpaceSwitcher space={space} onChange={onSpaceChange} />
+        <p className="truncate px-2 text-xs text-sidebar-foreground">
+          {adminSpaces.find((entry) => entry.key === space)?.title}
+        </p>
       </SidebarHeader>
       <SidebarContent>
         {groups.map((group) => (

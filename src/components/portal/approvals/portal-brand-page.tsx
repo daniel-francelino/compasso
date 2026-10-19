@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { Button } from "@/components/shared/ui/button";
 import { RequestCard } from "@/components/portal/approvals/request-card";
@@ -68,14 +68,11 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
   if (pending.isPending) return <ListSkeleton rows={3} />;
   if (pending.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Você não tem acesso a esta marca"
-        description="Escolha outra marca ou peça à equipe para liberar o acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Portal}>Voltar</Link>
-          </Button>
-        }
+        message="Escolha outra marca ou peça à equipe para liberar o acesso."
+        backTo={AppRoute.Portal}
+        backLabel="Voltar"
       />
     );
   }

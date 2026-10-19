@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Undo2 } from "lucide-react";
+import { Undo2, History } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -37,6 +37,7 @@ function Revisions({ pageId, status }: { pageId: string; status: SitePageStatus 
   if (revisions.data.length === 0) {
     return (
       <EmptyState
+        icon={History}
         title="Esta página ainda não foi publicada"
         description="As versões aparecem aqui depois da primeira publicação."
       />

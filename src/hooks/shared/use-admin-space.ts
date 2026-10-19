@@ -1,22 +1,25 @@
+import { useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import type { AdminSpace } from "@/components/shared/admin/nav-config";
+import { type AdminSpace, spaceOfPath } from "@/components/shared/admin/nav-config";
 import { Space } from "@/lib/shared/enums";
 import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
 
 const spaceSchema = z.union([z.literal(Space.Marketing), z.literal(Space.Cms)]);
 
-export const useAdminSpace = () => {
-  const [space, setSpace] = useState<AdminSpace>(Space.Marketing);
+export const useAdminSpace = (): AdminSpace => {
+  const fromRoute = useRouterState({ select: (state) => spaceOfPath(state.location.pathname) });
+  const [remembered, setRemembered] = useState<AdminSpace>(Space.Marketing);
 
   useEffect(() => {
-    setSpace(readStored(StoredKey.LastSpace, spaceSchema, Space.Marketing));
+    setRemembered(readStored(StoredKey.LastSpace, spaceSchema, Space.Marketing));
   }, []);
 
-  const change = (next: AdminSpace) => {
-    setSpace(next);
-    writeStored(StoredKey.LastSpace, next);
-  };
+  useEffect(() => {
+    if (fromRoute === null) return;
+    setRemembered(fromRoute);
+    writeStored(StoredKey.LastSpace, fromRoute);
+  }, [fromRoute]);
 
-  return { space, change };
+  return fromRoute ?? remembered;
 };

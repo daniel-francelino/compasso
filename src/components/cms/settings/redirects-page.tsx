@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ArrowRightLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
@@ -119,6 +119,7 @@ export function RedirectsPage() {
       {redirects.isError ? <p className="text-sm text-danger">{redirects.error.message}</p> : null}
       {redirects.data && redirects.data.length === 0 ? (
         <EmptyState
+          icon={ArrowRightLeft}
           title="Nenhum redirecionamento"
           description="Mudar o endereço de uma página no ar cria um automaticamente."
         />

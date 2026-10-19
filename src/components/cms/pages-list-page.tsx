@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FilePlus, Trash2 } from "lucide-react";
+import { FilePlus, Trash2, LayoutTemplate } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
@@ -148,7 +148,11 @@ export function PagesListPage() {
         </div>
       ) : null}
       {pages.data && pages.data.length === 0 ? (
-        <EmptyState title="Nenhuma página ainda" description="Crie a primeira página do site." />
+        <EmptyState
+          icon={LayoutTemplate}
+          title="Nenhuma página ainda"
+          description="Crie a primeira página do site."
+        />
       ) : null}
       {pages.data && pages.data.length > 0 ? (
         <ul className="divide-y divide-border rounded-xl border border-border bg-card">

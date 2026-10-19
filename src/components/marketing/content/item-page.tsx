@@ -3,6 +3,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Ban, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
@@ -98,14 +99,11 @@ export function ItemPage({ itemId }: { itemId: string }) {
   if (query.isPending) return <PageSkeleton />;
   if (query.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Conteúdo não encontrado"
-        description="Ele não existe ou você não tem acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Content}>Voltar para conteúdos</Link>
-          </Button>
-        }
+        message="Ele não existe ou você não tem acesso."
+        backTo={AppRoute.Content}
+        backLabel="Voltar para conteúdos"
       />
     );
   }
@@ -185,6 +183,7 @@ export function ItemPage({ itemId }: { itemId: string }) {
       >
         {item.variants.length === 0 ? (
           <EmptyState
+            icon={Layers}
             title="Nenhuma variante ainda"
             description="Crie uma variante para cada canal em que este conteúdo vai sair."
           />

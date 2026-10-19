@@ -48,7 +48,7 @@ export function CalendarToolbar({
         >
           <ChevronRight aria-hidden="true" />
         </Button>
-        <h2 className="text-lg font-semibold capitalize" aria-live="polite">
+        <h2 className="text-lg font-semibold first-letter:uppercase" aria-live="polite">
           {title}
         </h2>
       </div>

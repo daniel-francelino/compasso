@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
-import { Archive, MailPlus, Pencil, Plus, Trash2, Undo2 } from "lucide-react";
+import { Archive, MailPlus, Pencil, Plus, Trash2, Undo2, History, Tag, Users } from "lucide-react";
 import { useState } from "react";
 import { ClientForm } from "@/components/marketing/clients/client-form";
 import { ContactDialog } from "@/components/marketing/clients/contact-dialog";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -66,7 +67,7 @@ function ActivityTab({ clientId }: { clientId: string }) {
       </p>
     );
   if (query.data.rows.length === 0) {
-    return <EmptyState title="Sem atividade registrada" />;
+    return <EmptyState icon={History} title="Sem atividade registrada" />;
   }
   return (
     <ul className="divide-y divide-border">
@@ -105,14 +106,11 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
   if (query.isPending) return <PageSkeleton />;
   if (query.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Cliente não encontrado"
-        description="Ele não existe ou você não tem acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Clients}>Voltar para clientes</Link>
-          </Button>
-        }
+        message="Ele não existe ou você não tem acesso."
+        backTo={AppRoute.Clients}
+        backLabel="Voltar para clientes"
       />
     );
   }
@@ -202,6 +200,7 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
           ) : null}
           {client.brands.length === 0 ? (
             <EmptyState
+              icon={Tag}
               title="Este cliente ainda não tem marcas"
               description="A marca é a unidade do trabalho editorial."
             />
@@ -270,6 +269,7 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
             ]}
             empty={
               <EmptyState
+                icon={Users}
                 title="Nenhum contato"
                 description="Cadastre as pessoas com quem você conversa."
               />

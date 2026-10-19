@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { SelectField } from "@/components/shared/admin/form-fields";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -149,14 +149,11 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
   if (query.isPending) return <PageSkeleton />;
   if (query.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Pedido não encontrado"
-        description="Ele não existe ou você não tem acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Approvals}>Voltar para aprovações</Link>
-          </Button>
-        }
+        message="Ele não existe ou você não tem acesso."
+        backTo={AppRoute.Approvals}
+        backLabel="Voltar para aprovações"
       />
     );
   }

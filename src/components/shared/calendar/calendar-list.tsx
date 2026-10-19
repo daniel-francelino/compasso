@@ -26,7 +26,7 @@ export function CalendarList({
     <ol className="space-y-4">
       {days.map((day) => (
         <li key={day}>
-          <h3 className="mb-2 text-sm font-semibold capitalize">
+          <h3 className="mb-2 text-sm font-semibold first-letter:uppercase">
             {formatWeekdayShort(day)}, {formatDateOnly(day)}
           </h3>
           <ul className="divide-y divide-border rounded-xl border border-border bg-card">

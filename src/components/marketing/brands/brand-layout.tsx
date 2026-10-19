@@ -1,10 +1,9 @@
 import { Link, Outlet } from "@tanstack/react-router";
 import { Archive } from "lucide-react";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
-import { Button } from "@/components/shared/ui/button";
 import { useBrand } from "@/hooks/marketing/use-brand";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
@@ -21,14 +20,11 @@ export function BrandLayout({ brandId }: { brandId: string }) {
   if (query.isPending) return <PageSkeleton />;
   if (query.isError) {
     return (
-      <EmptyState
+      <RecordUnavailable
         title="Marca não encontrada"
-        description="Ela não existe ou você não tem acesso."
-        action={
-          <Button asChild>
-            <Link to={AppRoute.Brands}>Voltar para marcas</Link>
-          </Button>
-        }
+        message="Ela não existe ou você não tem acesso."
+        backTo={AppRoute.Brands}
+        backLabel="Voltar para marcas"
       />
     );
   }
