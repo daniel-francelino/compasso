@@ -1,9 +1,11 @@
-import { RotateCw } from "lucide-react";
+import { PanelRightClose, PanelRightOpen, RotateCw } from "lucide-react";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SelectField } from "@/components/shared/admin/form-fields";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
@@ -49,7 +51,9 @@ import {
 } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
 import { timezoneOptions } from "@/lib/shared/timezones";
+import { cn } from "@/lib/shared/utils";
 
 const ALL = "all";
 const DEFAULT_PLAN_TIME = "T09:00";
@@ -124,6 +128,17 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [target, setTarget] = useState<RescheduleTarget | null>(null);
+  const [undatedOpen, setUndatedOpen] = useState(true);
+
+  useEffect(() => {
+    setUndatedOpen(readStored(StoredKey.CalendarUndatedOpen, z.boolean(), true));
+  }, []);
+
+  function toggleUndated() {
+    const next = !undatedOpen;
+    setUndatedOpen(next);
+    writeStored(StoredKey.CalendarUndatedOpen, next);
+  }
 
   const brands = useBrandOptions(fixedBrandId === undefined);
   const channels = useQuery({
@@ -313,17 +328,25 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
             },
           ]}
         />
-        {brandId === undefined ? (
-          <div className="w-full sm:w-64">
-            <SelectField
-              id="calendar-zone"
-              label="Fuso horário do calendário"
-              value={activeZone}
-              onValueChange={(value) => void state.setZone(value)}
-              options={timezoneOptions()}
-            />
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-end gap-3">
+          {brandId === undefined ? (
+            <div className="w-full sm:w-64">
+              <SelectField
+                id="calendar-zone"
+                label="Fuso horário do calendário"
+                value={activeZone}
+                onValueChange={(value) => void state.setZone(value)}
+                options={timezoneOptions()}
+              />
+            </div>
+          ) : null}
+          <IconButton
+            variant="outline"
+            icon={undatedOpen ? PanelRightClose : PanelRightOpen}
+            label={undatedOpen ? "Ocultar conteúdos sem data" : "Mostrar conteúdos sem data"}
+            onClick={toggleUndated}
+          />
+        </div>
       </div>
       <CalendarToolbar
         title={title}
@@ -358,7 +381,12 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+        <div
+          className={cn(
+            "grid items-start gap-4",
+            undatedOpen && "lg:grid-cols-[minmax(0,1fr)_16rem]",
+          )}
+        >
           <div className={query.isFetching ? "opacity-70 transition-opacity" : undefined}>
             {showGrid ? (
               <CalendarGrid
@@ -376,11 +404,13 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
               <CalendarList items={items} onSelect={setSelectedKey} />
             )}
           </div>
-          <UndatedPanel
-            entries={query.data.undated}
-            canPlan={canManage}
-            onPlan={(entry) => setTarget(undatedTarget(entry, null))}
-          />
+          {undatedOpen ? (
+            <UndatedPanel
+              entries={query.data.undated}
+              canPlan={canManage}
+              onPlan={(entry) => setTarget(undatedTarget(entry, null))}
+            />
+          ) : null}
         </div>
       )}
       <CalendarLegend showKinds />

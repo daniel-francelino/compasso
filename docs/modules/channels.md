@@ -4,7 +4,7 @@
 
 ## Goal and scope
 
-A channel is a **concrete profile or destination of a brand**: "@cafeaurora on Instagram", "Café Aurora on LinkedIn", the brand's blog or newsletter. Two Instagram profiles are two channels. A brand can exist before its channels are registered.
+A channel is a **concrete profile or destination of a brand**: "@cafeaurora on Instagram", "Café Aurora on LinkedIn", the brand's blog or newsletter. A brand can have at most one active channel per platform. Archived channels remain available as history and free the platform slot for a replacement.
 
 **Registering a channel does not mean there is an authenticated integration with the platform.** In the MVP channels are descriptive: they classify variants, drive previews and calendar filters. Automatic publishing and token management are a separate future project.
 
@@ -22,7 +22,7 @@ Included: register, edit, archive, preview rules per platform. Not included: OAu
 | Notes | Optional, internal |
 | Status | Active or archived |
 
-Uniqueness: among **active** channels of the same brand, `(platform, lower(profile_name))` is unique.
+The channel editor UI allows at most one active channel per platform for a brand. This is a front-end workflow rule; the current database uniqueness constraint remains `(platform, lower(profile_name))` among active channels, so writes outside this UI are not protected by the one-channel-per-platform rule.
 
 ## Platform rules (preview and validation guidance)
 
@@ -45,8 +45,8 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 
 ## Screens and flows
 
-- **Channels tab:** table with platform icon (`ChannelIcon`), profile name, link, status, number of variants planned/published. Main action "Novo canal". Filter by platform and status.
-- **Create/edit:** a sheet (`EditorSheet`) with platform, profile name, URL, identifier and notes.
+- **Channels tab:** active platforms appear in a responsive grid of square platform cards, ordered by social usage priority: Instagram, TikTok, Facebook, YouTube, LinkedIn, X, Threads, Pinterest, then E-mail, Blog and Outro. Each card uses the platform SVG mark (`PlatformIcon`). An empty card creates the platform's channel; a configured card edits it. Archived history remains in the archived list.
+- **Create/edit:** the existing sheet (`EditorSheet`) keeps profile name, URL, identifier and notes. Choosing an empty platform card supplies the platform; editing a configured card retains it. No new channel fields are introduced.
 - **Archive/reactivate:** archiving blocks **new** planned items on the channel; variants already planned or published stay linked to it and visible; a channel with planned (not yet published) variants lists them first and requires the person to confirm or reassign them.
 - **Delete:** only a channel never used by any variant; otherwise archive.
 - When a brand is created, the screen offers "Adicionar canais agora" but it is optional.
@@ -63,7 +63,7 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 
 > Authoritative schema: [../reference/data-model.md](../reference/data-model.md). Functions, actions, audit and notifications per operation: [../reference/functions.md](../reference/functions.md). Statuses and constants: [../reference/enums.md](../reference/enums.md).
 
-`channels` as in [../reference/data-model.md](../reference/data-model.md) section 4 (`unique (id, brand_id)`, partial index on active channels). Indexes: `(brand_id) where archived_at is null`, unique `(brand_id, platform, lower(profile_name)) where archived_at is null`.
+`channels` as in [../reference/data-model.md](../reference/data-model.md) section 4 (`unique (id, brand_id)`, partial index on active channels). The database currently permits multiple active profiles per platform; the one-active-channel-per-platform rule is enforced only by the channel grid UI.
 
 ## Permissions
 
@@ -84,7 +84,9 @@ External users never read channels directly; the portal receives only the platfo
 
 ## Acceptance criteria
 
-- Two Instagram profiles of the same brand coexist as two channels; the same profile cannot be registered twice while active.
+- A brand's active channel grid has exactly one card per platform; an unused platform card starts creation and a configured card opens that channel for editing.
+- The active channel grid is ordered with the most-used social platforms first and displays an SVG mark for each platform.
+- Archived channels remain accessible in the archived list and no longer occupy the active platform card.
 - A variant cannot be planned on an archived channel or on a channel of another brand (UI and database).
 - Archiving a channel keeps the history of variants linked to it.
 - No channel registration triggers external calls.
@@ -93,6 +95,6 @@ External users never read channels directly; the portal receives only the platfo
 
 ## Implementation status
 
-Phase 1 (task P1-06, 2026-10-18). Same migrations as [clients.md](clients.md); `src/lib/marketing/channels/*`, `src/lib/shared/preview/platforms.ts` (descriptors: caption limits, @ prefix), `src/components/marketing/channels/*`; route `/admin/marketing/brands/$brandId/channels`.
+Phase 1 (task P1-06, 2026-10-18) plus platform grid update (2026-10-19). Same migrations as [clients.md](clients.md); no migration added or changed. Files: `src/lib/marketing/channels/*`, `src/lib/shared/preview/platforms.ts`, `src/components/marketing/channels/*`; route `/admin/marketing/brands/$brandId/channels`.
 
-Done: list by status, create/edit in a sheet, handle normalization (@), duplicate rule among active channels, archive/reactivate, delete. Validation performed: SQL assertions (duplicate, https URL, platform list, archived name reuse). **Not tested**: real Supabase, browser. **Pending (phase 3)**: variant counters, `channel_is_used`, the preview components per platform and the "planned variants" confirmation when archiving.
+Done: list by status, create/edit in a sheet, handle normalization (@), duplicate rule among active channels, archive/reactivate, delete; responsive active platform grid with platform SVG marks and one active channel slot per platform in this UI. Validation performed: [record checks performed for this delivery]. **Not tested**: [record checks not performed]. The one-channel-per-platform rule is a front-end rule and is not guaranteed by the database. **Pending (phase 3)**: variant counters, `channel_is_used`, the preview components per platform and the "planned variants" confirmation when archiving.

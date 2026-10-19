@@ -5,6 +5,7 @@ import type { ValueOf } from "@/lib/shared/utils";
 export const StoredKey = {
   CalendarView: "compasso:calendar-view",
   CalendarRange: "compasso:calendar-range",
+  CalendarUndatedOpen: "compasso:calendar-undated-open",
   SidebarOpen: "compasso:sidebar-open",
   LastSpace: "compasso:last-space",
   ListColumns: "compasso:list-columns",

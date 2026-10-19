@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { EditorSheet } from "@/components/shared/admin/editor-sheet";
-import { SelectField, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import { TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import { PlatformIcon } from "@/components/marketing/channels/platform-icon";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { type ChannelRow, saveChannel } from "@/lib/marketing/channels/channels.functions";
 import { saveChannelSchema } from "@/lib/marketing/channels/schemas";
@@ -9,17 +10,13 @@ import { Platform } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { platformDescriptors } from "@/lib/shared/preview/platforms";
 
-const platformOptions = Object.values(Platform).map((platform) => ({
-  value: platform,
-  label: platformLabels[platform],
-}));
-
 const isPlatform = (value: string): value is Platform =>
   Object.values(Platform).some((platform) => platform === value);
 
 export function ChannelEditor({
   brandId,
   channel,
+  initialPlatform,
   onClose,
   onDirtyChange,
   onSaved,
@@ -27,13 +24,14 @@ export function ChannelEditor({
 }: {
   brandId: string;
   channel?: ChannelRow | undefined;
+  initialPlatform?: Platform;
   onClose: () => void;
   onDirtyChange: (state: { dirty: boolean; busy: boolean }) => void;
   onSaved: () => void;
   restoreFocus: (event: Event) => void;
 }) {
   const { formRef, errors, error, busy, submit } = useFormSubmit();
-  const [platform, setPlatform] = useState<string>(channel?.platform ?? "");
+  const [platform] = useState<string>(channel?.platform ?? initialPlatform ?? "");
   const [profileName, setProfileName] = useState(channel?.profileName ?? "");
   const [profileUrl, setProfileUrl] = useState(channel?.profileUrl ?? "");
   const [externalId, setExternalId] = useState(channel?.externalId ?? "");
@@ -85,16 +83,20 @@ export function ChannelEditor({
           );
         }}
       >
-        <SelectField
-          id="channel-platform"
-          label="Plataforma"
-          required
-          value={platform}
-          onValueChange={setPlatform}
-          options={platformOptions}
-          placeholder="Escolha a plataforma"
-          error={errors["platform"]}
-        />
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-foreground">Plataforma</p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="inline-flex size-8 items-center justify-center rounded-lg bg-secondary text-foreground">
+              {isPlatform(platform) ? (
+                <PlatformIcon platform={platform} className="size-4" />
+              ) : null}
+            </span>
+            {isPlatform(platform) ? platformLabels[platform] : ""}
+          </div>
+          {errors["platform"] ? (
+            <p className="text-xs text-destructive">{errors["platform"]}</p>
+          ) : null}
+        </div>
         <TextField
           id="channel-name"
           label="Nome do perfil"

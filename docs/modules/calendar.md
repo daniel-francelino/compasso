@@ -31,7 +31,7 @@ Variants without a planned date do **not** appear on the grid; they stay in the 
 
 - **Month**, **Week** and **List**; today button; previous/next; a title with the range. Default: Week in Marketing Management, List on mobile.
 - **Filters:** brand, client, channel, owner, editorial status, publication status, "somente prazos". Filters and the visible range live in the **URL** so links can be shared and the position restored when returning from a detail.
-- **Side list "Sem data":** content without date, filtered the same way; drag a card onto the grid to plan it.
+- **Side list "Sem data":** content without date, filtered the same way; drag a card onto the grid to plan it. The panel can be hidden with an icon button (tooltip "Ocultar/Mostrar conteúdos sem data") next to the filters, so the grid takes the whole width; the choice is remembered in the browser (`StoredKey.CalendarUndatedOpen`, open by default).
 - **Legend:** status colors from `statusStyles` with icon and text; deadline markers explained.
 - **Entry preview:** click opens a popover with title, brand, channel, status, time with zone and quick actions (open variant, reschedule); on mobile a bottom sheet.
 - **Accessibility:** a **list alternative** is always available and keyboard-navigable; the grid supports arrow-key navigation; reschedule is also possible through a "Alterar data…" dialog (no drag required).
