@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { type Caller, requireActionServer } from "@/lib/shared/auth/server-guards.server";
+import { brandLogoUrls } from "@/lib/shared/brands/brand-logos.server";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import {
   type Page,
@@ -57,7 +58,13 @@ export type ClientDetail = {
   archived: boolean;
   createdAt: string;
   contacts: ContactRow[];
-  brands: { id: string; name: string; archived: boolean }[];
+  brands: {
+    id: string;
+    name: string;
+    archived: boolean;
+    timezone: string;
+    logoUrl: string | null;
+  }[];
 };
 
 const savedClientSchema = z.object({
@@ -149,7 +156,7 @@ export const getClient = createServerFn({ method: "GET" })
     const { data: row, error } = await caller.supabase
       .from("clients")
       .select(
-        "id, name, owner_user_id, internal_notes, tags, version, archived_at, created_at, owner:profiles!clients_owner_user_id_fkey(full_name), client_contacts(id, name, email, phone, role_title, is_primary), brands(id, name, archived_at)",
+        "id, name, owner_user_id, internal_notes, tags, version, archived_at, created_at, owner:profiles!clients_owner_user_id_fkey(full_name), client_contacts(id, name, email, phone, role_title, is_primary), brands(id, name, archived_at, timezone)",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -161,6 +168,10 @@ export const getClient = createServerFn({ method: "GET" })
       row.client_contacts.flatMap((contact) =>
         contact.email ? [contact.email.toLowerCase()] : [],
       ),
+    );
+    const logos = await brandLogoUrls(
+      caller.supabase,
+      row.brands.map((brand) => brand.id),
     );
     return {
       ok: true,
@@ -192,6 +203,8 @@ export const getClient = createServerFn({ method: "GET" })
             id: brand.id,
             name: brand.name,
             archived: brand.archived_at !== null,
+            timezone: brand.timezone,
+            logoUrl: logos.get(brand.id) ?? null,
           }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       },

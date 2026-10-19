@@ -41,7 +41,7 @@ Routes: `/admin/marketing/clients`, `/admin/marketing/clients/new`, `/admin/mark
 - **List:** name, owner, number of brands, number of contacts, status, last activity and a three-dot row action menu with open, edit, archive/reactivate and eligible delete actions. Search by name, contact name and email; filters by status, owner and tag. Main action "Novo cliente". Server pagination.
 - **Create:** a form with name, owner and notes. Creating a client does not create a brand; brands are created separately from the client's brands tab.
 - **Tags:** type one tag and press Enter to add it as a chip; each chip has a remove button. Tags are trimmed, duplicates are ignored case-insensitively, and a client can have up to 20 tags of 40 characters each.
-- **Record:** summary (status, owner), tabs **Marcas**, **Contatos**, **Atividade**, **Notas**. The brands and contacts tabs do not show numeric count summaries. The brands tab lists the client's brands with status and a shortcut "Nova marca". The activity tab presents audit events in a section card timeline, with the action, actor and timestamp; an empty state explains what will appear there. The notes tab uses the standard empty state when there are no notes and offers "Adicionar nota" to people with `clients.update`. From a brand overview, people with `clients.update` can open this client's existing edit form in a full-screen dialog and save without leaving the brand.
+- **Record:** summary (status, owner), tabs **Marcas**, **Contatos**, **Atividade**, **Notas**. The brands and contacts tabs do not show numeric count summaries. The brands tab shows each brand with its avatar, time zone and status; "Nova marca" opens a side sheet and refreshes the client data when saved. The activity tab presents audit events in a section card timeline, with the action, actor and timestamp; an empty state explains what will appear there. The notes tab uses the standard empty state when there are no notes and offers "Adicionar nota" to people with `clients.update`. From a brand overview, people with `clients.update` can open this client's existing edit form in a full-screen dialog and save without leaving the brand.
 - **Archive / reactivate:** archiving removes the client from selectors by default and **archives nothing else automatically**: the screen lists the active brands and asks whether to archive them too (never silently). Content in progress remains reachable. Reactivation requires `clients.update`.
 - **Quick select:** a searchable picker used when creating a brand; it can create a client without losing the form being filled.
 
@@ -100,6 +100,7 @@ Audit events: `client.created`, `client.updated`, `client.owner_changed`, `clien
 - Internal notes never appear in `portal_*` responses.
 - The portal-access badge of a contact reflects invitations and links in real time.
 - A client with brands cannot be deleted.
+- The client's brands tab displays the brand avatar, time zone and status; creating a brand in the side sheet refreshes the client record without navigating away.
 - Row actions are shown in a three-dot menu and respect client permissions; delete is disabled when the client has brands.
 - Duplicate warnings show similar names and contacts without blocking creation.
 
@@ -121,3 +122,5 @@ Done: list (status tabs, search, server pagination), create, duplicate-name warn
 2026-10-19: Replaced the plain "Sem notas." text with the standard notes empty state and an edit action for people with `clients.update`. Validation performed: targeted ESLint, `check:docs` and `git diff --check`. **Not tested**: browser behavior and real Supabase.
 
 2026-10-19: Reused the client edit form in a full-screen dialog opened from the client name in a brand overview. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser behavior.
+
+2026-10-19: Added brand avatars and time-zone details to the client's brands tab and changed "Nova marca" to create in a side sheet; saving refreshes the client data in place. Validation performed: pending. **Not tested**: browser behavior.

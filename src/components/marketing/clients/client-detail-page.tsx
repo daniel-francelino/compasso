@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouter } from "@tanstack/react-router";
 import {
   Archive,
@@ -14,9 +14,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ClientForm } from "@/components/marketing/clients/client-form";
+import { BrandCreateForm } from "@/components/marketing/brands/brand-create-form";
+import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import { ContactDialog } from "@/components/marketing/clients/contact-dialog";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { type DataTableColumn, DataTable } from "@/components/shared/admin/data-table";
+import { EditorSheet } from "@/components/shared/admin/editor-sheet";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { IconButton } from "@/components/shared/admin/icon-button";
@@ -37,6 +40,7 @@ import {
 import { Label } from "@/components/shared/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import { useServerAction } from "@/hooks/shared/use-server-action";
+import { useEditorSheet } from "@/hooks/shared/use-editor-sheet";
 import {
   type ClientDetail,
   type ContactRow,
@@ -127,8 +131,10 @@ function ActivityTab({ clientId }: { clientId: string }) {
 export function ClientDetailPage({ clientId }: { clientId: string }) {
   const auth = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { run, busy } = useServerAction();
   const [editing, setEditing] = useState(false);
+  const brandSheet = useEditorSheet<undefined>(QueryKey.Clients.all());
   const [contactDialog, setContactDialog] = useState<{ contact?: ContactRow } | null>(null);
   const [deletingContact, setDeletingContact] = useState<ContactRow | null>(null);
   const [archiving, setArchiving] = useState(false);
@@ -251,10 +257,8 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         <TabsContent value="brands" className="space-y-3">
           <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
             {can(auth, Action.Brands.Create) && !client.archived ? (
-              <Button asChild>
-                <Link to={`${AppRoute.Brands}/new`} search={{ clientId: client.id }}>
-                  <Plus aria-hidden="true" /> Nova marca
-                </Link>
+              <Button onClick={() => brandSheet.open()}>
+                <Plus aria-hidden="true" /> Nova marca
               </Button>
             ) : null}
           </div>
@@ -265,18 +269,29 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
               description="A marca é a unidade do trabalho editorial."
             />
           ) : (
-            <ul className="divide-y divide-border rounded-md border border-border">
+            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {client.brands.map((brand) => (
-                <li key={brand.id} className="flex items-center justify-between p-3">
+                <li
+                  key={brand.id}
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-border bg-card p-3"
+                >
                   <Link
                     to="/admin/marketing/brands/$brandId"
                     params={{ brandId: brand.id }}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="flex min-w-0 items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {brand.name}
+                    <BrandAvatar name={brand.name} logoUrl={brand.logoUrl} size="lg" />
+                    <span className="min-w-0 space-y-1">
+                      <span className="block truncate font-medium text-primary underline-offset-4 hover:underline">
+                        {brand.name}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {brand.timezone.replaceAll("_", " ")}
+                      </span>
+                    </span>
                   </Link>
                   {brand.archived ? (
-                    <StatusBadge tone="neutral" icon={Archive}>
+                    <StatusBadge tone="neutral" icon={Archive} className="shrink-0">
                       Arquivada
                     </StatusBadge>
                   ) : null}
@@ -388,6 +403,32 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
           />
         </DialogContent>
       </Dialog>
+
+      {brandSheet.editor ? (
+        <EditorSheet
+          open
+          onClose={() => void brandSheet.close()}
+          restoreFocus={brandSheet.restoreFocus}
+          title="Nova marca"
+          description="Crie uma marca para este cliente."
+          formId="client-brand-create-form"
+          busy={brandSheet.formState.busy}
+          submitLabel="Criar marca"
+          submitIcon={Plus}
+        >
+          <BrandCreateForm
+            formId="client-brand-create-form"
+            initialClientId={client.id}
+            onCancel={() => void brandSheet.close()}
+            onDirtyChange={brandSheet.setFormState}
+            onSaved={() =>
+              void brandSheet
+                .saved()
+                .then(() => queryClient.invalidateQueries({ queryKey: QueryKey.Brands.all() }))
+            }
+          />
+        </EditorSheet>
+      ) : null}
 
       {contactDialog ? (
         <ContactDialog

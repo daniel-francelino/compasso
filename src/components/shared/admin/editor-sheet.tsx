@@ -1,4 +1,4 @@
-import { Save, X } from "lucide-react";
+import { Save, X, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/shared/ui/button";
 import {
@@ -18,6 +18,8 @@ export function EditorSheet({
   description,
   formId,
   busy,
+  submitLabel = "Salvar",
+  submitIcon: SubmitIcon = Save,
   saveDisabled = false,
   footerStart,
   children,
@@ -29,6 +31,8 @@ export function EditorSheet({
   description?: string;
   formId: string;
   busy: boolean;
+  submitLabel?: string;
+  submitIcon?: LucideIcon;
   saveDisabled?: boolean;
   footerStart?: ReactNode;
   children: ReactNode;
@@ -59,8 +63,8 @@ export function EditorSheet({
               Cancelar
             </Button>
             <Button type="submit" form={formId} disabled={busy || saveDisabled} loading={busy}>
-              <Save aria-hidden="true" />
-              Salvar
+              <SubmitIcon aria-hidden="true" />
+              {submitLabel}
             </Button>
           </div>
         </SheetFooter>
