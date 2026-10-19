@@ -2,7 +2,8 @@ import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
 const OUT = "src/lib/shared/supabase/database.types.ts";
-const raw = execSync("npx --yes supabase gen types typescript --local --schema public", {
+const target = process.argv.includes("--linked") ? "--linked" : "--local";
+const raw = execSync(`npx --yes supabase gen types typescript ${target} --schema public`, {
   encoding: "utf8",
   maxBuffer: 64 * 1024 * 1024,
   stdio: ["ignore", "pipe", "inherit"],
@@ -26,13 +27,14 @@ const nullableArgs = (source) => {
     for (const char of source.slice(open + 1, close)) {
       if ("{[(<".includes(char)) level++;
       else if ("}])>".includes(char)) level--;
-      if ((char === "," || char === ";") && level === 0) {
+      if ((char === "," || char === ";" || char === "\n") && level === 0) {
         props.push(current);
         current = "";
       } else current += char;
     }
     if (current.trim()) props.push(current);
     const rewritten = props
+      .filter((prop) => prop.trim() !== "")
       .map((prop) => {
         const split = prop.indexOf(":");
         const type = prop.slice(split + 1).trim();
