@@ -134,6 +134,7 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
   const queryClient = useQueryClient();
   const { run, busy } = useServerAction();
   const [editing, setEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("brands");
   const brandSheet = useEditorSheet<undefined>(QueryKey.Clients.all());
   const [contactDialog, setContactDialog] = useState<{ contact?: ContactRow } | null>(null);
   const [deletingContact, setDeletingContact] = useState<ContactRow | null>(null);
@@ -232,36 +233,41 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         }
       />
 
-      <Tabs defaultValue="brands">
-        <TabsList>
-          <TabsTrigger value="brands">
-            <Tag aria-hidden="true" />
-            Marcas
-          </TabsTrigger>
-          <TabsTrigger value="contacts">
-            <Users aria-hidden="true" />
-            Contatos
-          </TabsTrigger>
-          {can(auth, Action.Audit.View) ? (
-            <TabsTrigger value="activity">
-              <History aria-hidden="true" />
-              Atividade
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex w-full flex-wrap items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="brands">
+              <Tag aria-hidden="true" />
+              Marcas
             </TabsTrigger>
+            <TabsTrigger value="contacts">
+              <Users aria-hidden="true" />
+              Contatos
+            </TabsTrigger>
+            {can(auth, Action.Audit.View) ? (
+              <TabsTrigger value="activity">
+                <History aria-hidden="true" />
+                Atividade
+              </TabsTrigger>
+            ) : null}
+            <TabsTrigger value="notes">
+              <StickyNote aria-hidden="true" />
+              Notas
+            </TabsTrigger>
+          </TabsList>
+          {activeTab === "brands" && can(auth, Action.Brands.Create) && !client.archived ? (
+            <Button onClick={() => brandSheet.open()}>
+              <Plus aria-hidden="true" /> Nova marca
+            </Button>
           ) : null}
-          <TabsTrigger value="notes">
-            <StickyNote aria-hidden="true" />
-            Notas
-          </TabsTrigger>
-        </TabsList>
+          {activeTab === "contacts" && canUpdate ? (
+            <Button onClick={() => setContactDialog({})}>
+              <Plus aria-hidden="true" /> Novo contato
+            </Button>
+          ) : null}
+        </div>
 
         <TabsContent value="brands" className="space-y-3">
-          <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
-            {can(auth, Action.Brands.Create) && !client.archived ? (
-              <Button onClick={() => brandSheet.open()}>
-                <Plus aria-hidden="true" /> Nova marca
-              </Button>
-            ) : null}
-          </div>
           {client.brands.length === 0 ? (
             <EmptyState
               icon={Tag}
@@ -302,13 +308,6 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         </TabsContent>
 
         <TabsContent value="contacts" className="space-y-3">
-          <div className="flex min-h-9 flex-wrap items-center justify-between gap-2 pt-2">
-            {canUpdate ? (
-              <Button onClick={() => setContactDialog({})}>
-                <Plus aria-hidden="true" /> Novo contato
-              </Button>
-            ) : null}
-          </div>
           <DataTable
             caption="Contatos"
             rows={client.contacts}
