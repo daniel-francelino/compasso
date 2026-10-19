@@ -10,7 +10,6 @@
 | Client | Cliente / Clientes | The commercial relationship |
 | Brand | Marca / Marcas | Unit of identity and planning |
 | Channel | Canal / Canais | "Perfil" only inside the channel form |
-| Channel setup | "Configurar canal" / "Editar canal" | One active platform card per brand; the existing editor fields are unchanged |
 | Platform profile collision | "Mais de um perfil cadastrado" | Shown only when legacy data has multiple active profiles on one platform |
 | Content item | Conteúdo / Conteúdos | The idea; never "post" |
 | Variant | Variante / Variantes | One per channel; in the client portal call it "Publicação" |

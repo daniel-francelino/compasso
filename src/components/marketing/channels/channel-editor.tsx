@@ -31,14 +31,15 @@ export function ChannelEditor({
   restoreFocus: (event: Event) => void;
 }) {
   const { formRef, errors, error, busy, submit } = useFormSubmit();
-  const [platform] = useState<string>(channel?.platform ?? initialPlatform ?? "");
+  const initialPlatformValue = channel?.platform ?? initialPlatform ?? "";
+  const [platform] = useState<string>(initialPlatformValue);
   const [profileName, setProfileName] = useState(channel?.profileName ?? "");
   const [profileUrl, setProfileUrl] = useState(channel?.profileUrl ?? "");
   const [externalId, setExternalId] = useState(channel?.externalId ?? "");
   const [notes, setNotes] = useState(channel?.notes ?? "");
 
   const dirty =
-    platform !== (channel?.platform ?? "") ||
+    platform !== initialPlatformValue ||
     profileName !== (channel?.profileName ?? "") ||
     profileUrl !== (channel?.profileUrl ?? "") ||
     externalId !== (channel?.externalId ?? "") ||

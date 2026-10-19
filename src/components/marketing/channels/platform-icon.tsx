@@ -1,6 +1,6 @@
 import { Platform } from "@/lib/shared/enums";
 
-const marks: Record<Platform, string> = {
+const marks: Record<Exclude<Platform, typeof Platform.Other>, string> = {
   [Platform.Instagram]:
     "M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5Zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7Zm5 3a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm5.5-3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z",
   [Platform.Facebook]:
@@ -20,11 +20,27 @@ const marks: Record<Platform, string> = {
   [Platform.Email]:
     "M3 5h18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Zm0 2v.5l9 5.7 9-5.7V7H3Zm18 10V9.9l-8.5 5.4a1 1 0 0 1-1 0L3 9.9V17h18Z",
   [Platform.Blog]: "M4 2h11l5 5v15H4V2Zm2 2v16h12V8h-4V4H6Zm2 7h8v2H8v-2Zm0 4h8v2H8v-2Z",
-  [Platform.Other]:
-    "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-2h2v2Zm2.1-7.7-.9.9c-.7.7-1.2 1.2-1.2 2.8h-2c0-2 .7-3 1.6-3.9l1.2-1.2a2 2 0 1 0-3.4-1.4h-2a4 4 0 1 1 6.7 2.8Z",
 };
 
 export function PlatformIcon({ platform, className }: { platform: Platform; className?: string }) {
+  if (platform === Platform.Other) {
+    return (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={className}
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
       <path d={marks[platform]} />

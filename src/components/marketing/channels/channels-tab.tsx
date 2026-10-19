@@ -1,14 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  Archive,
-  CircleCheck,
-  ExternalLink,
-  Pencil,
-  Plus,
-  Radio,
-  Trash2,
-  Undo2,
-} from "lucide-react";
+import { Archive, CircleCheck, ExternalLink, Pencil, Radio, Trash2, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { ChannelEditor } from "@/components/marketing/channels/channel-editor";
 import { PlatformIcon } from "@/components/marketing/channels/platform-icon";
@@ -17,6 +8,7 @@ import {
   type DataTableAction,
   type DataTableColumn,
   DataTable,
+  DataTableRowActions,
 } from "@/components/shared/admin/data-table";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
@@ -181,42 +173,62 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {platformOrder.map((platform) => {
               const platformChannels = activeChannelsByPlatform.get(platform) ?? [];
+              const singleChannel = platformChannels.length === 1 ? platformChannels[0] : undefined;
               const configured = platformChannels.length > 0;
               const canOpen = configured ? canUpdate : canCreate;
               return (
                 <SectionCard key={platform} as="div" padding="none" className="overflow-hidden">
-                  {platformChannels.length > 1 ? (
-                    <div className="flex aspect-square h-full flex-col gap-2 overflow-y-auto p-4">
-                      <div className="flex items-center gap-3 border-b border-border pb-3">
-                        <span className="inline-flex size-11 items-center justify-center rounded-xl bg-secondary text-foreground">
-                          <PlatformIcon platform={platform} className="size-6" />
-                        </span>
-                        <div>
-                          <h2 className="font-medium text-foreground">
-                            {platformLabels[platform]}
-                          </h2>
-                          <p className="text-xs text-muted-foreground">
-                            Mais de um perfil cadastrado
-                          </p>
+                  {platformChannels.length > 0 ? (
+                    <div className="flex aspect-square h-full flex-col gap-3 overflow-y-auto p-4">
+                      <div className="flex items-start justify-between gap-2 border-b border-border pb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="inline-flex size-11 items-center justify-center rounded-xl bg-secondary text-foreground">
+                            <PlatformIcon platform={platform} className="size-6" />
+                          </span>
+                          <div>
+                            <h2 className="font-medium text-foreground">
+                              {platformLabels[platform]}
+                            </h2>
+                            {platformChannels.length > 1 ? (
+                              <p className="text-xs text-muted-foreground">
+                                Mais de um perfil cadastrado
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
+                        {singleChannel ? (
+                          <DataTableRowActions
+                            row={singleChannel}
+                            label={singleChannel.profileName}
+                            actions={actions(singleChannel)}
+                          />
+                        ) : null}
                       </div>
                       <div className="space-y-1">
                         {platformChannels.map((channel) => (
-                          <button
-                            key={channel.id}
-                            type="button"
-                            className="flex min-h-10 w-full items-center justify-between gap-2 rounded-md px-2 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            onClick={() => sheet.open(channel)}
-                            disabled={!canUpdate}
-                          >
-                            <span className="truncate font-medium text-foreground">
-                              {channel.profileName}
-                            </span>
-                            <Pencil
-                              className="size-4 shrink-0 text-muted-foreground"
-                              aria-hidden="true"
-                            />
-                          </button>
+                          <div key={channel.id} className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              className="flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-md px-2 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+                              onClick={() => sheet.open(channel)}
+                              disabled={!canUpdate}
+                            >
+                              <span className="truncate font-medium text-foreground">
+                                {channel.profileName}
+                              </span>
+                              <Pencil
+                                className="size-4 shrink-0 text-muted-foreground"
+                                aria-hidden="true"
+                              />
+                            </button>
+                            {platformChannels.length > 1 ? (
+                              <DataTableRowActions
+                                row={channel}
+                                label={channel.profileName}
+                                actions={actions(channel)}
+                              />
+                            ) : null}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -242,16 +254,8 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
                           {platformLabels[platform]}
                         </span>
                         <span className="block max-w-full truncate text-sm text-muted-foreground">
-                          {configured ? platformChannels[0]?.profileName : "Adicionar canal"}
+                          {platformChannels[0]?.profileName ?? "-"}
                         </span>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-                        {configured ? (
-                          <Pencil className="size-4" aria-hidden="true" />
-                        ) : (
-                          <Plus className="size-4" aria-hidden="true" />
-                        )}
-                        {configured ? "Editar canal" : "Configurar canal"}
                       </span>
                     </button>
                   )}
