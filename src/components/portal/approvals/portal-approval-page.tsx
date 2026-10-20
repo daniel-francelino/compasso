@@ -293,6 +293,8 @@ export function PortalApprovalPage({
           name: item.name,
           kind: kindOfMime(item.mimeType),
           altText: item.altText,
+          width: item.width,
+          height: item.height,
         }))}
         urls={urls.data}
         brandLogoUrl={brand.data?.logoUrl ?? null}

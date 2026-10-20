@@ -69,6 +69,8 @@ export function RequestPreview({
                 versionId: item.versionId,
                 kind: kindOfMime(item.mimeType),
                 altText: item.altText,
+                width: item.width,
+                height: item.height,
                 url: urls?.[item.versionId] ?? null,
               }))}
             />

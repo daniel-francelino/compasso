@@ -1,7 +1,7 @@
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { ApprovalStage } from "@/lib/shared/enums";
-import { previewAspectRatio } from "@/lib/shared/preview/platforms";
+import { previewFrameRatio } from "@/lib/shared/preview/platforms";
 
 export const BENTO_MIN_COLUMN = 340;
 export const BENTO_MAX_COLUMNS = 3;
@@ -38,7 +38,13 @@ export const columnWidthFor = (width: number, columns: number): number =>
 const tallestPreviewRatio = (request: PortalRequest): number =>
   Math.min(
     ...request.channels.map((channel) =>
-      parseRatio(previewAspectRatio(channel.platform as Platform, channel.format as ContentFormat)),
+      parseRatio(
+        previewFrameRatio(
+          channel.platform as Platform,
+          channel.format as ContentFormat,
+          request.media[0],
+        ),
+      ),
     ),
     FALLBACK_RATIO * 10,
   );

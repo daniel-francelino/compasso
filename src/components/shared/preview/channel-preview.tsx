@@ -10,7 +10,7 @@ import { MediaKind } from "@/lib/shared/media/limits";
 import {
   isImmersivePreview,
   platformDescriptors,
-  previewAspectRatio,
+  previewFrameRatio,
 } from "@/lib/shared/preview/platforms";
 import { cn } from "@/lib/shared/utils";
 
@@ -19,6 +19,8 @@ export type PreviewMedia = {
   kind: MediaKind | null;
   altText: string | null;
   url: string | null;
+  width?: number | null | undefined;
+  height?: number | null | undefined;
 };
 
 function UnavailableSlide() {
@@ -157,7 +159,7 @@ export function ChannelPreview({
       {media.length > 0 && current !== undefined ? (
         <div
           className="relative bg-muted"
-          style={{ aspectRatio: previewAspectRatio(platform, format) }}
+          style={{ aspectRatio: previewFrameRatio(platform, format, media[0]) }}
         >
           <Slide item={current} position={index + 1} total={media.length} />
           {media.length > 1 ? (

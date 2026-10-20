@@ -16,8 +16,10 @@ import { PaginationBar } from "@/components/shared/admin/pagination-bar";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import { RequestCard, RequestListSkeleton } from "@/components/portal/approvals/request-card";
+import { useBentoLayout } from "@/hooks/portal/use-bento-layout";
 import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
 import { useListState } from "@/hooks/shared/use-list-state";
+import { estimateCardHeight } from "@/lib/portal/approvals/bento";
 import { listPortalApprovals } from "@/lib/portal/approvals/portal.functions";
 import { PORTAL_PAGE_SIZE, PortalApprovalFilter } from "@/lib/portal/approvals/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -40,6 +42,7 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
     placeholderData: keepPreviousData,
   });
   const previewUrls = usePortalPreviewUrls(query.data?.rows ?? []);
+  const { containerRef, lanes } = useBentoLayout(query.data?.rows ?? [], estimateCardHeight);
 
   return (
     <div className="space-y-6">
@@ -85,16 +88,20 @@ export function PortalApprovalsPage({ brandId }: { brandId: string }) {
       ) : null}
       {query.data && query.data.rows.length > 0 ? (
         <>
-          <ul className="space-y-3">
-            {query.data.rows.map((row) => (
-              <RequestCard
-                key={row.id}
-                request={row}
-                brandId={brandId}
-                mediaUrls={previewUrls.data}
-              />
+          <div ref={containerRef} className="flex items-start gap-3">
+            {lanes.map((lane, index) => (
+              <ul key={index} className="min-w-0 flex-1 space-y-3">
+                {lane.map((row) => (
+                  <RequestCard
+                    key={row.id}
+                    request={row}
+                    brandId={brandId}
+                    mediaUrls={previewUrls.data}
+                  />
+                ))}
+              </ul>
             ))}
-          </ul>
+          </div>
           <PaginationBar
             page={list.page}
             pageSize={PORTAL_PAGE_SIZE}

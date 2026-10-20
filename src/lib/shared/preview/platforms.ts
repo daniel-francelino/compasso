@@ -176,6 +176,31 @@ const mediaAspectRatios: Record<ContentFormat, Record<Platform, string>> = {
 export const previewAspectRatio = (platform: Platform, format: ContentFormat): string =>
   mediaAspectRatios[format][platform];
 
+export type MediaDimensions = {
+  width?: number | null | undefined;
+  height?: number | null | undefined;
+};
+
+const FEED_RATIO_RANGES: Partial<Record<Platform, { tallest: number; widest: number }>> = {
+  [Platform.Instagram]: { tallest: 4 / 5, widest: 1.91 },
+};
+
+const FLEXIBLE_FORMATS: readonly ContentFormat[] = [ContentFormat.Image, ContentFormat.Carousel];
+
+export const previewFrameRatio = (
+  platform: Platform,
+  format: ContentFormat,
+  first: MediaDimensions | undefined,
+): string => {
+  const range = FEED_RATIO_RANGES[platform];
+  const width = first?.width;
+  const height = first?.height;
+  const flexible = range !== undefined && FLEXIBLE_FORMATS.includes(format);
+  if (!flexible || !width || !height) return previewAspectRatio(platform, format);
+  const ratio = Math.min(Math.max(width / height, range.tallest), range.widest);
+  return `${Math.round(ratio * 1000)} / 1000`;
+};
+
 export const isImmersivePreview = (platform: Platform, format: ContentFormat): boolean =>
   format === ContentFormat.Story ||
   format === ContentFormat.Reel ||

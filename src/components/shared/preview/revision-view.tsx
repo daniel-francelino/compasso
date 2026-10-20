@@ -16,6 +16,8 @@ export type RevisionViewMedia = {
   name: string;
   kind: MediaKind | null;
   altText: string | null;
+  width?: number | null | undefined;
+  height?: number | null | undefined;
 };
 
 export type RevisionViewChannel = {
@@ -77,6 +79,8 @@ export function RevisionView({
               versionId: item.versionId,
               kind: item.kind,
               altText: item.altText,
+              width: item.width,
+              height: item.height,
               url: urls?.[item.versionId] ?? null,
             }))}
           />
