@@ -102,6 +102,6 @@ Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 b
 
 | ID | Item | Status |
 |---|---|---|
-| T1 | **Apply the four migrations of 2026-10-20 to the linked project** (`20261020100000`, `…100010`, `…100020` of the two-stage approval and `20261020110000` of the calendar events): `npx supabase db push`, after the person says so. The contract migration drops `reassign_approver` and `approver_user_id`, so code and database must go together | Waiting for the person |
-| T2 | After T1, regenerate the types (`npm run db:types -- --linked`); the committed ones come from the offline generator | Waiting for T1 |
+| T1 | **Apply the four migrations of 2026-10-20 to the linked project** (`20261020100000`, `…100010`, `…100020` of the two-stage approval and `20261020110000` of the calendar events): `npx supabase db push`, after the person says so. The contract migration drops `reassign_approver` and `approver_user_id`, so code and database must go together | Done 2026-10-20: the four migrations were applied with `npx supabase db push` |
+| T2 | After T1, regenerate the types (`npm run db:types -- --linked`); the committed ones come from the offline generator | Done 2026-10-20: `npm run db:types -- --linked`; typecheck passes |
 | T3 | The new screens (stage stepper, planning section, approver pool in the portal, events dialog and portal calendar) were never opened in a browser, and no Playwright flow covers the two stages | Waiting |
