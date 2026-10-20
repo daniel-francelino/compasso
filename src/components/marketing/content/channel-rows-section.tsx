@@ -1,38 +1,14 @@
-import {
-  CalendarPlus,
-  Clapperboard,
-  FileText,
-  Image as ImageIcon,
-  Images,
-  Megaphone,
-  Shapes,
-  Trash2,
-  Type,
-  Video,
-  Circle,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { CalendarPlus, Megaphone, Trash2 } from "lucide-react";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
 import { SelectField } from "@/components/shared/admin/form-fields";
 import { IconButton } from "@/components/shared/admin/icon-button";
+import { formatIcons } from "@/components/shared/content/format-icons";
 import { Button } from "@/components/shared/ui/button";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import { platformFormats } from "@/lib/shared/editorial/editorial";
-import { ContentFormat } from "@/lib/shared/enums";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
-
-const formatIcons: Record<ContentFormat, LucideIcon> = {
-  [ContentFormat.Image]: ImageIcon,
-  [ContentFormat.Carousel]: Images,
-  [ContentFormat.Video]: Video,
-  [ContentFormat.Text]: Type,
-  [ContentFormat.Story]: Circle,
-  [ContentFormat.Reel]: Clapperboard,
-  [ContentFormat.Article]: FileText,
-  [ContentFormat.Other]: Shapes,
-};
 
 export function ChannelRowsSection({
   draft,

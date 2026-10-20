@@ -326,3 +326,5 @@ History of the earlier model (kept for context): phase 3 delivered items, varian
 2026-10-20: migrations `20261020120000_content_art_files_before_plan.sql` and `20261020130000_portal_request_plan_summary.sql` applied to the linked project with `npx supabase db push` (the dry run listed only these two). No table or function signature changed, so the types were not regenerated. **Not tested** against the remote project: saving art files before the plan is approved and the portal plan card.
 
 2026-10-20: the portal request preview (`request-preview.tsx`) now shows one channel at a time with a tab per channel ("Instagram · Story"); with a single channel there are no tabs. Validation performed: typecheck, ESLint. **Not seen in a browser.**
+
+2026-10-20: the `ContentFormat.Image` label is now "Post" (was "Imagem"; `MediaKind` keeps "Imagem"), and the portal plan card shows an icon per format (`format-icons.ts` moved to `shared/content`, reused by the channel rows). Validation performed: typecheck, ESLint, Vitest. **Not seen in a browser.**

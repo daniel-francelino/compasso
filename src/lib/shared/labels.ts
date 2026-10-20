@@ -95,7 +95,7 @@ export const publicationStatusLabels: Record<PublicationStatus, string> = {
 };
 
 export const contentFormatLabels: Record<ContentFormat, string> = {
-  [ContentFormat.Image]: "Imagem",
+  [ContentFormat.Image]: "Post",
   [ContentFormat.Carousel]: "Carrossel",
   [ContentFormat.Video]: "Vídeo",
   [ContentFormat.Text]: "Texto",

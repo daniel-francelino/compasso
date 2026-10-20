@@ -1,10 +1,16 @@
 import { CalendarClock } from "lucide-react";
+import { formatIcons } from "@/components/shared/content/format-icons";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { formatInZone } from "@/lib/shared/format";
 import { contentFormatLabels, contentObjectiveLabels, platformLabels } from "@/lib/shared/labels";
 
 const DEFAULT_ZONE = "America/Sao_Paulo";
+
+function FormatIcon({ format }: { format: ContentFormat }) {
+  const Icon = formatIcons[format];
+  return <Icon className="size-4" aria-hidden="true" />;
+}
 
 export function PlanRequestSummary({ request }: { request: PortalRequest }) {
   return (
@@ -29,7 +35,8 @@ export function PlanRequestSummary({ request }: { request: PortalRequest }) {
               <span className="min-w-0 font-medium text-foreground">
                 {platformLabels[channel.platform as Platform]} · {channel.profileName}
               </span>
-              <span className="text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <FormatIcon format={channel.format as ContentFormat} />
                 {contentFormatLabels[channel.format as ContentFormat]}
               </span>
               <span className="flex items-center gap-1.5 text-muted-foreground">
