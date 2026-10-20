@@ -10,7 +10,9 @@ import { PortalBrandHeader } from "@/components/portal/brands/portal-brand-heade
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { RequestCard, RequestListSkeleton } from "@/components/portal/approvals/request-card";
+import { useBentoLayout } from "@/hooks/portal/use-bento-layout";
 import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
+import { estimateCardHeight } from "@/lib/portal/approvals/bento";
 import { listPortalApprovals, listPortalPending } from "@/lib/portal/approvals/portal.functions";
 import { nextPlanned } from "@/lib/portal/approvals/planned";
 import { PortalApprovalFilter } from "@/lib/portal/approvals/schemas";
@@ -41,6 +43,7 @@ function Section({
   loading?: boolean;
 }) {
   const previewUrls = usePortalPreviewUrls(requests);
+  const { containerRef, lanes } = useBentoLayout(requests, estimateCardHeight);
   return (
     <section className="space-y-3" aria-label={title}>
       <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
@@ -57,16 +60,20 @@ function Section({
       ) : requests.length === 0 ? (
         <EmptyState icon={Icon} title={emptyTitle} description={emptyDescription} />
       ) : (
-        <ul className="space-y-3">
-          {requests.map((request) => (
-            <RequestCard
-              key={request.id}
-              request={request}
-              brandId={brandId}
-              mediaUrls={previewUrls.data}
-            />
+        <div ref={containerRef} className="flex items-start gap-3">
+          {lanes.map((lane, index) => (
+            <ul key={index} className="min-w-0 flex-1 space-y-3">
+              {lane.map((request) => (
+                <RequestCard
+                  key={request.id}
+                  request={request}
+                  brandId={brandId}
+                  mediaUrls={previewUrls.data}
+                />
+              ))}
+            </ul>
           ))}
-        </ul>
+        </div>
       )}
     </section>
   );
