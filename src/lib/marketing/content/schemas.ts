@@ -100,6 +100,11 @@ export const moveContentSchema = z.object({
   expectedVersion: z.number().int().min(1),
 });
 
+export const publishContentSchema = z.object({
+  id: z.string().uuid(),
+  expectedVersion: z.number().int().min(1),
+});
+
 export const submitSchema = z.object({
   id: z.string().uuid(),
   dueDate: dateOnly.nullable().optional(),

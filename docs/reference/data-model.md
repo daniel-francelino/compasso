@@ -257,7 +257,7 @@ create table content_items (
   plan_approved_revision_id uuid,
   editorial_status text not null default 'draft' check (editorial_status in
     ('draft','planning','awaiting_plan_approval','plan_changes_requested','plan_approved',
-     'in_production','internal_review','awaiting_approval','changes_requested','approved','cancelled')),
+     'in_production','internal_review','awaiting_approval','changes_requested','approved','published','cancelled')),
   approval_due_date date,
   current_revision_id uuid,
   approved_revision_id uuid,
@@ -452,10 +452,14 @@ create table media_versions (
   status text not null default 'pending' check (status in ('pending','processing','available','failed')),
   failure_reason text,
   public_published_at timestamptz,
+  purge_requested_at timestamptz,
+  purge_keep_preview boolean not null default true,
+  original_purged_at timestamptz,
   uploaded_by uuid references profiles(id),
   created_at timestamptz not null default now(),
   unique (asset_id, version_no)
-);
+
+  -- publication clean-up (20261020140000): purge_requested_at, purge_keep_preview, original_purged_at);
 alter table media_assets add foreign key (current_version_id) references media_versions(id);
 alter table organizations add foreign key (logo_media_version_id) references media_versions(id);
 -- content_channels.published_evidence_media_version_id gets its foreign key in the content migration (the table does not exist yet)

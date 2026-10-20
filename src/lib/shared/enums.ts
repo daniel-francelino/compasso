@@ -150,6 +150,7 @@ export const EditorialStatus = {
   AwaitingApproval: "awaiting_approval",
   ChangesRequested: "changes_requested",
   Approved: "approved",
+  Published: "published",
   Cancelled: "cancelled",
 } as const;
 export type EditorialStatus = ValueOf<typeof EditorialStatus>;

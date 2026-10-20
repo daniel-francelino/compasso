@@ -41,6 +41,8 @@ const REFUSED: Partial<Record<EditorialStatus, string>> = {
   [EditorialStatus.AwaitingApproval]:
     "Para enviar à aprovação, abra o conteúdo e use “Enviar para aprovação”.",
   [EditorialStatus.Approved]: "A aprovação é decidida pelo cliente no portal.",
+  [EditorialStatus.Published]:
+    "Para marcar como publicado, abra o conteúdo e use “Marcar como publicado”.",
   [EditorialStatus.ChangesRequested]: "Este estado é definido pelo pedido do cliente.",
   [EditorialStatus.Cancelled]: "Para cancelar, abra o conteúdo e use “Cancelar”.",
 };

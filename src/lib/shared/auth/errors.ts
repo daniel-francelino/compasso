@@ -251,6 +251,10 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Ninguém da marca pode aprovar ainda. Convide um aprovador para continuar.",
   },
+  channels_not_published: {
+    category: ErrorCode.Invalid,
+    message: "Registre a publicação de todos os canais antes de marcar o conteúdo como publicado.",
+  },
   plan_not_approved: {
     category: ErrorCode.Invalid,
     message: "Aguarde a aprovação do planejamento para enviar as artes.",

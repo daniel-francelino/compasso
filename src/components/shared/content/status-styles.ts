@@ -29,6 +29,7 @@ const editorialStyles: Record<EditorialStatus, Style> = {
   [EditorialStatus.AwaitingApproval]: { tone: "warning", icon: Hourglass },
   [EditorialStatus.ChangesRequested]: { tone: "negative", icon: Undo2 },
   [EditorialStatus.Approved]: { tone: "success", icon: CircleCheck },
+  [EditorialStatus.Published]: { tone: "success", icon: Send },
   [EditorialStatus.Cancelled]: { tone: "neutral", icon: Ban },
 };
 

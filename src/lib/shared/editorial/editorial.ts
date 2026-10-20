@@ -51,8 +51,10 @@ export const EditorialTransitions: Record<EditorialStatus, readonly EditorialSta
   [EditorialStatus.Approved]: [
     EditorialStatus.InProduction,
     EditorialStatus.Planning,
+    EditorialStatus.Published,
     EditorialStatus.Cancelled,
   ],
+  [EditorialStatus.Published]: [],
   [EditorialStatus.Cancelled]: [],
 };
 
@@ -70,6 +72,7 @@ export const DirectMoves: Record<EditorialStatus, readonly EditorialStatus[]> = 
   [EditorialStatus.AwaitingApproval]: [],
   [EditorialStatus.ChangesRequested]: [EditorialStatus.InProduction],
   [EditorialStatus.Approved]: [],
+  [EditorialStatus.Published]: [],
   [EditorialStatus.Cancelled]: [],
 };
 
@@ -98,6 +101,7 @@ export const planLockedStatuses: readonly EditorialStatus[] = [
   EditorialStatus.AwaitingApproval,
   EditorialStatus.ChangesRequested,
   EditorialStatus.Approved,
+  EditorialStatus.Published,
 ];
 
 export const planStageStatuses: readonly EditorialStatus[] = [

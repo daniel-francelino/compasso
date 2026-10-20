@@ -43,6 +43,7 @@ export const AuditAction = {
     Submitted: "content.submitted",
     Reopened: "content.reopened",
     Cancelled: "content.cancelled",
+    Published: "content.published",
     Deleted: "content.deleted",
   },
   ContentChannel: {

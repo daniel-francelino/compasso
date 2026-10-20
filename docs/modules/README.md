@@ -10,6 +10,7 @@ Functional specification of the modules of Compasso, written before implementati
 | Brands | `marketing` | Brands of a client, identity, time zone, members and access | [brands.md](brands.md) |
 | Channels | `marketing` | Profiles/destinations of a brand (Instagram, LinkedIn…) | [channels.md](channels.md) |
 | Content | `marketing` | Content (one content for several channels), immutable versions, internal comments, manual publication, ideas and dates that convert into contents | [content.md](content.md) |
+| Content publication | `marketing` | Proposal: the `published` state and the storage clean-up that keeps only previews | [content-publication.md](content-publication.md) |
 | Approvals | `marketing` (request) + `portal` (decision) | Approval requests, decisions, history, deadlines | [approvals.md](approvals.md) |
 | Calendar | `marketing` + `portal` (shared components) | Editorial calendar, deadlines, rescheduling, time zones | [calendar.md](calendar.md) |
 | Dashboard | `marketing` | Work overview: what needs attention, what is coming | [dashboard.md](dashboard.md) |

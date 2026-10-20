@@ -76,6 +76,7 @@ export function ContentActions({
   isNew,
   cancelled,
   hasPublished,
+  canMarkPublished,
   hasContent,
   editable,
   dirty,
@@ -85,6 +86,7 @@ export function ContentActions({
   onSubmit,
   onReopen,
   onCancel,
+  onPublish,
 }: {
   status: EditorialStatus;
   state: StageState;
@@ -100,6 +102,8 @@ export function ContentActions({
   onSubmit: () => void;
   onReopen: (scope: ApprovalStage) => void;
   onCancel: () => void;
+  onPublish: () => void;
+  canMarkPublished: boolean;
 }) {
   const auth = useAuth();
   const moves =
@@ -109,6 +113,11 @@ export function ContentActions({
   const reopenAllowed = can(auth, Action.Content.Reopen) && !cancelled && !hasPublished;
   const canReopenArt = reopenAllowed && REOPEN_ART.includes(status);
   const canReopenPlan = reopenAllowed && state.planRequired && REOPEN_PLAN.includes(status);
+  const canPublish =
+    hasContent &&
+    can(auth, Action.Content.PublishManual) &&
+    !cancelled &&
+    status === EditorialStatus.Approved;
   const canCancel = hasContent && can(auth, Action.Content.Cancel) && !cancelled;
 
   return (
@@ -165,6 +174,22 @@ export function ContentActions({
           onClick={() => onReopen(ApprovalStage.Art)}
           disabled={acting}
         />
+      ) : null}
+      {canPublish ? (
+        <WhyDisabled
+          reason={canMarkPublished ? null : "Registre a publicação de todos os canais antes."}
+        >
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onPublish}
+            disabled={acting || !canMarkPublished}
+          >
+            <Send aria-hidden="true" />
+            Marcar como publicado
+          </Button>
+        </WhyDisabled>
       ) : null}
       {canCancel ? (
         <IconButton

@@ -69,6 +69,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `content.deleted` | `content_item` | `content_item_delete` |
 | `content.submitted` | `content_item` | `submit_for_approval` |
 | `content.reopened` | `content_item` | `reopen_content` (reason in metadata) |
+| `content.published` | `content_item` | `publish_content` |
 | `content_channel.added` | `content_channel` | `content_item_save` |
 | `content_channel.removed` | `content_channel` | `content_item_save` |
 | `content_channel.rescheduled` | `content_channel` | `reschedule_channel` (old and new instant) |

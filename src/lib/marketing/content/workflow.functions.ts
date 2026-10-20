@@ -3,11 +3,13 @@ import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { ApprovalStage } from "@/lib/shared/enums";
+import { purgePublishedMedia } from "@/lib/shared/media/cleanup.server";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 import {
   brandIdSchema,
   cancelSchema,
   moveContentSchema,
+  publishContentSchema,
   publishSchema,
   reopenSchema,
   submitSchema,
@@ -39,6 +41,28 @@ export const moveContent = createServerFn({ method: "POST" })
     if (error) return fail(error);
     const saved = parseOutput(movedSchema, row);
     return saved.ok ? { ok: true, id: saved.id, version: saved.version } : saved;
+  });
+
+const publishedSchema = z.object({
+  id: z.string().uuid(),
+  version: z.number().int(),
+  queued: z.number().int(),
+});
+
+export const publishContent = createServerFn({ method: "POST" })
+  .validator(publishContentSchema)
+  .handler(async ({ data }): Promise<Result<{ id: string; version: number; queued: number }>> => {
+    const caller = await requireActionServer(Action.Content.PublishManual);
+    if (caller === null) return denied;
+    const { data: row, error } = await caller.supabase.rpc("publish_content", {
+      p_item: data.id,
+      p_expected_version: data.expectedVersion,
+    });
+    if (error) return fail(error);
+    const published = parseOutput(publishedSchema, row);
+    if (!published.ok) return published;
+    if (published.queued > 0) await purgePublishedMedia();
+    return { ok: true, id: published.id, version: published.version, queued: published.queued };
   });
 
 export const submitForApproval = createServerFn({ method: "POST" })

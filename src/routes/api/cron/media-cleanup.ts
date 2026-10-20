@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { isAuthorizedCron } from "@/lib/shared/jobs/cron-auth.server";
-import { cleanupExpiredUploads } from "@/lib/shared/media/cleanup.server";
+import { cleanupExpiredUploads, purgePublishedMedia } from "@/lib/shared/media/cleanup.server";
 
 export const Route = createFileRoute("/api/cron/media-cleanup")({
   server: {
@@ -9,8 +9,12 @@ export const Route = createFileRoute("/api/cron/media-cleanup")({
         if (!isAuthorizedCron(request.headers.get("authorization"))) {
           return new Response("Unauthorized", { status: 401 });
         }
-        const result = await cleanupExpiredUploads();
-        return Response.json(result, { status: result.ok ? 200 : 500 });
+        const uploads = await cleanupExpiredUploads();
+        const published = await purgePublishedMedia();
+        return Response.json(
+          { uploads, published },
+          { status: uploads.ok && published.ok ? 200 : 500 },
+        );
       },
     },
   },

@@ -32,6 +32,15 @@ export function ContentBanners({ content }: { content: ContentDetail }) {
           </AlertDescription>
         </Alert>
       ) : null}
+      {content.editorialStatus === EditorialStatus.Published ? (
+        <Alert>
+          <AlertTitle>Conteúdo publicado</AlertTitle>
+          <AlertDescription>
+            Os originais e os arquivos do planejamento foram apagados. Ficam só as prévias do que
+            foi publicado.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {content.hasUnsentChanges && content.editorialStatus === EditorialStatus.AwaitingApproval ? (
         <Alert>
           <TriangleAlert aria-hidden="true" />

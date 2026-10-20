@@ -485,6 +485,7 @@ export const listBoard = createServerFn({ method: "GET" })
       EditorialStatus.AwaitingApproval,
       EditorialStatus.ChangesRequested,
       EditorialStatus.Approved,
+      EditorialStatus.Published,
     ];
 
     const matched = await matchingItemIds(caller.supabase, {

@@ -79,6 +79,7 @@ export const editorialStatusLabels: Record<EditorialStatus, string> = {
   [EditorialStatus.AwaitingApproval]: "Aguardando aprovação",
   [EditorialStatus.ChangesRequested]: "Alterações solicitadas",
   [EditorialStatus.Approved]: "Aprovado",
+  [EditorialStatus.Published]: "Publicado",
   [EditorialStatus.Cancelled]: "Cancelado",
 };
 

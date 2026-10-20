@@ -16,7 +16,7 @@
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
 |---|---|---|---|---|
-| `EditorialStatus` | `draft`, `planning`, `awaiting_plan_approval`, `plan_changes_requested`, `plan_approved`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em planejamento", "Planejamento em aprovação", "Alterações no planejamento", "Planejamento aprovado", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Cancelado" | content |
+| `EditorialStatus` | `draft`, `planning`, `awaiting_plan_approval`, `plan_changes_requested`, `plan_approved`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `published`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em planejamento", "Planejamento em aprovação", "Alterações no planejamento", "Planejamento aprovado", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Publicado", "Cancelado" | content |
 | `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_channels.publication_status` | "Não planejada", "Planejada", "Publicada manualmente", "Cancelada" | content |
 | `RichNodeType` | `doc`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `hardBreak`, `text` | Tiptap JSON of `content_items.briefing` (not a database column check; validated by zod in `lib/shared/rich-text/types.ts`) | (not shown) | content |
 | `RichMarkType` | `bold`, `italic` | Marks allowed in that JSON | (not shown) | content |

@@ -27,6 +27,7 @@ import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormActions } from "@/components/shared/admin/form-actions";
+import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -59,6 +60,7 @@ import {
   cancelContentChannel,
   moveContent,
   reopenContent,
+  publishContent,
 } from "@/lib/marketing/content/workflow.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { ErrorCode } from "@/lib/shared/auth/errors";
@@ -108,6 +110,7 @@ export function ContentEditor({
   const [cancellingRow, setCancellingRow] = useState<DraftRow | null>(null);
   const [reopening, setReopening] = useState<ApprovalStage | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmingPublish, setConfirmingPublish] = useState(false);
   const [tab, setTab] = useState(ALL_TAB);
 
   const isNew = content === undefined;
@@ -260,6 +263,7 @@ export function ContentEditor({
   }
 
   const hasPublished = values.rows.some((row) => row.published);
+  const allPublished = hasPublished && values.rows.every((row) => row.published);
   const canPublish = can(auth, Action.Content.PublishManual) && approved && !cancelled;
   const canCancel = content !== undefined && can(auth, Action.Content.Cancel) && !cancelled;
 
@@ -314,6 +318,8 @@ export function ContentEditor({
         isNew={isNew}
         cancelled={cancelled}
         hasPublished={hasPublished}
+        canMarkPublished={allPublished && !draft.dirty}
+        onPublish={() => setConfirmingPublish(true)}
         hasContent={content !== undefined}
         editable={editable}
         dirty={draft.dirty}
@@ -492,6 +498,22 @@ export function ContentEditor({
           }
         />
       ) : null}
+      <ConfirmDialog
+        open={confirmingPublish}
+        onOpenChange={setConfirmingPublish}
+        title="Marcar como publicado"
+        description="Depois de marcar como publicado, os originais e os arquivos do planejamento são apagados. Ficam só as prévias. Vídeos continuam guardados por enquanto. Não dá para desfazer."
+        confirmLabel="Marcar como publicado"
+        busy={acting}
+        onConfirm={async () => {
+          if (content === undefined) return false;
+          const result = await run(
+            () => publishContent({ data: { id: content.id, expectedVersion: content.version } }),
+            { invalidate: refresh, success: "Conteúdo marcado como publicado." },
+          );
+          return result.ok;
+        }}
+      />
       <ReasonDialog
         open={reopening !== null}
         onOpenChange={(next) => !next && setReopening(null)}

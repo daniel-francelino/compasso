@@ -32,6 +32,7 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Content.Submitted]: "Conteúdo enviado para aprovação",
   [AuditAction.Content.Reopened]: "Conteúdo reaberto",
   [AuditAction.Content.Cancelled]: "Conteúdo cancelado",
+  [AuditAction.Content.Published]: "Conteúdo marcado como publicado",
   [AuditAction.Content.Deleted]: "Conteúdo excluído",
   [AuditAction.ContentChannel.Added]: "Canal adicionado ao conteúdo",
   [AuditAction.ContentChannel.Removed]: "Canal removido do conteúdo",
