@@ -54,6 +54,7 @@ import {
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
 import { saveContentSchema } from "@/lib/marketing/content/schemas";
+import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 import { stageStateOf } from "@/lib/marketing/content/stage-state";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import {
@@ -457,6 +458,7 @@ export function ContentEditor({
                 kind: file.kind,
                 altText: file.altText === "" ? null : file.altText,
                 url: urls.data?.[file.mediaVersionId] ?? null,
+                unavailable: mediaUnavailable(urls.data, file.mediaVersionId),
               }))}
             />
           ) : (

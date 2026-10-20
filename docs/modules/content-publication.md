@@ -1,6 +1,6 @@
 # Content publication and storage clean-up
 
-> **Status: decided on 2026-10-20 (P1 to P4); first delivery implemented in code and not yet applied to the linked project, see section 12.** It adds a `published` editorial state to a content and a manual clean-up that keeps only the previews of what was published, to save storage. It also records how the previews learn the real size of the files and what is and is not verified about each platform's accepted ratios. It extends [content.md](content.md), [approvals.md](approvals.md) and [../spaces/media-library.md](../spaces/media-library.md); it does not replace them. Names below are proposals: per GOLD-4 they enter the registries ([../reference/README.md](../reference/README.md)) in the same change that implements them.
+> **Status: decided on 2026-10-20 (P1 to P4); first delivery implemented and applied to the linked project, see section 12.** It adds a `published` editorial state to a content and a manual clean-up that keeps only the previews of what was published, to save storage. It also records how the previews learn the real size of the files and what is and is not verified about each platform's accepted ratios. It extends [content.md](content.md), [approvals.md](approvals.md) and [../spaces/media-library.md](../spaces/media-library.md); it does not replace them. Names below are proposals: per GOLD-4 they enter the registries ([../reference/README.md](../reference/README.md)) in the same change that implements them.
 
 ## 1. Objective
 
@@ -58,9 +58,19 @@
 
 ## 5. Reading the preview after the clean-up
 
-- The internal and portal approval screens, the portal calendar and the content detail read the display copy as today (`has_display`); a purged original is never requested.
-- A published content does not allow "Abrir arquivo" on the original; the button is replaced by "Ver prévia".
-- The reduced copies are enough for the preview frame, because the width and height live in `media_versions` (section 6).
+Impact analysis (2026-10-20). Every place that signs a file for a preview asked for `display_key ?? storage_key`, so a purged original would have produced a signed URL for a missing object. What changed:
+
+| Where | Before | Now |
+|---|---|---|
+| `portal_media_urls` (portal approval, list cards, calendar entry) | Returned `storage_key` always | Returns `storage_key` as `null` once the original is purged (migration `20261020150000_purged_originals_fallback.sql`); the preview keeps working from `display_key` |
+| `signPortalMedia`, `signPortalPreviewMedia` | Fell back to the original | Ignore a `null` key; no URL for that file |
+| `getMedia` and `signMedia` (library, editor, internal approval) | Used `storage_key` when the display copy was missing | Treat a purged original as absent: no preview fallback to it and no download link (the "Baixar" button is hidden) |
+| `publish_content` | Queued every candidate | A version kept as preview is queued only if it **has a display copy**; otherwise its original stays (it is the only copy) |
+| Preview components (`ChannelPreview`, `RevisionView`, portal request card, portal calendar entry, editor) | A missing URL showed the loading skeleton for ever | `PreviewMedia.unavailable` (from `mediaUnavailable(urls, id)`, true when the URLs loaded and this file has none) shows "Prévia indisponível" |
+
+What the client sees after a publication: the art keeps its preview (display copy), the planning images of the old plan version show "Prévia indisponível", and "Abrir arquivo" on an original has nothing to open. A published content does not allow "Abrir arquivo" on the original; the button is replaced by "Ver prévia" (not built: the original button simply has no URL for now).
+
+Not covered: the public share link (`public-share.functions.ts`) still builds its download from `storage_key`; a purged version is never shared in practice (versions in use elsewhere are not purged), but the case is untested.
 
 ## 6. Real file size on every preview (internal screens)
 
@@ -130,4 +140,4 @@ Differences from the proposal: the action is the existing `content.publish_manua
 
 Validation performed: `npm run db:verify` (917 assertions, 0 failures; 17 new in `supabase/tests/21_content_published.test.sql`: refused while a channel is unpublished, stale version, queueing and `purge_keep_preview`, pending and confirmation, storage drop, audit, no second publication, no reopening, no edits, external user and `anon` refused), typecheck, ESLint, Vitest, `check:consistency`, `check:docs`.
 
-**Not done / not tested:** applying the migration to the linked project and `db:types -- --linked`; the removal from a real R2 bucket (`purgePublishedMedia` was not exercised); the reduced video copy; width and height on the internal DTOs (section 6); the official-source check of the platform ratios (section 7); the screens in a browser; the guard that refuses a signed URL for a purged original (`file_purged`, section 4) is not implemented yet.
+**Not done / not tested:** applying the migration to the linked project and `db:types -- --linked`; the removal from a real R2 bucket (`purgePublishedMedia` was not exercised); the reduced video copy; width and height on the internal DTOs (section 6); the official-source check of the platform ratios (section 7); the screens in a browser; the `file_purged` error of section 4 is **not** implemented: the fallback of section 5 returns no URL instead of an error.

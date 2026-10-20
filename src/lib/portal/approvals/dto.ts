@@ -146,7 +146,7 @@ export const portalMediaKeysSchema = z.object({
   list: z.array(
     z.object({
       version_id: z.string().uuid(),
-      storage_key: z.string(),
+      storage_key: z.string().nullable(),
       thumb_key: z.string().nullable(),
       display_key: z.string().nullable(),
       mime_type: z.string(),

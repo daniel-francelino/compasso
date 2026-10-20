@@ -1,6 +1,6 @@
 begin;
 
-select plan(67);
+select plan(69);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -211,6 +211,11 @@ reset role;
 
 set local role anon;
 select throws_ok($$select public.publish_content(gen_random_uuid(), 1)$$, 'permission denied for function publish_content', 'anon cannot publish');
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
+select is((public.portal_media_urls((current_setting('t.sub2')::jsonb ->> 'revision_id')::uuid, array[current_setting('t.media2')::uuid]) -> 0 ->> 'storage_key'), null, 'the portal gets no key for a purged original');
+select isnt((public.portal_media_urls((current_setting('t.sub2')::jsonb ->> 'revision_id')::uuid, array[current_setting('t.media2')::uuid]) -> 0 ->> 'display_key'), null, 'but still gets the preview key');
 reset role;
 
 select * from finish();

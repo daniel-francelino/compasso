@@ -14,6 +14,7 @@ import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { approvalRequestStatusLabels } from "@/lib/shared/labels";
 import { kindOfMime } from "@/lib/shared/media/limits";
 import { QueryKey } from "@/lib/shared/query-keys";
+import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const closeDelay = 160;
@@ -96,6 +97,7 @@ export function PortalCalendarEntryPreview({
             kind: kindOfMime(media.mimeType),
             altText: media.altText,
             url: mediaUrls.data?.[media.versionId] ?? null,
+            unavailable: mediaUnavailable(mediaUrls.data, media.versionId),
           }))}
         />
       </div>

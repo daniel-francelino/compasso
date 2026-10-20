@@ -11,6 +11,7 @@ import { unwrapResult } from "@/lib/shared/result-client";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { formatInZone } from "@/lib/shared/format";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
+import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 import { kindOfMime } from "@/lib/shared/media/limits";
 
 const DEFAULT_ZONE = "America/Sao_Paulo";
@@ -72,6 +73,7 @@ export function RequestPreview({
                 width: item.width,
                 height: item.height,
                 url: urls?.[item.versionId] ?? null,
+                unavailable: mediaUnavailable(urls, item.versionId),
               }))}
             />
           </TabsContent>

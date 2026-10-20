@@ -7,6 +7,7 @@ import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
+import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 import { formatInZone } from "@/lib/shared/format";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 import type { MediaKind } from "@/lib/shared/media/limits";
@@ -82,6 +83,7 @@ export function RevisionView({
               width: item.width,
               height: item.height,
               url: urls?.[item.versionId] ?? null,
+              unavailable: mediaUnavailable(urls, item.versionId),
             }))}
           />
         ) : null}

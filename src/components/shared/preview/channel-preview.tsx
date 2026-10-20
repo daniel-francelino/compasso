@@ -19,6 +19,7 @@ export type PreviewMedia = {
   kind: MediaKind | null;
   altText: string | null;
   url: string | null;
+  unavailable?: boolean | undefined;
   width?: number | null | undefined;
   height?: number | null | undefined;
 };
@@ -77,6 +78,7 @@ function VideoSlide({
 }
 
 function Slide({ item, position, total }: { item: PreviewMedia; position: number; total: number }) {
+  if (item.unavailable === true) return <UnavailableSlide />;
   if (item.url === null) {
     return (
       <div className="size-full" role="status" aria-label="Carregando arquivo">

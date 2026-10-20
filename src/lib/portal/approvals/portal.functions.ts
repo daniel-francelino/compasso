@@ -322,7 +322,10 @@ export const signPortalMedia = createServerFn({ method: "POST" })
         : data.variant === MediaVariant.Display
           ? (row.display_key ?? row.storage_key)
           : row.storage_key;
-    const signed = await storage.signUrls(parsed.list.map(keyOf), EXTERNAL_URL_SECONDS);
+    const signed = await storage.signUrls(
+      parsed.list.map(keyOf).filter((key): key is string => key !== null),
+      EXTERNAL_URL_SECONDS,
+    );
     const urls: Record<string, string> = {};
     for (const row of parsed.list) {
       const key = keyOf(row);

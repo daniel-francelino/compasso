@@ -178,7 +178,7 @@ export const getMedia = createServerFn({ method: "GET" })
     const { data: asset, error } = await caller.supabase
       .from("media_assets")
       .select(
-        "id, display_name, scope, brand_id, tags, size_bytes, version, trashed_at, created_at, current_version_id, brands(name), media_versions!media_versions_asset_id_fkey(id, version_no, original_filename, mime_type, size_bytes, width, height, duration_ms, status, created_at, thumb_key, display_key, storage_key, public_published_at)",
+        "id, display_name, scope, brand_id, tags, size_bytes, version, trashed_at, created_at, current_version_id, brands(name), media_versions!media_versions_asset_id_fkey(id, version_no, original_filename, mime_type, size_bytes, width, height, duration_ms, status, created_at, thumb_key, display_key, storage_key, original_purged_at, public_published_at)",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -197,20 +197,17 @@ export const getMedia = createServerFn({ method: "GET" })
 
     const storage = serverStorage();
     const kind = kindOfMime(current.mime_type) ?? MediaKind.Document;
+    const originalKey = current.original_purged_at === null ? current.storage_key : null;
     const previewKey =
-      kind === MediaKind.Image ? (current.display_key ?? current.storage_key) : current.storage_key;
+      kind === MediaKind.Image ? (current.display_key ?? originalKey) : originalKey;
     const signed =
-      storage === null
+      storage === null || previewKey === null
         ? new Map<string, string>()
         : await storage.signUrls([previewKey], INTERNAL_URL_SECONDS);
     const downloads =
-      storage === null
+      storage === null || originalKey === null
         ? new Map<string, string>()
-        : await storage.signUrls(
-            [current.storage_key],
-            INTERNAL_URL_SECONDS,
-            current.original_filename,
-          );
+        : await storage.signUrls([originalKey], INTERNAL_URL_SECONDS, current.original_filename);
 
     return {
       ok: true,
@@ -246,8 +243,8 @@ export const getMedia = createServerFn({ method: "GET" })
         published: version.public_published_at !== null,
       })),
       usageCount: usage.count ?? 0,
-      previewUrl: signed.get(previewKey) ?? null,
-      downloadUrl: downloads.get(current.storage_key) ?? null,
+      previewUrl: previewKey === null ? null : (signed.get(previewKey) ?? null),
+      downloadUrl: originalKey === null ? null : (downloads.get(originalKey) ?? null),
     };
   });
 
@@ -336,17 +333,16 @@ export const signMediaUrls = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await caller.supabase
       .from("media_versions")
-      .select("id, storage_key, thumb_key, display_key, status")
+      .select("id, storage_key, thumb_key, display_key, original_purged_at, status")
       .in("id", data.versionIds)
       .eq("status", MediaVersionStatus.Available);
     if (error) return fail(error);
 
-    const keyOf = (row: (typeof rows)[number]): string | null =>
-      data.variant === MediaVariant.Thumb
-        ? row.thumb_key
-        : data.variant === MediaVariant.Display
-          ? (row.display_key ?? row.storage_key)
-          : row.storage_key;
+    const keyOf = (row: (typeof rows)[number]): string | null => {
+      const original = row.original_purged_at === null ? row.storage_key : null;
+      if (data.variant === MediaVariant.Thumb) return row.thumb_key;
+      return data.variant === MediaVariant.Display ? (row.display_key ?? original) : original;
+    };
     const signed = await storage.signUrls(rows.map(keyOf), INTERNAL_URL_SECONDS, data.downloadName);
     const urls: Record<string, string> = {};
     for (const row of rows) {
