@@ -25,7 +25,7 @@ export function AppSidebar({ auth, space }: { auth: AuthState; space: AdminSpace
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="gap-0.5">
-        <img src="/aura-creative-logo.svg" alt="Aura Creative" className="h-auto w-32 px-2 pt-1" />
+        <img src="/aura-creative-logo.png" alt="Aura Creative" className="h-auto w-32 px-2 pt-1" />
         <p className="truncate px-2 text-xs text-sidebar-foreground">
           {adminSpaces.find((entry) => entry.key === space)?.title}
         </p>
