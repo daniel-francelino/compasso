@@ -235,14 +235,23 @@ export const CalendarEntryKind = {
   ProductionDeadline: "production_deadline",
   Idea: "idea",
   Date: "date",
+  Event: "event",
 } as const;
 export type CalendarEntryKind = ValueOf<typeof CalendarEntryKind>;
 
 export const CalendarNoteKind = {
   Idea: "idea",
   Date: "date",
+  Event: "event",
 } as const;
 export type CalendarNoteKind = ValueOf<typeof CalendarNoteKind>;
+
+export const CalendarEventType = {
+  Shoot: "shoot",
+  Meeting: "meeting",
+  Other: "other",
+} as const;
+export type CalendarEventType = ValueOf<typeof CalendarEventType>;
 
 export const CalendarNoteRepeat = {
   None: "none",

@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarPlus, Lightbulb, Plus } from "lucide-react";
+import { CalendarDays, CalendarPlus, CalendarRange, Lightbulb, Plus } from "lucide-react";
 import { Button } from "@/components/shared/ui/button";
 import {
   DropdownMenu,
@@ -45,6 +45,10 @@ export function DayAddMenu({
         ) : null}
         {canNote ? (
           <>
+            <DropdownMenuItem onSelect={() => onNote(CalendarNoteKind.Event, day)}>
+              <CalendarRange aria-hidden="true" />
+              Adicionar evento
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onNote(CalendarNoteKind.Date, day)}>
               <CalendarDays aria-hidden="true" />
               Adicionar data

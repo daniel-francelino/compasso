@@ -6,7 +6,10 @@ import { FormError } from "@/components/shared/admin/auth-shell";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { SelectField, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
+import { Label } from "@/components/shared/ui/label";
+import { Switch } from "@/components/shared/ui/switch";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { type CalendarNote, saveCalendarNote } from "@/lib/marketing/calendar/notes.functions";
@@ -37,6 +40,7 @@ export function NoteDialog({
   const [noteDate, setNoteDate] = useState(note?.noteDate ?? target.day);
   const [repeat, setRepeat] = useState<CalendarNoteRepeat>(note?.repeat ?? CalendarNoteRepeat.None);
   const [description, setDescription] = useState(note?.description ?? "");
+  const [clientVisible, setClientVisible] = useState(note?.clientVisible ?? false);
   const brands = useBrandOptions(note === undefined && target.brandId === undefined);
   const isIdea = target.kind === CalendarNoteKind.Idea;
   const kindLabel = calendarNoteKindLabels[target.kind].toLowerCase();
@@ -69,6 +73,7 @@ export function NoteDialog({
               description,
               noteDate,
               repeat,
+              clientVisible: isIdea ? false : clientVisible,
             },
             (data) => saveCalendarNote({ data }),
             () => {
@@ -133,6 +138,15 @@ export function NoteDialog({
         rows={4}
         error={errors["description"]}
       />
+      {isIdea ? null : (
+        <div className="flex items-center gap-3">
+          <Switch id="note-visible" checked={clientVisible} onCheckedChange={setClientVisible} />
+          <Label htmlFor="note-visible">Visível para o cliente</Label>
+          <InfoTip label="Sobre a visibilidade">
+            O cliente da marca vê esta data no portal e é avisado quando ela muda.
+          </InfoTip>
+        </div>
+      )}
       <FormError message={error} />
     </FormDialog>
   );

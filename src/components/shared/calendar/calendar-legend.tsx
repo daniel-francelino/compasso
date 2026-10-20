@@ -1,8 +1,10 @@
 import {
   CalendarClock,
   CalendarDays,
+  CalendarRange,
   CircleCheck,
   Clock3,
+  Eye,
   Hammer,
   Hourglass,
   Lightbulb,
@@ -15,6 +17,7 @@ import { calendarEntryKindLabels } from "@/lib/shared/labels";
 const marks = [
   { label: "Publicados", icon: CircleCheck, className: "text-success" },
   { label: "Agendados", icon: Clock3, className: "text-warning" },
+  { label: "Visível para o cliente", icon: Eye, className: "text-muted-foreground" },
 ];
 
 const kinds = [
@@ -24,6 +27,7 @@ const kinds = [
   { kind: CalendarEntryKind.ProductionDeadline, icon: Hammer },
   { kind: CalendarEntryKind.Idea, icon: Lightbulb },
   { kind: CalendarEntryKind.Date, icon: CalendarDays },
+  { kind: CalendarEntryKind.Event, icon: CalendarRange },
 ];
 
 const statuses = [

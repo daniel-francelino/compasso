@@ -117,11 +117,11 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 
 | ID | Task | Read | Done when | Status |
 |---|---|---|---|---|
-| E-01 | Documents first: calendar, portal, data model (`calendar_notes` columns), functions, enums (`CalendarEventType`, `CalendarNoteKind.Event`, `CalendarEntryKind.Event`), notifications (`calendar.event`), glossary | the calendar section, base.md 9.1 to 9.3 | `check:docs` passes | todo |
-| E-02 | Migration: new columns, `kind` check, `calendar.event` notification kind; `calendar_note_save`, `list_calendar_entries` and `portal_list_calendar` with events; notifications on create, change and archive; pgTAP | calendar, notifications | `db:verify` passes with tests for: internal event hidden from the portal, shared event visible, brand A versus brand B, ideas cannot be shared, notifications to the client members, the output has no internal field | todo |
-| E-03 | Server functions, schemas, types, constants, labels | enums, functions | typecheck and Vitest pass | todo |
-| E-04 | Team screens: "Evento" in the day menu, the event dialog, icons and marks in the grid, legend and filters | calendar, design-system | acceptance criteria of calendar.md | todo |
-| E-05 | Portal calendar: events with their icons and the read-only detail | portal | acceptance criteria of calendar.md and portal.md | todo |
+| E-01 | Documents first: calendar, portal, data model (`calendar_notes` columns), functions, enums (`CalendarEventType`, `CalendarNoteKind.Event`, `CalendarEntryKind.Event`), notifications (`calendar.event`), glossary | the calendar section, base.md 9.1 to 9.3 | `check:docs` passes | done (2026-10-20): calendar, portal, data model, functions, enums, notifications, audit and the glossary describe the events; `check:docs` passes |
+| E-02 | Migration: new columns, `kind` check, `calendar.event` notification kind; `calendar_note_save`, `list_calendar_entries` and `portal_list_calendar` with events; notifications on create, change and archive; pgTAP | calendar, notifications | `db:verify` passes with tests for: internal event hidden from the portal, shared event visible, brand A versus brand B, ideas cannot be shared, notifications to the client members, the output has no internal field | done on PGlite (2026-10-20): `20261020110000_calendar_events.sql` and `20_calendar_events.test.sql` (850 assertions in total pass); **not applied to the linked project** |
+| E-03 | Server functions, schemas, types, constants, labels | enums, functions | typecheck and Vitest pass | done (2026-10-20): schemas, notes and calendar server functions, types, constants, labels; the types still come from the offline generator |
+| E-04 | Team screens: "Evento" in the day menu, the event dialog, icons and marks in the grid, legend and filters | calendar, design-system | acceptance criteria of calendar.md | done in code (2026-10-20), not seen in a browser: "Adicionar evento", the event dialog, icons and marks, the legend and the details |
+| E-05 | Portal calendar: events with their icons and the read-only detail | portal | acceptance criteria of calendar.md and portal.md | done in code (2026-10-20), not seen in a browser: the portal calendar with events and the read-only dialog |
 
 ## Phase 6 — Hardening and launch
 

@@ -376,10 +376,19 @@ create index on comments (item_id, created_at);
 create table calendar_notes (
   id uuid primary key default gen_random_uuid(),
   brand_id uuid not null references brands(id),
-  kind text not null check (kind in ('idea','date')),
+  kind text not null check (kind in ('idea','date','event')),
   title text not null check (char_length(title) between 2 and 140),
   description text,
   note_date date not null,
+  end_date date,
+  event_type text check (event_type in ('shoot','meeting','other')),
+  all_day boolean not null default true,
+  starts_at timestamptz,
+  ends_at timestamptz,
+  timezone text,
+  location text check (char_length(location) <= 200),
+  client_visible boolean not null default false,
+  internal_notes text check (char_length(internal_notes) <= 4000),
   repeat text not null default 'none' check (repeat in ('none','weekly','monthly','yearly')),
   converted_item_id uuid,
   converted_at timestamptz,
@@ -392,6 +401,8 @@ create table calendar_notes (
   check ((converted_item_id is null) = (converted_at is null))
 );
 create index on calendar_notes (brand_id, note_date) where archived_at is null;
+-- checks: event fields only on events; a timed event has start, end and zone; an idea is never shared;
+-- a repeating note lasts one day. The portal reads shared notes only through portal_list_calendar.
 ```
 
 Triggers: `content_revisions`, `content_revision_media`, `approval_decisions` → refuse `update` and `delete`; `content_items` → a change of brand and any editorial transition outside the map of [enums.md](enums.md) are refused; `content_channels` → a change of brand or content is refused; `approval_requests` → block `status` changes except through the functions; `comments` → `deleted_at` is the only mutable column and only by the author (audited).

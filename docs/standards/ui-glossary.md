@@ -81,6 +81,8 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Move between statuses | "Mover para…" (menu), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
 | Add more days and times to a channel | "Incluir mais dias e horários" |
 | Convert a note | "Converter em conteúdo" |
+| Calendar event / shoot / meeting | "Evento" / "Captação" / "Reunião" |
+| Share an event with the client | "Visível para o cliente" |
 | Remind the approvers | "Reenviar lembrete" |
 | Planning / Art (approval stage) | "Planejamento" / "Artes" |
 | Start planning / start the art | "Iniciar planejamento" / "Iniciar produção das artes" |

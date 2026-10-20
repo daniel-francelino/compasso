@@ -74,7 +74,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `content_channel.rescheduled` | `content_channel` | `reschedule_channel` (old and new instant) |
 | `content_channel.published_manually` | `content_channel` | `mark_published` |
 | `content_channel.cancelled` | `content_channel` | `content_channel_cancel` |
-| `calendar_note.created` | `calendar_note` | `calendar_note_save` |
+| `calendar_note.created` | `calendar_note` | `calendar_note_save` (metadata: `kind`, `client_visible`) |
 | `calendar_note.updated` | `calendar_note` | `calendar_note_save` |
 | `calendar_note.archived` | `calendar_note` | `calendar_note_archive` |
 | `calendar_note.converted` | `calendar_note` | `content_item_save` (`source_note`) |

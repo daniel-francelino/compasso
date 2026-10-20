@@ -5,6 +5,7 @@ import {
   BrandMemberStatus,
   CalendarAlert,
   CalendarEntryKind,
+  CalendarEventType,
   CalendarNoteKind,
   CalendarNoteRepeat,
   CalendarView,
@@ -143,11 +144,19 @@ export const calendarEntryKindLabels: Record<CalendarEntryKind, string> = {
   [CalendarEntryKind.ProductionDeadline]: "Prazo de produção",
   [CalendarEntryKind.Idea]: "Ideia",
   [CalendarEntryKind.Date]: "Data",
+  [CalendarEntryKind.Event]: "Evento",
 };
 
 export const calendarNoteKindLabels: Record<CalendarNoteKind, string> = {
   [CalendarNoteKind.Idea]: "Ideia",
   [CalendarNoteKind.Date]: "Data",
+  [CalendarNoteKind.Event]: "Evento",
+};
+
+export const calendarEventTypeLabels: Record<CalendarEventType, string> = {
+  [CalendarEventType.Shoot]: "Captação",
+  [CalendarEventType.Meeting]: "Reunião",
+  [CalendarEventType.Other]: "Outro evento",
 };
 
 export const calendarNoteRepeatLabels: Record<CalendarNoteRepeat, string> = {

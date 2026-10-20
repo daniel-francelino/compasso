@@ -97,3 +97,11 @@ Later phases need more external accounts (not blocking Phase 0): Cloudflare R2 b
 | R1 | **Apply the four migrations of the content refactor to the linked project** (`20261019130000` to `20261019130030`): `npx supabase db push`. The environment refused the command when the assistant tried it. The migrations convert the one existing content (one variant, no versions, requests or comments); a backup of those rows was written to the assistant's scratchpad before the attempt. Until then the linked database has the old schema and the new screens will fail against it | Done (2026-10-19): applied with `supabase db push`; the one content converted correctly (its file and status moved to the content, the variant became a `story` channel row planned for 2026-10-30) |
 | R2 | After R1, regenerate the types from the project (`npx supabase gen types typescript --linked` through `npm run db:types -- --linked`). The committed `database.types.ts` was produced by the offline generator (`npm run db:types:offline`) and types `brand_logo_keys` imprecisely, which leaves three type errors in `brand-logos.server.ts` until the real types replace it | Done (2026-10-19): `database.types.ts` regenerated from the linked project |
 | R3 | The refactor screens (editor, list, board, calendar with notes, approval and portal tabs) were never opened in a browser | Waiting |
+
+## Two-stage approval and calendar events (2026-10-20)
+
+| ID | Item | Status |
+|---|---|---|
+| T1 | **Apply the four migrations of 2026-10-20 to the linked project** (`20261020100000`, `…100010`, `…100020` of the two-stage approval and `20261020110000` of the calendar events): `npx supabase db push`, after the person says so. The contract migration drops `reassign_approver` and `approver_user_id`, so code and database must go together | Waiting for the person |
+| T2 | After T1, regenerate the types (`npm run db:types -- --linked`); the committed ones come from the offline generator | Waiting for T1 |
+| T3 | The new screens (stage stepper, planning section, approver pool in the portal, events dialog and portal calendar) were never opened in a browser, and no Playwright flow covers the two stages | Waiting |

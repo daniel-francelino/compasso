@@ -2,6 +2,8 @@ import type {
   ApprovalRequestStatus,
   ApprovalStage,
   CalendarEntryKind,
+  CalendarEventType,
+  CalendarNoteKind,
   CalendarNoteRepeat,
   ContentFormat,
   EditorialStatus,
@@ -17,6 +19,15 @@ export type CalendarEntry = {
   description: string | null;
   repeat: CalendarNoteRepeat | null;
   convertedItemId: string | null;
+  eventType: CalendarEventType | null;
+  allDay: boolean;
+  endDate: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  timezone: string | null;
+  location: string | null;
+  clientVisible: boolean;
+  internalNotes: string | null;
   noteVersion: number | null;
   requestId: string | null;
   title: string;
@@ -65,6 +76,21 @@ export type PortalCalendarEntry = {
   plannedTimezone: string;
   brandTimezone: string;
   stage: ApprovalStage;
+};
+
+export type PortalCalendarEvent = {
+  noteId: string;
+  kind: CalendarNoteKind;
+  eventType: CalendarEventType | null;
+  title: string;
+  description: string | null;
+  date: string;
+  endDate: string | null;
+  allDay: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  timezone: string;
+  location: string | null;
 };
 
 export type VisibleRange = { start: string; end: string; days: string[] };

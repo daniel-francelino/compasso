@@ -15,8 +15,14 @@ export const entryDay = (entry: CalendarEntry, zone: string): string | null => {
   return instantToLocalInput(entry.at, zone).slice(0, 10);
 };
 
-export const entryTime = (entry: CalendarEntry, zone: string): string | null =>
-  entry.at === null ? null : instantToLocalInput(entry.at, zone).slice(11);
+export const entryTime = (entry: CalendarEntry, zone: string): string | null => {
+  if (entry.kind === CalendarEntryKind.Event) {
+    return entry.allDay || entry.startsAt === null
+      ? null
+      : instantToLocalInput(entry.startsAt, entry.timezone ?? zone).slice(11);
+  }
+  return entry.at === null ? null : instantToLocalInput(entry.at, zone).slice(11);
+};
 
 export const entryTimeLabel = (entry: CalendarEntry, zone: string): string => {
   const time = entryTime(entry, zone);

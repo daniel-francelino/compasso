@@ -1,4 +1,4 @@
-import { CircleCheck, Clock3, Link2, TriangleAlert } from "lucide-react";
+import { CircleCheck, Clock3, Eye, Link2, TriangleAlert } from "lucide-react";
 import { statusTones } from "@/components/shared/admin/status-tones";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { type GridItem, StatusMark, itemLabel } from "@/lib/shared/calendar/grid-item";
@@ -43,6 +43,9 @@ export function EntryChip({ item, onSelect }: { item: GridItem; onSelect: (key: 
       ) : null}
       {item.mark === StatusMark.Scheduled ? (
         <Clock3 className="ml-auto size-3.5 shrink-0 text-warning" aria-hidden="true" />
+      ) : null}
+      {item.mark === StatusMark.Shared ? (
+        <Eye className="ml-auto size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
       ) : null}
       {item.mark === StatusMark.Converted ? (
         <Link2 className="ml-auto size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />

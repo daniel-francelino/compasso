@@ -115,9 +115,9 @@ External users see a calendar restricted to the **brands they are linked to** an
 8. **A window of at most 100 days and 500 entries** replaces pagination: `list_calendar_entries` answers with `truncated = true` and the screen asks the person to filter. The "Sem data" list comes in the same call (at most 100, filtered like the grid).
 9. **Mobile shows the list** (the grid is not drawn below 768 px), as the document asks; the list is also available on desktop.
 
-## Events shared with the client (decided 2026-10-20, not implemented)
+## Events shared with the client (decided 2026-10-20)
 
-> Status: **design only**; tasks in phase E of [../implementation-plan.md](../implementation-plan.md). When done, move the rules into the sections above and delete this section (DOC-5).
+> Status: **implemented in code and on PGlite (2026-10-20)**, not applied to the linked project and not seen in a browser (see the implementation status). Fold the rules into the sections above once the migration is applied and used (DOC-5).
 
 ### Why
 
@@ -148,6 +148,7 @@ An event is a calendar note, not a new table. `kind` gets the value `event`, and
 |---|---|
 | `event_type` | `CalendarEventType`: `shoot`, `meeting`, `other` (events only) |
 | `all_day` | boolean; true keeps today's behavior (`note_date` only) |
+| `end_date` | the last day of an all-day event that lasts several days (at most 60 days after the first); null for one day. A repeating event cannot last several days |
 | `starts_at`, `ends_at` | instants (UTC) for timed events, with `ends_at` at or after `starts_at`; a multi-day event has an end date |
 | `timezone` | IANA zone of the event (the brand zone by default) |
 | `location` | up to 200 characters; a place or a link (an `https://` link is validated like the other links) |
@@ -159,7 +160,7 @@ Rules:
 
 1. Creating, editing and archiving need `calendar.manage` and the brand link, as the other notes; the client never writes.
 2. The client sees **only** `client_visible` events (and dates) of the brands they are linked to, through `portal_list_calendar` (new entries of kind `event`) and never through the table; the output carries title, description, type, place, time and zone, **not** the internal notes, who created it or the repeat rule internals.
-3. A change of date, time, place or visibility of a shared event, its creation and its archiving notify the brand's client members and the creator's team (new notification kind `calendar.event`, portal kind, in-app and optional e-mail), with the title and the time only. Turning an event back to internal withdraws it from the portal and tells them it was cancelled.
+3. A change of date, time, place or visibility of a shared event, its creation and its archiving notify the brand's client members and the creator's team (new notification kind `calendar.event`, portal kind, in-app and optional e-mail), with the title and the time only. Only the client members of the brand are notified; the team that made the change is not. Turning an event back to internal withdraws it from the portal and tells them it was cancelled.
 4. Events are all-day or timed; timed events show their zone ([../standards/base.md](../standards/base.md) UI-11) and a multi-day event is drawn on each day it covers in the month grid.
 5. Events appear in the team calendar and the portal calendar with an icon by type (camera for `shoot`, people for `meeting`, calendar mark for `other`) and the lock/eye mark that says whether the client sees it; the legend and the filters get "Eventos".
 6. The "Adicionar" menu of a day gets "Evento" next to "Ideia" and "Data". The dialog asks title, type, all day or start and end, place, description, internal notes, repeat and the switch "Visível para o cliente", off by default, with an `InfoTip` ("O cliente da marca vê este evento no portal e é avisado quando ele muda.").
@@ -225,3 +226,5 @@ Phase 5 (calendar screen layout, 2026-10-19).
 2026-10-19: "Agendar conteúdo" from a calendar day now opens the existing content editor in a full-screen modal with the selected day prefilled. Closing uses the existing unsaved-change confirmation; saving creates the content, refreshes calendar entries and closes the modal without changing routes. Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser interaction, modal sizing on mobile, save/refresh flow.
 
 2026-10-19: Removed the separate "Datas" and "Ideias" visibility buttons; notes are now consistently included. Moved the filter and undated-content icon buttons beside the view selector in the calendar toolbar. Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering or responsive toolbar behavior.
+
+2026-10-20 (events shared with the client, tasks E-01 to E-05): migration `20261020110000_calendar_events.sql` (the `event` kind, the new `calendar_notes` columns and their checks, the notification kind `calendar.event`, `calendar_note_days`, `calendar_event_when`, `calendar_event_notify`, and `calendar_note_save`, `calendar_note_archive`, `calendar_note_get`, `list_calendar_entries` and `portal_list_calendar` with events). Server: `notes.functions.ts`, `calendar.functions.ts`, `schemas.ts`, `portal-calendar.functions.ts`. Screens: "Adicionar evento" in the day menu, `EventDialog`, the "Visível para o cliente" switch on dates, icons by type (camera, people, calendar) and the eye mark on shared entries, the legend, the details with place, visibility and internal notes, and the portal calendar with events and `PortalEventDialog`. Validation performed: 42 SQL assertions in `20_calendar_events.test.sql` (850 in total, 0 failures: validation of the event shape, shared versus internal, brand A versus brand B, a client reading no note straight from the table, internal notes never in the portal output, weekly and multi-day expansion, the notifications on create, change, hide and archive, collaborator and anon refused), typecheck, lint, Vitest. **Not applied to the linked project**; **not seen in a browser**; **not tested**: the event dialog with a daylight-saving time, a multi-day event in the month grid, the filter by event in the team calendar (events are always listed with the other notes).

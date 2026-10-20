@@ -10,7 +10,7 @@ Included: brand selection, pending dashboard, calendar, approval screen, externa
 
 > Changed on 2026-10-20: any approver of the brand can decide a request (no designated approver), and every request has a stage, planning or art, with a plan version that may carry planning files but never the art. See [approvals.md](approvals.md#approver-pool-decided-2026-10-20) and [content.md](content.md#two-stage-approval-decided-2026-10-20).
 
-> Planned change (decided 2026-10-20, not implemented): the portal calendar will also show the events the team marks as visible to the client (shoot days, meetings), read-only, with a detail dialog. See [calendar.md](calendar.md#events-shared-with-the-client-decided-2026-10-20-not-implemented).
+> Changed on 2026-10-20: the portal calendar also shows the events the team marks as visible to the client (shoot days, meetings) and the shared dates, read-only, with a detail dialog. See [calendar.md](calendar.md#events-shared-with-the-client-decided-2026-10-20).
 
 ## Access
 
@@ -179,3 +179,5 @@ Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (r
 2026-10-20: Added the shared notification bell to the portal header. Its "Ver todos" link opens the portal notifications route; it reuses the existing notification query and read/snooze actions. Files: `src/components/portal/portal-shell.tsx`, `src/components/shared/notifications/notification-bell.tsx`, `src/lib/shared/routes.ts`. Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: notification dropdown and actions in a browser with an external account.
 
 2026-10-20: Portal previews now use the configured brand logo in approval detail and calendar hover, plus the shared platform-and-format media frames, failed-media fallback and accessible carousel indicators. Files: `src/components/portal/approvals/portal-approval-page.tsx`, `src/components/portal/calendar/portal-calendar-entry-preview.tsx`, `src/components/shared/preview/revision-view.tsx`, shared preview rules in [channels.md](channels.md#platform-rules-preview-and-validation-guidance). Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: Vitest could not start because esbuild returned `spawn EPERM`; visual comparison with each live platform app or browser behavior for every media kind.
+
+2026-10-20: The portal calendar shows the shared events and dates (`portal_list_calendar` returns `events`), each with the icon of its type, and opens a read-only dialog (`PortalEventDialog`) with the time and zone, the place (a link when it is `https://`) and the description. The internal notes never reach the portal. Validation performed: the SQL assertions of `20_calendar_events.test.sql`, typecheck, lint. **Not tested**: the calendar in a browser.

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { noteIdSchema, saveNoteSchema } from "@/lib/marketing/calendar/schemas";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
-import { CalendarNoteKind, CalendarNoteRepeat } from "@/lib/shared/enums";
+import { CalendarEventType, CalendarNoteKind, CalendarNoteRepeat } from "@/lib/shared/enums";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 
 export type CalendarNote = {
@@ -13,8 +13,17 @@ export type CalendarNote = {
   title: string;
   description: string | null;
   noteDate: string;
+  endDate: string | null;
   repeat: CalendarNoteRepeat;
   convertedItemId: string | null;
+  eventType: CalendarEventType | null;
+  allDay: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  timezone: string | null;
+  location: string | null;
+  clientVisible: boolean;
+  internalNotes: string | null;
   archived: boolean;
   version: number;
 };
@@ -28,8 +37,17 @@ const noteSchema = z.object({
   title: z.string(),
   description: z.string().nullable(),
   note_date: z.string(),
+  end_date: z.string().nullable(),
   repeat: z.nativeEnum(CalendarNoteRepeat),
   converted_item_id: z.string().uuid().nullable(),
+  event_type: z.nativeEnum(CalendarEventType).nullable(),
+  all_day: z.boolean(),
+  starts_at: z.string().nullable(),
+  ends_at: z.string().nullable(),
+  timezone: z.string().nullable(),
+  location: z.string().nullable(),
+  client_visible: z.boolean(),
+  internal_notes: z.string().nullable(),
   archived: z.boolean(),
   version: z.number().int(),
 });
@@ -47,7 +65,16 @@ export const saveCalendarNote = createServerFn({ method: "POST" })
         title: data.title,
         description: data.description ?? null,
         note_date: data.noteDate,
+        end_date: data.endDate ?? null,
         repeat: data.repeat,
+        event_type: data.eventType ?? null,
+        all_day: data.allDay,
+        starts_at: data.startsAt ?? null,
+        ends_at: data.endsAt ?? null,
+        timezone: data.timezone ?? null,
+        location: data.location ?? null,
+        client_visible: data.clientVisible,
+        internal_notes: data.internalNotes ?? null,
         ...(data.expectedVersion === undefined ? {} : { expected_version: data.expectedVersion }),
       },
     });
@@ -86,8 +113,17 @@ export const getCalendarNote = createServerFn({ method: "GET" })
         title: parsed.title,
         description: parsed.description,
         noteDate: parsed.note_date,
+        endDate: parsed.end_date,
         repeat: parsed.repeat,
         convertedItemId: parsed.converted_item_id,
+        eventType: parsed.event_type,
+        allDay: parsed.all_day,
+        startsAt: parsed.starts_at,
+        endsAt: parsed.ends_at,
+        timezone: parsed.timezone,
+        location: parsed.location,
+        clientVisible: parsed.client_visible,
+        internalNotes: parsed.internal_notes,
         archived: parsed.archived,
         version: parsed.version,
       },

@@ -357,6 +357,15 @@ export type Database = {
           created_by: string | null
           created_at: string
           updated_at: string
+          event_type: string | null
+          all_day: boolean
+          end_date: string | null
+          starts_at: string | null
+          ends_at: string | null
+          timezone: string | null
+          location: string | null
+          client_visible: boolean
+          internal_notes: string | null
         }
         Insert: {
           id?: string
@@ -373,6 +382,15 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          event_type?: string | null
+          all_day?: boolean
+          end_date?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          timezone?: string | null
+          location?: string | null
+          client_visible?: boolean
+          internal_notes?: string | null
         }
         Update: {
           id?: string
@@ -389,6 +407,15 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          event_type?: string | null
+          all_day?: boolean
+          end_date?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          timezone?: string | null
+          location?: string | null
+          client_visible?: boolean
+          internal_notes?: string | null
         }
         Relationships: [
           {
@@ -2430,9 +2457,21 @@ export type Database = {
         Args: { p_brand: string | null; p_version: string | null }
         Returns: Json
       }
+      calendar_event_notify: {
+        Args: { p_note: string | null; p_change: string | null }
+        Returns: undefined
+      }
+      calendar_event_when: {
+        Args: { p_note: string | null }
+        Returns: string
+      }
       calendar_note_archive: {
         Args: { p_note: string | null }
         Returns: undefined
+      }
+      calendar_note_days: {
+        Args: { p_note_date: string | null; p_end_date: string | null; p_repeat: string | null; p_from: string | null; p_to: string | null; p_zone: string | null }
+        Returns: string[]
       }
       calendar_note_get: {
         Args: { p_note: string | null }

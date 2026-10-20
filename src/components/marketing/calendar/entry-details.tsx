@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Archive,
   CalendarClock,
+  Eye,
+  EyeOff,
   ExternalLink,
+  MapPin,
   Pencil,
   RefreshCw,
   TriangleAlert,
@@ -31,6 +34,7 @@ import { unwrapResult } from "@/lib/shared/result-client";
 import {
   calendarAlertLabels,
   calendarEntryKindLabels,
+  calendarEventTypeLabels,
   calendarNoteRepeatLabels,
   contentFormatLabels,
   platformLabels,
@@ -57,14 +61,19 @@ export function EntryDetails({
   canConvert: boolean;
   onClose: () => void;
 }) {
+  const isEvent = entry.kind === CalendarEntryKind.Event;
+  const eventStart = isEvent && !entry.allDay ? entry.startsAt : null;
+  const timeZone = entry.plannedTimezone ?? entry.timezone ?? zone;
   const when =
-    entry.at !== null
-      ? formatInZone(entry.at, entry.plannedTimezone ?? zone)
-      : entry.date !== null
-        ? formatDateOnly(entry.date)
-        : "—";
-  const timeZone = entry.plannedTimezone ?? zone;
-  const isNote = entry.kind === CalendarEntryKind.Idea || entry.kind === CalendarEntryKind.Date;
+    eventStart !== null
+      ? `${formatInZone(eventStart, timeZone)}${entry.endsAt ? ` até ${formatInZone(entry.endsAt, timeZone)}` : ""}`
+      : entry.at !== null
+        ? formatInZone(entry.at, timeZone)
+        : entry.date !== null
+          ? `${formatDateOnly(entry.date)}${entry.endDate ? ` a ${formatDateOnly(entry.endDate)}` : ""}`
+          : "—";
+  const isNote =
+    entry.kind === CalendarEntryKind.Idea || entry.kind === CalendarEntryKind.Date || isEvent;
   const content = useQuery({
     queryKey: QueryKey.Content.item(entry.itemId ?? ""),
     queryFn: async () =>
@@ -120,6 +129,46 @@ export function EntryDetails({
               ) : null}
             </dd>
           </div>
+          {isEvent && entry.eventType !== null ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <dt className="text-muted-foreground">Tipo</dt>
+              <dd>{calendarEventTypeLabels[entry.eventType]}</dd>
+            </div>
+          ) : null}
+          {isEvent && entry.location ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <dt className="text-muted-foreground">
+                <MapPin className="size-4" aria-label="Local" />
+              </dt>
+              <dd className="break-words">
+                {entry.location.startsWith("https://") ? (
+                  <a
+                    href={entry.location}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline-offset-4 hover:underline"
+                  >
+                    {entry.location}
+                  </a>
+                ) : (
+                  entry.location
+                )}
+              </dd>
+            </div>
+          ) : null}
+          {isNote && entry.kind !== CalendarEntryKind.Idea ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <dt className="text-muted-foreground">Cliente</dt>
+              <dd className="inline-flex items-center gap-1.5">
+                {entry.clientVisible ? (
+                  <Eye className="size-4" aria-hidden="true" />
+                ) : (
+                  <EyeOff className="size-4" aria-hidden="true" />
+                )}
+                {entry.clientVisible ? "Vê no portal" : "Só a equipe vê"}
+              </dd>
+            </div>
+          ) : null}
           {isNote && entry.repeat !== null ? (
             <div className="flex flex-wrap items-center gap-2">
               <dt className="text-muted-foreground">Repete</dt>
@@ -130,6 +179,12 @@ export function EntryDetails({
             <div>
               <dt className="sr-only">Descrição</dt>
               <dd className="whitespace-pre-wrap text-sm">{entry.description}</dd>
+            </div>
+          ) : null}
+          {isEvent && entry.internalNotes ? (
+            <div>
+              <dt className="text-muted-foreground">Notas internas</dt>
+              <dd className="whitespace-pre-wrap text-sm">{entry.internalNotes}</dd>
             </div>
           ) : null}
           {entry.editorialStatus !== null ? (
@@ -194,7 +249,7 @@ export function EntryDetails({
                   </Link>
                 </Button>
               ) : null}
-              {canConvert && entry.convertedItemId === null && entry.noteId !== null ? (
+              {canConvert && !isEvent && entry.convertedItemId === null && entry.noteId !== null ? (
                 <Button asChild>
                   <Link to="/admin/marketing/content/new" search={{ note: entry.noteId }}>
                     <RefreshCw aria-hidden="true" />

@@ -1,10 +1,13 @@
 import {
   CalendarClock,
   CalendarDays,
+  CalendarRange,
+  Camera,
   Hammer,
   Hourglass,
   Lightbulb,
   Send,
+  UsersRound,
   type LucideIcon,
 } from "lucide-react";
 import type { StatusTone } from "@/components/shared/admin/status-tones";
@@ -12,7 +15,12 @@ import { editorialStyle } from "@/components/shared/content/status-styles";
 import { entryDay, entryTime } from "@/lib/shared/calendar/entries";
 import { type GridItem, StatusMark } from "@/lib/shared/calendar/grid-item";
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
-import { type CalendarAlert, CalendarEntryKind, PublicationStatus } from "@/lib/shared/enums";
+import {
+  type CalendarAlert,
+  CalendarEntryKind,
+  CalendarEventType,
+  PublicationStatus,
+} from "@/lib/shared/enums";
 import {
   calendarAlertLabels,
   calendarEntryKindLabels,
@@ -27,7 +35,17 @@ const kindIcons: Record<CalendarEntryKind, LucideIcon> = {
   [CalendarEntryKind.ProductionDeadline]: Hammer,
   [CalendarEntryKind.Idea]: Lightbulb,
   [CalendarEntryKind.Date]: CalendarDays,
+  [CalendarEntryKind.Event]: CalendarRange,
 };
+
+const eventIcons: Record<CalendarEventType, LucideIcon> = {
+  [CalendarEventType.Shoot]: Camera,
+  [CalendarEventType.Meeting]: UsersRound,
+  [CalendarEventType.Other]: CalendarRange,
+};
+
+export const eventIconOf = (type: CalendarEventType | null): LucideIcon =>
+  type === null ? CalendarDays : eventIcons[type];
 
 const deadlineTones: Partial<Record<CalendarEntryKind, StatusTone>> = {
   [CalendarEntryKind.ApprovalDeadline]: "warning",
@@ -35,12 +53,16 @@ const deadlineTones: Partial<Record<CalendarEntryKind, StatusTone>> = {
   [CalendarEntryKind.Published]: "success",
   [CalendarEntryKind.Idea]: "warning",
   [CalendarEntryKind.Date]: "info",
+  [CalendarEntryKind.Event]: "info",
 };
 
 const isNote = (entry: CalendarEntry): boolean =>
-  entry.kind === CalendarEntryKind.Idea || entry.kind === CalendarEntryKind.Date;
+  entry.kind === CalendarEntryKind.Idea ||
+  entry.kind === CalendarEntryKind.Date ||
+  entry.kind === CalendarEntryKind.Event;
 
 const markOf = (entry: CalendarEntry): StatusMark | null => {
+  if (entry.clientVisible) return StatusMark.Shared;
   if (isNote(entry)) return entry.convertedItemId === null ? null : StatusMark.Converted;
   if (entry.kind === CalendarEntryKind.Published) return StatusMark.Published;
   if (entry.kind === CalendarEntryKind.Publication) {
@@ -86,9 +108,14 @@ export const toGridItem = (
         ? editorialStatusLabels[entry.editorialStatus]
         : isNote(entry) && entry.convertedItemId !== null
           ? "Convertida em conteúdo"
-          : calendarEntryKindLabels[entry.kind],
+          : entry.clientVisible
+            ? "Visível para o cliente"
+            : calendarEntryKindLabels[entry.kind],
     tone: style?.tone ?? deadlineTones[entry.kind] ?? "neutral",
-    icon: kindIcons[entry.kind],
+    icon:
+      entry.kind === CalendarEntryKind.Event && entry.eventType !== null
+        ? eventIcons[entry.eventType]
+        : kindIcons[entry.kind],
     movable,
     alerts: alerts.map((alert) => calendarAlertLabels[alert]),
     platform: entry.platform,

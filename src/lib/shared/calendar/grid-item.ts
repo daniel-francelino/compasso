@@ -7,6 +7,7 @@ export const StatusMark = {
   Published: "published",
   Scheduled: "scheduled",
   Converted: "converted",
+  Shared: "shared",
 } as const;
 export type StatusMark = ValueOf<typeof StatusMark>;
 

@@ -10,6 +10,7 @@ import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import type { CalendarEntry, UndatedEntry } from "@/lib/shared/calendar/types";
 import {
   CalendarEntryKind,
+  CalendarEventType,
   CalendarNoteRepeat,
   ContentFormat,
   EditorialStatus,
@@ -37,6 +38,15 @@ const entrySchema = z.object({
   description: z.string().nullable().optional(),
   repeat: z.nativeEnum(CalendarNoteRepeat).nullable().optional(),
   converted_item_id: z.string().uuid().nullable().optional(),
+  event_type: z.nativeEnum(CalendarEventType).nullable().optional(),
+  all_day: z.boolean().optional(),
+  end_date: z.string().nullable().optional(),
+  starts_at: z.string().nullable().optional(),
+  ends_at: z.string().nullable().optional(),
+  timezone: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  client_visible: z.boolean().optional(),
+  internal_notes: z.string().nullable().optional(),
   request_id: z.string().uuid().nullable().optional(),
   channel_id: z.string().uuid().nullable().optional(),
   platform: z.nativeEnum(Platform).nullable().optional(),
@@ -90,8 +100,19 @@ const toEntry = (row: z.infer<typeof entrySchema>): CalendarEntry => ({
   description: row.description ?? null,
   repeat: row.repeat ?? null,
   convertedItemId: row.converted_item_id ?? null,
+  eventType: row.event_type ?? null,
+  allDay: row.all_day ?? true,
+  endDate: row.end_date ?? null,
+  startsAt: row.starts_at ?? null,
+  endsAt: row.ends_at ?? null,
+  timezone: row.timezone ?? null,
+  location: row.location ?? null,
+  clientVisible: row.client_visible ?? false,
+  internalNotes: row.internal_notes ?? null,
   noteVersion:
-    row.kind === CalendarEntryKind.Idea || row.kind === CalendarEntryKind.Date
+    row.kind === CalendarEntryKind.Idea ||
+    row.kind === CalendarEntryKind.Date ||
+    row.kind === CalendarEntryKind.Event
       ? (row.version ?? null)
       : null,
   requestId: row.request_id ?? null,

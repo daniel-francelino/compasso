@@ -26,6 +26,7 @@ import {
 import { DayAddMenu } from "@/components/marketing/calendar/day-add-menu";
 import { EntryDetails } from "@/components/marketing/calendar/entry-details";
 import { ContentEditorPage } from "@/components/marketing/content/content-editor-page";
+import { EventDialog } from "@/components/marketing/calendar/event-dialog";
 import { type NoteDialogTarget, NoteDialog } from "@/components/marketing/calendar/note-dialog";
 import {
   type RescheduleTarget,
@@ -125,6 +126,11 @@ const undatedTarget = (entry: UndatedEntry, day: string | null): RescheduleTarge
   ...(day === null ? {} : { initialLocal: `${day}${DEFAULT_PLAN_TIME}` }),
 });
 
+const noteKindOf = (entry: CalendarEntry): CalendarNoteKind => {
+  if (entry.kind === CalendarEntryKind.Idea) return CalendarNoteKind.Idea;
+  return entry.kind === CalendarEntryKind.Event ? CalendarNoteKind.Event : CalendarNoteKind.Date;
+};
+
 export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const raw = calendarSearchSchema.parse(useSearch({ strict: false }));
@@ -188,7 +194,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(state.search.owner ? { ownerId: state.search.owner } : {}),
     ...(state.search.editorial ? { editorial: state.search.editorial } : {}),
     ...(state.search.publication ? { publication: state.search.publication } : {}),
-    notes: [CalendarNoteKind.Idea, CalendarNoteKind.Date],
+    notes: [CalendarNoteKind.Idea, CalendarNoteKind.Date, CalendarNoteKind.Event],
   };
   const query = useQuery({
     queryKey: QueryKey.Calendar.entries(request),
@@ -278,8 +284,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
 
   function editNote(entry: CalendarEntry) {
     if (entry.noteId === null || entry.noteVersion === null) return;
-    const kind =
-      entry.kind === CalendarEntryKind.Idea ? CalendarNoteKind.Idea : CalendarNoteKind.Date;
+    const kind = noteKindOf(entry);
     setSelectedKey(null);
     setNoteTarget({
       kind,
@@ -292,8 +297,17 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         title: entry.title,
         description: entry.description,
         noteDate: entry.date ?? todayInZone(activeZone),
+        endDate: entry.endDate,
         repeat: entry.repeat ?? CalendarNoteRepeat.None,
         convertedItemId: entry.convertedItemId,
+        eventType: entry.eventType,
+        allDay: entry.allDay,
+        startsAt: entry.startsAt,
+        endsAt: entry.endsAt,
+        timezone: entry.timezone,
+        location: entry.location,
+        clientVisible: entry.clientVisible,
+        internalNotes: entry.internalNotes,
         archived: false,
         version: entry.noteVersion,
       },
@@ -501,7 +515,14 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           onClose={() => setSelectedKey(null)}
         />
       ) : null}
-      {noteTarget ? (
+      {noteTarget && noteTarget.kind === CalendarNoteKind.Event ? (
+        <EventDialog
+          key={noteTarget.note?.id ?? `new-event-${noteTarget.day}`}
+          target={noteTarget}
+          onOpenChange={(open) => !open && setNoteTarget(null)}
+        />
+      ) : null}
+      {noteTarget && noteTarget.kind !== CalendarNoteKind.Event ? (
         <NoteDialog
           key={noteTarget.note?.id ?? "new-" + noteTarget.kind + "-" + noteTarget.day}
           target={noteTarget}

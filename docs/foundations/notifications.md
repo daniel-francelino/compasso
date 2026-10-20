@@ -32,6 +32,7 @@ Each kind requires an **action** and, when the subject belongs to a brand, a **b
 | `content.overdue` | A production deadline passed and the content is not ready | The content owner and managers of the brand | Scheduled | Daily until resolved |
 | `content.publish_due` | The planned date of a channel row passed with no manual publication recorded | The content owner (`content.publish_manual`) | Scheduled | The day after |
 | `comment.created` | A comment on a content the person follows | Participants (internal: `comments.create_internal`; external: `comments.create_external`) | Event | Immediate |
+| `calendar.event` | A calendar event or date shared with the client was created, changed, hidden or archived | The client members of the brand (`portal.view`) | Event | Immediate |
 | `invitation.accepted` | An invitation was accepted | Whoever invited (`users.view`) | Event | Immediate |
 | `invitation.expiring` | A pending invitation expires soon | Whoever invited | Scheduled | 1 day before |
 | `site.published` | A site version was published or restored | People with `site.publish` | Event | Immediate |
@@ -93,6 +94,7 @@ The "next content, deadlines and pending approvals" block of the dashboard reuse
 | `approval.overdue` | Aprovação atrasada | "A aprovação de «Lançamento de outono» está pendente desde 12 de outubro." |
 | `content.due_soon` | Prazo de produção chegando | "«Lançamento de outono» deve ficar pronto em 2 dias." |
 | `content.publish_due` | Hora de registrar a publicação | "«Lançamento de outono» estava planejado para ontem às 10h. Já foi publicado?" |
+| `calendar.event` | Novo evento no calendário / Evento alterado / Evento cancelado | "«Reunião de alinhamento» · 21/10/2026 13:00 (America/Sao_Paulo)" |
 | `invitation.accepted` | Convite aceito | "Marta Silva aceitou o convite e já pode acessar." |
 | `site.published` | Site publicado | "A versão 12 do site está no ar." |
 
