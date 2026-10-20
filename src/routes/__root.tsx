@@ -32,24 +32,24 @@ function pageTitle(routeId: string) {
     .split("/")
     .filter((part) => part && part !== "index" && !part.startsWith("$") && !part.startsWith("("))
     .at(-1);
-  if (!segment || segment === "__root") return "In?cio";
+  if (!segment || segment === "__root") return "Início";
   const names: Record<string, string> = {
     brands: "Marcas",
     clients: "Clientes",
-    content: "Conte?dos",
-    calendar: "Calend?rio",
-    approvals: "Aprova??es",
-    settings: "Configura??es",
-    library: "Biblioteca de M?dia",
+    content: "Conteúdos",
+    calendar: "Calendário",
+    approvals: "Aprovações",
+    settings: "Configurações",
+    library: "Biblioteca de Mídia",
     profile: "Meu perfil",
     users: "Pessoas",
     roles: "Perfis",
     audit: "Auditoria",
-    pages: "P?ginas",
-    services: "Servi?os",
-    portfolio: "Portf?lio",
+    pages: "Páginas",
+    services: "Serviços",
+    portfolio: "Portfólio",
     messages: "Mensagens",
-    site: "Vis?o geral",
+    site: "Visão geral",
     notifications: "Avisos",
     login: "Entrar",
     "recover-password": "Recuperar senha",

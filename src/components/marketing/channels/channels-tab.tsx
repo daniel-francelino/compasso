@@ -149,7 +149,7 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
                   <span className="inline-flex size-10 items-center justify-center rounded-xl bg-secondary text-foreground">
                     <PlatformIcon platform={platform} className="size-6" />
                   </span>
-                  <span className="min-w-0 space-y-1">
+                  <span className="w-full min-w-0 space-y-1">
                     <span className="block truncate text-sm font-medium text-foreground">
                       {platformLabels[platform]}
                     </span>

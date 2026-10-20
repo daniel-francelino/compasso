@@ -47,7 +47,7 @@ function InvitePage() {
 
   return (
     <AuthShell
-      title="Bem-vindo(a) ? Aura Creative"
+      title="Bem-vindo(a) à Aura Creative"
       description="Você foi convidado(a) para acessar a Aura Creative. Defina uma senha para entrar."
     >
       <form
