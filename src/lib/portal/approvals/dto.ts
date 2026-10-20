@@ -18,6 +18,8 @@ export const portalRequestRowSchema = z.object({
   stage: z.nativeEnum(ApprovalStage),
   status: z.nativeEnum(ApprovalRequestStatus),
   title: z.string(),
+  objective_kind: z.string().nullable().optional(),
+  plan_summary: z.string().nullable().optional(),
   channels: z.array(portalChannelSchema),
   media: z.array(
     z.object({

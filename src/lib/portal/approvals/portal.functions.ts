@@ -72,6 +72,8 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
     hasThumb: item.has_thumb,
     hasDisplay: item.has_display,
   })),
+  objectiveKind: (row.objective_kind ?? null) as ContentObjective | null,
+  planSummary: row.plan_summary ?? null,
   brandTimezone: row.brand_timezone,
   revisionNo: row.revision_no,
   dueDate: row.due_date,

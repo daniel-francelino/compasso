@@ -22,7 +22,7 @@
 | `approver_is_valid(p_brand uuid, p_user uuid)` | boolean | internal: active external member of the brand with `can_decide`, approved account and a role that holds `approvals.decide` |
 | `content_check_media(p_brand uuid, p_media jsonb)` / `content_normalize_media(p_media jsonb)` / `content_check_channel(p_brand uuid, p_channel uuid)` | void / jsonb / void | internal: raise `media_not_available`, `invalid_input`, `channel_brand_mismatch`, `channel_archived` |
 | `content_cancel_pending_requests(p_item uuid, p_reason text)` / `content_channels_signature(p_item uuid)` | void / jsonb | internal: cancels the pending requests of a content; the signature of its active channel rows (used to refuse changes to an approved content) |
-| `portal_assert_member(p_brand uuid)` / `portal_request_row(p_request approval_requests)` | void / jsonb | internal helpers of the portal functions (not callable by `authenticated`) |
+| `portal_assert_member(p_brand uuid)` / `portal_request_row(p_request approval_requests)` | void / jsonb | internal helpers of the portal functions (not callable by `authenticated`); the row carries `objective_kind` and `plan_summary` from the version snapshot (migration `20261020130000_portal_request_plan_summary.sql`) |
 | `notification_lead_days(p_user uuid, p_kind text)` | int[] | the person's lead days or the kind default (used by scanners) |
 | `generate_due_notifications()` | jsonb | runs every `notify_scan_*` function and cleans old notifications (`pg_cron`); `notify_scan_invitations()` expires invitations and creates `invitation.expiring` |
 | `audit_write(p_org uuid, p_brand uuid, p_action text, p_entity_type text, p_entity_id uuid, p_metadata jsonb)` | void | single audit writer; validates `p_action` against the catalog |

@@ -97,7 +97,7 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.item', public.content_item_save(pg_temp.body(null, 'Resumo do plano', null, false))::jsonb ->> 'id', true);
 select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'planning', 'a new content starts in planning');
 select is((select plan_required from public.content_items where id = current_setting('t.item')::uuid), true, 'and remembers that its plan is required');
-select throws_ok(format($$select public.content_item_save('%s'::jsonb)$$, pg_temp.body(current_setting('t.item')::uuid, 'Resumo do plano', null, true)), 'plan_not_approved', 'art files are refused before the plan is approved');
+select lives_ok(format($$select public.content_item_save('%s'::jsonb)$$, pg_temp.body(current_setting('t.item')::uuid, 'Resumo do plano', null, true)), 'art files can be attached before the plan is approved');
 select throws_ok(format($$select public.content_move('%s', 'in_production', %s)$$, current_setting('t.item'), pg_temp.ver(current_setting('t.item')::uuid)), 'transition_not_allowed', 'the art cannot start from planning');
 select throws_ok(format($$select public.submit_for_approval('%s', null, null, %s)$$, current_setting('t.item'), pg_temp.ver(current_setting('t.item')::uuid)), 'plan_incomplete', 'a plan without a planned date cannot be sent');
 select lives_ok(format($$select public.content_item_save('%s'::jsonb)$$, pg_temp.body(current_setting('t.item')::uuid, 'Resumo do plano', current_setting('t.date1'), false)), 'the plan gets a planned date');

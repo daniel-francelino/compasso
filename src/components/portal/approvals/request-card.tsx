@@ -1,6 +1,7 @@
 import { ClipboardList, Maximize2 } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 import { PortalApprovalDialog } from "@/components/portal/approvals/portal-approval-dialog";
+import { PlanRequestSummary } from "@/components/portal/approvals/plan-request-summary";
 import { RequestDecisionActions } from "@/components/portal/approvals/request-decision-actions";
 import { RequestPreview } from "@/components/portal/approvals/request-preview";
 import { ResponseDeadlineBadge } from "@/components/portal/approvals/response-deadline-badge";
@@ -10,6 +11,7 @@ import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
+import { ApprovalStage } from "@/lib/shared/enums";
 import { approvalStageLabels } from "@/lib/shared/labels";
 
 const INTERACTIVE = "button, a, input, textarea, select, video, audio, [role=tab], [role=button]";
@@ -50,7 +52,11 @@ export function RequestCard({
         </span>
       </div>
       <div className="cursor-pointer" onClick={openFromPreview}>
-        <RequestPreview request={request} brandId={brandId} urls={mediaUrls} />
+        {request.stage === ApprovalStage.Plan ? (
+          <PlanRequestSummary request={request} />
+        ) : (
+          <RequestPreview request={request} brandId={brandId} urls={mediaUrls} />
+        )}
       </div>
       {request.decidedByName ? (
         <p className="text-center text-sm text-muted-foreground">

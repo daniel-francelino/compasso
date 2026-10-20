@@ -23,7 +23,6 @@ import { RevisionHistory } from "@/components/marketing/content/revision-history
 import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
 import { PlanSection } from "@/components/marketing/content/plan-section";
-import { StageStepper } from "@/components/marketing/content/stage-stepper";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { FormError } from "@/components/shared/admin/auth-shell";
@@ -118,7 +117,6 @@ export function ContentEditor({
   const canWrite = can(auth, isNew ? Action.Content.Create : Action.Content.Update);
   const editable = canWrite && !cancelled && !approved;
   const state = stageStateOf(
-    editorialStatus,
     content?.planRequired ?? true,
     content?.planApprovedRevisionId ?? null,
   );
@@ -280,6 +278,7 @@ export function ContentEditor({
       className="space-y-6"
       onSubmit={(event) => {
         event.preventDefault();
+        if (event.target !== event.currentTarget) return;
         void save(false);
       }}
     >
@@ -309,7 +308,6 @@ export function ContentEditor({
           actions={content ? <EditorialStatusBadge status={editorialStatus} /> : null}
         />
       )}
-      <StageStepper state={state} />
       <ContentActions
         status={editorialStatus}
         state={state}
@@ -404,25 +402,14 @@ export function ContentEditor({
               errors={errors}
             />
           </SectionCard>
-          <SectionCard
-            title="4. Artes e mídias"
-            icon={FileImage}
-            {...(state.artLocked
-              ? {
-                  tip: {
-                    label: "Sobre as artes",
-                    content: "Liberado depois que o cliente aprovar o planejamento.",
-                  },
-                }
-              : {})}
-          >
+          <SectionCard title="4. Artes e mídias" icon={FileImage}>
             <FileStrip
               items={values.files}
               onChange={(items) => draft.set("files", items)}
               brandId={values.brandId}
               formats={formats}
-              disabled={!editable || saving || values.brandId === "" || state.artLocked}
-              error={errors["media"] ?? fileProblem ?? undefined}
+              disabled={!editable || saving || values.brandId === ""}
+              error={errors["media"] ?? (values.files.length > 0 ? fileProblem : null) ?? undefined}
             />
           </SectionCard>
           <SectionCard title="5. Data e horário das publicações" icon={Calendar}>

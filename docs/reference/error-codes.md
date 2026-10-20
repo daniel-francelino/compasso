@@ -71,7 +71,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `transition_not_allowed` | invalid | "Esta mudança de estado não é permitida." | content functions |
 | `media_not_available` | invalid | "Há arquivos que ainda não estão disponíveis." | `submit_for_approval` |
 | `approver_required` | invalid | "Ninguém da marca pode aprovar ainda. Convide um aprovador para continuar." | `submit_for_approval`, `send_approval_reminder`, `reschedule_channel` |
-| `plan_not_approved` | invalid | "Aguarde a aprovação do planejamento para enviar as artes." | `content_item_save`, `content_move`, `submit_for_approval` |
+| `plan_not_approved` | invalid | "Aguarde a aprovação do planejamento para enviar as artes." | `content_move`, `submit_for_approval` |
 | `plan_locked` | invalid | "O planejamento já foi aprovado. Reabra o planejamento para mudar canais, formatos ou datas." | `content_item_save`, `reschedule_channel` |
 | `plan_incomplete` | invalid | "Para enviar o planejamento, escolha ao menos um canal com data e horário." | `submit_for_approval` |
 | `not_approved` | invalid | "Só é possível registrar a publicação de uma versão aprovada." | `mark_published` |

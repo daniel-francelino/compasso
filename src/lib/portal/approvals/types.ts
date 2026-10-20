@@ -49,6 +49,8 @@ export type PortalRequest = {
   stage: ApprovalStage;
   status: ApprovalRequestStatus;
   title: string;
+  objectiveKind: ContentObjective | null;
+  planSummary: string | null;
   channels: PortalChannel[];
   media: PortalMedia[];
   brandTimezone: string | null;
