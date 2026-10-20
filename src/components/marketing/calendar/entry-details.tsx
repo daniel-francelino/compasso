@@ -9,6 +9,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { WhyDisabled } from "@/components/shared/admin/why-disabled";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { entrySubtitle } from "@/components/shared/calendar/entry-items";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
@@ -62,6 +63,7 @@ export function EntryDetails({
       : entry.date !== null
         ? formatDateOnly(entry.date)
         : "—";
+  const timeZone = entry.plannedTimezone ?? zone;
   const isNote = entry.kind === CalendarEntryKind.Idea || entry.kind === CalendarEntryKind.Date;
   const content = useQuery({
     queryKey: QueryKey.Content.item(entry.itemId ?? ""),
@@ -111,7 +113,12 @@ export function EntryDetails({
         <dl className="grid gap-2 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <dt className="text-muted-foreground">Quando</dt>
-            <dd className="font-medium">{when}</dd>
+            <dd className="inline-flex items-center gap-1.5 font-medium">
+              {when}
+              {entry.at !== null ? (
+                <InfoTip label={`Fuso horário: ${timeZone}`}>Fuso horário: {timeZone}</InfoTip>
+              ) : null}
+            </dd>
           </div>
           {isNote && entry.repeat !== null ? (
             <div className="flex flex-wrap items-center gap-2">

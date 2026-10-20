@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
+import type { ContentObjective } from "@/lib/shared/enums";
 import { EXTERNAL_URL_SECONDS } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import {
@@ -48,6 +49,7 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
   id: row.id,
   itemId: row.item_id,
   revisionId: row.revision_id,
+  stage: row.stage,
   status: row.status,
   title: row.title,
   channels: row.channels.map((channel) => ({
@@ -75,9 +77,8 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
   dueDate: row.due_date,
   requestedAt: row.requested_at,
   decidedAt: row.decided_at,
-  isMine: row.is_mine,
   canDecide: row.can_decide,
-  approverName: row.approver_name,
+  decidedByName: row.decided_by_name,
 });
 
 const statusParam = (status: string | undefined): string | null =>
@@ -200,7 +201,8 @@ export const getPortalApproval = createServerFn({ method: "GET" })
         revisionId: parsed.revision_id,
         isCurrent: parsed.is_current,
         currentRequestId: parsed.current_request_id,
-        isDesignated: parsed.is_designated,
+        planSummary: parsed.plan_summary ?? null,
+        objectiveKind: (parsed.objective_kind ?? null) as ContentObjective | null,
         canDecide: parsed.can_decide,
         media: parsed.media.map((item) => ({
           versionId: item.version_id,
@@ -352,7 +354,8 @@ export const signPortalPreviewMedia = createServerFn({ method: "POST" })
       media.push(...lookup.list);
     }
 
-    const keyOf = (row: (typeof media)[number]): string | null => row.thumb_key ?? row.display_key;
+    const keyOf = (row: (typeof media)[number]): string | null =>
+      row.display_key ?? row.storage_key;
     const signed = await storage.signUrls(
       media.map(keyOf).filter((key): key is string => key !== null),
       EXTERNAL_URL_SECONDS,

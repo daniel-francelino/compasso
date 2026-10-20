@@ -57,7 +57,6 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `brand_not_empty` | in_use | "Esta marca tem histórico. Arquive em vez de excluir." | `brand_delete` |
 | `member_kind_mismatch` | invalid | "O tipo do vínculo não corresponde ao tipo do usuário." | `brand_member_set` |
 | `last_internal_member` | invalid | "A marca precisa manter ao menos um membro interno." | `brand_member_set` |
-| `approver_without_access` | invalid | "O aprovador designado não tem mais acesso. Escolha outro." | brand member changes, decide |
 | `channel_duplicate` | invalid | "Este perfil já está cadastrado nesta marca." | `channel_save` |
 | `channel_in_use` | in_use | "Este canal já foi usado. Arquive em vez de excluir." | `channel_delete` |
 | `channel_required` | invalid | "Escolha ao menos um canal para enviar." | `submit_for_approval` |
@@ -71,14 +70,16 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 |---|---|---|---|
 | `transition_not_allowed` | invalid | "Esta mudança de estado não é permitida." | content functions |
 | `media_not_available` | invalid | "Há arquivos que ainda não estão disponíveis." | `submit_for_approval` |
-| `approver_required` | invalid | "Escolha quem vai aprovar." | `submit_for_approval` |
+| `approver_required` | invalid | "Ninguém da marca pode aprovar ainda. Convide um aprovador para continuar." | `submit_for_approval`, `send_approval_reminder`, `reschedule_channel` |
+| `plan_not_approved` | invalid | "Aguarde a aprovação do planejamento para enviar as artes." | `content_item_save`, `content_move`, `submit_for_approval` |
+| `plan_locked` | invalid | "O planejamento já foi aprovado. Reabra o planejamento para mudar canais, formatos ou datas." | `content_item_save`, `reschedule_channel` |
+| `plan_incomplete` | invalid | "Para enviar o planejamento, escolha ao menos um canal com data e horário." | `submit_for_approval` |
 | `not_approved` | invalid | "Só é possível registrar a publicação de uma versão aprovada." | `mark_published` |
 | `requires_new_revision` | invalid | "Alterar isto exige uma nova versão e nova aprovação." | `content_item_save` (editing an approved content) |
 | `reason_required` | invalid | "Informe o motivo." | `reopen_content`, `cancel_request` |
 | `request_not_pending` | conflict | "Este pedido não está mais pendente." | `portal_decide_approval` |
 | `revision_superseded` | conflict | "Esta versão foi atualizada. Veja a versão atual." | `portal_decide_approval` |
 | `comment_required` | invalid | "Escreva um comentário para pedir alterações." | `portal_decide_approval` |
-| `not_designated_approver` | denied | "A decisão é de outra pessoa. Você pode comentar." | `portal_decide_approval` |
 | `date_in_past` | invalid | "A data escolhida já passou." | warning of the reschedule dialog (never raised by SQL) |
 | `local_time_nonexistent` | invalid | "Este horário não existe nesse dia (mudança de horário de verão)." | date conversion in TypeScript (`resolveLocalTime`) |
 | `local_time_ambiguous` | invalid | "Este horário acontece duas vezes nesse dia. Escolha qual." | date conversion in TypeScript (`resolveLocalTime`) |

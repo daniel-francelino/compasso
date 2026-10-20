@@ -8,6 +8,7 @@ import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
+import { approvalStageLabels } from "@/lib/shared/labels";
 
 export function RevisionHistory({ requests }: { requests: RequestRow[] }) {
   const auth = useAuth();
@@ -25,7 +26,9 @@ export function RevisionHistory({ requests }: { requests: RequestRow[] }) {
           {requests.map((request) => (
             <li key={request.id} className="space-y-1 rounded-xl border border-border p-3 text-sm">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">Versão {request.revisionNo}</span>
+                <span className="font-medium">
+                  {approvalStageLabels[request.stage]} · Versão {request.revisionNo}
+                </span>
                 <RequestStatusBadge status={request.status} />
                 {can(auth, Action.Approvals.View) ? (
                   <Link
@@ -39,8 +42,8 @@ export function RevisionHistory({ requests }: { requests: RequestRow[] }) {
               </div>
               <p className="text-muted-foreground">
                 Enviada em {formatDateTime(request.requestedAt)}
-                {request.requestedByName ? ` por ${request.requestedByName}` : ""} para{" "}
-                {request.approverName ?? "o aprovador"}
+                {request.requestedByName ? ` por ${request.requestedByName}` : ""} para a aprovação
+                da marca
                 {request.dueDate ? ` · prazo ${formatDateOnly(request.dueDate)}` : ""}
               </p>
               {request.decidedAt ? (

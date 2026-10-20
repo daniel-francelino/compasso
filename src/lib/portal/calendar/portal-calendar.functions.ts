@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import type { PortalCalendarEntry } from "@/lib/shared/calendar/types";
-import { ApprovalRequestStatus, Platform } from "@/lib/shared/enums";
+import { ApprovalRequestStatus, ApprovalStage, Platform } from "@/lib/shared/enums";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 
 const requestSchema = z.object({
@@ -24,7 +24,7 @@ const listSchema = z.object({
       planned_at: z.string(),
       planned_timezone: z.string(),
       brand_timezone: z.string(),
-      is_mine: z.boolean(),
+      stage: z.nativeEnum(ApprovalStage),
     }),
   ),
 });
@@ -57,7 +57,7 @@ export const listPortalCalendar = createServerFn({ method: "GET" })
           plannedAt: row.planned_at,
           plannedTimezone: row.planned_timezone,
           brandTimezone: row.brand_timezone,
-          isMine: row.is_mine,
+          stage: row.stage,
         })),
       };
     },

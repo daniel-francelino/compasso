@@ -141,6 +141,10 @@ export type MediaVersionStatus = ValueOf<typeof MediaVersionStatus>;
 
 export const EditorialStatus = {
   Draft: "draft",
+  Planning: "planning",
+  AwaitingPlanApproval: "awaiting_plan_approval",
+  PlanChangesRequested: "plan_changes_requested",
+  PlanApproved: "plan_approved",
   InProduction: "in_production",
   InternalReview: "internal_review",
   AwaitingApproval: "awaiting_approval",
@@ -189,6 +193,12 @@ export const ApprovalRequestStatus = {
   Cancelled: "cancelled",
 } as const;
 export type ApprovalRequestStatus = ValueOf<typeof ApprovalRequestStatus>;
+
+export const ApprovalStage = {
+  Plan: "plan",
+  Art: "art",
+} as const;
+export type ApprovalStage = ValueOf<typeof ApprovalStage>;
 
 export const ApprovalOutcome = {
   Approved: "approved",

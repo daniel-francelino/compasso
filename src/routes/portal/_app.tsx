@@ -20,6 +20,7 @@ export const Route = createFileRoute("/portal/_app")({
 
     return { auth };
   },
+  staleTime: 30_000,
   component: PortalLayout,
 });
 

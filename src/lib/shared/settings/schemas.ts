@@ -9,7 +9,10 @@ const days = (label: string, min: number, max: number) =>
     .max(max);
 
 export const policySchemas = {
-  [SettingKey.Approvals]: z.object({ deadlineDays: days("o prazo", 1, 60) }),
+  [SettingKey.Approvals]: z.object({
+    deadlineDays: days("o prazo", 1, 60),
+    requirePlanApproval: z.boolean().default(true),
+  }),
   [SettingKey.Calendar]: z.object({ weekStartsOnMonday: z.boolean() }),
   [SettingKey.Uploads]: z.object({
     maxImageMb: days("o limite de imagem", 1, 100),
@@ -28,7 +31,7 @@ export const policySchemas = {
 } as const;
 
 export const policyDefaults = {
-  [SettingKey.Approvals]: { deadlineDays: 3 },
+  [SettingKey.Approvals]: { deadlineDays: 3, requirePlanApproval: true },
   [SettingKey.Calendar]: { weekStartsOnMonday: true },
   [SettingKey.Uploads]: { maxImageMb: 25, maxVideoMb: 100, maxDocumentMb: 50, quotaMb: 10240 },
   [SettingKey.Urls]: { httpsOnly: true },

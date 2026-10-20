@@ -81,7 +81,12 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Move between statuses | "Mover para…" (menu), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
 | Add more days and times to a channel | "Incluir mais dias e horários" |
 | Convert a note | "Converter em conteúdo" |
-| Remind / reassign the approver | "Reenviar lembrete" / "Reatribuir aprovador" |
+| Remind the approvers | "Reenviar lembrete" |
+| Planning / Art (approval stage) | "Planejamento" / "Artes" |
+| Start planning / start the art | "Iniciar planejamento" / "Iniciar produção das artes" |
+| Send the plan / the art for approval | "Enviar planejamento para aprovação" / "Enviar artes para aprovação" |
+| Reopen the plan | "Reabrir planejamento" |
+| Who can approve | "Quem pode aprovar" / "Quem será avisado" |
 | Cancel an item | "Cancelar conteúdo" / "Cancelar pedido" |
 | Resend | "Reenviar" |
 | Brand switcher (portal) | "Suas marcas" / "Trocar de marca" (accessible name of the trigger) |

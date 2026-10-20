@@ -3,7 +3,11 @@ import { useRef, useState, type ReactNode } from "react";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import { Skeleton } from "@/components/shared/ui/skeleton";
-import { getPortalApproval, signPortalPreviewMedia } from "@/lib/portal/approvals/portal.functions";
+import {
+  getPortalApproval,
+  getPortalBrand,
+  signPortalPreviewMedia,
+} from "@/lib/portal/approvals/portal.functions";
 import type { PortalApproval } from "@/lib/portal/approvals/types";
 import type { GridItem } from "@/lib/shared/calendar/grid-item";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
@@ -29,6 +33,13 @@ export function PortalCalendarEntryPreview({
     queryFn: async () =>
       unwrapResult(await getPortalApproval({ data: { id: requestId } })).approval,
     enabled: open,
+    staleTime: 60_000,
+  });
+  const brandId = approval.data?.brandId ?? "";
+  const brand = useQuery({
+    queryKey: QueryKey.Portal.brand(brandId),
+    queryFn: async () => unwrapResult(await getPortalBrand({ data: { brandId } })).brand,
+    enabled: open && brandId !== "",
     staleTime: 60_000,
   });
   const mediaUrls = useQuery({
@@ -79,6 +90,7 @@ export function PortalCalendarEntryPreview({
           format={channel.format as ContentFormat}
           caption={channel.caption ?? data.caption}
           callToAction={data.callToAction}
+          brandLogoUrl={brand.data?.logoUrl ?? null}
           media={data.media.map((media) => ({
             versionId: media.versionId,
             kind: kindOfMime(media.mimeType),

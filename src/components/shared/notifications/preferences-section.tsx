@@ -11,11 +11,13 @@ export function PreferencesFields({
   drafts,
   onChange,
   disabled,
+  channelLabel,
 }: {
   rows: PreferenceRow[];
   drafts: Record<string, PreferenceDraft>;
   onChange: (kind: string, patch: Partial<PreferenceDraft>) => void;
   disabled: boolean;
+  channelLabel: string;
 }) {
   if (rows.length === 0) {
     return (
@@ -45,7 +47,7 @@ export function PreferencesFields({
                   disabled={disabled}
                   onCheckedChange={(enabled) => onChange(row.kind, { enabled })}
                 />
-                <Label htmlFor={`pref-${row.kind}`}>No Compasso</Label>
+                <Label htmlFor={`pref-${row.kind}`}>{channelLabel}</Label>
               </span>
               <span className="flex items-center gap-2">
                 <Switch

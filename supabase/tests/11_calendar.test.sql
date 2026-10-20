@@ -44,6 +44,10 @@ from (values
 ) as u (id, name, email, kind, role_key)
 join public.roles r on r.key = u.role_key;
 
+insert into public.organization_settings (key, value)
+values ('policies.approvals', '{"deadlineDays":3,"requirePlanApproval":false}')
+on conflict (key) do update set value = excluded.value;
+
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select public.client_save('{"name":"Cafe Aurora"}'::jsonb, true);
 select set_config('t.brand', (select id::text from public.brands where name = 'Cafe Aurora'), true);
@@ -122,7 +126,7 @@ select throws_ok(format($$select public.reschedule_production_deadline('%s', cur
 select throws_ok(format($$select public.reschedule_production_deadline('%s', null, 2)$$, current_setting('t.item1')), 'invalid_input', 'a missing deadline is refused');
 
 select public.content_move(current_setting('t.item1')::uuid, 'in_production', pg_temp.ver(current_setting('t.item1')::uuid));
-select set_config('t.sub1', public.submit_for_approval(current_setting('t.item1')::uuid, '00000000-0000-0000-0000-0000000000d1', current_setting('t.today')::date + 2, null, pg_temp.ver(current_setting('t.item1')::uuid))::text, true);
+select set_config('t.sub1', public.submit_for_approval(current_setting('t.item1')::uuid, current_setting('t.today')::date + 2, null, pg_temp.ver(current_setting('t.item1')::uuid))::text, true);
 select is(pg_temp.kinds(public.list_calendar_entries(current_setting('t.from')::timestamptz, current_setting('t.to')::timestamptz) -> 'entries'), 'approval_deadline,production_deadline,publication', 'a pending request adds its deadline');
 
 select is((public.reschedule_channel(current_setting('t.row1')::uuid, now() + interval '6 days', 'America/Sao_Paulo', pg_temp.rowver(current_setting('t.row1')::uuid)) ->> 'resubmitted')::boolean, true, 'a content awaiting approval gets a new revision');
@@ -161,7 +165,7 @@ select is((select editorial_status from public.content_items where id = current_
 select is((select approved_revision_id from public.content_items where id = current_setting('t.item1')::uuid), null, 'and is no longer approved');
 
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', false, 'active');
-select throws_ok(format($$select public.reschedule_channel('%s', now() + interval '8 days', 'America/Sao_Paulo', %s)$$, current_setting('t.row1'), pg_temp.rowver(current_setting('t.row1')::uuid)), 'approver_without_access', 'an approver who lost the right to decide blocks a resubmission');
+select throws_ok(format($$select public.reschedule_channel('%s', now() + interval '8 days', 'America/Sao_Paulo', %s)$$, current_setting('t.row1'), pg_temp.rowver(current_setting('t.row1')::uuid)), 'approver_required', 'a brand with nobody who can decide blocks a resubmission');
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', true, 'active');
 
 select set_config('t.idea', public.calendar_note_save(format('{"brand_id":"%s","kind":"idea","title":"Receita de outono","description":"Post com a receita","note_date":"%s"}', current_setting('t.brand'), current_setting('t.today')::date + 5)::jsonb) ->> 'id', true);

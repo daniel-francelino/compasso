@@ -30,16 +30,19 @@ Each platform has a descriptor in `shared/preview` used by the content editor (t
 
 | Platform | Formats offered | Caption guidance | Preview |
 |---|---|---|---|
-| Instagram | image, carousel, video/reel, story | ~2,200 characters; first 125 visible before "mais" | Square/portrait frame, caption truncation, carousel dots |
-| Facebook | image, carousel, video, text | long text allowed | Feed card |
-| LinkedIn | image, carousel (document), video, text, article | ~3,000 characters; first lines visible | Feed card |
-| TikTok | video | ~2,200 characters | Vertical frame |
-| YouTube | video | title + description | Thumbnail + description |
-| X / Threads | text, image | ~280 / ~500 characters | Post card |
-| Pinterest | image | description | Pin |
-| Email | text, image | subject + body | Email card |
-| Blog | article, image | title + body | Article card |
-| Other | any | none | Generic card |
+| Instagram | image, carousel, video, story, reel | ~2,200 characters; first 125 visible before "mais" | Feed image 4:5; story/reel 9:16; caption truncation and carousel controls |
+| Facebook | text, image, carousel, video, story, reel | Long text allowed | Image/carousel 1:1; video 16:9; story/reel 9:16 |
+| LinkedIn | text, image, carousel, video, article | ~3,000 characters; first lines visible | Image/carousel 4:5; video/article 16:9 |
+| TikTok | video, reel | ~2,200 characters | Vertical 9:16 player |
+| YouTube | video, reel, text | Title + description | Video 16:9; Short 9:16 |
+| X | text, image, video | ~280 characters | Image 1:1; video 16:9 |
+| Threads | text, image, carousel, video | ~500 characters | Feed image/video 4:5 |
+| Pinterest | image, carousel, video | Description | Pin 2:3; full-screen video 9:16 |
+| Email | text, article, image | Subject + body | Email card with 16:9 media |
+| Blog | article, text, image | Title + body | Article card with 16:9 media |
+| Other | all formats | None | Generic square; immersive formats use 9:16 |
+
+The shared `ChannelPreview` keeps the original media files, uses platform-and-format frame guidance, gives video its native controls, and provides keyboard-accessible carousel controls. Ratios are common preview targets rather than a promise of exact rendering; platforms may crop, expand or adapt media depending on placement and device.
 
 The descriptors live in code (`Platform` constants with format, limits and preview component) and are the single source for the editor, the validation warnings and the portal.
 
@@ -100,3 +103,5 @@ Phase 1 (task P1-06, 2026-10-18) plus platform grid update (2026-10-19). Same mi
 Done: active channel grid, create/edit in a sheet, handle normalization (@), duplicate rule among active channels, archive and delete; responsive square platform cards with SVG marks, one active channel slot per platform in this UI, and channel actions retained on configured cards. Archived channels are excluded from this screen; it has no reactivation control. The generic "Outro" platform uses a neutral globe SVG. A platform preselected from the grid is the initial form value and does not mark a new channel as dirty. Validation performed: `npm run typecheck`, targeted ESLint, `npm run check:consistency`, `npm run check:docs`, and `git diff --check`. **Not tested**: Vitest and production build could not start because the environment returned `spawn EPERM` (the build also could not load the Tailwind native binding); browser behavior and real Supabase. The one-channel-per-platform rule is a front-end rule and is not guaranteed by the database. No migration was added or changed. **Pending (phase 3)**: variant counters, `channel_is_used`, the preview components per platform and the "planned variants" confirmation when archiving.
 
 2026-10-19: Compacted the platform cards and aligned the grid with the one-profile-per-platform flow: each tile shows a single profile or "-" and is directly clickable for create/edit, while configured channel actions remain in the overflow menu. Validation performed: targeted ESLint, typecheck, `check:consistency`, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser layout.
+
+2026-10-20: Shared channel previews now choose their media frame by platform and format, matching the format options configured in `platformFormats`. Supported formats are covered by a table-driven aspect-ratio test. Files: `src/lib/shared/preview/platforms.ts`, `platforms.test.ts`, `src/components/shared/preview/channel-preview.tsx`. Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: Vitest could not start because esbuild returned `spawn EPERM`; visual comparison with each live platform app.

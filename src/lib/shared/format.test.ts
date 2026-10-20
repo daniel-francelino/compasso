@@ -29,10 +29,17 @@ describe("formatDateOnly", () => {
 });
 
 describe("formatInZone", () => {
-  it("shows the time and the zone", () => {
+  it("formats the instant in the requested zone without appending an offset by default", () => {
     const text = formatInZone("2026-07-01T15:00:00Z", "America/Sao_Paulo");
     expect(text).toContain("01/07/2026");
     expect(text).toContain("12:00");
+    expect(text).not.toMatch(/GMT|UTC|BRT/);
+  });
+
+  it("can include the zone when an offset distinguishes repeated local times", () => {
+    const text = formatInZone("2026-07-01T15:00:00Z", "America/Sao_Paulo", {
+      includeZone: true,
+    });
     expect(text).toMatch(/GMT-3|BRT/);
   });
 

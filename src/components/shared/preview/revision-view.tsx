@@ -1,6 +1,7 @@
 import { CalendarClock, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { Button } from "@/components/shared/ui/button";
@@ -34,6 +35,7 @@ export function RevisionView({
   callToAction,
   media,
   urls,
+  brandLogoUrl,
   onOpenFile,
 }: {
   title: string;
@@ -42,6 +44,7 @@ export function RevisionView({
   callToAction: string | null;
   media: RevisionViewMedia[];
   urls: Record<string, string> | undefined;
+  brandLogoUrl?: string | null;
   onOpenFile: (versionId: string) => void | Promise<void>;
 }) {
   const [active, setActive] = useState(channels[0]?.rowId ?? "");
@@ -66,6 +69,7 @@ export function RevisionView({
           <ChannelPreview
             platform={current.platform}
             profileName={current.profileName}
+            brandLogoUrl={brandLogoUrl ?? null}
             format={current.format}
             caption={text}
             callToAction={callToAction}
@@ -90,9 +94,16 @@ export function RevisionView({
           {current ? (
             <p className="flex items-center gap-2 text-sm">
               <CalendarClock className="size-4 text-muted-foreground" aria-hidden="true" />
-              {current.plannedAt !== null && current.plannedTimezone !== null
-                ? `Prevista para ${formatInZone(current.plannedAt, current.plannedTimezone)}`
-                : "Sem data prevista"}
+              {current.plannedAt !== null && current.plannedTimezone !== null ? (
+                <span className="inline-flex items-center gap-1.5">
+                  Prevista para {formatInZone(current.plannedAt, current.plannedTimezone)}
+                  <InfoTip label={`Fuso horário: ${current.plannedTimezone}`}>
+                    Fuso horário: {current.plannedTimezone}
+                  </InfoTip>
+                </span>
+              ) : (
+                "Sem data prevista"
+              )}
             </p>
           ) : null}
           <SectionCard title="Legenda completa" padding="sm">

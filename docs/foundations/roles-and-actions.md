@@ -29,7 +29,7 @@ Why a fixed action catalog: each action corresponds to something the code checks
 | Internal roles (manager, collaborator…) | Brands with an active `brand_members` row of `kind = 'internal'` |
 | External roles (approver, commenter) | Brands with an active `brand_members` row of `kind = 'external'`; deciding also requires `can_decide = true` |
 
-Examples: editing a content item requires `has_action('content.update')` **and** `can_access_brand(brand_id)`; deciding an approval requires `has_action('approvals.decide')`, being the **designated approver** of the request, and `is_external_brand_member(brand_id, true)`.
+Examples: editing a content item requires `has_action('content.update')` **and** `can_access_brand(brand_id)`; deciding an approval requires `has_action('approvals.decide')`, and being an **approver of the brand** (`approver_is_valid`: an approved external account whose role has the action and whose brand link has `can_decide`).
 
 Data that does not belong to a brand (settings, roles, users, the site) depends only on the action.
 

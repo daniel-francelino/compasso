@@ -1,14 +1,16 @@
-import { Maximize2 } from "lucide-react";
+import { ClipboardList, Maximize2 } from "lucide-react";
 import { type MouseEvent, useState } from "react";
 import { PortalApprovalDialog } from "@/components/portal/approvals/portal-approval-dialog";
 import { RequestDecisionActions } from "@/components/portal/approvals/request-decision-actions";
 import { RequestPreview } from "@/components/portal/approvals/request-preview";
 import { ResponseDeadlineBadge } from "@/components/portal/approvals/response-deadline-badge";
 import { SectionCard } from "@/components/shared/admin/section-card";
+import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
+import { approvalStageLabels } from "@/lib/shared/labels";
 
 const INTERACTIVE = "button, a, input, textarea, select, video, audio, [role=tab], [role=button]";
 
@@ -41,15 +43,18 @@ export function RequestCard({
         </button>
         <span className="flex flex-wrap items-center gap-1.5">
           <ResponseDeadlineBadge request={request} />
+          <StatusBadge tone="neutral" icon={ClipboardList}>
+            {approvalStageLabels[request.stage]}
+          </StatusBadge>
           <RequestStatusBadge status={request.status} />
         </span>
       </div>
       <div className="cursor-pointer" onClick={openFromPreview}>
         <RequestPreview request={request} brandId={brandId} urls={mediaUrls} />
       </div>
-      {!request.isMine && request.approverName ? (
+      {request.decidedByName ? (
         <p className="text-center text-sm text-muted-foreground">
-          Decisão de {request.approverName}
+          Decidido por {request.decidedByName}
         </p>
       ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">

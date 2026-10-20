@@ -109,6 +109,7 @@ export function FileStrip({
   formats,
   disabled,
   error,
+  maxItems,
 }: {
   items: FileItem[];
   onChange: (items: FileItem[]) => void;
@@ -116,9 +117,11 @@ export function FileStrip({
   formats: readonly ContentFormat[];
   disabled: boolean;
   error?: string | undefined;
+  maxItems?: number;
 }) {
   const [picking, setPicking] = useState(false);
-  const rule = combinedRule(formats);
+  const formatRule = combinedRule(formats);
+  const rule = maxItems === undefined ? formatRule : { ...formatRule, max: maxItems };
   const urls = useSignedUrls(
     items.map((item) => item.mediaVersionId),
     MediaVariant.Thumb,

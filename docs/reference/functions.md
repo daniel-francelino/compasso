@@ -78,7 +78,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `brand_logo_keys(p_brands)` | read by `listBrandOptions`, `listBrands`, `getBrand` (the server signs the thumbnail) | `brands.view` + brand link | — | — |
 | `brand_set_archived(p_brand, p_archived)` | `setBrandArchived` | `brands.update` | `brand.archived`, `brand.reactivated` | `conflict` |
 | `brand_delete(p_brand)` | `deleteBrand` | `brands.delete` | `brand.deleted` | `brand_not_empty` |
-| `brand_member_set(p_brand, p_user, p_kind, p_can_decide, p_status)` | `setBrandMember` | `brands.manage_members` | `brand.member_added`, `brand.member_revoked`, `brand.member_can_decide_changed` | `member_kind_mismatch`, `last_internal_member`, `approver_without_access` |
+| `brand_member_set(p_brand, p_user, p_kind, p_can_decide, p_status)` | `setBrandMember` | `brands.manage_members` | `brand.member_added`, `brand.member_revoked`, `brand.member_can_decide_changed` | `member_kind_mismatch`, `last_internal_member` |
 | `channel_save(p_channel jsonb)` | `saveChannel` | `channels.create` / `channels.update` | `channel.created`, `channel.updated` | `channel_duplicate`, `platform_change_forbidden`, `conflict` |
 | `channel_set_archived(p_channel, p_archived)` | `setChannelArchived` | `channels.update` | `channel.archived`, `channel.reactivated` | — |
 | `channel_delete(p_channel)` | `deleteChannel` | `channels.delete` | `channel.deleted` | `channel_in_use` |
@@ -91,24 +91,24 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `content_item_save(p_item jsonb)` | `saveContentItem` | `content.create` / `content.update` | `content.created`, `content.updated`, `content_channel.added`, `content_channel.removed`, `calendar_note.converted` (with `source_note`) | — | `conflict`, `requires_new_revision`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `invalid_input`, `transition_not_allowed` |
 | `content_item_cancel(p_item, p_reason)` | `cancelContentItem` | `content.cancel` | `content.cancelled` | — | `reason_required` |
 | `content_item_delete(p_item)` | `deleteContentItem` | `content.delete` | `content.deleted` | — | `content_has_history` |
-| `content_move(p_item, p_to_status, p_expected_version)` | `moveContent` (board) | `content.update` | `content.updated` | — | `transition_not_allowed`, `conflict` |
+| `content_move(p_item, p_to_status, p_expected_version)` | `moveContent` (board) | `content.update` | `content.updated` | — | `transition_not_allowed`, `conflict`, `plan_not_approved` |
 | `content_channel_cancel(p_channel_row, p_reason)` | `cancelContentChannel` | `content.cancel` | `content_channel.cancelled` | — | `reason_required`, `transition_not_allowed` |
-| `submit_for_approval(p_item, p_approver, p_due_date, p_message, p_expected_version)` | `submitForApproval` | `content.submit` | `content.submitted`, `approval.requested`, `approval.superseded` (when replacing) | `approval.requested`, `approval.superseded` | `conflict`, `channel_required`, `media_not_available`, `approver_required`, `approver_without_access`, `channel_archived` |
-| `reopen_content(p_item, p_reason)` | `reopenContent` | `content.reopen` | `content.reopened`, `approval.superseded` (when a request was pending) | `approval.superseded` | `reason_required`, `transition_not_allowed` |
-| `reschedule_channel(p_channel_row, p_planned_at, p_timezone, p_expected_version)` | `rescheduleChannel` | `calendar.manage` + `content.update` | `content_channel.rescheduled` (plus `approval.requested` and `approval.superseded` when it creates a version) | `approval.requested`, `approval.superseded` (only when the content was awaiting approval or approved) | `conflict`, `transition_not_allowed`, `channel_archived`, `approver_without_access`, `invalid_input` |
+| `submit_for_approval(p_item, p_due_date, p_message, p_expected_version)` (the stage comes from the editorial status; notifies every approver of the brand) | `submitForApproval` | `content.submit` | `content.submitted` (with `stage`), `approval.requested`, `approval.superseded` (when replacing) | `approval.requested`, `approval.superseded` | `conflict`, `channel_required`, `media_not_available`, `approver_required`, `plan_incomplete`, `plan_not_approved`, `channel_archived` |
+| `reopen_content(p_item, p_reason, p_scope)` (`art` or `plan`) | `reopenContent` | `content.reopen` | `content.reopened` (with `scope`), `approval.superseded` (when a request was pending) | `approval.superseded` | `reason_required`, `transition_not_allowed`, `invalid_input` |
+| `brand_approver_ids(p_brand)`, `plan_approval_required()`, `content_plan_signature(p_item)` (internal helpers, not granted to clients) | — | — | — | — | — |
+| `reschedule_channel(p_channel_row, p_planned_at, p_timezone, p_expected_version)` | `rescheduleChannel` | `calendar.manage` + `content.update` | `content_channel.rescheduled` (plus `approval.requested` and `approval.superseded` when it creates a version) | `approval.requested`, `approval.superseded` (only when the content was awaiting approval or approved) | `conflict`, `transition_not_allowed`, `channel_archived`, `approver_required`, `plan_locked`, `invalid_input` |
 | `reschedule_production_deadline(p_item, p_date, p_expected_version)` | `rescheduleProductionDeadline` | `calendar.manage` + `content.update` | `content.updated` | — | `conflict`, `transition_not_allowed`, `invalid_input` |
 | `mark_published(p_channel_row, p_published_at, p_url, p_evidence_media_version, p_note)` | `markPublished` | `content.publish_manual` | `content_channel.published_manually` | — | `not_approved`, `transition_not_allowed` |
 | `calendar_note_save(p_note jsonb)` | `saveCalendarNote` | `calendar.manage` + brand | `calendar_note.created`, `calendar_note.updated` | — | `conflict`, `transition_not_allowed`, `invalid_input`, `brand_archived`, `not_found` |
 | `calendar_note_archive(p_note)` | `archiveCalendarNote` | `calendar.manage` + brand | `calendar_note.archived` | — | `transition_not_allowed`, `not_found` |
 | `calendar_note_get(p_note)` | `getCalendarNote` | `calendar.view` + brand | — | — | `not_found` |
-| (history only, no function writes them) | — | — | `variant.created`, `variant.updated`, `variant.submitted`, `variant.reopened`, `variant.rescheduled`, `variant.cancelled`, `variant.published_manually` | — | — |
+| (history only, no function writes them) | — | — | `approval.approver_reassigned` (written by the removed `reassign_approver` until 2026-10-20), `variant.created`, `variant.updated`, `variant.submitted`, `variant.reopened`, `variant.rescheduled`, `variant.cancelled`, `variant.published_manually` | — | — |
 | `comment_add(p_item, p_visibility, p_body)` | `addComment` | `comments.create_internal` for an internal comment, `comments.create_external` for an external one written by the team | `comment.created` | — (only `portal_add_comment` notifies the team) | `invalid_input` |
 | `comment_delete(p_comment)` | `deleteComment` | author | `comment.deleted` | — | `denied` |
-| `reassign_approver(p_request, p_new_approver)` | `reassignApprover` | `content.submit` | `approval.approver_reassigned` | `approval.requested`, `approval.superseded` | `approver_without_access`, `request_not_pending` |
 | `cancel_request(p_request, p_reason)` | `cancelApprovalRequest` | `content.submit` | `approval.cancelled` | — | `reason_required`, `request_not_pending` |
 | `send_approval_reminder(p_request)` | `remindApprover` | `content.submit` | `approval.reminder_sent` | `approval.requested` (reminder) | `request_not_pending` |
 | `comment_list(p_item)` | `listComments` | `content.view` or `approvals.view` + brand | — | — | `not_found` |
-| `approver_options(p_brand)` | `listApproverOptions` | `content.submit` + brand | — | — | `not_found` |
+| `approver_options(p_brand)` (the approvers of the brand, who are asked when a content is sent) | `listApproverOptions` | `content.submit` + brand | — | — | `not_found` |
 | `person_names(p_ids uuid[])` | (internal helper `personNames`, not a server function) | `content.view` or `approvals.view` | — | — | `denied` |
 | (typed query) | `listAssigneeOptions` | `content.view` + brand | — | — | `not_found` |
 | typed queries | `listContentItems`, `getContentItem`, `listBoard`, `listApprovals`, `getApprovalRequest` | `content.view` / `approvals.view` | — | — | `not_found` |
@@ -128,11 +128,11 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `portal_list_approvals(p_brand, p_status, p_page, p_page_size)` | `listPortalApprovals` | link to brand; status filter `pending`, `approved`, `changes_requested`, `superseded` (cancelled requests never appear) | — | — | `not_found`, `invalid_input` |
 | `portal_get_approval(p_request)` | `getPortalApproval` | link to the request's brand; request shared with the person | — | — | `not_found` |
 | `portal_record_view(p_request)` | `recordPortalView` | — | — | — | — |
-| `portal_decide_approval(p_request, p_outcome, p_comment)` | `decidePortalApproval` | `approvals.decide`; designated approver; `can_decide` | `approval.decided` | `approval.decided` | `not_designated_approver`, `request_not_pending`, `revision_superseded`, `comment_required`, `approver_without_access` |
+| `portal_decide_approval(p_request, p_outcome, p_comment)` | `decidePortalApproval` | `approvals.decide`; any approver of the brand (`approver_is_valid`: external member with `can_decide`); the first decision wins | `approval.decided` (with `stage`) | `approval.decided` | `denied`, `request_not_pending`, `revision_superseded`, `comment_required` |
 | `portal_list_comments(p_item)` | `listPortalComments` | link | — | — | `not_found` |
 | `portal_add_comment(p_item, p_body)` | `addPortalComment` | `comments.create_external` | `comment.created` | `comment.created` | `invalid_input` |
 | `portal_list_calendar(p_brand, p_from, p_to)` | `listPortalCalendar` | link to the brand; returns `{ brand_timezone, entries }` with one entry per channel row of the latest version of each content that has a request that is not cancelled (date, status and title from the snapshot); range at most 100 days | — | — | `not_found`, `invalid_input` |
-| `portal_media_urls(p_revision, p_version_ids uuid[])` (checks, then the server signs; `signPortalPreviewMedia` batches thumbnail signing for listing previews) | `signPortalMedia`, `signPortalPreviewMedia` | revision shared with the person | — | — | `denied` |
+| `portal_media_urls(p_revision, p_version_ids uuid[])` (checks, then the server signs; `signPortalPreviewMedia` batches display-derivative signing for listing previews, falling back to the original when no derivative exists) | `signPortalMedia`, `signPortalPreviewMedia` | revision shared with the person | — | — | `denied` |
 
 ## 6. Calendar and dashboard (modules: calendar, dashboard)
 

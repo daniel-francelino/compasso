@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DeadlineUrgency, responseDeadline } from "@/lib/portal/approvals/deadline";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
-import { ApprovalRequestStatus } from "@/lib/shared/enums";
+import { ApprovalRequestStatus, ApprovalStage } from "@/lib/shared/enums";
 import { addDaysToDate, todayInZone } from "@/lib/shared/format";
 
 const ZONE = "America/Sao_Paulo";
@@ -10,6 +10,7 @@ const request = (overrides: Partial<PortalRequest>): PortalRequest => ({
   id: "r1",
   itemId: "i1",
   revisionId: "v1",
+  stage: ApprovalStage.Plan,
   status: ApprovalRequestStatus.Pending,
   title: "Teste",
   channels: [],
@@ -19,9 +20,8 @@ const request = (overrides: Partial<PortalRequest>): PortalRequest => ({
   dueDate: null,
   requestedAt: "2026-10-01T10:00:00Z",
   decidedAt: null,
-  isMine: true,
   canDecide: true,
-  approverName: null,
+  decidedByName: null,
   ...overrides,
 });
 

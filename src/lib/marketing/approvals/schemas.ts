@@ -11,15 +11,9 @@ export const ApprovalFilter = {
 
 export const listApprovalsSchema = listRequestSchema.extend({
   brandId: z.string().uuid().optional(),
-  approverId: z.string().uuid().optional(),
 });
 
 export const requestIdSchema = z.object({ id: z.string().uuid() });
-
-export const reassignSchema = z.object({
-  id: z.string().uuid(),
-  approverId: z.string().uuid({ message: "Escolha quem vai aprovar." }),
-});
 
 export const cancelRequestSchema = z.object({
   id: z.string().uuid(),

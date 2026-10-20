@@ -16,11 +16,12 @@
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
 |---|---|---|---|---|
-| `EditorialStatus` | `draft`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Cancelado" | content |
+| `EditorialStatus` | `draft`, `planning`, `awaiting_plan_approval`, `plan_changes_requested`, `plan_approved`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em planejamento", "Planejamento em aprovação", "Alterações no planejamento", "Planejamento aprovado", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Cancelado" | content |
 | `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_channels.publication_status` | "Não planejada", "Planejada", "Publicada manualmente", "Cancelada" | content |
 | `RichNodeType` | `doc`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `hardBreak`, `text` | Tiptap JSON of `content_items.briefing` (not a database column check; validated by zod in `lib/shared/rich-text/types.ts`) | (not shown) | content |
 | `RichMarkType` | `bold`, `italic` | Marks allowed in that JSON | (not shown) | content |
 | `ContentFormat` | `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` | `content_channels.format` | "Imagem", "Carrossel", "Vídeo", "Texto", "Story", "Reel", "Artigo", "Outro" | content |
+| `ApprovalStage` | `plan`, `art` | `content_revisions.stage`, `approval_requests.stage` | "Planejamento", "Artes" | content, approvals |
 | `ApprovalRequestStatus` | `pending`, `approved`, `changes_requested`, `superseded`, `cancelled` | `approval_requests.status` | "Pendente", "Aprovada", "Alterações solicitadas", "Substituída", "Cancelada" | approvals |
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |
 | `CommentVisibility` | `internal`, `external` | `comments.visibility` | "Interno", "Externo" | content |
@@ -30,7 +31,7 @@
 | `CalendarNoteRepeat` | `none`, `weekly`, `monthly`, `yearly` | `calendar_notes.repeat` | "Não repetir", "Toda semana", "Todo mês", "Todo ano" | calendar |
 | `ContentObjective` | `awareness`, `engagement`, `traffic`, `leads`, `sales`, `community`, `other` | `content_items.objective_kind` | "Reconhecimento da marca", "Engajamento", "Tráfego para o site", "Geração de contatos", "Vendas", "Comunidade", "Outro" | content |
 | `CalendarAlert` | `too_many_on_day`, `too_close`, `not_approved_yet`, `date_passed` | computed in the browser (not stored) | see `calendarAlertLabels` in `lib/shared/labels.ts` | calendar |
-| `DashboardReason` | `approval_overdue`, `changes_requested`, `production_overdue`, `planned_date_passed`, `approver_without_access` | `dashboard_attention` output (`reasons`, not stored) | "Aprovação atrasada", "Alterações solicitadas", "Prazo de produção vencido", "Data prevista ultrapassada", "Aprovador sem acesso" | dashboard |
+| `DashboardReason` | `approval_overdue`, `changes_requested`, `production_overdue`, `planned_date_passed`, `approver_without_access` | `dashboard_attention` output (`reasons`, not stored) | "Aprovação atrasada", "Alterações solicitadas", "Prazo de produção vencido", "Data prevista ultrapassada", "Ninguém pode aprovar" | dashboard |
 | `Platform` | `instagram`, `facebook`, `linkedin`, `tiktok`, `youtube`, `x`, `pinterest`, `threads`, `email`, `blog`, `other` | `channels.platform` | "Instagram", "Facebook", "LinkedIn", "TikTok", "YouTube", "X", "Pinterest", "Threads", "E-mail", "Blog", "Outro" | channels |
 
 Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → in_production | cancelled`; `in_production → internal_review | awaiting_approval | cancelled`; `internal_review → awaiting_approval | in_production | cancelled`; `awaiting_approval → approved | changes_requested | in_production (reopen) | cancelled`; `changes_requested → in_production | cancelled`; `approved → in_production (reopen) | cancelled`; `cancelled → ∅`. Only the transactional functions perform a transition; the map is shared by the editor, the board and tests.

@@ -33,6 +33,10 @@ from (values
 ) as u (id, name, email, kind, role_key)
 join public.roles r on r.key = u.role_key;
 
+insert into public.organization_settings (key, value)
+values ('policies.approvals', '{"deadlineDays":3,"requirePlanApproval":false}')
+on conflict (key) do update set value = excluded.value;
+
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select public.client_save('{"name":"Cafe Aurora"}'::jsonb, true);
 select set_config('t.brand', (select id::text from public.brands where name = 'Cafe Aurora'), true);
@@ -69,7 +73,7 @@ select is(pg_temp.notes('content.due_soon', '00000000-0000-0000-0000-0000000000b
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.v3', public.content_item_save(format('{"brand_id":"%s","title":"Aprovacao parada","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select public.content_move(current_setting('t.v3')::uuid, 'in_production', pg_temp.ver(current_setting('t.v3')::uuid));
-select set_config('t.sub3', public.submit_for_approval(current_setting('t.v3')::uuid, '00000000-0000-0000-0000-0000000000d1', current_setting('t.today')::date, null, pg_temp.ver(current_setting('t.v3')::uuid))::text, true);
+select set_config('t.sub3', public.submit_for_approval(current_setting('t.v3')::uuid, current_setting('t.today')::date, null, pg_temp.ver(current_setting('t.v3')::uuid))::text, true);
 reset role;
 
 alter table public.approval_requests disable trigger approval_requests_guard;
@@ -92,7 +96,7 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.v4', public.content_item_save(format('{"brand_id":"%s","title":"Publicar ontem","assignee_id":"00000000-0000-0000-0000-0000000000b1","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text","planned_at":"%s","planned_timezone":"America/Sao_Paulo"}]}', current_setting('t.brand'), current_setting('t.channel'), now() - interval '2 days')::jsonb) ->> 'id', true);
 select set_config('t.row4', (select id::text from public.content_channels where content_item_id = current_setting('t.v4')::uuid), true);
 select public.content_move(current_setting('t.v4')::uuid, 'in_production', pg_temp.ver(current_setting('t.v4')::uuid));
-select set_config('t.sub4', public.submit_for_approval(current_setting('t.v4')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver(current_setting('t.v4')::uuid))::text, true);
+select set_config('t.sub4', public.submit_for_approval(current_setting('t.v4')::uuid, null, null, pg_temp.ver(current_setting('t.v4')::uuid))::text, true);
 reset role;
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
 select public.portal_decide_approval((current_setting('t.sub4')::jsonb ->> 'request_id')::uuid, 'approved', null);

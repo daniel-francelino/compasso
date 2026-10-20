@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRightLeft, CalendarClock, TriangleAlert, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
@@ -44,13 +45,13 @@ const REFUSED: Partial<Record<EditorialStatus, string>> = {
   [EditorialStatus.Cancelled]: "Para cancelar, abra o conteúdo e use “Cancelar”.",
 };
 
-const nextPlanned = (card: BoardCard): string => {
+const nextPlanned = (card: BoardCard): { at: string; timeZone: string } | null => {
   const planned = card.channels
     .filter((channel) => channel.plannedAt !== null && channel.plannedTimezone !== null)
     .sort((a, b) => (a.plannedAt ?? "").localeCompare(b.plannedAt ?? ""))[0];
   return planned?.plannedAt && planned.plannedTimezone
-    ? formatInZone(planned.plannedAt, planned.plannedTimezone)
-    : "Sem data prevista";
+    ? { at: planned.plannedAt, timeZone: planned.plannedTimezone }
+    : null;
 };
 
 function Card({
@@ -65,6 +66,7 @@ function Card({
   const auth = useAuth();
   const targets = DirectMoves[card.editorialStatus];
   const movable = can(auth, Action.Content.Update) && targets.length > 0;
+  const planned = nextPlanned(card);
   return (
     <SectionCard
       as="li"
@@ -88,7 +90,16 @@ function Card({
       </div>
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
-        {nextPlanned(card)}
+        {planned ? (
+          <>
+            {formatInZone(planned.at, planned.timeZone)}
+            <InfoTip label={`Fuso horário: ${planned.timeZone}`}>
+              Fuso horário: {planned.timeZone}
+            </InfoTip>
+          </>
+        ) : (
+          "Sem data prevista"
+        )}
       </p>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

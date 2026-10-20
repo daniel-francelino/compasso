@@ -107,10 +107,6 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "O e-mail desta conta não é o do convite.",
   },
-  approver_without_access: {
-    category: ErrorCode.Invalid,
-    message: "O aprovador designado não tem mais acesso. Escolha outro.",
-  },
   channel_archived: {
     category: ErrorCode.Invalid,
     message: "Este canal está arquivado e não aceita novos itens.",
@@ -251,7 +247,23 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Esta mudança de estado não é permitida.",
   },
-  approver_required: { category: ErrorCode.Invalid, message: "Escolha quem vai aprovar." },
+  approver_required: {
+    category: ErrorCode.Invalid,
+    message: "Ninguém da marca pode aprovar ainda. Convide um aprovador para continuar.",
+  },
+  plan_not_approved: {
+    category: ErrorCode.Invalid,
+    message: "Aguarde a aprovação do planejamento para enviar as artes.",
+  },
+  plan_locked: {
+    category: ErrorCode.Invalid,
+    message:
+      "O planejamento já foi aprovado. Reabra o planejamento para mudar canais, formatos ou datas.",
+  },
+  plan_incomplete: {
+    category: ErrorCode.Invalid,
+    message: "Para enviar o planejamento, escolha ao menos um canal com data e horário.",
+  },
   not_approved: {
     category: ErrorCode.Invalid,
     message: "Só é possível registrar a publicação de uma versão aprovada.",
@@ -272,10 +284,6 @@ const catalog: Record<string, CatalogEntry> = {
   comment_required: {
     category: ErrorCode.Invalid,
     message: "Escreva um comentário para pedir alterações.",
-  },
-  not_designated_approver: {
-    category: ErrorCode.Denied,
-    message: "A decisão é de outra pessoa. Você pode comentar.",
   },
   channel_brand_mismatch: {
     category: ErrorCode.Invalid,

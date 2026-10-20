@@ -12,11 +12,13 @@ export function ContentSettingsSection({
   draft,
   assignees,
   disabled,
+  objectiveLocked = false,
   errors,
 }: {
   draft: ContentDraft;
   assignees: { id: string; name: string }[];
   disabled: boolean;
+  objectiveLocked?: boolean;
   errors: Record<string, string>;
 }) {
   const { values, set } = draft;
@@ -38,7 +40,7 @@ export function ContentSettingsSection({
           id="content-objective-kind"
           label="Objetivo"
           value={values.objectiveKind ?? NONE}
-          disabled={disabled}
+          disabled={disabled || objectiveLocked}
           onValueChange={(value) => {
             const match = Object.values(ContentObjective).find((objective) => objective === value);
             set("objectiveKind", match ?? null);
@@ -56,7 +58,7 @@ export function ContentSettingsSection({
           id="content-objective"
           label="Detalhe do objetivo"
           value={values.objective}
-          disabled={disabled}
+          disabled={disabled || objectiveLocked}
           onValueChange={(value) => set("objective", value)}
           maxLength={2000}
           error={errors["objective"]}

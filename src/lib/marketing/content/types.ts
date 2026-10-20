@@ -1,6 +1,7 @@
 import type {
   ApprovalOutcome,
   ApprovalRequestStatus,
+  ApprovalStage,
   CommentVisibility,
   ContentFormat,
   ContentObjective,
@@ -32,6 +33,7 @@ export type SnapshotChannel = {
 
 export type RevisionSnapshot = {
   title: string;
+  planSummary: string | null;
   caption: string;
   callToAction: string | null;
   channels: SnapshotChannel[];
@@ -40,6 +42,7 @@ export type RevisionSnapshot = {
 export type RevisionRow = {
   id: string;
   revisionNo: number;
+  stage: ApprovalStage;
   createdAt: string;
   snapshot: RevisionSnapshot;
   media: ContentMedia[];
@@ -49,8 +52,9 @@ export type RequestRow = {
   id: string;
   revisionId: string;
   revisionNo: number;
+  stage: ApprovalStage;
   status: ApprovalRequestStatus;
-  approverName: string | null;
+  decidedByName: string | null;
   requestedByName: string | null;
   requestedAt: string;
   dueDate: string | null;
@@ -96,6 +100,10 @@ export type ContentDetail = {
   productionDueDate: string | null;
   cancelled: boolean;
   editorialStatus: EditorialStatus;
+  planRequired: boolean;
+  planSummary: string | null;
+  planMedia: ContentMedia[];
+  planApprovedRevisionId: string | null;
   approvalDueDate: string | null;
   caption: string;
   callToAction: string | null;

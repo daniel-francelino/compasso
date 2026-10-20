@@ -21,6 +21,8 @@ At most **one pending request per content** (partial unique index). A decision i
 
 ## Rules
 
+> Replaced on 2026-10-20: rules 1 and 5 and the "designated approver" wording below are superseded by the [approver pool](#approver-pool-decided-2026-10-20), and every request has a **stage** (planning or art, see [content.md](content.md#two-stage-approval-decided-2026-10-20)).
+
 1. In the MVP there is **one designated approver per request**. Other external members may comment (if they have `comments.create_external`) but do not decide that request.
 2. The decision identifies the revision, approver, date and outcome; **requesting changes requires a comment**.
 3. Changing text, files, order, channel or date requires a **new revision and a new approval**.
@@ -58,6 +60,43 @@ At most **one pending request per content** (partial unique index). A decision i
 
 - **Reopen** (`content.reopen`, reason mandatory): supersedes any pending request and returns the content to `in_production`; an approved revision stays in the history and `approved_revision_id` is cleared.
 - **Cancel** (`content.cancel`): pending requests become `cancelled`.
+
+## Approver pool (decided 2026-10-20)
+
+> Status: **implemented in code and on PGlite (2026-10-20)**, not applied to the linked project. It replaces the designated approver: rules 1 and 5 of the "Rules" section and the wording "designated approver" in the flows above are superseded by it (DOC-5: fold it in once the migrations are applied and used).
+
+### Why
+
+Today the sender picks **one designated approver** and only that person can decide. A brand can have several people who may approve (a founder and a marketing manager, for example) and the one picked may be away. The right to decide should come from the **permission**, not from a name chosen per request.
+
+### Target rules
+
+1. **Anyone who can approve may decide.** Eligibility is the existing rule, checked in the database at the moment of the decision: an approved external account whose role has `approvals.decide` **and** an active brand link with `can_decide` for the request's brand ([../foundations/roles-and-actions.md](../foundations/roles-and-actions.md)). No new action and no new flag.
+2. **No approver is chosen when sending.** The send dialog lists who will be asked (read-only) and refuses to send when nobody is eligible (`approver_required`, with the "Convidar aprovador" shortcut of today).
+3. **One decision per request; the first one wins** (the `approval_decision_once` index and the row lock already guarantee it). The second person who tries receives `request_not_pending` and the screen shows the decision made and by whom ("Aprovado por Marta em 20/10"). The decision keeps recording the person who decided (`approval_decisions.decided_by`).
+4. **Every eligible approver is notified** of `approval.requested`, respecting their notification preferences, and every one of them sees the request under "Aguardando você" until it is decided; when someone decides, the others' notifications are resolved (`resolve_notifications`).
+5. Members who are **not** eligible (commenters, members without `can_decide`) still see the request and can comment, with the message "Você pode comentar, mas a decisão é de quem aprova a marca" (it no longer names a person).
+6. Revoking `can_decide` or the link of someone blocks their next decision immediately; requests are never orphaned by it, because the pool is evaluated at decision time. A request only has no possible decider when **nobody** is eligible, and the team sees a warning on it ("Ninguém pode aprovar esta marca agora").
+7. The decision is **any one** approver (no "all must approve" in this delivery, see O1 below).
+8. Reminders (`send_approval_reminder`) go to every eligible approver who has not been notified in the last day; the overdue scanner keeps notifying the sender.
+
+### What goes away
+
+`reassign_approver` and the "Reatribuir aprovador" button; the error codes `not_designated_approver` and `approver_without_access`; `is_mine` and the "Pendentes com outras pessoas" section of the portal panel; `approver_user_id` as a required column (it becomes nullable in the expand migration and is dropped in the contract one). Existing requests keep their old value only as history.
+
+### Screens
+
+- **Team, request detail:** the "Aprovador" line becomes "Quem pode aprovar" (names of the eligible members) and, after the decision, "Decidido por {nome}". "Reenviar lembrete" stays; "Reatribuir aprovador" is removed; "Cancelar pedido" stays.
+- **Team, approvals list:** the approver column shows "Quem decidiu" for decided requests and "Qualquer aprovador da marca" for pending ones; the filter by approver becomes a filter by who decided.
+- **Brand members tab:** the column "Pode aprovar" (today's `can_decide`) is explained with an `InfoTip`: "Pessoas com esta permissão podem aprovar ou pedir alterações nos conteúdos da marca."
+- **Portal:** "Aguardando você" lists every pending request of the brand the person may decide; the section "Pendentes com outras pessoas" goes away; non-eligible members see their requests read-only with the comment option.
+
+### Open decisions
+
+| ID | Decision | Status |
+|---|---|---|
+| O1 | Quorum: **any one** eligible approver decides. "All must approve" or "N of M" can come later as a brand setting | Decided for this delivery |
+| O2 | Let the sender mark a **preferred** approver who is notified first | Not needed; every eligible approver is notified |
 
 ## Screens (team side)
 
@@ -101,7 +140,7 @@ Deciding also requires being the designated approver and an active external memb
 
 > Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
-`request_not_pending`, `revision_superseded`, `comment_required`, `approver_without_access`, `approver_required`, `not_designated_approver`, `conflict`, `denied`, `not_found`.
+`request_not_pending`, `revision_superseded`, `comment_required`, `approver_required`, `plan_not_approved`, `plan_locked`, `conflict`, `denied`, `not_found`.
 
 ## Acceptance criteria
 
@@ -122,3 +161,5 @@ Phase 3 (tasks P3-02, P3-03, P3-05, P3-06, 2026-10-18). Done: `approval_requests
 Validation performed: the pgTAP assertions of [content.md](content.md) cover submission, supersession, designated approver, member without `can_decide`, commenter, approver of another brand, superseded revision, decision recorded once, revoked `can_decide` and revoked link, reassignment, cancellation, reminder de-duplication and the audit events; Vitest for the outbox rules (back-off, final failure, internal links only, escaped template). **Not tested**: simultaneous sessions, sending through the real e-mail provider, the worker against a database. **Not done**: the scheduled `approval.overdue` scanner (task P4-04), the period filter of the list.
 
 2026-10-19: The shared list-filter trigger now uses an icon with a tooltip and active-count badge. This applies to the approvals list. Validation performed: targeted ESLint, Prettier and `git diff --check`. `check:docs` is currently blocked by ten audit-action registry mismatches for `calendar_note.*` and `variant.*` in the audit/functions documents. Full typecheck is blocked by existing `brand-logos.server.ts` type errors. **Not tested**: browser interaction.
+
+2026-10-20 (approver pool and two stages, tasks T-02 to T-07): `portal_decide_approval`, `portal_get_approval`, `portal_list_pending`, `portal_record_view`, `portal_list_brands`, `portal_list_calendar`, `portal_request_row`, `submit_for_approval`, `send_approval_reminder`, `cancel_request` and `dashboard_attention` follow the pool (anyone with the right to approve decides; the first decision wins; every approver is notified and their notifications are resolved on the decision); `reassign_approver`, `approver_user_id`, `is_mine`, "Reatribuir aprovador" and the portal section "Pendentes com outras pessoas" were removed (the section is now "Em análise pela marca", read-only, for members who cannot decide). Team screens: the list shows the stage and "Quem decidiu", the detail shows "Quem pode aprovar". Validation performed: see the status of [content.md](content.md) (808 SQL assertions, Vitest, typecheck, lint). **Not tested**: simultaneous decisions from two real sessions, the screens in a browser.

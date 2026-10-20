@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { Caller } from "@/lib/shared/auth/server-guards.server";
-import type { ContentFormat, Platform } from "@/lib/shared/enums";
+import { ApprovalStage, type ContentFormat, type Platform } from "@/lib/shared/enums";
 import { kindOfMime } from "@/lib/shared/media/limits";
 import { fail, type Result } from "@/lib/shared/server-utils";
 import type { ContentMedia, RevisionRow } from "@/lib/marketing/content/types";
@@ -11,6 +11,7 @@ const captionSchema = z.object({ text: z.string() }).nullable().optional();
 
 const snapshotSchema = z.object({
   title: z.string(),
+  plan_summary: z.string().nullable().optional(),
   caption: captionSchema,
   call_to_action: z.string().nullable().optional(),
   channels: z.array(
@@ -27,11 +28,12 @@ const snapshotSchema = z.object({
 });
 
 export const REVISION_SELECT =
-  "id, revision_no, created_at, snapshot, content_revision_media(media_version_id, position, alt_text)";
+  "id, revision_no, stage, created_at, snapshot, content_revision_media(media_version_id, position, alt_text)";
 
 export type RevisionQueryRow = {
   id: string;
   revision_no: number;
+  stage: string;
   created_at: string;
   snapshot: unknown;
   content_revision_media: { media_version_id: string; position: number; alt_text: string | null }[];
@@ -85,9 +87,11 @@ export const toRevision = async (
     revision: {
       id: revision.id,
       revisionNo: revision.revision_no,
+      stage: revision.stage === ApprovalStage.Plan ? ApprovalStage.Plan : ApprovalStage.Art,
       createdAt: revision.created_at,
       snapshot: {
         title: snapshot.data.title,
+        planSummary: snapshot.data.plan_summary ?? null,
         caption: snapshot.data.caption?.text ?? "",
         callToAction: snapshot.data.call_to_action ?? null,
         channels: snapshot.data.channels.map((channel) => ({

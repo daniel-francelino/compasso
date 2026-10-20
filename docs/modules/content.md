@@ -58,6 +58,8 @@ Rules: `planned_at` requires `planned_timezone`; `planned` requires `planned_at`
 
 ## Statuses and transitions
 
+> Two approval stages (planning, then art) add four statuses and more transitions, in [Two-stage approval](#two-stage-approval-decided-2026-10-20). The table below is the art cycle, which is also the whole flow when `plan_required` is false.
+
 Editorial status of a content: `draft` → `in_production` → `internal_review` → `awaiting_approval` → `approved`; `changes_requested` after a request; `cancelled` at any time (constants `EditorialStatus`; the transition map lives in `shared/editorial`).
 
 | From | To | Action required | Notes |
@@ -65,7 +67,7 @@ Editorial status of a content: `draft` → `in_production` → `internal_review`
 | `draft` | `in_production` | `content.update` | |
 | `in_production` | `internal_review` | `content.update` | Optional step |
 | `in_production` / `internal_review` | `awaiting_approval` | `content.submit` | Creates a version and an approval request ([approvals.md](approvals.md)); needs at least one channel row (`channel_required`) |
-| `awaiting_approval` | `approved` / `changes_requested` | Designated approver | Through the portal |
+| `awaiting_approval` | `approved` / `changes_requested` | Any approver of the brand | Through the portal; the first decision wins |
 | `changes_requested` | `in_production` | `content.update` | A new version is prepared |
 | `approved` | `in_production` | `content.reopen` | Audited with a reason; clears the approved version and keeps history; refused once any channel row is published |
 | any | `cancelled` | `content.cancel` | Does not delete history |
@@ -78,7 +80,7 @@ When a content is submitted (`submit_for_approval`):
 
 1. The content row is locked (`for update`) and the expected `version` is checked (`conflict` if outdated).
 2. A version is created with the title, base caption, call to action, brand zone and **every non-cancelled channel row** (row id, platform, profile name, format, caption adjustment, planned date and zone); the exact media versions in order go to `content_revision_media`.
-3. The previous pending request of the content becomes `superseded`; a new approval request is created for the designated approver.
+3. The previous pending request of the content becomes `superseded`; a new approval request is created for the brand's approvers (anyone who can approve may decide).
 4. The content moves to `awaiting_approval`; notifications and an audit event are written in the same transaction.
 
 Versions and their media rows are **immutable** (triggers refuse `update` and `delete`). Editing a content that is `awaiting_approval` edits the working copy and a **new version** must be sent; an `approved` content refuses a change of text, files, channels, formats or dates (`requires_new_revision`) until it is reopened. The internal title, objective, briefing, owner, tags, deadline and notes can change at any time.
@@ -96,7 +98,7 @@ Routes: `/admin/marketing/content` (all authorized brands), `/admin/marketing/br
   4. **Data e horário das publicações:** one line per channel row: logo, format select, date and time (`DateTimeField`, brand zone), "Registrar publicação" and "Cancelar este canal" icon buttons, and "Incluir mais dias e horários neste canal".
   5. **Configurações:** title, objective (select) and detail, briefing (`RichTextEditor`), owner, production deadline (`DatePickerField`), tags, internal notes.
   Right column: live `ChannelPreview` of the selected tab with the brand logo when registered, history of versions and decisions, internal comments. Actions: "Criar conteúdo"/"Salvar", "Iniciar produção", "Enviar para revisão interna", "Enviar para aprovação", "Reabrir", "Cancelar conteúdo". Unsaved changes warn before leaving; a save conflict keeps the typed text.
-- **Send for approval dialog:** choose the **designated approver** among external members with `can_decide`; optional message; approval deadline; the dialog states "Isto cria a versão nº N. O cliente verá exatamente esta versão, com todos os canais."; checks run first (at least one channel, text or files, file count for every format, files available, channels active, dates in the future as a warning).
+- **Send for approval dialog:** by stage ("Enviar planejamento para aprovação" or "Enviar artes para aprovação"); it lists who will be asked, the brand's approvers, with no choice to make, and refuses to send when there is nobody ("Convidar aprovador"); optional message; approval deadline; the dialog states "Isto cria a versão nº N … O cliente verá exatamente esta versão."; checks run first (plan: a channel with a planned date, files available; art: at least one channel, text or files, file count for every format, files available, channels active, dates in the future as a warning).
 - **Manual publication:** "Registrar publicação" on a channel row (only when the content is `approved`) asks real date/time, link or evidence file (optional) and a note; it changes that row to `published_manually`, audits it and **never calls a social network**.
 - **Reopen:** requires a reason; supersedes any pending request; the content returns to `in_production`.
 - **Cancel:** the content (with confirmation and a reason) cancels its unpublished rows and pending requests; one channel row can be cancelled alone while another active row remains.
@@ -150,7 +152,7 @@ Comments belong to a content (and optionally a version) with visibility `interna
 
 > Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
-`conflict`, `revision_superseded`, `requires_new_revision`, `channel_required`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `approver_required`, `approver_without_access`, `transition_not_allowed`, `not_approved`, `content_has_history`, `denied`, `not_found`.
+`conflict`, `revision_superseded`, `requires_new_revision`, `channel_required`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `approver_required`, `plan_not_approved`, `plan_locked`, `plan_incomplete`, `transition_not_allowed`, `not_approved`, `content_has_history`, `denied`, `not_found`.
 
 ## Acceptance criteria
 
@@ -167,6 +169,110 @@ Comments belong to a content (and optionally a version) with visibility `interna
 - Concurrent edits produce a `conflict` that keeps the typed text.
 - An idea or a date converted into a content links to it once, when the content is first saved.
 
+## Two-stage approval (decided 2026-10-20)
+
+> Status: **implemented in code and on PGlite (2026-10-20)**, not applied to the linked project and not seen in a browser (see the implementation status). The sections above describe the single approval cycle, which is what a content with `plan_required = false` still follows; this section is the rule for the others (DOC-5: fold it into the sections above once the migrations are applied and the flow was used for real).
+
+### Why
+
+The agency works in two client approvals: first the **planning** (what will be posted, where, in which format and when, and the direction of the text), and only after the client approves it does the team **create the art** (files and final text), which the client approves again. Today a content has one cycle that mixes both, so the team either produces art before the plan is agreed or sends a plan without a proper place for it.
+
+### The two stages
+
+| Stage | Constant | What the team prepares | What the client sees and decides | Frozen after approval |
+|---|---|---|---|---|
+| Planning | `ApprovalStage.Plan` (`plan`) | Title, objective, **planning summary** (client-facing text), draft of the caption (optional), channel rows with format and planned date, and optional **planning images** (references, sketches, layout drafts) | A **plan version**: title, objective, planning summary, caption draft, the planning images, one tab per channel with its format and planned date and time (with zone). The planning images are **not the art** | Channels, formats, planned dates, objective, planning summary, planning images |
+| Art | `ApprovalStage.Art` (`art`) | Final caption, call to action, files, channel caption adjustments | An **art version**: the whole content as today (preview per channel, caption, files), plus the approved plan as context | Caption, call to action, files, adjustments (as today) |
+
+Rules:
+
+1. **Art production starts only after the plan is approved.** Before that, the **art** files section of the editor is locked ("Liberado depois que o cliente aprovar o planejamento"; the optional **planning images** section stays open) and `submit_for_approval` for the art stage is refused with `plan_not_approved`.
+2. Each stage has its **own approval cycle**: its own versions, its own request, its own decision, supersession and reopening. At most one pending request per content (the existing index) because the stages are sequential.
+3. Versions are numbered by one running counter per content ("Versão 1" is the plan, "Versão 2" the first art, and so on); the stage is shown next to the number ("Planejamento · Versão 1", "Artes · Versão 2"). `unique (item_id, revision_no)` stays.
+4. After the plan is approved, **channels, formats, planned dates, objective and the planning summary are locked**: changing them is refused with `plan_locked`. To change the plan the team uses **"Reabrir planejamento"** (`content.reopen`, reason required): it supersedes any pending request, clears the plan approval **and** the art approval, keeps the files and the history, and returns the content to `planning`. Rescheduling a channel from the calendar after the plan is approved follows the same rule (see O7).
+5. Once the art is approved the content behaves as today: manual publication per channel row, "Reabrir" (art only, to `in_production`) with a reason, and `requires_new_revision` for any change of caption or files.
+6. The plan stage is **optional per organization**: policy `requirePlanApproval` in the approvals settings group, default on ([organization-settings.md](organization-settings.md)). The value is copied to the content when it is created (`plan_required`) so changing the policy never changes a content already in progress. With `plan_required = false` the content goes `draft → in_production` and has only the art stage, exactly as today. Contents that exist when phase T is migrated get `plan_required = false`.
+
+### Editorial statuses
+
+`EditorialStatus` gets four values; the transition map in `shared/editorial` and the `CHECK` change with them.
+
+| Status | Meaning |
+|---|---|
+| `draft` | Idea or brief, nothing sent |
+| `planning` (new) | The team is writing the plan |
+| `awaiting_plan_approval` (new) | A plan version is with the client |
+| `plan_changes_requested` (new) | The client asked for changes to the plan |
+| `plan_approved` (new) | The plan is approved; art production can start |
+| `in_production` | Art in production (as today) |
+| `internal_review` | Optional internal review of the art (as today) |
+| `awaiting_approval` | An art version is with the client (as today) |
+| `changes_requested` | The client asked for changes to the art (as today) |
+| `approved` | Art approved (as today) |
+| `cancelled` | Cancelled (as today) |
+
+| From | To | Action required | Notes |
+|---|---|---|---|
+| `draft` | `planning` | `content.update` | Only when `plan_required` |
+| `draft` | `in_production` | `content.update` | Only when not `plan_required` (today's path) |
+| `planning` / `plan_changes_requested` | `awaiting_plan_approval` | `content.submit` | Creates a plan version and a request; needs at least one channel row with a planned date (`channel_required`, `plan_incomplete`) |
+| `awaiting_plan_approval` | `plan_approved` / `plan_changes_requested` | An eligible approver | Through the portal ([approvals.md](approvals.md)) |
+| `plan_changes_requested` | `planning` | `content.update` | The plan is edited again |
+| `plan_approved` | `in_production` | `content.update` | "Iniciar produção das artes" |
+| `in_production` / `internal_review` | `awaiting_approval` | `content.submit` | Art stage as today; refused with `plan_not_approved` when the plan is required and not approved |
+| `plan_approved`, `in_production`, `internal_review`, `changes_requested`, `awaiting_approval`, `approved` | `planning` | `content.reopen` | "Reabrir planejamento"; reason required; audited |
+| any | `cancelled` | `content.cancel` | As today |
+
+Publication status of the channel rows is unchanged. Recording a manual publication still requires `approved`.
+
+### Data model changes (to be added to [../reference/data-model.md](../reference/data-model.md) in task T-01)
+
+| Table | Change |
+|---|---|
+| `content_items` | `plan_required boolean not null`; `plan_media jsonb not null default '[]'` (ordered `{ media_version_id, alt_text }`, at most 10, images only); `plan_summary text` (client-facing, up to 4000 characters, plain text); `plan_approved_revision_id` (the approved plan version, composite foreign key like `approved_revision_id`); `editorial_status` `CHECK` extended with the four new values |
+| `content_revisions` | `stage text not null check (stage in ('plan','art'))`, default `art` for rows that exist; the plan snapshot holds title, objective, planning summary, caption draft the channel rows with format and planned date, and the **planning images** in order (stored in `content_revision_media`; the art version holds the art files only) |
+| `approval_requests` | `stage` (same values, copied from the version); `approver_user_id` becomes nullable and stops being written ([approvals.md](approvals.md), approver pool) |
+| `organization_settings` (key `approvals`) | New field `requirePlanApproval` (boolean, default true) in the zod schema of the group |
+
+Migration strategy (expand, then contract; DATA-12): count the rows first; add the columns with defaults that describe today's behavior (`stage = 'art'`, `plan_required = false` for existing contents); migrate the code; only then drop the designated-approver code and columns in the contract migration.
+
+### Functions
+
+| Function | Change |
+|---|---|
+| `submit_for_approval(p_item, p_due_date, p_message, p_expected_version)` | No approver parameter. The stage comes from the editorial status (planning side sends a plan, production side sends an art). The plan stage requires a channel row with a planned date; the art stage requires `plan_approved` (or not `plan_required`), text or files and the file rules of today. Notifies every eligible approver |
+| `content_move` | Handles `draft → planning`, `plan_changes_requested → planning` and `plan_approved → in_production` (no side effects) |
+| `reopen_content(p_item, p_reason, p_scope)` | `p_scope` is `art` (today's behavior) or `plan` |
+| `content_item_save` | Refuses channels, formats, dates, objective and planning summary once the plan is approved (`plan_locked`); refuses files before it (`plan_not_approved`) |
+| `reschedule_channel` | After the plan approval it returns `plan_locked` (see O7) |
+| `portal_decide_approval`, `portal_get_approval`, `portal_list_pending` | Follow the approver pool ([approvals.md](approvals.md)); every result carries `stage` |
+
+### Screens
+
+- **Editor:** a stepper at the top, "Planejamento" and "Artes", with the status of each (pendente, em aprovação, aprovado). In planning the editor shows the channels, the planning summary and caption draft, the **planning images** (an optional file strip with the same picker, ordering and alternative text as the art files, up to 10 images), the dates per channel and the settings; the art files section is locked. In art it shows everything, with channels, formats and dates read-only and a link "Reabrir planejamento". The primary action follows the stage: "Enviar planejamento para aprovação", "Iniciar produção das artes", "Enviar artes para aprovação".
+- **Send dialog:** no approver choice. It lists who will be asked to decide (the brand members who can approve), the optional message and the approval deadline, and says "Isto cria a versão nº N do planejamento/das artes. O cliente verá exatamente esta versão."
+- **List and board:** one board column per editorial status that exists; a stage badge ("Planejamento", "Artes") beside the status badge; filter by stage.
+- **Calendar and dashboard:** entries of a content in planning keep their dates and show the planning status icon; the dashboard counts pending approvals by stage.
+- **Portal:** the card and the review screen show the stage badge. A plan version shows its planning images (when there are any) next to the caption draft and the channel with format and date, and the screen says what is being approved ("Você está aprovando o planejamento: canais, formatos, datas e direção do texto. As artes vêm depois.").
+
+### Registries and copy to add in task T-01
+
+- Enums: `ApprovalStage` (`plan`, `art`); `EditorialStatus` with `planning`, `awaiting_plan_approval`, `plan_changes_requested`, `plan_approved`.
+- Error codes: `plan_not_approved` ("Aguarde a aprovação do planejamento para enviar as artes."), `plan_locked` ("O planejamento já foi aprovado. Reabra o planejamento para mudar canais, formatos ou datas."), `plan_incomplete` ("Para enviar o planejamento, escolha ao menos um canal com data e horário.").
+- Audit: no new action; `content.submitted`, `content.reopened` and `approval.decided` carry `stage` in their metadata.
+- Notifications: no new kind; the title and body of `approval.requested` and `approval.decided` name the stage ("Planejamento aguarda sua decisão", "Artes aguardam sua decisão").
+- Glossary: Planning "Planejamento"; Art "Artes"; Reopen the plan "Reabrir planejamento"; Start art "Iniciar produção das artes"; Plan approved "Planejamento aprovado".
+
+### Acceptance criteria (two stages)
+
+- With the policy on, a new content cannot send art, and cannot attach files, before the plan is approved.
+- The client sees a plan version (summary, caption draft, channels, dates and the optional planning images) and an art version (the final files); each is immutable and has its own request and decision.
+- A content can go to planning approval with images or without any; images attached to the plan are never treated as the art, and art production still waits for the plan approval.
+- After the plan is approved, channels, formats and dates are locked; "Reabrir planejamento" unlocks them with a reason, supersedes any pending request and clears both approvals.
+- A change requested on the plan returns the content to `planning`; a change requested on the art returns it to `in_production`; neither affects the other approval until reopened.
+- With the policy off, or on a content created before phase T, the flow is exactly today's single cycle.
+- The board, the list, the calendar and the portal show the stage and use the new statuses.
+
 ## Open decisions
 
 | ID | Decision | Status |
@@ -176,6 +282,10 @@ Comments belong to a content (and optionally a version) with visibility `interna
 | O3 | The approval is **per content**; a channel the client does not want is removed by the team in a new version | Decided |
 | O4 | A date change after approval creates a new version and a new approval (as before). If it proves heavy, take the planned date **out of the approved snapshot**: the approval would cover text and files and dates become scheduling | Open; revisit after real use |
 | O5 | At most 20 channel rows per content | Decided |
+| O6 | The planning stage is **optional per organization** (policy `requirePlanApproval`, default on) and frozen into each content at creation (`plan_required`) | Decided 2026-10-20 (go-ahead to develop) |
+| O7 | A date change **after the plan is approved**: recommended is to require "Reabrir planejamento" (the plan is what the client agreed). The alternative is to let the team move a planned date during art production without a new approval, taking the date out of the frozen plan | Open; revisit after real use |
+| O8 | What the client sees in the plan version: title, objective, planning summary, caption draft, channels with format and planned date, plus the optional planning files (O9); no briefing, no internal notes | Decided 2026-10-20 (go-ahead to develop) |
+| O9 | A plan version can carry **planning files** (references, sketches, layout drafts, any file type the library accepts): optional, up to 10, kept in their own ordered list `plan_media` on the content (same shape as `working_media`) and frozen into the plan version on submission. Whether the client may also upload references of their own stays out of scope | Decided 2026-10-20 |
 
 ## Implementation status
 
@@ -202,3 +312,7 @@ History of the earlier model (kept for context): phase 3 delivered items, varian
 2026-10-19: Content media now use `@dnd-kit/react` for animated drag-and-drop reordering, with a keyboard-operable drag handle and the existing persisted list order. Files: `src/components/marketing/content/file-strip.tsx`, `package.json` and `package-lock.json`. Validation performed: targeted ESLint, full TypeScript check, Prettier, `check:docs`, production dependency audit and `git diff --check`. **Not tested**: browser pointer, touch and keyboard interactions.
 
 2026-10-19: The content editor's channel preview now uses the registered brand logo as its avatar, with the existing profile initial as fallback. Files: `src/components/marketing/content/content-editor.tsx` and `src/components/shared/preview/channel-preview.tsx`. Validation performed: targeted ESLint, full TypeScript check, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering or fallback behavior.
+
+2026-10-20: Shared content previews now use a platform-and-format-specific media frame, handle failed image/video loads with a clear fallback, and provide keyboard-accessible carousel indicators. The preview uses the media URL supplied by its caller without applying a lower-resolution transform. Files: `src/lib/shared/preview/platforms.ts`, `src/lib/shared/preview/platforms.test.ts`, `src/components/shared/preview/channel-preview.tsx`. Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: Vitest could not start because esbuild returned `spawn EPERM`; visual comparison with each live platform app or browser behavior for every media kind.
+
+2026-10-20 (two-stage approval, tasks T-01 to T-07): migrations `20261020100000_two_stage_approval_expand.sql` (stage columns, `plan_required`, `plan_summary`, `plan_media`, `plan_approved_revision_id`, the four statuses and their transitions, `brand_approver_ids`, `plan_approval_required`, `content_plan_signature`), `…100010_two_stage_approval_functions.sql` (`content_item_save` with the locks, `content_move`, `submit_for_approval` without an approver and per stage, `reopen_content` with a scope, `cancel_request`, `send_approval_reminder`, `reschedule_channel`, and the portal functions for the approver pool) and `…100020_two_stage_approval_contract.sql` (drops `reassign_approver` and `approver_user_id`). Server: `content.functions.ts`, `workflow.functions.ts`, `revisions.server.ts`, `schemas.ts`, `stage-state.ts`. Screens: the stepper (`stage-stepper.tsx`), the planning section (`plan-section.tsx`), the action bar (`content-actions.tsx`), the stage-aware send dialog, the board with the new columns. Validation performed: 59 new SQL assertions in `19_two_stage_approval.test.sql` (808 in total, 0 failures; plan then art, art before the plan refused, locks, reopen scope, two approvers with the first decision winning, a member without `can_decide`, brand A versus brand B, nobody able to approve, anon), tests 09 to 12 adapted (policy off keeps the old cycle), Vitest for `stageStateOf` and the transition map against the SQL, typecheck, lint. **Not applied to the linked project** (the three migrations are waiting for the go-ahead) and the types are from the offline generator; **not seen in a browser**; **not tested**: the new board with ten columns, the planning files in the portal on a real bucket, the policy switch on the policies screen.

@@ -31,7 +31,11 @@ export function formatDateTime(value: Instant, timeZone?: string): string {
   }).format(toDate(value));
 }
 
-export function formatInZone(value: Instant, timeZone: string): string {
+export function formatInZone(
+  value: Instant,
+  timeZone: string,
+  options: { includeZone?: boolean } = {},
+): string {
   return new Intl.DateTimeFormat(LOCALE, {
     day: "2-digit",
     month: "2-digit",
@@ -39,7 +43,7 @@ export function formatInZone(value: Instant, timeZone: string): string {
     hour: "2-digit",
     minute: "2-digit",
     timeZone,
-    timeZoneName: "short",
+    ...(options.includeZone ? { timeZoneName: "short" as const } : {}),
   }).format(toDate(value));
 }
 

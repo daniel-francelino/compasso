@@ -21,6 +21,7 @@ import {
   DataTable,
 } from "@/components/shared/admin/data-table";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
@@ -81,13 +82,13 @@ const publicationOptions = [
   })),
 ];
 
-const nextPlanned = (row: ContentItemRow): string => {
+const nextPlanned = (row: ContentItemRow): { at: string; timeZone: string } | null => {
   const planned = row.channels
     .filter((variant) => variant.plannedAt !== null && variant.plannedTimezone !== null)
     .sort((a, b) => (a.plannedAt ?? "").localeCompare(b.plannedAt ?? ""))[0];
   return planned?.plannedAt && planned.plannedTimezone
-    ? formatInZone(planned.plannedAt, planned.plannedTimezone)
-    : "—";
+    ? { at: planned.plannedAt, timeZone: planned.plannedTimezone }
+    : null;
 };
 
 export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
@@ -161,7 +162,23 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       label: "Estado",
       cell: (row) => <EditorialStatusBadge status={row.editorialStatus} />,
     },
-    { id: "planned", label: "Prevista", cell: nextPlanned },
+    {
+      id: "planned",
+      label: "Prevista",
+      cell: (row) => {
+        const planned = nextPlanned(row);
+        return planned ? (
+          <span className="inline-flex items-center gap-1.5">
+            {formatInZone(planned.at, planned.timeZone)}
+            <InfoTip label={`Fuso horário: ${planned.timeZone}`}>
+              Fuso horário: {planned.timeZone}
+            </InfoTip>
+          </span>
+        ) : (
+          "—"
+        );
+      },
+    },
     { id: "owner", label: "Responsável", cell: (row) => row.assigneeName ?? "—" },
     {
       id: "deadline",

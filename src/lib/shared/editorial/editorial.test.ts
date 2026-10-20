@@ -13,8 +13,11 @@ import {
 import { ContentFormat, EditorialStatus, Platform } from "@/lib/shared/enums";
 
 const sqlTransitions = (): Record<string, string[]> => {
-  const sql = readFileSync("supabase/migrations/20261018100900_content.sql", "utf8");
-  const body = sql.match(/function public\.editorial_transition_allowed[\s\S]*?\$\$;/)?.[0] ?? "";
+  const sql = readFileSync(
+    "supabase/migrations/20261020100000_two_stage_approval_expand.sql",
+    "utf8",
+  );
+  const body = sql.match(/function public\.editorial_transition_allowed[\s\S]*?\$fn\$;/)?.[0] ?? "";
   const map: Record<string, string[]> = {};
   for (const match of body.matchAll(/when '([a-z_]+)' then p_to in \(([^)]*)\)/g)) {
     const from = match[1] ?? "";

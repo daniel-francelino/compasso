@@ -5,6 +5,7 @@ import {
   CircleCheck,
   Eye,
   FileText,
+  ClipboardList,
   Hammer,
   Hourglass,
   Replace,
@@ -19,6 +20,10 @@ export type Style = { tone: StatusTone; icon: LucideIcon };
 
 const editorialStyles: Record<EditorialStatus, Style> = {
   [EditorialStatus.Draft]: { tone: "draft", icon: FileText },
+  [EditorialStatus.Planning]: { tone: "info", icon: ClipboardList },
+  [EditorialStatus.AwaitingPlanApproval]: { tone: "warning", icon: Hourglass },
+  [EditorialStatus.PlanChangesRequested]: { tone: "negative", icon: Undo2 },
+  [EditorialStatus.PlanApproved]: { tone: "success", icon: CircleCheck },
   [EditorialStatus.InProduction]: { tone: "info", icon: Hammer },
   [EditorialStatus.InternalReview]: { tone: "info", icon: Eye },
   [EditorialStatus.AwaitingApproval]: { tone: "warning", icon: Hourglass },

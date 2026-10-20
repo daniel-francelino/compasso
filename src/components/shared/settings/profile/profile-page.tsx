@@ -37,9 +37,11 @@ import { unwrapResult } from "@/lib/shared/result-client";
 function ProfileForm({
   initialName,
   preferences,
+  notificationChannelLabel,
 }: {
   initialName: string;
   preferences: PreferenceRow[];
+  notificationChannelLabel: string;
 }) {
   const queryClient = useQueryClient();
   const [fullName, setFullName] = useState(initialName);
@@ -140,47 +142,52 @@ function ProfileForm({
         event.preventDefault();
         void save();
       }}
-      className="space-y-8"
+      className="space-y-6"
     >
-      <section aria-labelledby="profile-data" className="space-y-3">
-        <h2 id="profile-data" className="heading-card text-foreground">
-          Seus dados
-        </h2>
-        <TextField
-          id="profile-name"
-          label="Nome"
-          required
-          value={fullName}
-          onValueChange={setFullName}
-          maxLength={120}
-          error={errors["fullName"]}
-        />
-      </section>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="profile-data" className="space-y-3">
+          <h2 id="profile-data" className="heading-card text-foreground">
+            Seus dados
+          </h2>
+          <TextField
+            id="profile-name"
+            label="Nome"
+            required
+            value={fullName}
+            onValueChange={setFullName}
+            maxLength={120}
+            error={errors["fullName"]}
+          />
+        </section>
 
-      <section aria-labelledby="profile-password" className="space-y-3">
-        <h2 id="profile-password" className="heading-card text-foreground">
-          Senha
-        </h2>
-        <PasswordField
-          id="new-password"
-          label="Nova senha"
-          autoComplete="new-password"
-          hint="Deixe em branco para manter a atual. Pelo menos 10 caracteres."
-          value={password}
-          error={errors["password"]}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-        <PasswordField
-          id="confirm-password"
-          label="Repita a nova senha"
-          autoComplete="new-password"
-          value={confirmation}
-          error={errors["confirmation"]}
-          onChange={(event) => setConfirmation(event.target.value)}
-        />
-      </section>
+        <section aria-labelledby="profile-password" className="space-y-3">
+          <h2 id="profile-password" className="heading-card text-foreground">
+            Senha
+          </h2>
+          <PasswordField
+            id="new-password"
+            label="Nova senha"
+            autoComplete="new-password"
+            hint="Deixe em branco para manter a atual. Pelo menos 10 caracteres."
+            value={password}
+            error={errors["password"]}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <PasswordField
+            id="confirm-password"
+            label="Repita a nova senha"
+            autoComplete="new-password"
+            value={confirmation}
+            error={errors["confirmation"]}
+            onChange={(event) => setConfirmation(event.target.value)}
+          />
+        </section>
+      </div>
 
-      <section aria-labelledby="profile-notifications" className="space-y-3">
+      <section
+        aria-labelledby="profile-notifications"
+        className="space-y-3 border-t border-border pt-6"
+      >
         <h2 id="profile-notifications" className="heading-card text-foreground">
           Avisos
         </h2>
@@ -189,6 +196,7 @@ function ProfileForm({
           drafts={drafts}
           onChange={patchDraft}
           disabled={busy}
+          channelLabel={notificationChannelLabel}
         />
       </section>
 
@@ -203,7 +211,11 @@ function ProfileForm({
   );
 }
 
-export function ProfilePage() {
+export function ProfilePage({
+  notificationChannelLabel = "No Compasso",
+}: {
+  notificationChannelLabel?: string;
+}) {
   const auth = useAuth();
   const query = useQuery({
     queryKey: QueryKey.Notifications.preferences(),
@@ -228,6 +240,7 @@ export function ProfilePage() {
           key={formKey}
           initialName={auth.profile?.name ?? ""}
           preferences={preferences}
+          notificationChannelLabel={notificationChannelLabel}
         />
       )}
     </div>

@@ -1,6 +1,6 @@
 begin;
 
-select plan(185);
+select plan(176);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -61,6 +61,10 @@ from (values
 ) as u (id, name, email, kind, role_key)
 join public.roles r on r.key = u.role_key;
 
+insert into public.organization_settings (key, value)
+values ('policies.approvals', '{"deadlineDays":3,"requirePlanApproval":false}')
+on conflict (key) do update set value = excluded.value;
+
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select public.client_save('{"name":"Cafe Aurora"}'::jsonb, true);
 select set_config('t.brand', (select id::text from public.brands where name = 'Cafe Aurora'), true);
@@ -117,7 +121,7 @@ select is((select editorial_status from public.content_items where id = current_
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'denied', 'a collaborator cannot send for approval');
+select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'denied', 'a collaborator cannot send for approval');
 select lives_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Item do colaborador"}'::jsonb)$$, current_setting('t.brand')), 'a collaborator creates contents');
 select throws_ok(format($$select public.content_item_delete('%s')$$, current_setting('t.item')), 'denied', 'a collaborator cannot delete contents');
 reset role;
@@ -126,27 +130,22 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select is(jsonb_array_length(public.approver_options(current_setting('t.brand')::uuid) -> 'approvers'), 1, 'only the member who can decide is offered as approver');
 select is((public.approver_options(current_setting('t.brand')::uuid) ->> 'default_deadline_days')::int, 3, 'the default deadline comes from the approvals policy');
 select throws_ok(format($$select public.approver_options('%s')$$, current_setting('t.brandB')), 'not_found', 'approvers of another brand are not listed');
-select throws_ok(format($$select public.submit_for_approval('%s', null, null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'approver_required', 'an approver is required');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d2', null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'approver_without_access', 'a member without can_decide cannot be the approver');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d3', null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'approver_without_access', 'a commenter cannot be the approver');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000e1', null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'approver_without_access', 'an approver of another brand is refused');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000b1', null, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'approver_without_access', 'an internal user cannot be the approver');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d1', null, null, 1)$$, current_setting('t.item')), 'conflict', 'a stale version conflicts on submission');
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d1', current_date - 3, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'invalid_input', 'an approval deadline in the past is refused');
+select throws_ok(format($$select public.submit_for_approval('%s', null, null, 1)$$, current_setting('t.item')), 'conflict', 'a stale version conflicts on submission');
+select throws_ok(format($$select public.submit_for_approval('%s', current_date - 3, null, pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'invalid_input', 'an approval deadline in the past is refused');
 
 select set_config('t.empty', public.content_item_save(format('{"brand_id":"%s","title":"Sem texto","channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select set_config('t.emptyRow', (select id::text from public.content_channels where content_item_id = current_setting('t.empty')::uuid), true);
 select public.content_move(current_setting('t.empty')::uuid, 'in_production', pg_temp.ver(current_setting('t.empty')::uuid));
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver('%s'))$$, current_setting('t.empty'), current_setting('t.empty')), 'invalid_input', 'a content with no text and no files cannot be sent');
+select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.empty'), current_setting('t.empty')), 'invalid_input', 'a content with no text and no files cannot be sent');
 select set_config('t.draft', public.content_item_save(format('{"brand_id":"%s","title":"Rascunho","caption":{"text":"Rascunho"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver('%s'))$$, current_setting('t.draft'), current_setting('t.draft')), 'transition_not_allowed', 'a draft cannot be sent');
+select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.draft'), current_setting('t.draft')), 'transition_not_allowed', 'a draft cannot be sent');
 select set_config('t.nochannel', public.content_item_save(format('{"brand_id":"%s","title":"Sem canal","caption":{"text":"Texto"}}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select public.content_move(current_setting('t.nochannel')::uuid, 'in_production', pg_temp.ver(current_setting('t.nochannel')::uuid));
-select throws_ok(format($$select public.submit_for_approval('%s', '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver('%s'))$$, current_setting('t.nochannel'), current_setting('t.nochannel')), 'channel_required', 'a content with no channel cannot be sent');
+select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.nochannel'), current_setting('t.nochannel')), 'channel_required', 'a content with no channel cannot be sent');
 
 select pg_temp.save(current_setting('t.item')::uuid, format('"title":"Lançamento de outono","caption":{"text":"Chegou o outono"},"working_media":[{"media_version_id":"%s","alt_text":"Xicara"},{"media_version_id":"%s"}],"channels":[{"id":"%s","channel_id":"%s","format":"carousel"},{"channel_id":"%s","format":"text","caption":"Versão para o LinkedIn"}]', current_setting('t.media1'), current_setting('t.media2'), current_setting('t.row1'), current_setting('t.channel'), current_setting('t.channel2')));
 select is((select count(*)::int from public.content_channels where content_item_id = current_setting('t.item')::uuid), 2, 'a second channel row is added to the same content');
-select set_config('t.sub1', public.submit_for_approval(current_setting('t.item')::uuid, '00000000-0000-0000-0000-0000000000d1', current_date + 3, 'Pode olhar?', pg_temp.ver(current_setting('t.item')::uuid))::text, true);
+select set_config('t.sub1', public.submit_for_approval(current_setting('t.item')::uuid, current_date + 3, 'Pode olhar?', pg_temp.ver(current_setting('t.item')::uuid))::text, true);
 select set_config('t.req1', current_setting('t.sub1')::jsonb ->> 'request_id', true);
 select set_config('t.rev1', current_setting('t.sub1')::jsonb ->> 'revision_id', true);
 select is((current_setting('t.sub1')::jsonb ->> 'revision_no')::int, 1, 'the first submission creates revision 1');
@@ -173,7 +172,7 @@ select is((select count(*)::int from public.audit_events where action = 'content
 
 select throws_ok(format($$update public.content_revisions set snapshot = '{}' where id = '%s'$$, current_setting('t.rev1')), 'record_immutable', 'a revision cannot be updated');
 select throws_ok(format($$delete from public.content_revision_media where revision_id = '%s'$$, current_setting('t.rev1')), 'record_immutable', 'revision files cannot be deleted');
-select throws_ok(format($$update public.approval_requests set approver_user_id = '00000000-0000-0000-0000-0000000000d2' where id = '%s'$$, current_setting('t.req1')), 'record_immutable', 'the approver of a request cannot be rewritten');
+select throws_ok(format($$update public.approval_requests set stage = 'plan' where id = '%s'$$, current_setting('t.req1')), 'record_immutable', 'the approver of a request cannot be rewritten');
 select throws_ok($$insert into public.content_channels (brand_id, content_item_id, channel_id, format) values (current_setting('t.brandB')::uuid, current_setting('t.item')::uuid, current_setting('t.channelB')::uuid, 'text')$$, '23503', null, 'a channel row cannot point to a content of another brand');
 select throws_ok(format($$update public.content_channels set channel_id = '%s' where id = '%s'$$, current_setting('t.channelB'), current_setting('t.row1')), '23503', null, 'nor to a channel of another brand');
 
@@ -184,7 +183,7 @@ select lives_ok(format($$select public.media_set_trashed(a.id, false) from publi
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select set_config('t.sub2', public.submit_for_approval(current_setting('t.item')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver(current_setting('t.item')::uuid))::text, true);
+select set_config('t.sub2', public.submit_for_approval(current_setting('t.item')::uuid, null, null, pg_temp.ver(current_setting('t.item')::uuid))::text, true);
 select set_config('t.req2', current_setting('t.sub2')::jsonb ->> 'request_id', true);
 select is((select status from public.approval_requests where id = current_setting('t.req1')::uuid), 'superseded', 'a new submission supersedes the pending request');
 select is((select count(*)::int from public.approval_requests where item_id = current_setting('t.item')::uuid and status = 'pending'), 1, 'and only one request is pending');
@@ -228,7 +227,7 @@ reset role;
 select isnt((select viewed_at from public.approval_requests where id = current_setting('t.req2')::uuid), null, 'the first view is recorded for the approver');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d2');
-select throws_ok(format($$select public.portal_decide_approval('%s', 'approved', null)$$, current_setting('t.req2')), 'not_designated_approver', 'another member cannot decide');
+select throws_ok(format($$select public.portal_decide_approval('%s', 'approved', null)$$, current_setting('t.req2')), 'denied', 'another member cannot decide');
 select is((public.portal_get_approval(current_setting('t.req2')::uuid) ->> 'can_decide')::boolean, false, 'and does not get the decision controls');
 select is((public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 ->> 'can_decide')::boolean, false, 'the list also hides decisions from another member');
 reset role;
@@ -264,7 +263,7 @@ select is((select count(*)::int from public.notifications where user_id = '00000
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select lives_ok(format($$select public.content_move('%s', 'in_production', pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'the team resumes production');
-select set_config('t.sub3', public.submit_for_approval(current_setting('t.item')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver(current_setting('t.item')::uuid))::text, true);
+select set_config('t.sub3', public.submit_for_approval(current_setting('t.item')::uuid, null, null, pg_temp.ver(current_setting('t.item')::uuid))::text, true);
 select set_config('t.req3', current_setting('t.sub3')::jsonb ->> 'request_id', true);
 select is((current_setting('t.sub3')::jsonb ->> 'revision_no')::int, 3, 'a new revision is sent after the change request');
 reset role;
@@ -296,32 +295,28 @@ select is((select count(*)::int from public.audit_events where action = 'content
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.item2', public.content_item_save(format('{"brand_id":"%s","title":"Segundo conteudo","caption":{"text":"Texto pronto"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select public.content_move(current_setting('t.item2')::uuid, 'in_production', pg_temp.ver(current_setting('t.item2')::uuid));
-select set_config('t.sub4', public.submit_for_approval(current_setting('t.item2')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver(current_setting('t.item2')::uuid))::text, true);
+select set_config('t.sub4', public.submit_for_approval(current_setting('t.item2')::uuid, null, null, pg_temp.ver(current_setting('t.item2')::uuid))::text, true);
 select set_config('t.req4', current_setting('t.sub4')::jsonb ->> 'request_id', true);
-select throws_ok(format($$select public.reassign_approver('%s', '00000000-0000-0000-0000-0000000000d2')$$, current_setting('t.req4')), 'approver_without_access', 'a request cannot be reassigned to someone who cannot decide');
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d2', 'external', true, 'active');
-select set_config('t.reassigned', public.reassign_approver(current_setting('t.req4')::uuid, '00000000-0000-0000-0000-0000000000d2')::text, true);
-select is((select status from public.approval_requests where id = current_setting('t.req4')::uuid), 'superseded', 'reassigning supersedes the old request');
-select is((select approver_user_id::text from public.approval_requests where id = (current_setting('t.reassigned')::jsonb ->> 'request_id')::uuid), '00000000-0000-0000-0000-0000000000d2', 'and creates one for the new approver on the same revision');
+select set_config('t.reassigned', jsonb_build_object('request_id', current_setting('t.req4'))::text, true);
 select lives_ok(format($$select public.send_approval_reminder('%s')$$, current_setting('t.reassigned')::jsonb ->> 'request_id'), 'a reminder is sent');
 select lives_ok(format($$select public.send_approval_reminder('%s')$$, current_setting('t.reassigned')::jsonb ->> 'request_id'), 'a second reminder in the same hour is accepted');
 reset role;
 
-select is((select count(*)::int from public.audit_events where action = 'approval.approver_reassigned'), 1, 'the reassignment is audited');
-select is((select count(*)::int from public.notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'approval.requested'), 2, 'reminders in the same hour are not duplicated');
+select is((select count(*)::int from public.notifications where user_id = '00000000-0000-0000-0000-0000000000d2' and kind = 'approval.requested'), 1, 'reminders in the same hour are not duplicated');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select throws_ok(format($$select public.cancel_request('%s', '')$$, current_setting('t.reassigned')::jsonb ->> 'request_id'), 'reason_required', 'cancelling a request needs a reason');
 select lives_ok(format($$select public.cancel_request('%s', 'Mudança de plano')$$, current_setting('t.reassigned')::jsonb ->> 'request_id'), 'a pending request is cancelled');
 select is((select editorial_status from public.content_items where id = current_setting('t.item2')::uuid), 'in_production', 'and the content returns to production');
 select throws_ok(format($$select public.cancel_request('%s', 'De novo')$$, current_setting('t.reassigned')::jsonb ->> 'request_id'), 'request_not_pending', 'a cancelled request cannot be cancelled again');
-select set_config('t.sub5', public.submit_for_approval(current_setting('t.item2')::uuid, '00000000-0000-0000-0000-0000000000d1', null, null, pg_temp.ver(current_setting('t.item2')::uuid))::text, true);
+select set_config('t.sub5', public.submit_for_approval(current_setting('t.item2')::uuid, null, null, pg_temp.ver(current_setting('t.item2')::uuid))::text, true);
 select set_config('t.req5', current_setting('t.sub5')::jsonb ->> 'request_id', true);
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', false, 'active');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
-select throws_ok(format($$select public.portal_decide_approval('%s', 'approved', null)$$, current_setting('t.req5')), 'approver_without_access', 'revoking can_decide blocks the decision immediately');
+select throws_ok(format($$select public.portal_decide_approval('%s', 'approved', null)$$, current_setting('t.req5')), 'denied', 'revoking can_decide blocks the decision immediately');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
@@ -394,7 +389,7 @@ set local role anon;
 select throws_ok($$select * from public.content_items$$, 'permission denied for table content_items', 'anon cannot read contents');
 select throws_ok($$select * from public.content_channels$$, 'permission denied for table content_channels', 'nor channel rows');
 select throws_ok($$select public.portal_list_brands()$$, 'permission denied for function portal_list_brands', 'anon cannot call the portal');
-select throws_ok($$select public.submit_for_approval(gen_random_uuid(), gen_random_uuid(), null, null, 1)$$, 'permission denied for function submit_for_approval', 'anon cannot submit');
+select throws_ok($$select public.submit_for_approval(gen_random_uuid(), null, null, 1)$$, 'permission denied for function submit_for_approval', 'anon cannot submit');
 reset role;
 
 select * from finish();

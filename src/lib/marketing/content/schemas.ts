@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  ApprovalStage,
   CommentVisibility,
   ContentFormat,
   ContentObjective,
@@ -71,6 +72,8 @@ export const saveContentSchema = z
     assigneeId: z.string().uuid().nullable().optional(),
     tags: z.array(z.string().trim().min(1).max(40)).max(20),
     productionDueDate: dateOnly.nullable().optional(),
+    planSummary: z.string().trim().max(4000, "O resumo é longo demais.").optional(),
+    planMedia: z.array(mediaRefSchema).max(10, "No máximo 10 arquivos no planejamento."),
     caption: z.string().max(5000, "A legenda é longa demais.").default(""),
     callToAction: z.string().trim().max(300, "A chamada para ação é longa demais.").optional(),
     media: z.array(mediaRefSchema).max(20, "No máximo 20 arquivos."),
@@ -89,6 +92,8 @@ export const idSchema = z.object({ id: z.string().uuid() });
 
 export const cancelSchema = z.object({ id: z.string().uuid(), reason: reasonSchema });
 
+export const reopenSchema = cancelSchema.extend({ scope: z.nativeEnum(ApprovalStage) });
+
 export const moveContentSchema = z.object({
   id: z.string().uuid(),
   to: z.nativeEnum(EditorialStatus),
@@ -97,7 +102,6 @@ export const moveContentSchema = z.object({
 
 export const submitSchema = z.object({
   id: z.string().uuid(),
-  approverId: z.string().uuid({ message: "Escolha quem vai aprovar." }),
   dueDate: dateOnly.nullable().optional(),
   message: z.string().trim().max(1000, "A mensagem é longa demais.").optional(),
   expectedVersion: z.number().int().min(1),

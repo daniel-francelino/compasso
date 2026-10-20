@@ -31,7 +31,10 @@ report("Actions used by has_action in SQL but missing in Action", difference(use
 report("Actions in Action that no migration seeds", difference(tsActions, sqlActions));
 report("Actions seeded by SQL but missing in Action", difference(sqlActions, tsActions));
 
-const raised = quoted(sql, /raise exception '([a-z_0-9]+)'/g);
+const retiredCodes = new Set(["approver_without_access", "not_designated_approver"]);
+const raised = new Set(
+  [...quoted(sql, /raise exception '([a-z_0-9]+)'/g)].filter((code) => !retiredCodes.has(code)),
+);
 const errorsText = read("src/lib/shared/auth/errors.ts");
 const messageCodes = quoted(errorsText, /^ {2}([a-z_0-9]+): \{/gm);
 const registryText = read("docs/reference/error-codes.md");
@@ -70,14 +73,25 @@ const checkValues = (table, column, constant, file, definedIn = table) => {
     tableBlock.match(
       new RegExp(`${column} text[^,;]*?check \\(${column} in \\(([^)]*)\\)\\)`),
     )?.[1] ?? "";
+  const constraints = [
+    ...sql.matchAll(
+      new RegExp(
+        `add constraint ${table}_${column}_check check \\(\\s*${column} in \\(([^)]*)\\)`,
+        "g",
+      ),
+    ),
+  ];
+  const latestConstraint = constraints.at(-1)?.[1] ?? "";
   const added =
-    columnLine === ""
-      ? (sql.match(
-          new RegExp(
-            `add column ${column} text[\\s\\S]*?check \\(\\s*(?:${column} is null or )?${column} in \\(([^)]*)\\)`,
-          ),
-        )?.[1] ?? "")
-      : columnLine;
+    latestConstraint !== ""
+      ? latestConstraint
+      : columnLine === ""
+        ? (sql.match(
+            new RegExp(
+              `add column ${column} text[\\s\\S]*?check \\(\\s*(?:${column} is null or )?${column} in \\(([^)]*)\\)`,
+            ),
+          )?.[1] ?? "")
+        : columnLine;
   const fromSql = quoted(added, /'([a-z_]+)'/g);
   const body =
     read(file).match(new RegExp(`export const ${constant} = \\{([\\s\\S]*?)\\} as const`))?.[1] ??

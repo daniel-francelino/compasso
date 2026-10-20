@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
 import { PortalBreadcrumbs } from "@/components/portal/portal-breadcrumbs";
+import { NotificationBell } from "@/components/shared/notifications/notification-bell";
 import { Separator } from "@/components/shared/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/shared/ui/sidebar";
 import { useAuth } from "@/lib/shared/auth/use-auth";
+import { AppRoute } from "@/lib/shared/routes";
 
 export function PortalShell({ children }: { children: ReactNode }) {
   const auth = useAuth();
@@ -21,6 +23,12 @@ export function PortalShell({ children }: { children: ReactNode }) {
           <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
           <Separator orientation="vertical" className="h-5" />
           <PortalBreadcrumbs />
+          {auth.user ? (
+            <NotificationBell
+              userId={auth.user.id}
+              notificationsTo={AppRoute.PortalNotifications}
+            />
+          ) : null}
         </header>
         <main
           id="main-content"

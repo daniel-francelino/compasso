@@ -5,6 +5,7 @@ import { type Caller, requireActionServer } from "@/lib/shared/auth/server-guard
 import {
   type ApprovalOutcome,
   ApprovalRequestStatus,
+  ApprovalStage,
   CommentVisibility,
   type Platform,
 } from "@/lib/shared/enums";
@@ -25,7 +26,6 @@ import {
   ApprovalFilter,
   cancelRequestSchema,
   listApprovalsSchema,
-  reassignSchema,
   requestIdSchema,
 } from "@/lib/marketing/approvals/schemas";
 import { parseComments } from "@/lib/marketing/content/comments.server";
@@ -45,7 +45,8 @@ export type ApprovalRow = {
   itemId: string;
   channels: { platform: Platform; profileName: string }[];
   revisionNo: number;
-  approverName: string | null;
+  stage: ApprovalStage;
+  decidedByName: string | null;
   requestedAt: string;
   dueDate: string | null;
   overdue: boolean;
@@ -58,8 +59,8 @@ export type ApprovalDetail = {
   brandName: string;
   brandTimezone: string;
   itemId: string;
-  approverId: string;
-  approverName: string | null;
+  stage: ApprovalStage;
+  approverNames: string[];
   requestedByName: string | null;
   requestedAt: string;
   dueDate: string | null;
@@ -76,7 +77,9 @@ export type ApprovalDetail = {
   comments: CommentRow[];
 };
 
-const reassignedSchema = z.object({ request_id: z.string().uuid() });
+const approverOptionsSchema = z.object({
+  approvers: z.array(z.object({ id: z.string().uuid(), name: z.string() })),
+});
 
 const snapshotChannelsSchema = z.object({
   channels: z.array(z.object({ platform: z.string(), profile_name: z.string() })),
@@ -108,7 +111,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     let query = caller.supabase
       .from("approval_requests")
       .select(
-        "id, status, brand_id, item_id, approver_user_id, requested_at, due_date, content_revisions(revision_no, snapshot), content_items!inner(title, brands(name))",
+        "id, status, stage, brand_id, item_id, requested_at, due_date, approval_decisions(decided_by), content_revisions(revision_no, snapshot), content_items!inner(title, brands(name))",
         { count: "exact" },
       );
     const filter = data.status ?? ApprovalFilter.Pending;
@@ -117,7 +120,6 @@ export const listApprovals = createServerFn({ method: "GET" })
         ? query.eq("status", ApprovalRequestStatus.Pending).lt("due_date", today)
         : query.eq("status", filter);
     if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
-    if (data.approverId !== undefined) query = query.eq("approver_user_id", data.approverId);
     if (search !== "") query = query.ilike("content_items.title", `%${search}%`);
 
     const {
@@ -132,7 +134,7 @@ export const listApprovals = createServerFn({ method: "GET" })
 
     const names = await personNames(
       caller.supabase,
-      rows.map((row) => row.approver_user_id),
+      rows.map((row) => row.approval_decisions[0]?.decided_by),
     );
     const mapped = rows.map((row) => ({
       id: row.id,
@@ -143,7 +145,11 @@ export const listApprovals = createServerFn({ method: "GET" })
       itemId: row.item_id,
       channels: snapshotChannels(row.content_revisions?.snapshot),
       revisionNo: row.content_revisions?.revision_no ?? 0,
-      approverName: names.get(row.approver_user_id) ?? null,
+      stage: row.stage === ApprovalStage.Plan ? ApprovalStage.Plan : ApprovalStage.Art,
+      decidedByName:
+        row.approval_decisions[0] === undefined
+          ? null
+          : (names.get(row.approval_decisions[0].decided_by) ?? null),
       requestedAt: row.requested_at,
       dueDate: row.due_date,
       overdue:
@@ -164,7 +170,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("approval_requests")
       .select(
-        "id, status, brand_id, item_id, revision_id, approver_user_id, requested_by, requested_at, due_date, message, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by), content_items(current_revision_id, brands(name, timezone))",
+        "id, status, stage, brand_id, item_id, revision_id, requested_by, requested_at, due_date, message, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by), content_items(current_revision_id, brands(name, timezone))",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -189,11 +195,9 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
     const comments = parseComments(commentsResult.data);
     if (!comments.ok) return comments;
     const decision = row.approval_decisions[0];
-    const names = await personNames(supabase, [
-      row.approver_user_id,
-      row.requested_by,
-      decision?.decided_by,
-    ]);
+    const names = await personNames(supabase, [row.requested_by, decision?.decided_by]);
+    const options = await supabase.rpc("approver_options", { p_brand: row.brand_id });
+    const approvers = parseOutput(approverOptionsSchema, options.data);
     const brand = row.content_items?.brands;
     const zone = brand?.timezone ?? (await organizationZone(supabase));
     const today = todayInZone(zone);
@@ -207,8 +211,8 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
         brandName: brand?.name ?? "",
         brandTimezone: zone,
         itemId: row.item_id,
-        approverId: row.approver_user_id,
-        approverName: names.get(row.approver_user_id) ?? null,
+        stage: row.stage === ApprovalStage.Plan ? ApprovalStage.Plan : ApprovalStage.Art,
+        approverNames: approvers.ok ? approvers.approvers.map((person) => person.name) : [],
         requestedByName: row.requested_by === null ? null : (names.get(row.requested_by) ?? null),
         requestedAt: row.requested_at,
         dueDate: row.due_date,
@@ -240,20 +244,6 @@ export const remindApprover = createServerFn({ method: "POST" })
     const { error } = await caller.supabase.rpc("send_approval_reminder", { p_request: data.id });
     if (error) return fail(error);
     return { ok: true };
-  });
-
-export const reassignApprover = createServerFn({ method: "POST" })
-  .validator(reassignSchema)
-  .handler(async ({ data }): Promise<Result<{ requestId: string }>> => {
-    const caller = await requireActionServer(Action.Content.Submit);
-    if (caller === null) return denied;
-    const { data: row, error } = await caller.supabase.rpc("reassign_approver", {
-      p_request: data.id,
-      p_new_approver: data.approverId,
-    });
-    if (error) return fail(error);
-    const parsed = parseOutput(reassignedSchema, row);
-    return parsed.ok ? { ok: true, requestId: parsed.request_id } : parsed;
   });
 
 export const cancelApprovalRequest = createServerFn({ method: "POST" })

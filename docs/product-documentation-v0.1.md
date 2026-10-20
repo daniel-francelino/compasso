@@ -104,7 +104,7 @@ Starting profiles (editable, except the system one):
 | Manage clients and brands | Yes | Linked brands | View linked | No |
 | Create and edit content | Yes | Linked brands | Linked brands | No |
 | Send for approval | Yes | Linked brands | With permission | No |
-| Approve or request changes | Not by default | Not by default | No | Content sent on the brands where they are the designated approver |
+| Approve or request changes | Not by default | Not by default | No | Content sent on the brands where they have the right to approve |
 | View the library | Authorized scope | Authorized scope | Authorized scope | Shared files only |
 
 "With permission" means the user's profile includes the corresponding action. Model rules:
@@ -167,7 +167,7 @@ Publication status is separate: Unplanned ("Não planejada"), Planned ("Planejad
 
 ### Approval rules
 
-1. In the MVP there is one designated approver per request. Other external members can comment, if authorized, but do not decide that request.
+1. Any approver of the brand (an external member with the right to decide) can decide a request; the first decision wins and the others see who decided. Other external members can comment, if authorized. Content goes through two approvals: the planning first and, only after it, the art.
 2. The decision identifies the revision, approver, date and result; requesting changes requires a comment.
 3. Changing text, files, order, channel or date requires a new revision and a new approval.
 4. A superseded revision accepts no new decisions. Concurrent submissions must be checked in a transaction to avoid approving an outdated version.
@@ -252,7 +252,7 @@ Technical sources: https://supabase.com/docs/guides/database/postgres/row-level-
 | content_channels | Channel, format and publication occurrence of a content |
 | calendar_notes | Ideas and dates on the calendar, convertible into contents |
 | content_revisions, content_revision_media | Immutable versions of the content and the files shown |
-| approval_requests, approval_decisions | Request per revision and the designated approver's decision |
+| approval_requests, approval_decisions | Request per version (planning or art) and the decision of whoever approved |
 | comments | Comments with internal or external visibility |
 | media_assets, media_versions | Logical identity and file versions in R2 |
 | media_collections, media_collection_items | Logical organization of the library |

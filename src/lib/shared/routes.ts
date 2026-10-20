@@ -13,6 +13,7 @@ export const AppRoute = {
   Forbidden: "/admin/forbidden",
   Design: "/admin/design",
   Notifications: "/admin/notifications",
+  PortalNotifications: "/portal/notifications",
   Profile: "/admin/profile",
   Library: "/admin/library",
   Users: "/admin/settings/users",

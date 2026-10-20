@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
@@ -124,8 +125,11 @@ export function RescheduleDialog({
       {publication ? (
         <>
           {publication.currentAt !== null ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
               Data atual: {formatInZone(publication.currentAt, publication.brandTimezone)}
+              <InfoTip label={`Fuso horário: ${publication.brandTimezone}`}>
+                Fuso horário: {publication.brandTimezone}
+              </InfoTip>
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">Este conteúdo ainda não tem data.</p>
@@ -140,8 +144,11 @@ export function RescheduleDialog({
             error={errors["plannedAt"]}
           />
           {plannedAt !== null ? (
-            <p className="text-sm">
+            <p className="flex items-center gap-1.5 text-sm">
               Nova data: <strong>{formatInZone(plannedAt, publication.brandTimezone)}</strong>
+              <InfoTip label={`Fuso horário: ${publication.brandTimezone}`}>
+                Fuso horário: {publication.brandTimezone}
+              </InfoTip>
             </p>
           ) : null}
           {resubmits ? (

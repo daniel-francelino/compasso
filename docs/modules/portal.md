@@ -8,6 +8,10 @@ Give the client a simple, mobile-first place to: see what is pending, preview ea
 
 Included: brand selection, pending dashboard, calendar, approval screen, external comments, decision history, notifications, profile. Not included in the MVP: client uploads, anonymous approval links, multiple approvers, chat, payments, reports.
 
+> Changed on 2026-10-20: any approver of the brand can decide a request (no designated approver), and every request has a stage, planning or art, with a plan version that may carry planning files but never the art. See [approvals.md](approvals.md#approver-pool-decided-2026-10-20) and [content.md](content.md#two-stage-approval-decided-2026-10-20).
+
+> Planned change (decided 2026-10-20, not implemented): the portal calendar will also show the events the team marks as visible to the client (shoot days, meetings), read-only, with a detail dialog. See [calendar.md](calendar.md#events-shared-with-the-client-decided-2026-10-20-not-implemented).
+
 ## Access
 
 - Login at `/admin/login` (same identity pool); after sign-in, a person who only has portal actions is redirected to `/portal`. The portal layout has its own guard (`requireAction(context, Action.Portal.View)`).
@@ -66,11 +70,13 @@ Technically the external role has **no `select` policy** on any internal table; 
 
 ### Approval lists and dashboard previews
 
-- Approval cards in the dashboard and approval list show a preview of the exact shared revision, including the selected channel, format, caption, the linked brand's configured logo as the channel avatar, and signed media thumbnails where available.
-- A designated approver with current decision access can use "Aprovar" or "Pedir alterações" directly from a pending card. Approval uses the existing confirmation; requesting changes requires the same comment dialog and minimum length as the review screen. Other members and non-pending requests have no decision actions.
+- Approval cards in the dashboard and approval list show a separate preview for every channel row in the exact shared revision, including its format, caption, the linked brand's configured logo as the channel avatar, and signed display media (falling back to the original when no display derivative exists). Multiple formats from one platform appear together without tabs.
+- An approver of the brand with current decision access can use "Aprovar" or "Pedir alterações" directly from a pending card. Approval uses the existing confirmation; requesting changes requires the same comment dialog and minimum length as the review screen. Other members and non-pending requests have no decision actions.
 - Each portal section shows a matching skeleton while its data is loading; one section loading does not hide the rest of the dashboard.
 
 ### Layout and side menu
+
+The top bar also shows the shared notification bell at the upper right, with the unread count, latest notifications, read and snooze actions, and a "Ver todos" link to `/portal/notifications`.
 
 The portal uses the same shell as the back office: a **side menu** (collapsible, a drawer on mobile) and a top bar with the menu toggle. The menu has the title "Portal do Cliente", the brand switcher, the group "Marca" (Painel, Aprovações, Calendário, always for the current brand) and the group "Conta" (Avisos with the unread counter, Meu perfil), and "Sair" with the person's name in the footer. On pages that are not tied to a brand (Avisos, Meu perfil) the brand links use the first linked brand.
 
@@ -88,12 +94,12 @@ Each request is a card that focuses on the **preview**: the title with the statu
 
 ## Rules
 
-1. A request can only be decided by its **designated approver**, with an active external link and `can_decide`. Other external members comment.
+1. A request can be decided by **any approver of the brand** (an active external link with `can_decide` and the action `approvals.decide`); the first decision wins and the others see who decided. Other external members comment.
 2. The decision applies to the **exact revision shown**; if it was superseded meanwhile the decision is refused (`revision_superseded`).
 3. Requesting changes requires a comment. A decision cannot be changed by the client; to revise it, the team reopens and a new request is created.
 4. Opening a request records `viewed_at` once (informational).
 5. The portal is mobile-first: no horizontal scroll at 360 px, readable contrast (AAA for body text), visible focus, keyboard access, `aria-live` for success/error messages.
-6. All dates are shown with their time zone; the portal never mixes zones silently.
+6. Date and time values are calculated in their configured time zone, without appending a GMT offset to every value. When a screen can contain multiple zones, an adjacent timezone icon exposes the IANA zone in a tooltip; page-level zone context may cover a single-zone view.
 7. Session expiry returns to the login with the same page as the return destination, preserving a typed (undecided) comment locally.
 8. Notifications (in-app and email) never contain private content beyond the title and brand; the link leads to the portal.
 
@@ -110,7 +116,7 @@ Code layout: `components/portal/{brands,approvals,calendar,comments}`, `lib/port
 | Action | Allows |
 |---|---|
 | `portal.view` | Enter the portal and read the allowed data |
-| `approvals.decide` | Decide the requests designated to the person (needs `portal.view`) |
+| `approvals.decide` | Decide the requests of the brands where the person has `can_decide` (needs `portal.view`) |
 | `comments.create_external` | Comment on contents of the linked brands (needs `portal.view`) |
 
 Starting roles: `external_approver` (all three) and `external_commenter` (`portal.view` and `comments.create_external`).
@@ -119,13 +125,13 @@ Starting roles: `external_approver` (all three) and `external_commenter` (`porta
 
 > Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
-`denied`, `not_found`, `request_not_pending`, `revision_superseded`, `comment_required`, `not_designated_approver`, `approver_without_access`, `conflict`. Messages are friendly pt-BR texts without internal codes.
+`denied`, `not_found`, `request_not_pending`, `revision_superseded`, `comment_required`, `conflict`. Messages are friendly pt-BR texts without internal codes.
 
 ## Acceptance criteria
 
 - An external member of brand A cannot obtain data, comments or private URLs of brand B, even by changing identifiers in requests.
 - The approver sees exactly the revision sent; later edits by the team do not change it.
-- Approval lists and dashboard cards preview only the revision shared with the client; pending designated approvers can decide from those cards.
+- Approval lists and dashboard cards preview only the revision shared with the client; approvers of the brand can decide from those cards.
 - Every portal section presents a skeleton while its data is loading.
 - A decision on a superseded revision is refused, also with concurrent sessions.
 - Only shared contents appear in the portal calendar; drafts and internal deadlines never do.
@@ -148,6 +154,9 @@ Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (r
 2026-10-20: Portal calendar items now load the shared approval revision on hover or keyboard focus and show its channel preview, signed media and caption; selecting an item still opens its review. No migration. Validation performed: targeted lint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: hover/focus preview in a browser.
 2026-10-20: Shared channel and revision previews now show a dash when the caption is empty. Validation performed: targeted ESLint, Prettier and `git diff --check`. **Not tested**: browser rendering.
 2026-10-20: Revision preview tabs now include the format label alongside the platform so multiple formats on the same network can be distinguished. Validation performed: targeted ESLint, typecheck, Prettier and `git diff --check`. **Not tested**: browser rendering.
+2026-10-20: Portal content previews now sign the display derivative instead of preferring the 400 px thumbnail, with the original as the fallback, so clients see the content at better quality. Authorization still runs through `portal_media_urls`. Validation performed: targeted ESLint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser rendering with production media.
+2026-10-20: Portal approval cards display each channel format as its own preview instead of tabs, so multiple formats on the same platform are visible together. Validation performed: targeted ESLint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: responsive card rendering in a browser.
+2026-10-20: Date and time displays now omit the trailing GMT abbreviation; the configured IANA zone remains available from a compact tooltip where entries can use different zones. Portal route transitions reuse the authenticated layout for 30 seconds and show the router's default page skeleton when route loading exceeds 150 ms. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. **Not verified**: full TypeScript check (blocked by existing errors in content editor, revision history and approvals), Vitest (could not start because esbuild returned `spawn EPERM`), browser transition timing and timezone tooltips.
 
 2026-10-19: The portal layout now has the back-office shell with a side menu: `PortalShell` (`SidebarProvider`, top bar) and `PortalSidebar` (`src/components/portal/portal-sidebar.tsx`); the old top navigation (Avisos, Meu perfil, Sair) moved into the menu. Validation performed: typecheck, build, lint of the changed files. **Not tested**: the menu in a browser (desktop, tablet, 360 px drawer), keyboard navigation, the active state of each item.
 
@@ -158,3 +167,15 @@ Phase 4 (task P4-03, 2026-10-18). The portal calendar: `portal_list_calendar` (r
 2026-10-20: Request cards redesigned (`request-card.tsx`, `request-preview.tsx`): preview first, publication date inside the preview, `ResponseDeadlineBadge` (rule in `src/lib/portal/approvals/deadline.ts`, replaces `isOverdue`, which was removed), status badge kept, actions at the bottom, and the full-screen `PortalApprovalDialog` that embeds `PortalApprovalPage` (`embedded` prop). The channel and version line was removed from the card. Validation performed: 6 Vitest tests of the deadline rule (overdue, singular, today, tomorrow, later, decided or no due date), lint of the portal files, typecheck of the portal files. **Not tested**: the dialog and the cards in a browser (focus trap, scroll, 360 px), the click on the preview versus the carousel controls, deciding from inside the dialog. The project-wide lint and typecheck currently fail in `portal-calendar-entry-preview.tsx` and `calendar-grid.tsx`, which belong to another change in progress.
 
 2026-10-20: The preview on the request cards is smaller. `ChannelPreview` has a `compact` mode (card at most 16rem wide, 11rem for story and reel, smaller header, caption clamped to two lines and no "ver mais"; the full caption is in the full-screen dialog); only the portal cards use it, the editor, the review screen and the calendar keep the default size. Validation performed: lint and typecheck. **Not tested**: the cards in a browser (sizes by format, 360 px).
+
+2026-10-20: Shared channel previews now show the existing media skeleton while the file URL is loading, keeping the media frame dimensions stable. Files: `src/components/shared/preview/channel-preview.tsx`. Validation performed: targeted ESLint, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering during slow media URL resolution.
+
+2026-10-20: Shared channel previews leave the caption area empty when no caption is provided. Files: `src/components/shared/preview/channel-preview.tsx`. Validation performed: targeted ESLint, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering.
+
+2026-10-20: The portal profile form now places personal data and password side by side on wide screens and labels in-app notification delivery as "No portal". The layout stacks on small screens. Files: `src/components/shared/settings/profile/profile-page.tsx`, `src/components/shared/notifications/preferences-section.tsx`, `src/routes/portal/_app/profile.tsx`. Validation performed: targeted ESLint, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering at mobile and desktop widths.
+
+2026-10-20: The portal's unread notification badge now keeps its contrast on hover and active rows, and the Avisos link reserves space so its label cannot overlap the badge. Files: `src/components/portal/portal-sidebar.tsx`. Validation performed: targeted ESLint, Prettier, `check:docs` and `git diff --check`. **Not tested**: visual hover behavior in a browser.
+
+2026-10-20: Added the shared notification bell to the portal header. Its "Ver todos" link opens the portal notifications route; it reuses the existing notification query and read/snooze actions. Files: `src/components/portal/portal-shell.tsx`, `src/components/shared/notifications/notification-bell.tsx`, `src/lib/shared/routes.ts`. Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: notification dropdown and actions in a browser with an external account.
+
+2026-10-20: Portal previews now use the configured brand logo in approval detail and calendar hover, plus the shared platform-and-format media frames, failed-media fallback and accessible carousel indicators. Files: `src/components/portal/approvals/portal-approval-page.tsx`, `src/components/portal/calendar/portal-calendar-entry-preview.tsx`, `src/components/shared/preview/revision-view.tsx`, shared preview rules in [channels.md](channels.md#platform-rules-preview-and-validation-guidance). Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: Vitest could not start because esbuild returned `spawn EPERM`; visual comparison with each live platform app or browser behavior for every media kind.

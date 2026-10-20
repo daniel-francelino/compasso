@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Ban, Check, MessageSquareWarning, Replace } from "lucide-react";
+import { ArrowLeft, Ban, Check, ClipboardList, MessageSquareWarning, Replace } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PortalComments } from "@/components/portal/approvals/portal-comments";
@@ -9,6 +9,7 @@ import { RecordUnavailable } from "@/components/shared/admin/record-unavailable"
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { TextAreaField } from "@/components/shared/admin/form-fields";
 import { SectionCard } from "@/components/shared/admin/section-card";
+import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { PageSkeleton } from "@/components/shared/admin/skeletons";
 import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { RevisionView } from "@/components/shared/preview/revision-view";
@@ -19,6 +20,7 @@ import { usePortalUrls } from "@/hooks/portal/use-portal-urls";
 import {
   decidePortalApproval,
   getPortalApproval,
+  getPortalBrand,
   recordPortalView,
   signPortalMedia,
 } from "@/lib/portal/approvals/portal.functions";
@@ -27,11 +29,16 @@ import type { PortalApproval } from "@/lib/portal/approvals/types";
 import {
   ApprovalOutcome,
   ApprovalRequestStatus,
+  ApprovalStage,
   type ContentFormat,
   type Platform,
 } from "@/lib/shared/enums";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
-import { approvalOutcomeLabels } from "@/lib/shared/labels";
+import {
+  approvalOutcomeLabels,
+  approvalStageLabels,
+  contentObjectiveLabels,
+} from "@/lib/shared/labels";
 import { kindOfMime } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -69,17 +76,38 @@ function StateNotice({ approval }: { approval: PortalApproval }) {
       </Alert>
     );
   }
-  if (request.status === ApprovalRequestStatus.Pending && !approval.isDesignated) {
+  if (request.status === ApprovalRequestStatus.Pending && !approval.canDecide) {
     return (
       <Alert>
         <AlertTitle>Você pode comentar</AlertTitle>
-        <AlertDescription>
-          A decisão é de {request.approverName ?? "outra pessoa"}.
-        </AlertDescription>
+        <AlertDescription>A decisão é de quem aprova a marca.</AlertDescription>
       </Alert>
     );
   }
   return null;
+}
+
+function StageNotice({ approval }: { approval: PortalApproval }) {
+  const { request } = approval;
+  if (request.stage !== ApprovalStage.Plan) return null;
+  return (
+    <SectionCard title="Planejamento" icon={ClipboardList}>
+      <p className="text-sm text-muted-foreground">
+        {request.status === ApprovalRequestStatus.Pending
+          ? "Você está aprovando o planejamento: canais, formatos, datas e direção do texto. As artes vêm depois."
+          : "Este é o planejamento enviado pela equipe. As artes vêm depois da aprovação."}
+      </p>
+      {approval.objectiveKind ? (
+        <p className="text-sm">
+          <span className="font-medium">Objetivo:</span>{" "}
+          {contentObjectiveLabels[approval.objectiveKind]}
+        </p>
+      ) : null}
+      {approval.planSummary ? (
+        <p className="whitespace-pre-wrap break-words text-sm">{approval.planSummary}</p>
+      ) : null}
+    </SectionCard>
+  );
 }
 
 function DecisionCard({ approval }: { approval: PortalApproval }) {
@@ -139,6 +167,10 @@ export function PortalApprovalPage({
       unwrapResult(await getPortalApproval({ data: { id: requestId } })).approval,
   });
   const approval = query.data;
+  const brand = useQuery({
+    queryKey: QueryKey.Portal.brand(brandId),
+    queryFn: async () => unwrapResult(await getPortalBrand({ data: { brandId } })).brand,
+  });
   const urls = usePortalUrls(
     approval?.revisionId ?? "",
     (approval?.media ?? []).map((item) => item.versionId),
@@ -148,7 +180,7 @@ export function PortalApprovalPage({
   useEffect(() => {
     if (viewed.current || approval === undefined) return;
     viewed.current = true;
-    if (approval.isDesignated && approval.request.status === ApprovalRequestStatus.Pending) {
+    if (approval.canDecide && approval.request.status === ApprovalRequestStatus.Pending) {
       void recordPortalView({ data: { id: requestId } });
     }
   }, [approval, requestId]);
@@ -219,6 +251,9 @@ export function PortalApprovalPage({
         )}
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="heading-page">{request.title}</h1>
+          <StatusBadge tone="neutral" icon={ClipboardList}>
+            {approvalStageLabels[request.stage]}
+          </StatusBadge>
           <RequestStatusBadge status={request.status} />
         </div>
         <p className="text-sm text-muted-foreground">
@@ -233,6 +268,7 @@ export function PortalApprovalPage({
         ) : null}
       </div>
       <StateNotice approval={approval} />
+      <StageNotice approval={approval} />
       {error ? (
         <Alert variant="destructive" role="alert">
           <AlertTitle>Não foi possível registrar</AlertTitle>
@@ -259,6 +295,7 @@ export function PortalApprovalPage({
           altText: item.altText,
         }))}
         urls={urls.data}
+        brandLogoUrl={brand.data?.logoUrl ?? null}
         onOpenFile={openFile}
       />
       <DecisionCard approval={approval} />

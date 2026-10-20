@@ -14,6 +14,7 @@ import { useListState } from "@/hooks/shared/use-list-state";
 import { type ApprovalRow, listApprovals } from "@/lib/marketing/approvals/approvals.functions";
 import { ApprovalFilter } from "@/lib/marketing/approvals/schemas";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
+import { approvalStageLabels } from "@/lib/shared/labels";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -69,8 +70,13 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
       label: "Canais",
       cell: (row) => <ChannelLogos channels={row.channels} />,
     },
+    { id: "stage", label: "Etapa", cell: (row) => approvalStageLabels[row.stage] },
     { id: "revision", label: "Versão", cell: (row) => row.revisionNo },
-    { id: "approver", label: "Aprovador", cell: (row) => row.approverName ?? "—" },
+    {
+      id: "approver",
+      label: "Quem decidiu",
+      cell: (row) => row.decidedByName ?? "Qualquer aprovador da marca",
+    },
     { id: "requested", label: "Enviada em", cell: (row) => formatDateTime(row.requestedAt) },
     {
       id: "due",

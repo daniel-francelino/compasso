@@ -551,8 +551,8 @@ any status ─▶ cancelled
 | draft | in_production | `content.update` | — |
 | in_production | internal_review | `content.update` | Internal review is optional; it can be skipped straight to awaiting_approval according to the organization's configuration |
 | in_production / internal_review | awaiting_approval | `content.submit` | Creates a revision, sets the approver, requires at least one active channel |
-| awaiting_approval | approved | designated approver (`approvals.decide` and `can_decide`) | The request's revision is the `current_revision_id` |
-| awaiting_approval | changes_requested | designated approver | Comment required |
+| awaiting_approval | approved | any approver of the brand (`approvals.decide` and `can_decide`); the first decision wins | The request's revision is the `current_revision_id` |
+| awaiting_approval | changes_requested | any approver of the brand | Comment required |
 | changes_requested | in_production | `content.update` | — |
 | approved | in_production | `content.reopen` | Audited, with reason; clears `approved_revision_id` and keeps the history |
 | any | cancelled | `content.cancel` | Does not delete history |
@@ -622,7 +622,7 @@ Created in the same transaction as the functions above through `notify_users(...
 
 | Kind | When | Who receives (action) |
 |---|---|---|
-| `approval.requested` | Request sent | Designated approver (`approvals.decide`) |
+| `approval.requested` | Request sent | Every approver of the brand (`approvals.decide`) |
 | `approval.decided` | Approved or changes requested | Whoever sent it (`approvals.view`) |
 | `approval.overdue` | Pending request beyond the approval deadline | Whoever sent it (scheduled, `pg_cron`) |
 | `content.due_soon` | Production deadline approaching | Owner (`content.view`, scheduled) |

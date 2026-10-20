@@ -1,25 +1,52 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { CircleAlert, CircleCheck, Send, TriangleAlert } from "lucide-react";
+import { CircleAlert, CircleCheck, Send, TriangleAlert, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
-import { SelectField, TextAreaField } from "@/components/shared/admin/form-fields";
+import { TextAreaField } from "@/components/shared/admin/form-fields";
+import { InfoTip } from "@/components/shared/admin/info-tip";
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { submitSchema } from "@/lib/marketing/content/schemas";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import { listApproverOptions, submitForApproval } from "@/lib/marketing/content/workflow.functions";
-import { mediaProblem } from "@/lib/shared/editorial/editorial";
+import { mediaProblem, submitStageOf } from "@/lib/shared/editorial/editorial";
+import { ApprovalStage } from "@/lib/shared/enums";
 import { addDaysToDate, todayInZone } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 type Check = { ok: boolean; warning?: boolean; text: string };
 
-const checksOf = (content: ContentDetail, dirty: boolean): Check[] => {
-  const hasContent = content.caption.trim() !== "" || content.media.length > 0;
+const futureDates = (content: ContentDetail): Check => ({
+  ok: content.channels.every(
+    (channel) => channel.plannedAt === null || new Date(channel.plannedAt).getTime() > Date.now(),
+  ),
+  warning: true,
+  text: "As datas previstas estão no futuro",
+});
+
+const planChecks = (content: ContentDetail, dirty: boolean): Check[] => [
+  { ok: !dirty, text: "As alterações estão salvas" },
+  { ok: content.channels.length > 0, text: "Há ao menos um canal" },
+  {
+    ok: content.channels.some((channel) => channel.plannedAt !== null),
+    text: "Ao menos um canal tem data e horário",
+  },
+  {
+    ok: content.planMedia.every((file) => file.available),
+    text: "Todos os arquivos do planejamento estão disponíveis",
+  },
+  {
+    ok: content.channels.every((channel) => !channel.channelArchived),
+    text: "Os canais estão ativos",
+  },
+  futureDates(content),
+];
+
+const artChecks = (content: ContentDetail, dirty: boolean): Check[] => {
   const countProblem = mediaProblem(
     content.channels.map((channel) => channel.format),
     content.media.length,
@@ -27,7 +54,10 @@ const checksOf = (content: ContentDetail, dirty: boolean): Check[] => {
   return [
     { ok: !dirty, text: "As alterações estão salvas" },
     { ok: content.channels.length > 0, text: "Há ao menos um canal" },
-    { ok: hasContent, text: "Há legenda ou arquivos" },
+    {
+      ok: content.caption.trim() !== "" || content.media.length > 0,
+      text: "Há legenda ou arquivos",
+    },
     {
       ok: countProblem === null,
       text: countProblem ?? "A quantidade de arquivos serve para os formatos",
@@ -40,16 +70,24 @@ const checksOf = (content: ContentDetail, dirty: boolean): Check[] => {
       ok: content.channels.every((channel) => !channel.channelArchived),
       text: "Os canais estão ativos",
     },
-    {
-      ok: content.channels.every(
-        (channel) =>
-          channel.plannedAt === null || new Date(channel.plannedAt).getTime() > Date.now(),
-      ),
-      warning: true,
-      text: "As datas previstas estão no futuro",
-    },
+    futureDates(content),
   ];
 };
+
+const copyOf = (stage: ApprovalStage) =>
+  stage === ApprovalStage.Plan
+    ? {
+        title: "Enviar planejamento para aprovação",
+        submit: "Enviar planejamento",
+        subject: "do planejamento",
+        seen: "canais, formatos, datas, resumo e imagens do planejamento",
+      }
+    : {
+        title: "Enviar artes para aprovação",
+        submit: "Enviar artes",
+        subject: "das artes",
+        seen: "texto, arquivos e canais",
+      };
 
 export function SubmitDialog({
   content,
@@ -65,9 +103,10 @@ export function SubmitDialog({
   onSubmitted: () => void;
 }) {
   const { formRef, errors, error, busy, submit } = useFormSubmit();
-  const [approverId, setApproverId] = useState("");
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const stage = submitStageOf(content.editorialStatus) ?? ApprovalStage.Art;
+  const copy = copyOf(stage);
 
   const options = useQuery({
     queryKey: QueryKey.Content.approvers(content.brandId),
@@ -77,7 +116,8 @@ export function SubmitDialog({
   });
   const today = todayInZone(content.brandTimezone);
   const effectiveDue = dueDate ?? addDaysToDate(today, options.data?.defaultDeadlineDays ?? 3);
-  const checks = checksOf(content, dirty);
+  const checks =
+    stage === ApprovalStage.Plan ? planChecks(content, dirty) : artChecks(content, dirty);
   const blocked = checks.some((check) => !check.ok && check.warning !== true);
   const approvers = options.data?.approvers ?? [];
 
@@ -86,9 +126,9 @@ export function SubmitDialog({
       open={open}
       onOpenChange={onOpenChange}
       icon={Send}
-      title="Enviar para aprovação"
-      description={`Isto cria a versão nº ${content.nextRevisionNo}. O cliente verá exatamente esta versão, com todos os canais.`}
-      submitLabel="Enviar para aprovação"
+      title={copy.title}
+      description={`Isto cria a versão nº ${content.nextRevisionNo} ${copy.subject}. O cliente verá exatamente esta versão.`}
+      submitLabel={copy.submit}
       submitDisabled={blocked || approvers.length === 0}
       busy={busy}
       form={{
@@ -100,7 +140,6 @@ export function SubmitDialog({
             submitSchema,
             {
               id: content.id,
-              approverId,
               dueDate: effectiveDue,
               message,
               expectedVersion: content.version,
@@ -142,7 +181,7 @@ export function SubmitDialog({
       </ul>
       {options.isSuccess && approvers.length === 0 ? (
         <p role="status" className="rounded-md border border-border bg-muted p-3 text-sm">
-          Esta marca ainda não tem um aprovador com permissão de decidir.{" "}
+          Ninguém desta marca pode aprovar ainda.{" "}
           <Link
             to="/admin/marketing/brands/$brandId/members"
             params={{ brandId: content.brandId }}
@@ -152,16 +191,19 @@ export function SubmitDialog({
           </Link>
         </p>
       ) : (
-        <SelectField
-          id="submit-approver"
-          label="Quem vai aprovar"
-          required
-          value={approverId}
-          onValueChange={setApproverId}
-          placeholder="Escolha o aprovador"
-          options={approvers.map((person) => ({ value: person.id, label: person.name }))}
-          error={errors["approverId"]}
-        />
+        <div className="space-y-1">
+          <p className="flex items-center gap-1.5 text-sm font-medium">
+            <UsersRound className="size-4 text-muted-foreground" aria-hidden="true" />
+            Quem será avisado
+            <InfoTip label="Sobre quem aprova">
+              Qualquer pessoa da marca com permissão de aprovar pode decidir. A primeira decisão
+              vale. O cliente verá: {copy.seen}.
+            </InfoTip>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {approvers.map((person) => person.name).join(", ")}
+          </p>
+        </div>
       )}
       <DatePickerField
         id="submit-due"
@@ -173,7 +215,7 @@ export function SubmitDialog({
       />
       <TextAreaField
         id="submit-message"
-        label="Mensagem para o aprovador (opcional)"
+        label="Mensagem para quem aprova (opcional)"
         value={message}
         onValueChange={setMessage}
         maxLength={1000}

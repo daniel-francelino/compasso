@@ -1,5 +1,6 @@
 import type {
   ApprovalRequestStatus,
+  ApprovalStage,
   CalendarEntryKind,
   CalendarNoteRepeat,
   ContentFormat,
@@ -63,7 +64,7 @@ export type PortalCalendarEntry = {
   plannedAt: string;
   plannedTimezone: string;
   brandTimezone: string;
-  isMine: boolean;
+  stage: ApprovalStage;
 };
 
 export type VisibleRange = { start: string; end: string; days: string[] };

@@ -1,12 +1,17 @@
-import { ChevronLeft, ChevronRight, FileText, ImageOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Button } from "@/components/shared/ui/button";
-import { ContentFormat, Platform } from "@/lib/shared/enums";
+import { Skeleton } from "@/components/shared/ui/skeleton";
+import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 import { MediaKind } from "@/lib/shared/media/limits";
-import { platformDescriptors } from "@/lib/shared/preview/platforms";
+import {
+  isImmersivePreview,
+  platformDescriptors,
+  previewAspectRatio,
+} from "@/lib/shared/preview/platforms";
 import { cn } from "@/lib/shared/utils";
 
 export type PreviewMedia = {
@@ -16,36 +21,69 @@ export type PreviewMedia = {
   url: string | null;
 };
 
-const TALL_FORMATS: readonly ContentFormat[] = [ContentFormat.Story, ContentFormat.Reel];
+function UnavailableSlide() {
+  return (
+    <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+      <FileText className="size-8" aria-hidden="true" />
+      <span className="text-xs">Prévia indisponível</span>
+    </div>
+  );
+}
 
-const aspectRatio = (platform: Platform, format: ContentFormat): string => {
-  if (TALL_FORMATS.includes(format)) return "9 / 16";
-  if (format === ContentFormat.Video) return "16 / 9";
-  if (platform === Platform.Instagram) return "4 / 5";
-  if (platform === Platform.Linkedin || platform === Platform.Facebook) return "1.91 / 1";
-  return "1 / 1";
-};
+function ImageSlide({
+  item,
+  position,
+  total,
+}: {
+  item: PreviewMedia;
+  position: number;
+  total: number;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (failed || item.url === null) return <UnavailableSlide />;
+  return (
+    <img
+      src={item.url}
+      alt={item.altText ?? `Imagem ${position} de ${total}`}
+      className="size-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function VideoSlide({
+  item,
+  position,
+  total,
+}: {
+  item: PreviewMedia;
+  position: number;
+  total: number;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (failed || item.url === null) return <UnavailableSlide />;
+  return (
+    <video
+      src={item.url}
+      controls
+      preload="metadata"
+      className="size-full object-contain"
+      aria-label={item.altText ?? `Vídeo ${position} de ${total}`}
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 function Slide({ item, position, total }: { item: PreviewMedia; position: number; total: number }) {
   if (item.url === null) {
     return (
-      <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
-        <ImageOff className="size-8" aria-hidden="true" />
-        <span className="text-xs">Carregando arquivo…</span>
+      <div className="size-full" role="status" aria-label="Carregando arquivo">
+        <Skeleton className="size-full rounded-none" />
       </div>
     );
   }
-  if (item.kind === MediaKind.Video) {
-    return (
-      <video
-        src={item.url}
-        controls
-        preload="metadata"
-        className="size-full object-contain"
-        aria-label={item.altText ?? `Vídeo ${position} de ${total}`}
-      />
-    );
-  }
+  if (item.kind === MediaKind.Video)
+    return <VideoSlide item={item} position={position} total={total} />;
   if (item.kind === MediaKind.Document) {
     return (
       <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -54,13 +92,9 @@ function Slide({ item, position, total }: { item: PreviewMedia; position: number
       </div>
     );
   }
-  return (
-    <img
-      src={item.url}
-      alt={item.altText ?? `Imagem ${position} de ${total}`}
-      className="size-full object-cover"
-    />
-  );
+  if (item.kind === MediaKind.Image)
+    return <ImageSlide item={item} position={position} total={total} />;
+  return <UnavailableSlide />;
 }
 
 export function ChannelPreview({
@@ -91,7 +125,7 @@ export function ChannelPreview({
   const visible = descriptor.visibleCaption;
   const truncated = visible !== null && !expanded && caption.length > visible;
   const text = truncated ? `${caption.slice(0, visible)}…` : caption;
-  const tall = TALL_FORMATS.includes(format);
+  const tall = isImmersivePreview(platform, format);
   const width = compact ? (tall ? "max-w-44" : "max-w-64") : "max-w-sm";
   const overLimit = descriptor.captionLimit !== null && caption.length > descriptor.captionLimit;
 
@@ -100,7 +134,7 @@ export function ChannelPreview({
       as="figure"
       padding="none"
       className={cn("mx-auto w-full overflow-hidden", width)}
-      aria-label={`Pré-visualização no ${platformLabels[platform]}`}
+      aria-label={`Pré-visualização no ${platformLabels[platform]} · ${contentFormatLabels[format]}`}
     >
       <figcaption
         className={cn("flex items-center gap-2 border-b border-border", compact ? "p-2" : "p-3")}
@@ -121,7 +155,10 @@ export function ChannelPreview({
         </span>
       </figcaption>
       {media.length > 0 && current !== undefined ? (
-        <div className="relative bg-muted" style={{ aspectRatio: aspectRatio(platform, format) }}>
+        <div
+          className="relative bg-muted"
+          style={{ aspectRatio: previewAspectRatio(platform, format) }}
+        >
           <Slide item={current} position={index + 1} total={media.length} />
           {media.length > 1 ? (
             <>
@@ -147,20 +184,34 @@ export function ChannelPreview({
               >
                 <ChevronRight aria-hidden="true" />
               </Button>
-              <span
-                className="absolute bottom-2 right-2 rounded-full bg-surface px-2 py-0.5 text-xs"
-                aria-live="polite"
+              <div
+                className="absolute bottom-2 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-surface/90 px-2 py-1"
+                aria-label="Arquivos da pré-visualização"
               >
-                {index + 1} / {media.length}
-              </span>
+                {media.map((item, itemIndex) => (
+                  <button
+                    key={item.versionId}
+                    type="button"
+                    className="flex size-3 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Exibir arquivo ${itemIndex + 1} de ${media.length}`}
+                    aria-pressed={index === itemIndex}
+                    onClick={() => setIndex(itemIndex)}
+                  >
+                    <span
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        index === itemIndex ? "bg-primary" : "bg-muted-foreground/60",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
             </>
           ) : null}
         </div>
       ) : null}
       <div className={cn("space-y-2 text-sm", compact ? "p-2 text-xs" : "p-3")}>
-        {caption === "" ? (
-          <p className="text-muted-foreground">-</p>
-        ) : (
+        {caption !== "" ? (
           <p className={cn("whitespace-pre-wrap break-words", compact && "line-clamp-2")}>
             {text}
             {truncated && !compact ? (
@@ -173,7 +224,7 @@ export function ChannelPreview({
               </button>
             ) : null}
           </p>
-        )}
+        ) : null}
         {callToAction ? <p className="font-medium">{callToAction}</p> : null}
         {showCounter && descriptor.captionLimit !== null ? (
           <p

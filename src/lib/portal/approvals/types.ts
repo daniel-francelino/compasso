@@ -1,4 +1,9 @@
-import type { ApprovalOutcome, ApprovalRequestStatus } from "@/lib/shared/enums";
+import type {
+  ApprovalOutcome,
+  ApprovalRequestStatus,
+  ApprovalStage,
+  ContentObjective,
+} from "@/lib/shared/enums";
 
 export type PortalBrand = {
   id: string;
@@ -41,6 +46,7 @@ export type PortalRequest = {
   id: string;
   itemId: string;
   revisionId: string;
+  stage: ApprovalStage;
   status: ApprovalRequestStatus;
   title: string;
   channels: PortalChannel[];
@@ -50,9 +56,8 @@ export type PortalRequest = {
   dueDate: string | null;
   requestedAt: string;
   decidedAt: string | null;
-  isMine: boolean;
   canDecide: boolean;
-  approverName: string | null;
+  decidedByName: string | null;
 };
 
 export type PortalMedia = {
@@ -77,7 +82,8 @@ export type PortalApproval = {
   revisionId: string;
   isCurrent: boolean;
   currentRequestId: string | null;
-  isDesignated: boolean;
+  planSummary: string | null;
+  objectiveKind: ContentObjective | null;
   canDecide: boolean;
   media: PortalMedia[];
   decision: {

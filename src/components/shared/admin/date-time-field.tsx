@@ -205,7 +205,7 @@ export function DateTimeField({
             <div key={option.toISOString()} className="flex items-center gap-2">
               <RadioGroupItem id={`${id}-${option.getTime()}`} value={option.toISOString()} />
               <Label htmlFor={`${id}-${option.getTime()}`} className="font-normal">
-                {formatInZone(option, timeZone)}
+                {formatInZone(option, timeZone, { includeZone: true })}
               </Label>
             </div>
           ))}

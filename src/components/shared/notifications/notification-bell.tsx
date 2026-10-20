@@ -17,7 +17,13 @@ import { AppRoute } from "@/lib/shared/routes";
 const MAX_BADGE = 9;
 const PANEL_SIZE = 8;
 
-export function NotificationBell({ userId }: { userId: string }) {
+export function NotificationBell({
+  userId,
+  notificationsTo = AppRoute.Notifications,
+}: {
+  userId: string;
+  notificationsTo?: typeof AppRoute.Notifications | typeof AppRoute.PortalNotifications;
+}) {
   const unread = useUnreadCount(userId);
   const actions = useNotificationActions();
   const filters = { filter: NotificationFilter.All, page: 1 };
@@ -78,7 +84,7 @@ export function NotificationBell({ userId }: { userId: string }) {
         ) : null}
         <div className="border-t border-border p-2 text-center">
           <Button asChild variant="ghost" size="sm">
-            <Link to={AppRoute.Notifications}>
+            <Link to={notificationsTo}>
               <ArrowRight aria-hidden="true" />
               Ver todos
             </Link>

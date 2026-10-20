@@ -2,12 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
+import { ApprovalStage } from "@/lib/shared/enums";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 import {
   brandIdSchema,
   cancelSchema,
   moveContentSchema,
   publishSchema,
+  reopenSchema,
   submitSchema,
 } from "@/lib/marketing/content/schemas";
 
@@ -17,6 +19,7 @@ const submittedSchema = z.object({
   revision_id: z.string().uuid(),
   revision_no: z.number().int(),
   version: z.number().int(),
+  stage: z.nativeEnum(ApprovalStage),
 });
 const approverOptionsSchema = z.object({
   approvers: z.array(z.object({ id: z.string().uuid(), name: z.string() })),
@@ -43,12 +46,13 @@ export const submitForApproval = createServerFn({ method: "POST" })
   .handler(
     async ({
       data,
-    }): Promise<Result<{ requestId: string; revisionNo: number; version: number }>> => {
+    }): Promise<
+      Result<{ requestId: string; revisionNo: number; version: number; stage: ApprovalStage }>
+    > => {
       const caller = await requireActionServer(Action.Content.Submit);
       if (caller === null) return denied;
       const { data: row, error } = await caller.supabase.rpc("submit_for_approval", {
         p_item: data.id,
-        p_approver: data.approverId,
         p_due_date: data.dueDate ?? null,
         p_message: data.message ?? null,
         p_expected_version: data.expectedVersion,
@@ -61,18 +65,20 @@ export const submitForApproval = createServerFn({ method: "POST" })
         requestId: parsed.request_id,
         revisionNo: parsed.revision_no,
         version: parsed.version,
+        stage: parsed.stage,
       };
     },
   );
 
 export const reopenContent = createServerFn({ method: "POST" })
-  .validator(cancelSchema)
+  .validator(reopenSchema)
   .handler(async ({ data }): Promise<Result> => {
     const caller = await requireActionServer(Action.Content.Reopen);
     if (caller === null) return denied;
     const { error } = await caller.supabase.rpc("reopen_content", {
       p_item: data.id,
       p_reason: data.reason,
+      p_scope: data.scope,
     });
     if (error) return fail(error);
     return { ok: true };

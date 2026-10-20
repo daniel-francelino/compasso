@@ -5,6 +5,7 @@ import { type Caller, requireActionServer } from "@/lib/shared/auth/server-guard
 import {
   type ApprovalOutcome,
   type ApprovalRequestStatus,
+  ApprovalStage,
   type ContentFormat,
   type ContentObjective,
   EditorialStatus,
@@ -85,6 +86,11 @@ const workingMediaSchema = z.array(
   z.object({ media_version_id: z.string().uuid(), alt_text: z.string().nullable().optional() }),
 );
 const captionSchema = z.object({ text: z.string() });
+
+const mediaRefs = (
+  items: z.infer<typeof workingMediaSchema>,
+): { id: string; alt: string | null }[] =>
+  items.map((item) => ({ id: item.media_version_id, alt: item.alt_text ?? null }));
 
 const firstMediaVersion = (value: unknown): string | null => {
   const parsed = workingMediaSchema.safeParse(value);
@@ -267,7 +273,7 @@ export const getContentItem = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, objective, objective_kind, briefing, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, current_revision_id, approved_revision_id, brands(name, timezone), content_channels(${CHANNEL_SELECT})`,
+        `id, title, brand_id, objective, objective_kind, briefing, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_required, plan_summary, plan_media, plan_approved_revision_id, current_revision_id, approved_revision_id, brands(name, timezone), content_channels(${CHANNEL_SELECT})`,
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -283,7 +289,7 @@ export const getContentItem = createServerFn({ method: "GET" })
       supabase
         .from("approval_requests")
         .select(
-          "id, revision_id, status, approver_user_id, requested_by, requested_at, due_date, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment)",
+          "id, revision_id, stage, status, requested_by, requested_at, due_date, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by)",
         )
         .eq("item_id", data.id)
         .order("requested_at", { ascending: false }),
@@ -292,14 +298,14 @@ export const getContentItem = createServerFn({ method: "GET" })
     if (requestsResult.error) return fail(requestsResult.error);
 
     const working = workingMediaSchema.safeParse(row.working_media);
-    const mediaResult = await loadMedia(
-      supabase,
-      (working.success ? working.data : []).map((item) => ({
-        id: item.media_version_id,
-        alt: item.alt_text ?? null,
-      })),
-    );
+    const mediaResult = await loadMedia(supabase, mediaRefs(working.success ? working.data : []));
     if (!mediaResult.ok) return mediaResult;
+    const planned = workingMediaSchema.safeParse(row.plan_media);
+    const planMediaResult = await loadMedia(
+      supabase,
+      mediaRefs(planned.success ? planned.data : []),
+    );
+    if (!planMediaResult.ok) return planMediaResult;
 
     const built = await Promise.all(
       revisionsResult.data.map((revision) => toRevision(supabase, revision)),
@@ -313,7 +319,10 @@ export const getContentItem = createServerFn({ method: "GET" })
 
     const names = await personNames(supabase, [
       row.assignee_id,
-      ...requestsResult.data.flatMap((request) => [request.approver_user_id, request.requested_by]),
+      ...requestsResult.data.flatMap((request) => [
+        request.requested_by,
+        request.approval_decisions[0]?.decided_by ?? null,
+      ]),
     ]);
     const numberOf = new Map(revisions.map((revision) => [revision.id, revision.revisionNo]));
     const requests: RequestRow[] = requestsResult.data.map((request) => {
@@ -322,8 +331,9 @@ export const getContentItem = createServerFn({ method: "GET" })
         id: request.id,
         revisionId: request.revision_id,
         revisionNo: numberOf.get(request.revision_id) ?? 0,
+        stage: request.stage === ApprovalStage.Plan ? ApprovalStage.Plan : ApprovalStage.Art,
         status: request.status as ApprovalRequestStatus,
-        approverName: names.get(request.approver_user_id) ?? null,
+        decidedByName: decision === undefined ? null : (names.get(decision.decided_by) ?? null),
         requestedByName:
           request.requested_by === null ? null : (names.get(request.requested_by) ?? null),
         requestedAt: request.requested_at,
@@ -342,9 +352,12 @@ export const getContentItem = createServerFn({ method: "GET" })
     const hasUnsentChanges =
       current !== undefined &&
       (current.snapshot.caption !== text ||
-        (current.snapshot.callToAction ?? "") !== (row.call_to_action ?? "") ||
         !sameChannels(current, channels) ||
-        !sameMedia(current.media, mediaResult.media));
+        (current.stage === ApprovalStage.Plan
+          ? (current.snapshot.planSummary ?? "") !== (row.plan_summary ?? "") ||
+            !sameMedia(current.media, planMediaResult.media)
+          : (current.snapshot.callToAction ?? "") !== (row.call_to_action ?? "") ||
+            !sameMedia(current.media, mediaResult.media)));
 
     return {
       ok: true,
@@ -365,6 +378,10 @@ export const getContentItem = createServerFn({ method: "GET" })
         productionDueDate: row.production_due_date,
         cancelled: row.cancelled_at !== null,
         editorialStatus: row.editorial_status as EditorialStatus,
+        planRequired: row.plan_required,
+        planSummary: row.plan_summary,
+        planMedia: planMediaResult.media,
+        planApprovedRevisionId: row.plan_approved_revision_id,
         approvalDueDate: row.approval_due_date,
         caption: text,
         callToAction: row.call_to_action,
@@ -403,6 +420,11 @@ export const saveContentItem = createServerFn({ method: "POST" })
         caption: { text: data.caption },
         call_to_action: data.callToAction ?? null,
         working_media: data.media.map((item) => ({
+          media_version_id: item.mediaVersionId,
+          alt_text: item.altText ?? null,
+        })),
+        plan_summary: data.planSummary ?? null,
+        plan_media: data.planMedia.map((item) => ({
           media_version_id: item.mediaVersionId,
           alt_text: item.altText ?? null,
         })),
@@ -454,6 +476,10 @@ export const listBoard = createServerFn({ method: "GET" })
     const search = cleanSearch(data.search);
     const statuses = [
       EditorialStatus.Draft,
+      EditorialStatus.Planning,
+      EditorialStatus.AwaitingPlanApproval,
+      EditorialStatus.PlanChangesRequested,
+      EditorialStatus.PlanApproved,
       EditorialStatus.InProduction,
       EditorialStatus.InternalReview,
       EditorialStatus.AwaitingApproval,

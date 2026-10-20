@@ -27,7 +27,7 @@ Channel rows without a planned date do **not** appear on the grid; they stay in 
 
 - Instants are stored in UTC **plus** the IANA zone chosen at planning (the brand's zone by default; the organization's zone is the brand's default).
 - Deadlines are local dates of the brand, without time.
-- The calendar grid uses the zone of the **selected brand**; in the global view it detects and uses the browser timezone, shown compactly in the toolbar. The global view has no timezone selector. Each entry shows its own zone when it differs ("10:00 · America/Sao_Paulo").
+- The calendar grid uses the zone of the **selected brand**; in the global view it detects and uses the browser timezone, shown compactly in the toolbar. The global view has no timezone selector. Date/time strings are formatted inside the applicable zone without appending GMT offsets; when an entry's zone differs from the view, the zone is available from a timezone icon tooltip.
 - The editor of a date asks for date and time **in the brand's zone**; the server converts before saving. Non-existent and ambiguous local times (daylight-saving changes) are handled explicitly: a non-existent time is refused with a suggestion; an ambiguous one asks which occurrence.
 - Mandatory tests: daylight-saving changes of a zone that has them (for example Europe/Lisbon in March and October) and a zone that has none (America/Sao_Paulo).
 
@@ -108,12 +108,73 @@ External users see a calendar restricted to the **brands they are linked to** an
 1. **Own calendar, no library** (spike P4-01, 2026-10-18). FullCalendar was not adopted: it brings its own styles and time-zone plugin, which would have to be fitted to the tokens of [../standards/color-palette.md](../standards/color-palette.md), and the project needs only month, week and list views with day-level drag. The Memoria Print calendar was not ported (it is not part of this repository). The grid is a plain CSS grid in `shared/calendar` that reuses the kit, the status styles and the time-zone helpers of `format.ts`. Cost: no hourly lanes and no multi-day events, which the MVP does not need. If hourly lanes are wanted later, adopting a library becomes a new decision (CODE-12).
 2. **Drag moves the day, not the time.** Dragging an entry to another day keeps its local time of day and always opens the confirmation dialog, where the time can be changed ("Alterar data…" is the keyboard alternative). Hour-level dragging is not offered.
 3. **The approval deadline is read-only on the calendar.** It belongs to the approval request, which is immutable after sending (`approval_requests_guard`); changing it means sending a new version. Only the production deadline moves (`reschedule_production_deadline`, which does not create a revision).
-4. **Rescheduling a channel row of a content that is awaiting approval or approved creates the new version straight away**, copied from the current one with the new date of that channel and addressed to the same approver; the pending request is superseded. If the approver no longer has access the call fails with `approver_without_access` and nothing changes. A content in any earlier state just changes the date of the row.
+4. **Rescheduling a channel row.** With the two-stage approval, once the plan is approved the date belongs to the approved plan and the call fails with `plan_locked` (the team reopens the plan, see [content.md](content.md#two-stage-approval-decided-2026-10-20)). For a content that does not require a plan, one that is awaiting approval or approved creates the new version straight away, copied from the current one with the new date of that channel; the pending request is superseded and every approver of the brand is asked again; with nobody able to approve the call fails with `approver_required`. A content in any earlier state just changes the date of the row.
 5. **A date in the past is accepted by the server**; the dialog warns first (`date_in_past` is a UI warning, never raised by SQL).
 6. **The conflict alerts use fixed limits** (3 publications per channel per day, 30 minutes between two of the same channel) kept in `lib/shared/calendar/alerts.ts`; they are not yet a setting of `policies.calendar`.
 7. **The week starts on Monday.** `policies.calendar.weekStartsOnMonday` is stored but the calendar does not read it yet, because `organization_settings` is readable only with `settings.manage`.
 8. **A window of at most 100 days and 500 entries** replaces pagination: `list_calendar_entries` answers with `truncated = true` and the screen asks the person to filter. The "Sem data" list comes in the same call (at most 100, filtered like the grid).
 9. **Mobile shows the list** (the grid is not drawn below 768 px), as the document asks; the list is also available on desktop.
+
+## Events shared with the client (decided 2026-10-20, not implemented)
+
+> Status: **design only**; tasks in phase E of [../implementation-plan.md](../implementation-plan.md). When done, move the rules into the sections above and delete this section (DOC-5).
+
+### Why
+
+The marketing manager needs to put on the calendar things that are not posts: a **shoot day** ("dia de captação"), a **meeting with the client**, a delivery, a campaign launch window. The client must be able to **see** the ones that concern them, so nobody is surprised. Today the calendar only has contents and the team-only ideas and dates ([Decisions of the content refactor](#decisions-of-the-content-refactor-2026-10-19)).
+
+### Scenarios analysed
+
+| # | Scenario | What it needs | Decision |
+|---|---|---|---|
+| 1 | **Shoot day** at the client's site: all day, or 09:00–13:00, one or two days | Start and end (date or date-time), all-day option, place, notes for the client ("levar o produto") | Supported: kind `event`, type `shoot` |
+| 2 | **Meeting with the client** at a time, with a link or an address | Start and end in the brand time zone, place or link, who is invited is implicit (the brand's client members) | Supported: type `meeting` |
+| 3 | **Team-only event** (internal alignment, a day off) | An event the client must not see | Supported: the event has a visibility switch, **internal by default** |
+| 4 | **Recurring** (weekly alignment, monthly report meeting) | Repeat none, weekly, monthly or yearly, as the existing dates | Supported, expanded when reading; each occurrence keeps its local time across daylight-saving changes |
+| 5 | **Several brands of the same client** in one meeting | One event per brand, or one event on several brands | **Not in this delivery**: an event belongs to one brand; the manager creates it on each brand (see O3) |
+| 6 | **A meeting is moved or cancelled** | Edit and archive; the client has to find out | Supported: editing the date or the place of a shared event and archiving it notify the brand's client members |
+| 7 | **The client confirms attendance** (RSVP) | A response per person | **Not in this delivery** (O2) |
+| 8 | **Reminders** ("a meeting tomorrow") | A scheduled notification before the event | Not in this delivery; the first notification covers creation and change (O4) |
+| 9 | **Deadlines** (production, approval) | Already on the calendar as read-only marks | Unchanged |
+| 10 | **Holidays and commemorative dates** | Today's `date` notes | Unchanged; a date note can also be shared by the same switch (see below) |
+| 11 | **Export to Google/Apple calendar** | An iCalendar feed | **Not in this delivery** (O5) |
+| 12 | **Overlap** of two events | A warning | Not in this delivery; events do not raise the publication conflict alerts |
+
+### Model: extend `calendar_notes` (one way, GOLD-2)
+
+An event is a calendar note, not a new table. `kind` gets the value `event`, and the columns that only events use are added (all nullable for ideas and dates):
+
+| Column | Meaning |
+|---|---|
+| `event_type` | `CalendarEventType`: `shoot`, `meeting`, `other` (events only) |
+| `all_day` | boolean; true keeps today's behavior (`note_date` only) |
+| `starts_at`, `ends_at` | instants (UTC) for timed events, with `ends_at` at or after `starts_at`; a multi-day event has an end date |
+| `timezone` | IANA zone of the event (the brand zone by default) |
+| `location` | up to 200 characters; a place or a link (an `https://` link is validated like the other links) |
+| `client_visible` | boolean, default false; when true the brand's client members see the event in the portal |
+
+`title`, `description` (what the client reads when the event is shared), `repeat`, `archived_at` and `version` are the existing columns. Internal-only text goes in a new `internal_notes` column, never exposed. For an event `note_date` is the first local day. `client_visible` also applies to `kind = date`; ideas can never be shared (the check refuses it).
+
+Rules:
+
+1. Creating, editing and archiving need `calendar.manage` and the brand link, as the other notes; the client never writes.
+2. The client sees **only** `client_visible` events (and dates) of the brands they are linked to, through `portal_list_calendar` (new entries of kind `event`) and never through the table; the output carries title, description, type, place, time and zone, **not** the internal notes, who created it or the repeat rule internals.
+3. A change of date, time, place or visibility of a shared event, its creation and its archiving notify the brand's client members and the creator's team (new notification kind `calendar.event`, portal kind, in-app and optional e-mail), with the title and the time only. Turning an event back to internal withdraws it from the portal and tells them it was cancelled.
+4. Events are all-day or timed; timed events show their zone ([../standards/base.md](../standards/base.md) UI-11) and a multi-day event is drawn on each day it covers in the month grid.
+5. Events appear in the team calendar and the portal calendar with an icon by type (camera for `shoot`, people for `meeting`, calendar mark for `other`) and the lock/eye mark that says whether the client sees it; the legend and the filters get "Eventos".
+6. The "Adicionar" menu of a day gets "Evento" next to "Ideia" and "Data". The dialog asks title, type, all day or start and end, place, description, internal notes, repeat and the switch "Visível para o cliente", off by default, with an `InfoTip` ("O cliente da marca vê este evento no portal e é avisado quando ele muda.").
+7. In the portal an event opens a read-only detail (type, date and time with zone, place with a link when it is `https://`, description). There is nothing to approve.
+8. Audit: `calendar_note.created`, `updated`, `archived` already exist; their metadata carries `kind` and, for events, `client_visible` (no new audit action). Notification kind: `calendar.event`.
+
+### Open decisions
+
+| ID | Decision | Status |
+|---|---|---|
+| O1 | Events and dates are **internal by default**; the manager opts in to show them to the client | Recommended |
+| O2 | RSVP ("Confirmar presença") by the client | Out of this delivery; add later as a response per member |
+| O3 | One event shared by **several brands** of the same client | Out of this delivery; revisit if managers repeat the same event on many brands |
+| O4 | A reminder notification before the event (`calendar.event_soon`) | Out of this delivery; reuse the lead-days mechanism of the scheduled kinds later |
+| O5 | iCalendar feed or Google/Apple sync | Out of this delivery |
 
 ## Decisions of the content refactor (2026-10-19)
 
@@ -152,6 +213,9 @@ Phase 5 (calendar screen layout, 2026-10-19).
 2026-10-19: The global calendar now detects the browser timezone and shows it beside a globe icon in the toolbar; the timezone selector was removed. Brand calendars continue using the selected brand timezone. Validation performed: targeted ESLint, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser rendering or timezone detection in a browser.
 
 2026-10-20: Portal calendar entries now open a revision preview on hover or keyboard focus, using the existing approval and signed-media functions. Shared grid and list accept an optional entry renderer; admin calendar rendering is unchanged. Validation performed: targeted ESLint, typecheck, `check:docs`, Prettier and `git diff --check`. **Not tested**: browser hover, keyboard focus, and signed media rendering.
+
+2026-10-20: The shared preview used by portal calendar hover now chooses its media frame from the platform and format, shows failed-media fallbacks and supports keyboard carousel controls. See [channels.md](channels.md#platform-rules-preview-and-validation-guidance). Validation performed: targeted ESLint, TypeScript, Prettier, `check:docs` and `git diff --check`. **Not tested**: Vitest could not start because esbuild returned `spawn EPERM`; browser rendering for every platform and format.
+2026-10-20: Calendar and content date/time displays now format in the stored IANA zone without appending GMT offsets; differing zones are exposed with a tooltip. The date-time field keeps offsets only when distinguishing repeated local times during daylight-saving changes. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. **Not verified**: full TypeScript check (blocked by existing errors in content editor, revision history and approvals), Vitest (could not start because esbuild returned `spawn EPERM`), browser rendering and daylight-saving selection in the browser.
 2026-10-19: Calendar view selection is synchronized to local storage when selected or opened from a URL, including the week view opened from a day cell. Validation performed: pending. **Not tested**: browser storage behavior.
 
 2026-10-19: The shared `DateTimeField` used for rescheduling now uses the localized calendar and time controls and shows its time zone in an icon tooltip. Validation performed: targeted ESLint, typecheck, Prettier, `check:docs` and `git diff --check`. **Not tested**: browser interaction or daylight-saving edge cases in the new input.

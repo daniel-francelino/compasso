@@ -35,7 +35,7 @@ A brand has members (`brand_members`):
 |---|---|
 | User | An existing approved account |
 | Kind | `internal` (team) or `external` (client user) — must match the user's profile kind |
-| `can_decide` | External only: may decide approvals designated to them |
+| `can_decide` | External only: may decide the approvals of the brand (planning and art). Every member with it is an approver and is asked when something is sent |
 | Status | `active` or `revoked` (history kept) |
 | Granted by / at, revoked at | Audit data |
 
@@ -44,7 +44,7 @@ Rules:
 - Belonging to the team **does not** give access to every brand: the Owner sees all; everyone else needs an active internal link.
 - A brand must keep at least one active internal member who can manage it, or be managed by the Owner.
 - Revoking a link takes effect immediately for new operations; signed file URLs already issued expire on their own within minutes.
-- The designated approver of a pending request must stay an active external member with `can_decide`; revoking them blocks the pending decision (the request keeps its history and shows "Aprovador sem acesso", requiring a new designation).
+- Revoking `can_decide` or the link of an approver takes effect on their next decision. Pending requests are not orphaned: they stay open for the other approvers, and the team sees a warning when nobody is left ("Ninguém pode aprovar esta marca agora").
 - Granting access to an external user happens through **invitations** (see [../foundations/authentication.md](../foundations/authentication.md)) or by linking an existing external account; both need `brands.manage_members`.
 
 ## Screens and flows
@@ -91,7 +91,7 @@ Brand detail routes use the full available content width. The content and calend
 
 > Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
-`brand_name_taken`, `brand_not_empty`, `member_kind_mismatch`, `last_internal_member`, `approver_without_access`, `conflict`, `denied`.
+`brand_name_taken`, `brand_not_empty`, `member_kind_mismatch`, `last_internal_member`, `conflict`, `denied`.
 
 ## Acceptance criteria
 

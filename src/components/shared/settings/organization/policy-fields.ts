@@ -27,7 +27,7 @@ export type PolicyGroup = {
 export const policyGroups: Record<SettingKey, PolicyGroup> = {
   [SettingKey.Approvals]: {
     icon: ClipboardCheck,
-    description: "Prazo que vale quando quem envia não define um.",
+    description: "Prazo de resposta e as etapas de aprovação dos conteúdos.",
   },
   [SettingKey.Calendar]: {
     icon: CalendarDays,
@@ -67,6 +67,13 @@ export const policyFields: Record<SettingKey, PolicyField[]> = {
       type: "number",
       unit: "dias",
       description: "Entre 1 e 60 dias, contados a partir do envio.",
+    },
+    {
+      name: "requirePlanApproval",
+      label: "Aprovar o planejamento antes das artes",
+      type: "boolean",
+      description:
+        "Com isto ligado, o cliente aprova primeiro o planejamento e só depois as artes. Vale para os conteúdos novos; os que já existem seguem como estão.",
     },
   ],
   [SettingKey.Calendar]: [

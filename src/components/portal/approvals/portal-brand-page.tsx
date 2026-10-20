@@ -108,8 +108,8 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
   }
 
   const requests = pending.data ?? [];
-  const mine = requests.filter((request) => request.isMine);
-  const others = requests.filter((request) => !request.isMine);
+  const mine = requests.filter((request) => request.canDecide);
+  const others = requests.filter((request) => !request.canDecide);
   const upcoming = (approved.data ?? [])
     .filter((request) => {
       const planned = nextPlanned(request);
@@ -135,7 +135,7 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
       />
       {others.length > 0 ? (
         <Section
-          title="Pendentes com outras pessoas"
+          title="Em análise pela marca"
           icon={Hourglass}
           brandId={brandId}
           requests={others}

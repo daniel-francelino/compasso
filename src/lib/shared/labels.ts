@@ -1,6 +1,7 @@
 import {
   ApprovalOutcome,
   ApprovalRequestStatus,
+  ApprovalStage,
   BrandMemberStatus,
   CalendarAlert,
   CalendarEntryKind,
@@ -68,12 +69,21 @@ export const platformLabels: Record<Platform, string> = {
 
 export const editorialStatusLabels: Record<EditorialStatus, string> = {
   [EditorialStatus.Draft]: "Rascunho",
+  [EditorialStatus.Planning]: "Em planejamento",
+  [EditorialStatus.AwaitingPlanApproval]: "Planejamento em aprovação",
+  [EditorialStatus.PlanChangesRequested]: "Alterações no planejamento",
+  [EditorialStatus.PlanApproved]: "Planejamento aprovado",
   [EditorialStatus.InProduction]: "Em produção",
   [EditorialStatus.InternalReview]: "Em revisão interna",
   [EditorialStatus.AwaitingApproval]: "Aguardando aprovação",
   [EditorialStatus.ChangesRequested]: "Alterações solicitadas",
   [EditorialStatus.Approved]: "Aprovado",
   [EditorialStatus.Cancelled]: "Cancelado",
+};
+
+export const approvalStageLabels: Record<ApprovalStage, string> = {
+  [ApprovalStage.Plan]: "Planejamento",
+  [ApprovalStage.Art]: "Artes",
 };
 
 export const publicationStatusLabels: Record<PublicationStatus, string> = {
@@ -117,7 +127,7 @@ export const dashboardReasonLabels: Record<DashboardReason, string> = {
   [DashboardReason.ChangesRequested]: "Alterações solicitadas",
   [DashboardReason.ProductionOverdue]: "Prazo de produção vencido",
   [DashboardReason.PlannedDatePassed]: "Data prevista ultrapassada",
-  [DashboardReason.ApproverWithoutAccess]: "Aprovador sem acesso",
+  [DashboardReason.ApproverWithoutAccess]: "Ninguém pode aprovar",
 };
 
 export const calendarViewLabels: Record<CalendarView, string> = {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ApprovalOutcome, ApprovalRequestStatus } from "@/lib/shared/enums";
+import { ApprovalOutcome, ApprovalRequestStatus, ApprovalStage } from "@/lib/shared/enums";
 
 export const portalChannelSchema = z.object({
   row_id: z.string(),
@@ -15,6 +15,7 @@ export const portalRequestRowSchema = z.object({
   id: z.string().uuid(),
   item_id: z.string().uuid(),
   revision_id: z.string().uuid(),
+  stage: z.nativeEnum(ApprovalStage),
   status: z.nativeEnum(ApprovalRequestStatus),
   title: z.string(),
   channels: z.array(portalChannelSchema),
@@ -36,9 +37,8 @@ export const portalRequestRowSchema = z.object({
   due_date: z.string().nullable(),
   requested_at: z.string(),
   decided_at: z.string().nullable(),
-  is_mine: z.boolean(),
   can_decide: z.boolean(),
-  approver_name: z.string().nullable(),
+  decided_by_name: z.string().nullable(),
 });
 
 export type PortalRequestRow = z.infer<typeof portalRequestRowSchema>;
@@ -89,7 +89,9 @@ export const portalApprovalSchema = z.object({
   revision_id: z.string().uuid(),
   is_current: z.boolean(),
   current_request_id: z.string().uuid().nullable(),
-  is_designated: z.boolean(),
+  stage: z.nativeEnum(ApprovalStage),
+  plan_summary: z.string().nullable().optional(),
+  objective_kind: z.string().nullable().optional(),
   can_decide: z.boolean(),
   media: z.array(
     z.object({

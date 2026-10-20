@@ -1,19 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
-  Ban,
   Calendar,
+  ClipboardList,
   FileImage,
-  Hammer,
-  MessageSquare,
   Radio,
   RotateCcw,
   Save,
-  Send,
   Settings2,
   Type,
-  Undo2,
-  type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,16 +20,17 @@ import { ContentSettingsSection } from "@/components/marketing/content/content-s
 import { FileStrip } from "@/components/marketing/content/file-strip";
 import { PublishDialog } from "@/components/marketing/content/publish-dialog";
 import { RevisionHistory } from "@/components/marketing/content/revision-history";
+import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
+import { PlanSection } from "@/components/marketing/content/plan-section";
+import { StageStepper } from "@/components/marketing/content/stage-stepper";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
-import { IconButton } from "@/components/shared/admin/icon-button";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { SectionCard } from "@/components/shared/admin/section-card";
-import { WhyDisabled } from "@/components/shared/admin/why-disabled";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
@@ -58,6 +54,7 @@ import {
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
 import { saveContentSchema } from "@/lib/marketing/content/schemas";
+import { stageStateOf } from "@/lib/marketing/content/stage-state";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import {
   cancelContentChannel,
@@ -69,8 +66,8 @@ import { ErrorCode } from "@/lib/shared/auth/errors";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { resolveLocalTime } from "@/lib/shared/calendar/reschedule";
-import { DirectMoves, mediaProblem, platformFormats } from "@/lib/shared/editorial/editorial";
-import { EditorialStatus } from "@/lib/shared/enums";
+import { mediaProblem, platformFormats } from "@/lib/shared/editorial/editorial";
+import { type ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -79,27 +76,6 @@ import { AppRoute } from "@/lib/shared/routes";
 
 const DEFAULT_HOUR = "09:00";
 const FALLBACK_ZONE = "America/Sao_Paulo";
-
-const MOVE_LABELS: Partial<Record<EditorialStatus, { label: string; icon: LucideIcon }>> = {
-  [EditorialStatus.InProduction]: { label: "Iniciar produção", icon: Hammer },
-  [EditorialStatus.InternalReview]: { label: "Enviar para revisão interna", icon: MessageSquare },
-};
-
-const RESUME_FROM: readonly EditorialStatus[] = [
-  EditorialStatus.InternalReview,
-  EditorialStatus.ChangesRequested,
-];
-
-const SUBMITTABLE: readonly EditorialStatus[] = [
-  EditorialStatus.InProduction,
-  EditorialStatus.InternalReview,
-  EditorialStatus.AwaitingApproval,
-];
-
-const moveLabel = (from: EditorialStatus, to: EditorialStatus) =>
-  RESUME_FROM.includes(from) && to === EditorialStatus.InProduction
-    ? { label: "Retomar produção", icon: Undo2 }
-    : MOVE_LABELS[to];
 
 const defaultPlanned = (day: string | undefined, zone: string): string | null => {
   if (day === undefined) return null;
@@ -131,7 +107,7 @@ export function ContentEditor({
   const [submitting, setSubmitting] = useState(false);
   const [publishing, setPublishing] = useState<DraftRow | null>(null);
   const [cancellingRow, setCancellingRow] = useState<DraftRow | null>(null);
-  const [reopening, setReopening] = useState(false);
+  const [reopening, setReopening] = useState<ApprovalStage | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [tab, setTab] = useState(ALL_TAB);
 
@@ -141,6 +117,11 @@ export function ContentEditor({
   const approved = editorialStatus === EditorialStatus.Approved;
   const canWrite = can(auth, isNew ? Action.Content.Create : Action.Content.Update);
   const editable = canWrite && !cancelled && !approved;
+  const state = stageStateOf(
+    editorialStatus,
+    content?.planRequired ?? true,
+    content?.planApprovedRevisionId ?? null,
+  );
   useUnsavedChanges(draft.dirty && !saving);
 
   const brands = useBrandOptions(isNew);
@@ -212,6 +193,11 @@ export function ContentEditor({
     assigneeId: values.assigneeId,
     tags: values.tags,
     productionDueDate: values.productionDueDate,
+    planSummary: values.planSummary,
+    planMedia: values.planFiles.map((file) => ({
+      mediaVersionId: file.mediaVersionId,
+      altText: file.altText,
+    })),
     caption: values.caption,
     callToAction: values.callToAction,
     media: values.files.map((file) => ({
@@ -275,22 +261,7 @@ export function ContentEditor({
     );
   }
 
-  const moves =
-    content !== undefined && can(auth, Action.Content.Update) && !cancelled
-      ? DirectMoves[editorialStatus]
-      : [];
   const hasPublished = values.rows.some((row) => row.published);
-  const canSubmit =
-    content !== undefined &&
-    can(auth, Action.Content.Submit) &&
-    !cancelled &&
-    SUBMITTABLE.includes(editorialStatus);
-  const canReopen =
-    can(auth, Action.Content.Reopen) &&
-    !cancelled &&
-    !hasPublished &&
-    (editorialStatus === EditorialStatus.Approved ||
-      editorialStatus === EditorialStatus.AwaitingApproval);
   const canPublish = can(auth, Action.Content.PublishManual) && approved && !cancelled;
   const canCancel = content !== undefined && can(auth, Action.Content.Cancel) && !cancelled;
 
@@ -338,70 +309,23 @@ export function ContentEditor({
           actions={content ? <EditorialStatusBadge status={editorialStatus} /> : null}
         />
       )}
-      <div
-        className="flex flex-wrap items-center justify-end gap-1.5"
-        role="group"
-        aria-label="Ações do conteúdo"
-      >
-        {moves.map((to) => {
-          const meta = moveLabel(editorialStatus, to);
-          if (meta === undefined) return null;
-          const Icon = meta.icon;
-          return (
-            <WhyDisabled
-              key={to}
-              reason={draft.dirty ? "Salve as alterações antes de mudar o estado." : null}
-            >
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={draft.dirty || acting}
-                onClick={() => void move(to)}
-              >
-                <Icon aria-hidden="true" />
-                {meta.label}
-              </Button>
-            </WhyDisabled>
-          );
-        })}
-        {canSubmit ? (
-          <Button type="button" size="sm" onClick={() => setSubmitting(true)} disabled={acting}>
-            <Send aria-hidden="true" />
-            Enviar para aprovação
-          </Button>
-        ) : null}
-        {canReopen && content !== undefined ? (
-          <IconButton
-            variant="outline"
-            icon={RotateCcw}
-            label="Reabrir conteúdo"
-            onClick={() => setReopening(true)}
-            disabled={acting}
-          />
-        ) : null}
-        {canCancel ? (
-          <IconButton
-            variant="outline"
-            icon={Ban}
-            label="Cancelar conteúdo"
-            destructive
-            onClick={() => setCancelling(true)}
-            disabled={acting}
-          />
-        ) : null}
-        {editable ? (
-          <Button
-            type="submit"
-            size="sm"
-            loading={saving}
-            disabled={saving || (!isNew && !draft.dirty)}
-          >
-            <Save aria-hidden="true" />
-            {isNew ? "Criar conteúdo" : "Salvar"}
-          </Button>
-        ) : null}
-      </div>
+      <StageStepper state={state} />
+      <ContentActions
+        status={editorialStatus}
+        state={state}
+        isNew={isNew}
+        cancelled={cancelled}
+        hasPublished={hasPublished}
+        hasContent={content !== undefined}
+        editable={editable}
+        dirty={draft.dirty}
+        saving={saving}
+        acting={acting}
+        onMove={(to) => void move(to)}
+        onSubmit={() => setSubmitting(true)}
+        onReopen={setReopening}
+        onCancel={() => setCancelling(true)}
+      />
       {error ? (
         <Alert variant="destructive" role="alert">
           <AlertTitle>Não foi possível salvar</AlertTitle>
@@ -448,12 +372,29 @@ export function ContentEditor({
               channels={channels}
               selected={selected}
               locked={locked}
-              disabled={!editable}
+              disabled={!editable || state.planLocked}
               onToggle={toggleChannel}
               error={errors["channels"]}
             />
           </SectionCard>
-          <SectionCard title="2. Texto do post" icon={Type}>
+          {state.planRequired ? (
+            <SectionCard
+              title="2. Planejamento"
+              icon={ClipboardList}
+              tip={{
+                label: "Sobre o planejamento",
+                content:
+                  "O cliente aprova primeiro o planejamento. Depois da aprovação, canais, formatos e datas ficam travados e começam as artes.",
+              }}
+            >
+              <PlanSection
+                draft={draft}
+                disabled={!editable || saving || state.planLocked}
+                errors={errors}
+              />
+            </SectionCard>
+          ) : null}
+          <SectionCard title="3. Texto do post" icon={Type}>
             <CaptionSection
               draft={draft}
               channels={channels}
@@ -463,22 +404,33 @@ export function ContentEditor({
               errors={errors}
             />
           </SectionCard>
-          <SectionCard title="3. Mídias" icon={FileImage}>
+          <SectionCard
+            title="4. Artes e mídias"
+            icon={FileImage}
+            {...(state.artLocked
+              ? {
+                  tip: {
+                    label: "Sobre as artes",
+                    content: "Liberado depois que o cliente aprovar o planejamento.",
+                  },
+                }
+              : {})}
+          >
             <FileStrip
               items={values.files}
               onChange={(items) => draft.set("files", items)}
               brandId={values.brandId}
               formats={formats}
-              disabled={!editable || saving || values.brandId === ""}
+              disabled={!editable || saving || values.brandId === "" || state.artLocked}
               error={errors["media"] ?? fileProblem ?? undefined}
             />
           </SectionCard>
-          <SectionCard title="4. Data e horário das publicações" icon={Calendar}>
+          <SectionCard title="5. Data e horário das publicações" icon={Calendar}>
             <ChannelRowsSection
               draft={draft}
               channels={channels}
               brandTimezone={zone}
-              disabled={!editable || saving}
+              disabled={!editable || saving || state.planLocked}
               errors={errors}
               canPublish={canPublish}
               canCancel={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
@@ -486,11 +438,12 @@ export function ContentEditor({
               onCancelRow={setCancellingRow}
             />
           </SectionCard>
-          <SectionCard title="5. Configurações" icon={Settings2}>
+          <SectionCard title="6. Configurações" icon={Settings2}>
             <ContentSettingsSection
               draft={draft}
               assignees={assignees.data ?? []}
               disabled={!canWrite || cancelled || saving}
+              objectiveLocked={state.planLocked}
               errors={errors}
             />
           </SectionCard>
@@ -506,7 +459,7 @@ export function ContentEditor({
               callToAction={values.callToAction === "" ? null : values.callToAction}
               brandLogoUrl={brand.data?.logoUrl ?? null}
               showCounter
-              media={values.files.map((file) => ({
+              media={(state.stage === "plan" ? values.planFiles : values.files).map((file) => ({
                 versionId: file.mediaVersionId,
                 kind: file.kind,
                 altText: file.altText === "" ? null : file.altText,
@@ -553,18 +506,23 @@ export function ContentEditor({
         />
       ) : null}
       <ReasonDialog
-        open={reopening}
-        onOpenChange={setReopening}
-        title="Reabrir conteúdo"
-        description="Ele volta para produção e o pedido pendente ao cliente é substituído. Uma nova versão precisará de nova aprovação. O motivo fica registrado."
+        open={reopening !== null}
+        onOpenChange={(next) => !next && setReopening(null)}
+        title={reopening === "plan" ? "Reabrir planejamento" : "Reabrir artes"}
+        description={
+          reopening === "plan"
+            ? "O conteúdo volta para o planejamento, o pedido pendente é substituído e as duas aprovações são limpas. As artes e o histórico ficam guardados. O motivo fica registrado."
+            : "Ele volta para produção e o pedido pendente ao cliente é substituído. Uma nova versão das artes precisará de nova aprovação. O motivo fica registrado."
+        }
         confirmLabel="Reabrir"
         icon={RotateCcw}
         onSubmit={async (reason) => {
-          if (content === undefined) return null;
-          const result = await run(() => reopenContent({ data: { id: content.id, reason } }), {
-            invalidate: refresh,
-            success: "Conteúdo reaberto.",
-          });
+          if (content === undefined || reopening === null) return null;
+          const scope = reopening;
+          const result = await run(
+            () => reopenContent({ data: { id: content.id, reason, scope } }),
+            { invalidate: refresh, success: "Conteúdo reaberto." },
+          );
           return result.ok ? null : result.message;
         }}
       />

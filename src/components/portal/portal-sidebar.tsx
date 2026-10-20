@@ -56,7 +56,7 @@ function UnreadBadge({ userId }: { userId: string }) {
   const unread = useUnreadCount(userId);
   if (unread === 0) return null;
   return (
-    <SidebarMenuBadge className="rounded-full bg-violet text-primary-foreground">
+    <SidebarMenuBadge className="rounded-full bg-violet text-primary-foreground peer-hover/menu-button:!text-primary-foreground peer-data-[active=true]/menu-button:!text-primary-foreground">
       {unread > MAX_BADGE ? `${MAX_BADGE}+` : unread}
     </SidebarMenuBadge>
   );
@@ -113,7 +113,11 @@ export function PortalSidebar({ auth }: { auth: AuthState }) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/portal/notifications")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname.startsWith("/portal/notifications")}
+                  className="pr-8"
+                >
                   <Link to="/portal/notifications">
                     <Bell aria-hidden="true" />
                     <span>Avisos</span>

@@ -87,11 +87,11 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `variant.published_manually` | `content_variant` | legacy |
 | `comment.created` | `comment` | `comment_add`, `portal_add_comment` |
 | `comment.deleted` | `comment` | `comment_delete` |
-| `approval.requested` | `approval_request` | `submit_for_approval`, `reassign_approver` |
+| `approval.requested` | `approval_request` | `submit_for_approval` (with `stage`) |
 | `approval.decided` | `approval_request` | `portal_decide_approval` |
 | `approval.superseded` | `approval_request` | `submit_for_approval`, `reopen_content`, `reschedule_channel` |
 | `approval.cancelled` | `approval_request` | `cancel_request` |
-| `approval.approver_reassigned` | `approval_request` | `reassign_approver` |
+| `approval.approver_reassigned` | `approval_request` | legacy: written before 2026-10-20, kept so old history keeps its label |
 | `approval.reminder_sent` | `approval_request` | `send_approval_reminder` |
 | `media.published` | `media_version` | `media_publish_derivative` |
 | `media.unpublished` | `media_version` | `media_withdraw_derivative` |

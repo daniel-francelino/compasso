@@ -38,6 +38,10 @@ from (values
 ) as u (id, name, email, kind, role_key)
 join public.roles r on r.key = u.role_key;
 
+insert into public.organization_settings (key, value)
+values ('policies.approvals', '{"deadlineDays":3,"requirePlanApproval":false}')
+on conflict (key) do update set value = excluded.value;
+
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select public.client_save('{"name":"Cafe Aurora"}'::jsonb, true);
 select set_config('t.brand', (select id::text from public.brands where name = 'Cafe Aurora'), true);
@@ -54,7 +58,7 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.v1', public.content_item_save(format('{"brand_id":"%s","title":"Atrasado","assignee_id":"00000000-0000-0000-0000-0000000000b1","production_due_date":"2020-01-01","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'production_overdue', 'a late production deadline needs attention');
 select public.content_move(current_setting('t.v1')::uuid, 'in_production', pg_temp.ver(current_setting('t.v1')::uuid));
-select set_config('t.sub1', public.submit_for_approval(current_setting('t.v1')::uuid, '00000000-0000-0000-0000-0000000000d1', current_date + 2, null, pg_temp.ver(current_setting('t.v1')::uuid))::text, true);
+select set_config('t.sub1', public.submit_for_approval(current_setting('t.v1')::uuid, current_date + 2, null, pg_temp.ver(current_setting('t.v1')::uuid))::text, true);
 select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'production_overdue', 'a pending request within its deadline adds no reason');
 reset role;
 

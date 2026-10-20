@@ -251,8 +251,13 @@ create table content_items (
   caption jsonb,
   call_to_action text,
   working_media jsonb not null default '[]',
+  plan_required boolean not null,
+  plan_summary text check (plan_summary is null or char_length(plan_summary) <= 4000),
+  plan_media jsonb not null default '[]',
+  plan_approved_revision_id uuid,
   editorial_status text not null default 'draft' check (editorial_status in
-    ('draft','in_production','internal_review','awaiting_approval','changes_requested','approved','cancelled')),
+    ('draft','planning','awaiting_plan_approval','plan_changes_requested','plan_approved',
+     'in_production','internal_review','awaiting_approval','changes_requested','approved','cancelled')),
   approval_due_date date,
   current_revision_id uuid,
   approved_revision_id uuid,
@@ -300,6 +305,7 @@ create table content_revisions (
   item_id uuid not null,
   brand_id uuid not null,
   revision_no int not null,
+  stage text not null default 'art' check (stage in ('plan','art')),
   snapshot jsonb not null,
   created_by uuid references profiles(id),
   created_at timestamptz not null default now(),
@@ -309,7 +315,8 @@ create table content_revisions (
 );
 alter table content_items
   add foreign key (current_revision_id, id) references content_revisions(id, item_id),
-  add foreign key (approved_revision_id, id) references content_revisions(id, item_id);
+  add foreign key (approved_revision_id, id) references content_revisions(id, item_id),
+  add foreign key (plan_approved_revision_id, id) references content_revisions(id, item_id);
 
 create table content_revision_media (
   revision_id uuid not null references content_revisions(id),
@@ -324,7 +331,7 @@ create table approval_requests (
   brand_id uuid not null,
   item_id uuid not null,
   revision_id uuid not null,
-  approver_user_id uuid not null references profiles(id),
+  stage text not null default 'art' check (stage in ('plan','art')),
   status text not null default 'pending' check (status in
     ('pending','approved','changes_requested','superseded','cancelled')),
   requested_by uuid references profiles(id),
@@ -339,7 +346,6 @@ create table approval_requests (
 );
 create unique index approval_one_pending_per_item on approval_requests (item_id) where status = 'pending';
 create index on approval_requests (brand_id, status, due_date);
-create index on approval_requests (approver_user_id, status);
 
 create table approval_decisions (
   id uuid primary key default gen_random_uuid(),

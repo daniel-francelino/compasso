@@ -24,7 +24,7 @@ Each kind requires an **action** and, when the subject belongs to a brand, a **b
 
 | Kind | When it fires | Who receives (action) | Origin | Default lead time |
 |---|---|---|---|---|
-| `approval.requested` | A revision is submitted for approval | The designated approver (`approvals.decide`) | Event | Immediate |
+| `approval.requested` | A revision is submitted for approval | Every approver of the brand (`approvals.decide` and a brand link with `can_decide`); the title names the stage ("Planejamento aguarda sua decisão", "Artes aguardam sua decisão") | Event | Immediate |
 | `approval.decided` | The approver approved or requested changes | Whoever submitted (`approvals.view`) | Event | Immediate |
 | `approval.superseded` | A pending request was replaced by a new revision | The previous approver (`approvals.decide`) | Event | Immediate |
 | `approval.overdue` | A pending request passed its approval deadline | Whoever submitted (`approvals.view`). The external approver is not sent this alert (see the Phase 4 addition) | Scheduled | Next day, then every 2 days until resolved |
@@ -205,7 +205,7 @@ Email complements the in-app alert for what is important or for people who are n
 
 ## 10. Acceptance criteria
 
-- [ ] Submitting a revision creates `approval.requested` for the designated approver in real time, with the counter on the bell, **in the same transaction** as the submission.
+- [ ] Submitting a revision creates `approval.requested` for every approver of the brand in real time, with the counter on the bell, **in the same transaction** as the submission.
 - [ ] Opening a notification leads to the right record and marks it as read.
 - [ ] The same situation **does not generate repeated alerts**, even with the routine running several times.
 - [ ] A person **does not see** notifications of kinds whose action they lack, nor of brands they are not linked to, even asking the API directly.

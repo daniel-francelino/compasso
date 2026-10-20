@@ -7,15 +7,13 @@ import {
   Replace,
   Send,
   TriangleAlert,
-  UserCog,
+  UsersRound,
   XCircle,
   ArrowRight,
   MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { FormDialog } from "@/components/shared/admin/form-dialog";
-import { SelectField } from "@/components/shared/admin/form-fields";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
@@ -32,16 +30,14 @@ import {
   type ApprovalDetail,
   cancelApprovalRequest,
   getApprovalRequest,
-  reassignApprover,
   remindApprover,
 } from "@/lib/marketing/approvals/approvals.functions";
-import { listApproverOptions } from "@/lib/marketing/content/workflow.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { ApprovalRequestStatus } from "@/lib/shared/enums";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
-import { approvalOutcomeLabels } from "@/lib/shared/labels";
+import { approvalOutcomeLabels, approvalStageLabels } from "@/lib/shared/labels";
 import { signMediaUrls } from "@/lib/shared/media/media.functions";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -55,11 +51,11 @@ const timelineOf = (request: ApprovalDetail): TimelineEvent[] => {
     {
       key: "sent",
       at: request.requestedAt,
-      text: `Enviada${request.requestedByName ? ` por ${request.requestedByName}` : ""} para ${request.approverName ?? "o aprovador"}`,
+      text: `${approvalStageLabels[request.stage]} enviado${request.requestedByName ? ` por ${request.requestedByName}` : ""} para a aprovação da marca`,
     },
   ];
   if (request.viewedAt) {
-    events.push({ key: "viewed", at: request.viewedAt, text: "Aberta pelo aprovador" });
+    events.push({ key: "viewed", at: request.viewedAt, text: "Aberta por quem aprova" });
   }
   if (request.decidedAt) {
     events.push({ key: "decided", at: request.decidedAt, text: closingText(request) });
@@ -75,64 +71,9 @@ const closingText = (request: ApprovalDetail): string => {
     : `${approvalOutcomeLabels[request.outcome]}${request.decidedByName ? ` por ${request.decidedByName}` : ""}`;
 };
 
-function ReassignDialog({
-  request,
-  open,
-  onOpenChange,
-  onDone,
-}: {
-  request: ApprovalDetail;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onDone: (requestId: string) => void;
-}) {
-  const { run, busy } = useServerAction();
-  const [approverId, setApproverId] = useState("");
-  const options = useQuery({
-    queryKey: QueryKey.Content.approvers(request.brandId),
-    queryFn: async () =>
-      unwrapResult(await listApproverOptions({ data: { brandId: request.brandId } })).approvers,
-    enabled: open,
-  });
-  return (
-    <FormDialog
-      open={open}
-      onOpenChange={onOpenChange}
-      icon={UserCog}
-      title="Reatribuir aprovador"
-      description="O pedido atual é substituído e um novo pedido da mesma versão vai para a pessoa escolhida."
-      submitLabel="Reatribuir"
-      submitDisabled={approverId === ""}
-      busy={busy}
-      onSubmit={async () => {
-        const result = await run(() => reassignApprover({ data: { id: request.id, approverId } }), {
-          invalidate: [QueryKey.Approvals.all(), QueryKey.Content.all()],
-          success: "Aprovador reatribuído.",
-        });
-        if (!result.ok) return;
-        onDone(result.requestId);
-        onOpenChange(false);
-      }}
-    >
-      <SelectField
-        id="reassign-approver"
-        label="Novo aprovador"
-        required
-        value={approverId}
-        onValueChange={setApproverId}
-        placeholder="Escolha o aprovador"
-        options={(options.data ?? [])
-          .filter((person) => person.id !== request.approverId)
-          .map((person) => ({ value: person.id, label: person.name }))}
-      />
-    </FormDialog>
-  );
-}
-
 export function ApprovalDetailPage({ requestId }: { requestId: string }) {
   const auth = useAuth();
   const { run, busy } = useServerAction();
-  const [reassigning, setReassigning] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   const query = useQuery({
@@ -179,7 +120,7 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
     <div className="space-y-6">
       <PageHeader
         title={snapshot.title}
-        description={`${request.brandName} · Versão ${request.revision.revisionNo}`}
+        description={`${request.brandName} · ${approvalStageLabels[request.stage]} · Versão ${request.revision.revisionNo}`}
         breadcrumbs={[{ label: "Aprovações", to: AppRoute.Approvals }, { label: snapshot.title }]}
         actions={
           <>
@@ -222,12 +163,6 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
             <BellRing aria-hidden="true" />
             Reenviar lembrete
           </Button>
-          {request.isCurrent ? (
-            <Button variant="outline" disabled={busy} onClick={() => setReassigning(true)}>
-              <UserCog aria-hidden="true" />
-              Reatribuir aprovador
-            </Button>
-          ) : null}
           <Button variant="outline" disabled={busy} onClick={() => setCancelling(true)}>
             <XCircle aria-hidden="true" />
             Cancelar pedido
@@ -249,6 +184,21 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
           urls={urls.data}
           onOpenFile={openFile}
         />
+      </SectionCard>
+      <SectionCard
+        title="Quem pode aprovar"
+        icon={UsersRound}
+        tip={{
+          label: "Sobre quem aprova",
+          content:
+            "Qualquer pessoa da marca com permissão de aprovar pode decidir. A primeira decisão vale.",
+        }}
+      >
+        {request.approverNames.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Ninguém da marca pode aprovar agora.</p>
+        ) : (
+          <p className="text-sm">{request.approverNames.join(", ")}</p>
+        )}
       </SectionCard>
       <SectionCard title="Andamento" icon={Send}>
         <ol className="space-y-2 text-sm">
@@ -300,19 +250,11 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
           </ul>
         )}
       </SectionCard>
-      {reassigning ? (
-        <ReassignDialog
-          request={request}
-          open
-          onOpenChange={(next) => !next && setReassigning(false)}
-          onDone={() => void query.refetch()}
-        />
-      ) : null}
       <ReasonDialog
         open={cancelling}
         onOpenChange={setCancelling}
         title="Cancelar pedido"
-        description="O conteúdo volta para produção e o aprovador deixa de ver este pedido como pendente."
+        description="O conteúdo volta para a etapa anterior e o pedido deixa de aparecer como pendente."
         confirmLabel="Cancelar pedido"
         onSubmit={async (reason) => {
           const result = await run(
