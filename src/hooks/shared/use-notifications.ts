@@ -20,7 +20,7 @@ export const useUnreadCount = (userId: string) => {
   useEffect(() => {
     const client = browserClient();
     const channel = client
-      .channel(`${REALTIME_CHANNEL}-${userId}`)
+      .channel(`${REALTIME_CHANNEL}-${userId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
