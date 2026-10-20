@@ -205,7 +205,7 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
       onOpenChange={(open) => !open && onClose()}
       title={`Compartilhar «${target.name}»`}
       icon={Share2}
-      description="Quem tiver o link acessa sem entrar no Compasso. Você pode encerrar o link quando quiser."
+      description="Quem tiver o link acessa sem entrar na Aura Creative. Você pode encerrar o link quando quiser."
       busy={busy}
       submitLabel="Criar link"
       submitIcon={Link2}

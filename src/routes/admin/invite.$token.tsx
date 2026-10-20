@@ -47,8 +47,8 @@ function InvitePage() {
 
   return (
     <AuthShell
-      title="Bem-vindo(a) ao Compasso"
-      description="Você foi convidado(a) para acessar o Compasso. Defina uma senha para entrar."
+      title="Bem-vindo(a) ? Aura Creative"
+      description="Você foi convidado(a) para acessar a Aura Creative. Defina uma senha para entrar."
     >
       <form
         ref={formRef}

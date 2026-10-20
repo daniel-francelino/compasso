@@ -6,15 +6,15 @@ import { TooltipProvider } from "@/components/shared/ui/tooltip";
 import appCss from "@/styles.css?url";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Compasso" },
+      { title: `${pageTitle(matches.at(-1)?.routeId ?? "")} | Aura Creative` },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", href: "/aura-mark.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -26,6 +26,44 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   shellComponent: RootShell,
   component: RootComponent,
 });
+
+function pageTitle(routeId: string) {
+  const segment = routeId
+    .split("/")
+    .filter((part) => part && part !== "index" && !part.startsWith("$") && !part.startsWith("("))
+    .at(-1);
+  if (!segment || segment === "__root") return "In?cio";
+  const names: Record<string, string> = {
+    brands: "Marcas",
+    clients: "Clientes",
+    content: "Conte?dos",
+    calendar: "Calend?rio",
+    approvals: "Aprova??es",
+    settings: "Configura??es",
+    library: "Biblioteca de M?dia",
+    profile: "Meu perfil",
+    users: "Pessoas",
+    roles: "Perfis",
+    audit: "Auditoria",
+    pages: "P?ginas",
+    services: "Servi?os",
+    portfolio: "Portf?lio",
+    messages: "Mensagens",
+    site: "Vis?o geral",
+    notifications: "Avisos",
+    login: "Entrar",
+    "recover-password": "Recuperar senha",
+    "reset-password": "Redefinir senha",
+    "confirm-email": "Confirmar e-mail",
+    invite: "Convite",
+    "access-denied": "Acesso negado",
+    forbidden: "Acesso negado",
+  };
+  return (
+    names[segment] ??
+    segment.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
+  );
+}
 
 function RootShell({ children }: { children: ReactNode }) {
   return (

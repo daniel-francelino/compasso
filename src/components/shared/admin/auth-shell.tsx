@@ -18,7 +18,7 @@ export function AuthShell({
 }) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
-      <p className="heading-section mb-6 text-foreground">Compasso</p>
+      <img src="/aura-creative-logo.svg" alt="Aura Creative" className="mb-6 h-auto w-56" />
       <SectionCard padding="lg" as="div" className="w-full max-w-md sm:p-8">
         <h1 className="heading-section text-foreground">{title}</h1>
         {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}

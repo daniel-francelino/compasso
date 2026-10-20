@@ -38,7 +38,7 @@ export const policyDefaults = {
   [SettingKey.Retention]: { auditMonths: 24, notificationDays: 90 },
   [SettingKey.Invitations]: { expiresDays: 7 },
   [SettingKey.Security]: { requireOwnerMfa: false },
-  [SettingKey.Email]: { senderName: "Compasso" },
+  [SettingKey.Email]: { senderName: "Aura Creative" },
 } as const;
 
 export const saveSettingSchema = z.object({

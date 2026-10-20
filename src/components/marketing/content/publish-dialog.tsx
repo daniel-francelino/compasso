@@ -45,7 +45,7 @@ export function PublishDialog({
       onOpenChange={onOpenChange}
       icon={Megaphone}
       title="Registrar publicação"
-      description={`Isto só registra que a publicação em ${channelLabel} aconteceu. O Compasso não publica em nenhuma rede social.`}
+      description={`Isto só registra que a publicação em ${channelLabel} aconteceu. A Aura Creative não publica em nenhuma rede social.`}
       submitLabel="Registrar publicação"
       busy={busy}
       form={{

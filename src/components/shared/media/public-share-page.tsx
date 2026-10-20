@@ -172,7 +172,7 @@ export function PublicSharePage({ token }: { token: string }) {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-5xl items-center px-4 py-4 sm:px-6">
-          <p className="heading-card">Compasso</p>
+          <img src="/aura-creative-logo.svg" alt="Aura Creative" className="h-auto w-40" />
         </div>
       </header>
       <main className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 sm:px-6">

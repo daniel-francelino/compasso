@@ -30,7 +30,7 @@ function LoginPage() {
   return (
     <AuthShell
       title="Entrar"
-      description="Use o e-mail do seu convite para acessar o Compasso."
+      description="Use o e-mail do seu convite para acessar a Aura Creative."
       footer={
         <Link
           to={AppRoute.RecoverPassword}

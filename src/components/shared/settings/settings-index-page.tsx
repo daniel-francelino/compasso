@@ -37,7 +37,7 @@ const entries: Entry[] = [
   },
   {
     title: "Perfis",
-    description: "O que cada perfil pode fazer no Compasso.",
+    description: "O que cada perfil pode fazer na Aura Creative.",
     icon: ShieldCheck,
     to: AppRoute.Roles,
     action: Action.Roles.Manage,

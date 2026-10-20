@@ -31,6 +31,8 @@ Source: https://www.mlabs.com.br/
 
 ## 3. Naming and navigation
 
+The product brand is **Aura Creative**, with the visual wordmark and sparkle mark stored in `public/aura-creative-logo.svg` and `public/aura-mark.svg`. User-facing application copy, browser titles, invitations and email templates use Aura Creative. `compasso` remains the repository and package identifier only.
+
 | Element | Recommended name | UI label (pt-BR) | Responsibility |
 |---|---|---|---|
 | Editorial space | Site and CMS | "Site e CMS" | Content and settings of the public website |

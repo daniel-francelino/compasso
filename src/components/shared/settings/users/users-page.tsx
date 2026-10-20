@@ -229,7 +229,7 @@ export function UsersPage() {
     <div className="space-y-6">
       <PageHeader
         title="Pessoas e acessos"
-        description="Quem usa o Compasso e o que cada pessoa pode fazer."
+        description="Quem usa a Aura Creative e o que cada pessoa pode fazer."
         breadcrumbs={[{ label: "Configurações" }, { label: "Pessoas" }]}
         actions={
           canInvite ? (
@@ -299,7 +299,7 @@ export function UsersPage() {
         description={
           toggling?.status === ProfileStatus.Approved
             ? `${toggling.fullName} perde o acesso agora, mas o histórico fica guardado.`
-            : `${toggling?.fullName ?? ""} volta a acessar o Compasso com o perfil atual.`
+            : `${toggling?.fullName ?? ""} volta a acessar a Aura Creative com o perfil atual.`
         }
         confirmLabel={toggling?.status === ProfileStatus.Approved ? "Suspender" : "Reativar"}
         destructive={toggling?.status === ProfileStatus.Approved}

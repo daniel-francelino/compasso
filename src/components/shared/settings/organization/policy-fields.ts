@@ -55,7 +55,7 @@ export const policyGroups: Record<SettingKey, PolicyGroup> = {
   },
   [SettingKey.Email]: {
     icon: Mail,
-    description: "Como os e-mails do Compasso se apresentam.",
+    description: "Como os e-mails da Aura Creative se apresentam.",
   },
 };
 

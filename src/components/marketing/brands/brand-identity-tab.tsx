@@ -134,7 +134,7 @@ function IdentityForm({ brand, canEdit }: { brand: BrandDetail; canEdit: boolean
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-medium">Cores da marca</p>
           <InfoTip label="Ajuda sobre as cores">
-            Servem de referência para a equipe. Não alteram as cores do Compasso.
+            Servem de referência para a equipe. Não alteram as cores da Aura Creative.
           </InfoTip>
         </div>
         {colors.map((color, index) => (

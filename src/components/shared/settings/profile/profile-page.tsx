@@ -212,7 +212,7 @@ function ProfileForm({
 }
 
 export function ProfilePage({
-  notificationChannelLabel = "No Compasso",
+  notificationChannelLabel = "Na Aura Creative",
 }: {
   notificationChannelLabel?: string;
 }) {

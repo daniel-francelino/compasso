@@ -119,7 +119,7 @@ export function AuditPage() {
     <div className="space-y-6">
       <PageHeader
         title="Auditoria"
-        description="O histórico de tudo que mudou no Compasso. Os registros não podem ser alterados."
+        description="O histórico de tudo que mudou na Aura Creative. Os registros não podem ser alterados."
         breadcrumbs={[{ label: "Configurações" }, { label: "Auditoria" }]}
         actions={
           <Button variant="outline" onClick={() => void exportCsv()} loading={exporting}>

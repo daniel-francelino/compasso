@@ -16,7 +16,7 @@ function ForbiddenPage() {
       <EmptyState
         icon={ShieldAlert}
         title="Você não tem permissão para ver esta página"
-        description="Peça acesso a quem administra o Compasso, se precisar dela."
+        description="Peça acesso a quem administra a Aura Creative, se precisar dela."
         action={
           <Button asChild>
             <Link to={AppRoute.Admin}>
