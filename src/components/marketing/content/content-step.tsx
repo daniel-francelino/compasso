@@ -1,7 +1,6 @@
-import { Calendar, FileImage, Settings2, Type } from "lucide-react";
+import { Calendar, FileImage, Type } from "lucide-react";
 import { CaptionSection } from "@/components/marketing/content/caption-section";
 import { ChannelRowsSection } from "@/components/marketing/content/channel-rows-section";
-import { ContentSettingsSection } from "@/components/marketing/content/content-settings-section";
 import { FileStrip } from "@/components/marketing/content/file-strip";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
@@ -12,13 +11,11 @@ import { mediaProblem } from "@/lib/shared/editorial/editorial";
 export function ContentStep({
   draft,
   channels,
-  assignees,
   zone,
   state,
   tab,
   onTab,
   editable,
-  settingsDisabled,
   saving,
   canPublish,
   canCancelRow,
@@ -28,13 +25,11 @@ export function ContentStep({
 }: {
   draft: ContentDraft;
   channels: ChannelRow[];
-  assignees: { id: string; name: string }[];
   zone: string;
   state: StageState;
   tab: string;
   onTab: (tab: string) => void;
   editable: boolean;
-  settingsDisabled: boolean;
   saving: boolean;
   canPublish: boolean;
   canCancelRow: boolean;
@@ -78,15 +73,6 @@ export function ContentStep({
           canCancel={canCancelRow}
           onPublish={onPublishRow}
           onCancelRow={onCancelRow}
-        />
-      </SectionCard>
-      <SectionCard title="6. Configurações" icon={Settings2}>
-        <ContentSettingsSection
-          draft={draft}
-          assignees={assignees}
-          disabled={settingsDisabled}
-          objectiveLocked={state.planLocked}
-          errors={errors}
         />
       </SectionCard>
     </>

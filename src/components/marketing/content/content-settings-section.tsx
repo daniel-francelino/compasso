@@ -38,17 +38,6 @@ export function ContentSettingsSection({
   }
   return (
     <div className="space-y-4">
-      <TextField
-        id="content-title"
-        label="Título interno"
-        required
-        value={values.title}
-        disabled={disabled}
-        onValueChange={(value) => set("title", value)}
-        maxLength={140}
-        error={errors["title"]}
-        hint="O cliente só vê este título se ele fizer parte do que for enviado."
-      />
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           id="content-objective-kind"

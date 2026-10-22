@@ -1,6 +1,7 @@
-import { ClipboardList, Radio, Settings2 } from "lucide-react";
+import { ClipboardList, Radio, Settings2, Tag } from "lucide-react";
 import { ChannelPicker } from "@/components/marketing/content/channel-picker";
 import { ContentSettingsSection } from "@/components/marketing/content/content-settings-section";
+import { ContentTitleField } from "@/components/marketing/content/content-title-field";
 import { PlanSection } from "@/components/marketing/content/plan-section";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -9,6 +10,7 @@ import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import type { StageState } from "@/lib/marketing/content/stage-state";
 import type { BrandOption } from "@/lib/shared/brands/brand-options.functions";
 import { StoredKey, writeStored } from "@/lib/shared/stored-keys";
+import { cn } from "@/lib/shared/utils";
 
 export function PlanningStep({
   draft,
@@ -40,10 +42,10 @@ export function PlanningStep({
   onToggleChannel: (channelId: string) => void;
 }) {
   const { values, set } = draft;
-  return (
-    <div className="grid items-start gap-6 xl:grid-cols-2">
-      {isNew ? (
-        <SectionCard title="Marca" icon={Radio}>
+  const identity = (
+    <SectionCard title="Identificação" icon={Tag}>
+      <div className={isNew ? "grid gap-4 md:grid-cols-2" : undefined}>
+        {isNew ? (
           <BrandSelect
             id="content-brand"
             required
@@ -58,45 +60,61 @@ export function PlanningStep({
             brands={brands}
             error={errors["brandId"]}
           />
-        </SectionCard>
-      ) : null}
-      <SectionCard title="1. Selecione os canais" icon={Radio}>
-        <ChannelPicker
-          brandId={values.brandId}
-          channels={channels}
-          selected={selected}
-          locked={locked}
-          disabled={!editable || state.planLocked}
-          onToggle={onToggleChannel}
-          error={errors["channels"]}
-        />
-      </SectionCard>
-      {state.planRequired ? (
-        <SectionCard
-          title="2. Planejamento"
-          icon={ClipboardList}
-          tip={{
-            label: "Sobre o planejamento",
-            content:
-              "O cliente aprova primeiro o planejamento. Depois da aprovação, canais, formatos e datas ficam travados e começam as artes.",
-          }}
-        >
-          <PlanSection
-            draft={draft}
-            disabled={!editable || saving || state.planLocked}
-            errors={errors}
-          />
-        </SectionCard>
-      ) : null}
-      <SectionCard title="Organização" icon={Settings2}>
-        <ContentSettingsSection
-          draft={draft}
-          assignees={assignees}
-          disabled={settingsDisabled}
-          objectiveLocked={state.planLocked}
-          errors={errors}
-        />
-      </SectionCard>
+        ) : null}
+        <ContentTitleField draft={draft} disabled={settingsDisabled} error={errors["title"]} />
+      </div>
+    </SectionCard>
+  );
+  const channelsCard = (
+    <SectionCard title="1. Selecione os canais" icon={Radio}>
+      <ChannelPicker
+        brandId={values.brandId}
+        channels={channels}
+        selected={selected}
+        locked={locked}
+        disabled={!editable || state.planLocked}
+        onToggle={onToggleChannel}
+        error={errors["channels"]}
+      />
+    </SectionCard>
+  );
+  const organization = (
+    <SectionCard title="Organização" icon={Settings2}>
+      <ContentSettingsSection
+        draft={draft}
+        assignees={assignees}
+        disabled={settingsDisabled}
+        objectiveLocked={state.planLocked}
+        errors={errors}
+      />
+    </SectionCard>
+  );
+  return (
+    <div className="space-y-6">
+      {identity}
+      <div className={cn("grid items-start gap-6", state.planRequired && "xl:grid-cols-2")}>
+        <div className="space-y-6">
+          {channelsCard}
+          {organization}
+        </div>
+        {state.planRequired ? (
+          <SectionCard
+            title="2. Planejamento"
+            icon={ClipboardList}
+            tip={{
+              label: "Sobre o planejamento",
+              content:
+                "O cliente aprova primeiro o planejamento. Depois da aprovação, canais, formatos e datas ficam travados e começam as artes.",
+            }}
+          >
+            <PlanSection
+              draft={draft}
+              disabled={!editable || saving || state.planLocked}
+              errors={errors}
+            />
+          </SectionCard>
+        ) : null}
+      </div>
     </div>
   );
 }

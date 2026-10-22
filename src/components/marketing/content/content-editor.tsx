@@ -378,13 +378,11 @@ export function ContentEditor({
             <ContentStep
               draft={draft}
               channels={channels}
-              assignees={assignees.data ?? []}
               zone={zone}
               state={state}
               tab={tab}
               onTab={setTab}
               editable={editable}
-              settingsDisabled={settingsDisabled}
               saving={saving}
               canPublish={canPublish}
               canCancelRow={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
