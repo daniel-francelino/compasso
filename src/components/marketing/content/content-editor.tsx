@@ -20,6 +20,7 @@ import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { StepNav } from "@/components/shared/admin/step-nav";
+import { StepPanel } from "@/components/shared/admin/step-panel";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
@@ -61,6 +62,7 @@ import { platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
+import { cn } from "@/lib/shared/utils";
 
 const DEFAULT_HOUR = "09:00";
 const FALLBACK_ZONE = "America/Sao_Paulo";
@@ -255,6 +257,27 @@ export function ContentEditor({
     return channel ? `${platformLabels[channel.platform]} · ${channel.profileName}` : "o canal";
   };
   const settingsDisabled = !canWrite || cancelled || saving;
+  const hasSide = content !== undefined || step === EditorStep.Content;
+  const actionsBar = (
+    <ContentActions
+      status={editorialStatus}
+      state={state}
+      isNew={isNew}
+      cancelled={cancelled}
+      hasPublished={hasPublished}
+      canMarkPublished={allPublished && !draft.dirty}
+      onPublish={() => setConfirmingPublish(true)}
+      hasContent={content !== undefined}
+      editable={editable}
+      dirty={draft.dirty}
+      saving={saving}
+      acting={acting}
+      onMove={(to) => void move(to)}
+      onSubmit={() => setSubmitting(true)}
+      onReopen={setReopening}
+      onCancel={() => setCancelling(true)}
+    />
+  );
 
   return (
     <form
@@ -277,6 +300,7 @@ export function ContentEditor({
               Escreva uma vez e escolha onde vai sair. Cada canal só muda o que for diferente.
             </p>
           </div>
+          {actionsBar}
         </header>
       ) : (
         <PageHeader
@@ -290,27 +314,14 @@ export function ContentEditor({
             { label: "Conteúdos", to: AppRoute.Content },
             { label: isNew ? "Novo conteúdo" : values.title || "Conteúdo" },
           ]}
-          actions={content ? <EditorialStatusBadge status={editorialStatus} /> : null}
+          actions={
+            <>
+              {content ? <EditorialStatusBadge status={editorialStatus} /> : null}
+              {actionsBar}
+            </>
+          }
         />
       )}
-      <ContentActions
-        status={editorialStatus}
-        state={state}
-        isNew={isNew}
-        cancelled={cancelled}
-        hasPublished={hasPublished}
-        canMarkPublished={allPublished && !draft.dirty}
-        onPublish={() => setConfirmingPublish(true)}
-        hasContent={content !== undefined}
-        editable={editable}
-        dirty={draft.dirty}
-        saving={saving}
-        acting={acting}
-        onMove={(to) => void move(to)}
-        onSubmit={() => setSubmitting(true)}
-        onReopen={setReopening}
-        onCancel={() => setCancelling(true)}
-      />
       {error ? (
         <Alert variant="destructive" role="alert">
           <AlertTitle>Não foi possível salvar</AlertTitle>
@@ -333,8 +344,10 @@ export function ContentEditor({
       ) : null}
       {content ? <ContentBanners content={content} /> : null}
       <StepNav label="Etapas do conteúdo" steps={editorSteps} active={step} onChange={setStep} />
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
-        <div className="space-y-6">
+      <div
+        className={cn("grid items-start gap-6", hasSide && "xl:grid-cols-[minmax(0,1fr)_24rem]")}
+      >
+        <StepPanel steps={editorSteps} active={step} onChange={setStep}>
           {step === EditorStep.Planning ? (
             <PlanningStep
               draft={draft}
@@ -381,24 +394,26 @@ export function ContentEditor({
             />
           ) : null}
           <FormError message={error} />
-        </div>
-        <div className="space-y-6 xl:sticky xl:top-4">
-          {step === EditorStep.Content ? (
-            <EditorPreview
-              draft={draft}
-              channels={channels}
-              tab={tab}
-              state={state}
-              brandLogoUrl={brand.data?.logoUrl ?? null}
-            />
-          ) : null}
-          {content ? (
-            <>
-              <RevisionHistory requests={content.requests} />
-              <CommentsPanel itemId={content.id} />
-            </>
-          ) : null}
-        </div>
+        </StepPanel>
+        {hasSide ? (
+          <div className="space-y-6 xl:sticky xl:top-4">
+            {step === EditorStep.Content ? (
+              <EditorPreview
+                draft={draft}
+                channels={channels}
+                tab={tab}
+                state={state}
+                brandLogoUrl={brand.data?.logoUrl ?? null}
+              />
+            ) : null}
+            {content ? (
+              <>
+                <RevisionHistory requests={content.requests} />
+                <CommentsPanel itemId={content.id} />
+              </>
+            ) : null}
+          </div>
+        ) : null}
       </div>
       {submitting && content ? (
         <SubmitDialog

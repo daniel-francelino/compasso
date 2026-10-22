@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { ContentEditor } from "@/components/marketing/content/content-editor";
 import { ContentEditorSkeleton } from "@/components/marketing/content/content-editor-skeleton";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
@@ -57,11 +58,12 @@ function NewContent({
       unwrapResult(await getCalendarNote({ data: { id: sourceNoteId ?? "" } })).note,
     enabled: sourceNoteId !== undefined,
   });
+  const [rememberedBrand, setRememberedBrand] = useState<string | null>(null);
+  useEffect(() => {
+    setRememberedBrand(readStored(StoredKey.CalendarBrand, z.string().uuid(), ""));
+  }, []);
+  if (rememberedBrand === null) return <ContentEditorSkeleton isNew />;
   if (sourceNoteId !== undefined && note.isPending) return <ContentEditorSkeleton isNew />;
-  const rememberedBrand =
-    brandId === undefined && onSaved !== undefined
-      ? readStored(StoredKey.CalendarBrand, z.string().uuid(), "")
-      : "";
   const seed = emptyDraft(note.data?.brandId ?? brandId ?? rememberedBrand);
   if (note.data) {
     seed.title = note.data.title;

@@ -27,12 +27,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
 });
 
+const NEW_SEGMENT = "new";
+
+const newPageTitles: Record<string, string> = {
+  content: "Novo conteúdo",
+  brands: "Nova marca",
+  clients: "Novo cliente",
+};
+
 function pageTitle(routeId: string) {
-  const segment = routeId
+  const segments = routeId
     .split("/")
-    .filter((part) => part && part !== "index" && !part.startsWith("$") && !part.startsWith("("))
-    .at(-1);
+    .filter((part) => part && part !== "index" && !part.startsWith("$") && !part.startsWith("("));
+  const segment = segments.at(-1);
   if (!segment || segment === "__root") return "Início";
+  const created = segment === NEW_SEGMENT ? newPageTitles[segments.at(-2) ?? ""] : undefined;
+  if (created !== undefined) return created;
   const names: Record<string, string> = {
     brands: "Marcas",
     clients: "Clientes",

@@ -8,6 +8,7 @@ import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import type { StageState } from "@/lib/marketing/content/stage-state";
 import type { BrandOption } from "@/lib/shared/brands/brand-options.functions";
+import { StoredKey, writeStored } from "@/lib/shared/stored-keys";
 
 export function PlanningStep({
   draft,
@@ -40,7 +41,7 @@ export function PlanningStep({
 }) {
   const { values, set } = draft;
   return (
-    <>
+    <div className="grid items-start gap-6 xl:grid-cols-2">
       {isNew ? (
         <SectionCard title="Marca" icon={Radio}>
           <BrandSelect
@@ -49,6 +50,7 @@ export function PlanningStep({
             value={values.brandId}
             onValueChange={(value) => {
               set("brandId", value);
+              writeStored(StoredKey.CalendarBrand, value);
               set("rows", []);
               set("assigneeId", null);
             }}
@@ -95,6 +97,6 @@ export function PlanningStep({
           errors={errors}
         />
       </SectionCard>
-    </>
+    </div>
   );
 }
