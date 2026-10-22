@@ -63,7 +63,7 @@ export const adminSpaces: SpaceEntry[] = [
     icon: LayoutDashboard,
     to: AppRoute.Marketing,
   },
-  { key: Space.Cms, title: "Site e CMS", icon: Globe, to: AppRoute.Site },
+  { key: Space.Cms, title: "Gestão de Site", icon: Globe, to: AppRoute.Site },
 ];
 
 export const spaceOfPath = (pathname: string): AdminSpace | null => {

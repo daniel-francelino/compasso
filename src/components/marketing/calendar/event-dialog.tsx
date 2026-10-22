@@ -20,6 +20,8 @@ import { CalendarEventType, CalendarNoteKind, CalendarNoteRepeat } from "@/lib/s
 import { instantToLocalInput } from "@/lib/shared/format";
 import { calendarEventTypeLabels, calendarNoteRepeatLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
+import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
+import { z } from "zod";
 
 const FALLBACK_ZONE = "America/Sao_Paulo";
 const ONE_HOUR_MS = 3_600_000;
@@ -43,7 +45,9 @@ export function EventDialog({
   const queryClient = useQueryClient();
   const { formRef, errors, error, busy, submit } = useFormSubmit();
   const { note } = target;
-  const [brandId, setBrandId] = useState(note?.brandId ?? target.brandId ?? "");
+  const [brandId, setBrandId] = useState(
+    note?.brandId ?? target.brandId ?? readStored(StoredKey.CalendarBrand, z.string().uuid(), ""),
+  );
   const [title, setTitle] = useState(note?.title ?? "");
   const [eventType, setEventType] = useState<CalendarEventType | null>(
     note?.eventType ?? CalendarEventType.Meeting,
@@ -115,7 +119,10 @@ export function EventDialog({
           id="event-brand"
           required
           value={brandId}
-          onValueChange={setBrandId}
+          onValueChange={(value) => {
+            setBrandId(value);
+            writeStored(StoredKey.CalendarBrand, value);
+          }}
           placeholder="Escolha a marca"
           brands={brands.data}
           error={errors["brandId"]}

@@ -354,6 +354,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                           brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
                         options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
                         onChange: (value: string) => {
+                          if (value !== ALL) writeStored(StoredKey.CalendarBrand, value);
                           void state.setFilter("brand", value === ALL ? "" : value);
                           void state.setFilter("channel", "");
                           void state.setFilter("owner", "");

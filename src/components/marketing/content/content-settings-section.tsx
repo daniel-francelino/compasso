@@ -13,15 +13,29 @@ export function ContentSettingsSection({
   assignees,
   disabled,
   objectiveLocked = false,
+  showBriefing = false,
   errors,
 }: {
   draft: ContentDraft;
   assignees: { id: string; name: string }[];
   disabled: boolean;
   objectiveLocked?: boolean;
+  showBriefing?: boolean;
   errors: Record<string, string>;
 }) {
   const { values, set } = draft;
+  if (showBriefing) {
+    return (
+      <RichTextEditor
+        id="content-briefing"
+        label="Briefing (interno)"
+        value={values.briefing}
+        disabled={disabled}
+        onValueChange={(value) => set("briefing", value)}
+        error={errors["briefing"]}
+      />
+    );
+  }
   return (
     <div className="space-y-4">
       <TextField
@@ -64,14 +78,6 @@ export function ContentSettingsSection({
           error={errors["objective"]}
         />
       </div>
-      <RichTextEditor
-        id="content-briefing"
-        label="Briefing (interno)"
-        value={values.briefing}
-        disabled={disabled}
-        onValueChange={(value) => set("briefing", value)}
-        error={errors["briefing"]}
-      />
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
           id="content-assignee"

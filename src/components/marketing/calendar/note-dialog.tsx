@@ -17,6 +17,8 @@ import { saveNoteSchema } from "@/lib/marketing/calendar/schemas";
 import { CalendarNoteKind, CalendarNoteRepeat } from "@/lib/shared/enums";
 import { calendarNoteKindLabels, calendarNoteRepeatLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
+import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
+import { z } from "zod";
 
 export type NoteDialogTarget = {
   kind: CalendarNoteKind;
@@ -35,7 +37,9 @@ export function NoteDialog({
   const queryClient = useQueryClient();
   const { formRef, errors, error, busy, submit } = useFormSubmit();
   const { note } = target;
-  const [brandId, setBrandId] = useState(note?.brandId ?? target.brandId ?? "");
+  const [brandId, setBrandId] = useState(
+    note?.brandId ?? target.brandId ?? readStored(StoredKey.CalendarBrand, z.string().uuid(), ""),
+  );
   const [title, setTitle] = useState(note?.title ?? "");
   const [noteDate, setNoteDate] = useState(note?.noteDate ?? target.day);
   const [repeat, setRepeat] = useState<CalendarNoteRepeat>(note?.repeat ?? CalendarNoteRepeat.None);
@@ -90,7 +94,10 @@ export function NoteDialog({
           id="note-brand"
           required
           value={brandId}
-          onValueChange={setBrandId}
+          onValueChange={(value) => {
+            setBrandId(value);
+            writeStored(StoredKey.CalendarBrand, value);
+          }}
           placeholder="Escolha a marca"
           brands={brands.data}
           error={errors["brandId"]}

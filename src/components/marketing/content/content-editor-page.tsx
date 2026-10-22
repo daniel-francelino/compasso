@@ -10,6 +10,8 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { richDocFromPlain } from "@/lib/shared/rich-text/types";
 import { AppRoute } from "@/lib/shared/routes";
+import { StoredKey, readStored } from "@/lib/shared/stored-keys";
+import { z } from "zod";
 
 function ExistingContent({ itemId }: { itemId: string }) {
   const existing = useQuery({
@@ -56,7 +58,11 @@ function NewContent({
     enabled: sourceNoteId !== undefined,
   });
   if (sourceNoteId !== undefined && note.isPending) return <ContentEditorSkeleton isNew />;
-  const seed = emptyDraft(note.data?.brandId ?? brandId ?? "");
+  const rememberedBrand =
+    brandId === undefined && onSaved !== undefined
+      ? readStored(StoredKey.CalendarBrand, z.string().uuid(), "")
+      : "";
+  const seed = emptyDraft(note.data?.brandId ?? brandId ?? rememberedBrand);
   if (note.data) {
     seed.title = note.data.title;
     seed.briefing = richDocFromPlain(note.data.description ?? "");

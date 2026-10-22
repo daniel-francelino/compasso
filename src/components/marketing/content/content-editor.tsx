@@ -1,38 +1,26 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Calendar,
-  ClipboardList,
-  FileImage,
-  Radio,
-  RotateCcw,
-  Save,
-  Settings2,
-  Type,
-} from "lucide-react";
+import { RotateCcw, Save } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CaptionSection, ALL_TAB } from "@/components/marketing/content/caption-section";
-import { ChannelPicker } from "@/components/marketing/content/channel-picker";
-import { ChannelRowsSection } from "@/components/marketing/content/channel-rows-section";
+import { ALL_TAB } from "@/components/marketing/content/caption-section";
+import { BriefingStep } from "@/components/marketing/content/briefing-step";
 import { CommentsPanel } from "@/components/marketing/content/comments-panel";
-import { ContentSettingsSection } from "@/components/marketing/content/content-settings-section";
-import { FileStrip } from "@/components/marketing/content/file-strip";
-import { PublishDialog } from "@/components/marketing/content/publish-dialog";
-import { RevisionHistory } from "@/components/marketing/content/revision-history";
 import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
-import { PlanSection } from "@/components/marketing/content/plan-section";
+import { ContentStep } from "@/components/marketing/content/content-step";
+import { EditorPreview } from "@/components/marketing/content/editor-preview";
+import { PlanningStep } from "@/components/marketing/content/planning-step";
+import { PublishDialog } from "@/components/marketing/content/publish-dialog";
+import { RevisionHistory } from "@/components/marketing/content/revision-history";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
-import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { FormError } from "@/components/shared/admin/auth-shell";
-import { FormActions } from "@/components/shared/admin/form-actions";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
-import { SectionCard } from "@/components/shared/admin/section-card";
+import { StepNav } from "@/components/shared/admin/step-nav";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
-import { ChannelPreview } from "@/components/shared/preview/channel-preview";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
 import {
@@ -44,7 +32,6 @@ import { useBrand } from "@/hooks/marketing/use-brand";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { useServerAction } from "@/hooks/shared/use-server-action";
-import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
 import { useUnsavedChanges } from "@/hooks/shared/use-unsaved-changes";
 import { listChannels } from "@/lib/marketing/channels/channels.functions";
 import {
@@ -53,8 +40,8 @@ import {
   listAssigneeOptions,
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
+import { EditorStep, editorSteps } from "@/lib/marketing/content/editor-steps";
 import { saveContentSchema } from "@/lib/marketing/content/schemas";
-import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 import { stageStateOf } from "@/lib/marketing/content/stage-state";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import {
@@ -68,10 +55,9 @@ import { ErrorCode } from "@/lib/shared/auth/errors";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { resolveLocalTime } from "@/lib/shared/calendar/reschedule";
-import { mediaProblem, platformFormats } from "@/lib/shared/editorial/editorial";
+import { platformFormats } from "@/lib/shared/editorial/editorial";
 import { type ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
-import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
@@ -113,6 +99,7 @@ export function ContentEditor({
   const [cancelling, setCancelling] = useState(false);
   const [confirmingPublish, setConfirmingPublish] = useState(false);
   const [tab, setTab] = useState(ALL_TAB);
+  const [step, setStep] = useState<EditorStep>(EditorStep.Planning);
 
   const isNew = content === undefined;
   const editorialStatus = content?.editorialStatus ?? EditorialStatus.Draft;
@@ -142,12 +129,7 @@ export function ContentEditor({
     enabled: values.brandId !== "",
   });
   const channels = channelsQuery.data ?? [];
-  const urls = useSignedUrls(
-    values.files.map((file) => file.mediaVersionId),
-    MediaVariant.Display,
-  );
 
-  const formats = values.rows.map((row) => row.format);
   const selected = new Set(values.rows.map((row) => row.channelId));
   const locked = new Set(values.rows.filter((row) => row.published).map((row) => row.channelId));
   const refresh = [QueryKey.Content.all(), QueryKey.Dashboard.all(), QueryKey.Approvals.all()];
@@ -272,9 +254,7 @@ export function ContentEditor({
     const channel = channels.find((candidate) => candidate.id === row.channelId);
     return channel ? `${platformLabels[channel.platform]} · ${channel.profileName}` : "o canal";
   };
-  const previewRow = values.rows.find((row) => row.key === tab) ?? values.rows[0];
-  const previewChannel = channels.find((channel) => channel.id === previewRow?.channelId);
-  const fileProblem = mediaProblem(formats, values.files.length);
+  const settingsDisabled = !canWrite || cancelled || saving;
 
   return (
     <form
@@ -352,122 +332,66 @@ export function ContentEditor({
         </Alert>
       ) : null}
       {content ? <ContentBanners content={content} /> : null}
+      <StepNav label="Etapas do conteúdo" steps={editorSteps} active={step} onChange={setStep} />
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="space-y-6">
-          {isNew ? (
-            <SectionCard title="Marca" icon={Radio}>
-              <BrandSelect
-                id="content-brand"
-                required
-                value={values.brandId}
-                onValueChange={(value) => {
-                  draft.set("brandId", value);
-                  draft.set("rows", []);
-                  draft.set("assigneeId", null);
-                }}
-                placeholder="Escolha a marca"
-                brands={brands.data}
-                error={errors["brandId"]}
-              />
-            </SectionCard>
-          ) : null}
-          <SectionCard title="1. Selecione os canais" icon={Radio}>
-            <ChannelPicker
-              brandId={values.brandId}
+          {step === EditorStep.Planning ? (
+            <PlanningStep
+              draft={draft}
+              isNew={isNew}
+              brands={brands.data}
               channels={channels}
               selected={selected}
               locked={locked}
-              disabled={!editable || state.planLocked}
-              onToggle={toggleChannel}
-              error={errors["channels"]}
+              assignees={assignees.data ?? []}
+              state={state}
+              editable={editable}
+              settingsDisabled={settingsDisabled}
+              saving={saving}
+              errors={errors}
+              onToggleChannel={toggleChannel}
             />
-          </SectionCard>
-          {state.planRequired ? (
-            <SectionCard
-              title="2. Planejamento"
-              icon={ClipboardList}
-              tip={{
-                label: "Sobre o planejamento",
-                content:
-                  "O cliente aprova primeiro o planejamento. Depois da aprovação, canais, formatos e datas ficam travados e começam as artes.",
-              }}
-            >
-              <PlanSection
-                draft={draft}
-                disabled={!editable || saving || state.planLocked}
-                errors={errors}
-              />
-            </SectionCard>
           ) : null}
-          <SectionCard title="3. Texto do post" icon={Type}>
-            <CaptionSection
-              draft={draft}
-              channels={channels}
-              active={tab}
-              onActive={setTab}
-              disabled={!editable || saving}
-              errors={errors}
-            />
-          </SectionCard>
-          <SectionCard title="4. Artes e mídias" icon={FileImage}>
-            <FileStrip
-              items={values.files}
-              onChange={(items) => draft.set("files", items)}
-              brandId={values.brandId}
-              formats={formats}
-              disabled={!editable || saving || values.brandId === ""}
-              error={errors["media"] ?? (values.files.length > 0 ? fileProblem : null) ?? undefined}
-            />
-          </SectionCard>
-          <SectionCard title="5. Data e horário das publicações" icon={Calendar}>
-            <ChannelRowsSection
-              draft={draft}
-              channels={channels}
-              brandTimezone={zone}
-              disabled={!editable || saving || state.planLocked}
-              errors={errors}
-              canPublish={canPublish}
-              canCancel={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
-              onPublish={setPublishing}
-              onCancelRow={setCancellingRow}
-            />
-          </SectionCard>
-          <SectionCard title="6. Configurações" icon={Settings2}>
-            <ContentSettingsSection
+          {step === EditorStep.Briefing ? (
+            <BriefingStep
               draft={draft}
               assignees={assignees.data ?? []}
-              disabled={!canWrite || cancelled || saving}
-              objectiveLocked={state.planLocked}
+              disabled={settingsDisabled}
+              state={state}
               errors={errors}
             />
-          </SectionCard>
+          ) : null}
+          {step === EditorStep.Content ? (
+            <ContentStep
+              draft={draft}
+              channels={channels}
+              assignees={assignees.data ?? []}
+              zone={zone}
+              state={state}
+              tab={tab}
+              onTab={setTab}
+              editable={editable}
+              settingsDisabled={settingsDisabled}
+              saving={saving}
+              canPublish={canPublish}
+              canCancelRow={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
+              errors={errors}
+              onPublishRow={setPublishing}
+              onCancelRow={setCancellingRow}
+            />
+          ) : null}
           <FormError message={error} />
         </div>
         <div className="space-y-6 xl:sticky xl:top-4">
-          {previewRow && previewChannel ? (
-            <ChannelPreview
-              platform={previewChannel.platform}
-              profileName={previewChannel.profileName}
-              format={previewRow.format}
-              caption={previewRow.caption === "" ? values.caption : previewRow.caption}
-              callToAction={values.callToAction === "" ? null : values.callToAction}
+          {step === EditorStep.Content ? (
+            <EditorPreview
+              draft={draft}
+              channels={channels}
+              tab={tab}
+              state={state}
               brandLogoUrl={brand.data?.logoUrl ?? null}
-              showCounter
-              media={(state.stage === "plan" ? values.planFiles : values.files).map((file) => ({
-                versionId: file.mediaVersionId,
-                kind: file.kind,
-                altText: file.altText === "" ? null : file.altText,
-                url: urls.data?.[file.mediaVersionId] ?? null,
-                unavailable: mediaUnavailable(urls.data, file.mediaVersionId),
-              }))}
             />
-          ) : (
-            <SectionCard title="Pré-visualização">
-              <p className="text-sm text-muted-foreground">
-                Escolha um canal e escreva o texto para ver como o post vai aparecer.
-              </p>
-            </SectionCard>
-          )}
+          ) : null}
           {content ? (
             <>
               <RevisionHistory requests={content.requests} />
