@@ -27,6 +27,7 @@ export function PlanningFormats({
             <div className="min-w-0 flex-1">
               <RowFormatField
                 id={`plan-format-${row.key}`}
+                label={channel ? `Formato · ${platformLabels[channel.platform]}` : "Formato"}
                 platform={channel?.platform}
                 value={row.format}
                 disabled={disabled || row.published}
@@ -38,9 +39,6 @@ export function PlanningFormats({
                   )
                 }
               />
-              <span className="sr-only">
-                {channel ? `${platformLabels[channel.platform]} · ${channel.profileName}` : ""}
-              </span>
             </div>
           </li>
         );
