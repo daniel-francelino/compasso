@@ -6,6 +6,7 @@ import { contentFormatLabels } from "@/lib/shared/labels";
 
 export function RowFormatField({
   id,
+  label = "Formato",
   platform,
   value,
   disabled,
@@ -13,6 +14,7 @@ export function RowFormatField({
   onChange,
 }: {
   id: string;
+  label?: string;
   platform: Platform | undefined;
   value: ContentFormat;
   disabled: boolean;
@@ -23,7 +25,7 @@ export function RowFormatField({
   return (
     <SelectField
       id={id}
-      label="Formato"
+      label={label}
       value={value}
       disabled={disabled}
       onValueChange={(next) => {

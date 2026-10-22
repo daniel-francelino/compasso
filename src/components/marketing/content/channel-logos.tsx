@@ -1,4 +1,4 @@
-import { PlatformIcon } from "@/components/shared/preview/platform-icon";
+import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import type { Platform } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 
