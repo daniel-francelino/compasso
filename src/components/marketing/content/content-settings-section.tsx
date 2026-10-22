@@ -1,6 +1,15 @@
-import { SelectField, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
+import {
+  CircleHelp,
+  Eye,
+  Heart,
+  MousePointerClick,
+  ShoppingCart,
+  Target,
+  UserRoundPlus,
+  UsersRound,
+} from "lucide-react";
+import { SelectField, TextField } from "@/components/shared/admin/form-fields";
 import { RichTextEditor } from "@/components/shared/admin/rich-text-editor";
-import { TagInputField } from "@/components/shared/admin/tag-input-field";
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import { ContentObjective } from "@/lib/shared/enums";
@@ -49,10 +58,25 @@ export function ContentSettingsSection({
             set("objectiveKind", match ?? null);
           }}
           options={[
-            { value: NONE, label: "Sem objetivo definido" },
+            {
+              value: NONE,
+              label: "Sem objetivo definido",
+              icon: <CircleHelp aria-hidden="true" className="size-4" />,
+            },
             ...Object.values(ContentObjective).map((objective) => ({
               value: objective,
               label: contentObjectiveLabels[objective],
+              icon: {
+                [ContentObjective.Awareness]: <Eye aria-hidden="true" className="size-4" />,
+                [ContentObjective.Engagement]: <Heart aria-hidden="true" className="size-4" />,
+                [ContentObjective.Traffic]: (
+                  <MousePointerClick aria-hidden="true" className="size-4" />
+                ),
+                [ContentObjective.Leads]: <UserRoundPlus aria-hidden="true" className="size-4" />,
+                [ContentObjective.Sales]: <ShoppingCart aria-hidden="true" className="size-4" />,
+                [ContentObjective.Community]: <UsersRound aria-hidden="true" className="size-4" />,
+                [ContentObjective.Other]: <Target aria-hidden="true" className="size-4" />,
+              }[objective],
             })),
           ]}
           error={errors["objectiveKind"]}
@@ -91,26 +115,6 @@ export function ContentSettingsSection({
           error={errors["productionDueDate"]}
         />
       </div>
-      <TagInputField
-        id="content-tags"
-        label="Etiquetas"
-        value={values.tags}
-        disabled={disabled}
-        onValueChange={(value) => set("tags", value)}
-        maxItems={20}
-        maxLength={40}
-        error={errors["tags"]}
-      />
-      <TextAreaField
-        id="content-notes"
-        label="Notas internas"
-        value={values.internalNotes}
-        disabled={disabled}
-        onValueChange={(value) => set("internalNotes", value)}
-        maxLength={4000}
-        rows={3}
-        error={errors["internalNotes"]}
-      />
     </div>
   );
 }

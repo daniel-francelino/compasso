@@ -2,6 +2,7 @@ import { ClipboardList, Radio, Settings2, Tag } from "lucide-react";
 import { ChannelPicker } from "@/components/marketing/content/channel-picker";
 import { ContentSettingsSection } from "@/components/marketing/content/content-settings-section";
 import { ContentTitleField } from "@/components/marketing/content/content-title-field";
+import { PlanningFormats } from "@/components/marketing/content/planning-formats";
 import { PlanSection } from "@/components/marketing/content/plan-section";
 import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { SectionCard } from "@/components/shared/admin/section-card";
@@ -78,6 +79,12 @@ export function PlanningStep({
         disabled={!editable || state.planLocked}
         onToggle={onToggleChannel}
         error={errors["channels"]}
+      />
+      <PlanningFormats
+        draft={draft}
+        channels={channels}
+        disabled={!editable || state.planLocked}
+        errors={errors}
       />
     </SectionCard>
   );

@@ -54,6 +54,12 @@
   --sidebar-border: var(--line);
   --sidebar-ring: var(--violet);
 
+  --platform-instagram: #b02a78;
+  --platform-facebook: #1559c4;
+  --platform-linkedin: #0a5ea8;
+  --platform-youtube: #c40000;
+  --platform-pinterest: #b3081a;
+
   --success: var(--cactus);
   --info: var(--ink-soft);
 
@@ -91,6 +97,11 @@
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-info: var(--info);
+  --color-platform-instagram: var(--platform-instagram);
+  --color-platform-facebook: var(--platform-facebook);
+  --color-platform-linkedin: var(--platform-linkedin);
+  --color-platform-youtube: var(--platform-youtube);
+  --color-platform-pinterest: var(--platform-pinterest);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

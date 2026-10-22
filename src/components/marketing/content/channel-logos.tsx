@@ -23,10 +23,10 @@ export function ChannelLogos({
       {visible.map((channel, index) => (
         <span
           key={`${channel.platform}-${channel.profileName}-${index}`}
-          className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-foreground"
+          className="inline-flex"
           title={`${platformLabels[channel.platform]} · ${channel.profileName}`}
         >
-          <PlatformIcon platform={channel.platform} className="size-3.5" />
+          <PlatformMark platform={channel.platform} className="size-6" iconClassName="size-3.5" />
         </span>
       ))}
       {rest > 0 ? <span className="text-xs text-muted-foreground">+{rest}</span> : null}

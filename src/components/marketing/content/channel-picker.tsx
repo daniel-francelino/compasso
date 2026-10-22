@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Check, Radio } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
-import { PlatformIcon } from "@/components/shared/preview/platform-icon";
+import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shared/ui/tooltip";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
@@ -88,14 +88,18 @@ export function ChannelPicker({
                       if (!inactive) onToggle(channel.id);
                     }}
                     className={cn(
-                      "relative flex size-11 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      "relative flex size-11 cursor-pointer items-center justify-center rounded-full transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground hover:bg-accent",
-                      inactive && "cursor-not-allowed opacity-60",
+                        ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        : "opacity-50 grayscale hover:scale-105 hover:opacity-100 hover:grayscale-0",
+                      inactive && "cursor-not-allowed hover:scale-100",
                     )}
                   >
-                    <PlatformIcon platform={channel.platform} className="size-5" />
+                    <PlatformMark
+                      platform={channel.platform}
+                      className="size-11"
+                      iconClassName="size-5"
+                    />
                     {isSelected ? (
                       <span
                         aria-hidden="true"

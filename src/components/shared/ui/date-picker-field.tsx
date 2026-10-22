@@ -8,6 +8,7 @@ import { Calendar } from "@/components/shared/ui/calendar";
 import { Label } from "@/components/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import { parseDateValue, toDateValue } from "@/lib/shared/date-value";
+import { cn } from "@/lib/shared/utils";
 
 export function DatePickerField({
   id,
@@ -63,9 +64,10 @@ export function DatePickerField({
             aria-invalid={error ? true : undefined}
             aria-haspopup="dialog"
             aria-expanded={open}
-            className={`h-10 w-full justify-start gap-2 rounded-xl px-3 text-left font-normal ${
-              selected ? "text-foreground" : "text-muted-foreground"
-            }`}
+            className={cn(
+              "h-10 w-full justify-start gap-2 rounded-md border-input bg-background px-3 text-left text-sm font-normal shadow-sm hover:bg-background pointer-coarse:h-11",
+              selected ? "text-foreground" : "text-muted-foreground",
+            )}
           >
             <CalendarDays className="size-4" aria-hidden="true" />
             <span>

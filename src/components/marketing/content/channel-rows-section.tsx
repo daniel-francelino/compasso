@@ -1,14 +1,12 @@
 import { CalendarPlus, Megaphone, Trash2 } from "lucide-react";
-import { PlatformIcon } from "@/components/shared/preview/platform-icon";
+import { RowFormatField } from "@/components/marketing/content/row-format-field";
+import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
-import { SelectField } from "@/components/shared/admin/form-fields";
 import { IconButton } from "@/components/shared/admin/icon-button";
-import { formatIcons } from "@/components/shared/content/format-icons";
 import { Button } from "@/components/shared/ui/button";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
-import { platformFormats } from "@/lib/shared/editorial/editorial";
-import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
+import { platformLabels } from "@/lib/shared/labels";
 
 export function ChannelRowsSection({
   draft,
@@ -70,18 +68,13 @@ export function ChannelRowsSection({
       {channelIds.map((channelId) => {
         const channel = channelOf(channelId);
         const channelRows = rows.filter((row) => row.channelId === channelId);
-        const formats = channel ? platformFormats[channel.platform] : [];
         const lastRow = channelRows.at(-1);
 
         return (
           <li key={channelId} className="overflow-hidden rounded-xl border border-border">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/40 p-3">
               <div className="flex min-w-0 items-center gap-2">
-                {channel ? (
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted">
-                    <PlatformIcon platform={channel.platform} className="size-4" />
-                  </span>
-                ) : null}
+                {channel ? <PlatformMark platform={channel.platform} className="size-8" /> : null}
                 <span className="min-w-0 text-sm">
                   <span className="block truncate font-medium">
                     {channel ? platformLabels[channel.platform] : "Canal"}
@@ -108,23 +101,12 @@ export function ChannelRowsSection({
                     key={row.key}
                     className="grid gap-3 p-3 md:grid-cols-[minmax(12rem,0.9fr)_minmax(0,1.4fr)_auto] md:items-start"
                   >
-                    <SelectField
+                    <RowFormatField
                       id={`row-format-${row.key}`}
-                      label="Formato"
+                      platform={channel?.platform}
                       value={row.format}
                       disabled={rowDisabled}
-                      onValueChange={(value) => {
-                        const match = formats.find((format) => format === value);
-                        if (match) update(row.key, { format: match });
-                      }}
-                      options={formats.map((format) => {
-                        const Icon = formatIcons[format];
-                        return {
-                          value: format,
-                          label: contentFormatLabels[format],
-                          icon: <Icon aria-hidden="true" className="size-4" />,
-                        };
-                      })}
+                      onChange={(format) => update(row.key, { format })}
                       error={errors[`channels.${index}.format`]}
                     />
                     <DateTimeField

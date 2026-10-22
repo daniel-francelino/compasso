@@ -30,6 +30,7 @@ import {
   useContentDraft,
 } from "@/hooks/marketing/use-content-draft";
 import { useAutoSelectChannel } from "@/hooks/marketing/use-auto-select-channel";
+import { useAutoSelectAssignee } from "@/hooks/marketing/use-auto-select-assignee";
 import { useBrand } from "@/hooks/marketing/use-brand";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
@@ -175,6 +176,14 @@ export function ContentEditor({
     channels,
     hasSelection: values.rows.length > 0,
     onSelect: toggleChannel,
+  });
+
+  useAutoSelectAssignee({
+    enabled: isNew && editable,
+    brandId: values.brandId,
+    assignees: assignees.data ?? [],
+    selected: values.assigneeId,
+    onSelect: (assigneeId) => draft.set("assigneeId", assigneeId),
   });
 
   const payload = (expectedVersion: number | undefined) => ({

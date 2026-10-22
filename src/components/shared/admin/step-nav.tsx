@@ -28,7 +28,7 @@ export function StepNav<K extends string>({
             <div key={step.key} className="flex items-center">
               <button
                 type="button"
-                className="relative flex min-h-11 shrink-0 items-center gap-2 rounded-full px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="group relative flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full px-3 py-1 text-sm text-foreground transition-colors duration-200 hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 aria-current={current ? "step" : undefined}
                 onClick={() => onChange(step.key)}
               >
@@ -45,7 +45,7 @@ export function StepNav<K extends string>({
                     "relative flex size-7 items-center justify-center rounded-full transition-colors duration-200",
                     current || done
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground",
+                      : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-foreground",
                   )}
                 >
                   <Icon className="size-4" aria-hidden="true" />
@@ -53,7 +53,7 @@ export function StepNav<K extends string>({
                 <span
                   className={cn(
                     "relative transition-colors duration-200",
-                    current ? "font-medium" : "text-muted-foreground",
+                    current ? "font-medium" : "text-muted-foreground group-hover:text-foreground",
                   )}
                 >
                   <span className="sr-only">{`Etapa ${index + 1}: `}</span>
