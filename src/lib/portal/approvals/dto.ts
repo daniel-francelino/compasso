@@ -19,7 +19,7 @@ export const portalRequestRowSchema = z.object({
   status: z.nativeEnum(ApprovalRequestStatus),
   title: z.string(),
   objective_kind: z.string().nullable().optional(),
-  plan_summary: z.string().nullable().optional(),
+  plan_summary: z.unknown().optional(),
   channels: z.array(portalChannelSchema),
   media: z.array(
     z.object({
@@ -92,7 +92,7 @@ export const portalApprovalSchema = z.object({
   is_current: z.boolean(),
   current_request_id: z.string().uuid().nullable(),
   stage: z.nativeEnum(ApprovalStage),
-  plan_summary: z.string().nullable().optional(),
+  plan_summary: z.unknown().optional(),
   objective_kind: z.string().nullable().optional(),
   can_decide: z.boolean(),
   media: z.array(

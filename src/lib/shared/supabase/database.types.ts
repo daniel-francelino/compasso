@@ -829,7 +829,7 @@ export type Database = {
           plan_approved_revision_id: string | null
           plan_media: Json
           plan_required: boolean
-          plan_summary: string | null
+          plan_summary: Json | null
           production_due_date: string | null
           tags: string[]
           title: string
@@ -857,7 +857,7 @@ export type Database = {
           plan_approved_revision_id?: string | null
           plan_media?: Json
           plan_required: boolean
-          plan_summary?: string | null
+          plan_summary?: Json | null
           production_due_date?: string | null
           tags?: string[]
           title: string
@@ -885,7 +885,7 @@ export type Database = {
           plan_approved_revision_id?: string | null
           plan_media?: Json
           plan_required?: boolean
-          plan_summary?: string | null
+          plan_summary?: Json | null
           production_due_date?: string | null
           tags?: string[]
           title?: string

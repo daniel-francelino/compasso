@@ -36,7 +36,7 @@ begin
     'brand_id', current_setting('t.brand'),
     'expected_version', case when p_item is null then null else pg_temp.ver(p_item) end,
     'title', 'Campanha de outono',
-    'plan_summary', p_summary,
+    'plan_summary', case when p_summary is null then null else jsonb_build_object('type', 'doc', 'content', jsonb_build_array(jsonb_build_object('type', 'paragraph', 'content', jsonb_build_array(jsonb_build_object('type', 'text', 'text', p_summary))))) end,
     'plan_media', jsonb_build_array(jsonb_build_object('media_version_id', current_setting('t.media1'))),
     'caption', jsonb_build_object('text', p_caption),
     'working_media', case
@@ -114,7 +114,7 @@ select is((select stage from public.content_revisions where id = current_setting
 select is((select stage from public.approval_requests where id = current_setting('t.req1')::uuid), 'plan', 'and so is the request');
 select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'awaiting_plan_approval', 'the content waits for the plan decision');
 select is((select count(*)::int from public.content_revision_media where revision_id = current_setting('t.rev1')::uuid), 1, 'the plan version carries the planning image');
-select is((select snapshot ->> 'plan_summary' from public.content_revisions where id = current_setting('t.rev1')::uuid), 'Resumo do plano', 'and the planning summary');
+select is((select snapshot #>> '{plan_summary,content,0,content,0,text}' from public.content_revisions where id = current_setting('t.rev1')::uuid), 'Resumo do plano', 'and the planning summary');
 select is((select count(*)::int from public.notifications where kind = 'approval.requested' and ref_id = current_setting('t.req1')::uuid and user_id in ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000d2')), 2, 'every approver of the brand is asked');
 select is((select count(*)::int from public.notifications where kind = 'approval.requested' and ref_id = current_setting('t.req1')::uuid and user_id in ('00000000-0000-0000-0000-0000000000d3', '00000000-0000-0000-0000-0000000000e1')), 0, 'but not a commenter or an approver of another brand');
 select is((select title from public.notifications where ref_id = current_setting('t.req1')::uuid and user_id = '00000000-0000-0000-0000-0000000000d1'), 'Planejamento aguarda sua decisão', 'the notification names the stage');
@@ -124,7 +124,7 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
 select is((public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 ->> 'can_decide')::boolean, true, 'the first approver sees the decision controls');
 select is(public.portal_list_pending(current_setting('t.brand')::uuid) -> 0 ->> 'stage', 'plan', 'and the stage of the request');
 select is((public.portal_list_brands() -> 0 ->> 'pending_count')::int, 1, 'the brand counts one request waiting');
-select is(public.portal_get_approval(current_setting('t.req1')::uuid) ->> 'plan_summary', 'Resumo do plano', 'the approval shows the planning summary');
+select is(public.portal_get_approval(current_setting('t.req1')::uuid) #>> '{plan_summary,content,0,content,0,text}', 'Resumo do plano', 'the approval shows the planning summary');
 select is(jsonb_array_length(public.portal_get_approval(current_setting('t.req1')::uuid) -> 'media'), 1, 'and the planning image');
 reset role;
 

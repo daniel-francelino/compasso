@@ -91,6 +91,7 @@ export const richDocFromPlain = (text: string): RichDoc | null => {
 export const richDocFromStored = (value: unknown): RichDoc | null => {
   const rich = richDocSchema.safeParse(value);
   if (rich.success) return isRichDocEmpty(rich.data) ? null : rich.data;
-  const legacy = z.object({ text: z.string() }).safeParse(value);
-  return legacy.success ? richDocFromPlain(legacy.data.text) : null;
+  const legacy = z.union([z.object({ text: z.string() }), z.string()]).safeParse(value);
+  if (!legacy.success) return null;
+  return richDocFromPlain(typeof legacy.data === "string" ? legacy.data : legacy.data.text);
 };

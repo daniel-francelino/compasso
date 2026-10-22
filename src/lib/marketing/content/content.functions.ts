@@ -354,7 +354,8 @@ export const getContentItem = createServerFn({ method: "GET" })
       (current.snapshot.caption !== text ||
         !sameChannels(current, channels) ||
         (current.stage === ApprovalStage.Plan
-          ? (current.snapshot.planSummary ?? "") !== (row.plan_summary ?? "") ||
+          ? JSON.stringify(current.snapshot.planSummary) !==
+              JSON.stringify(richDocFromStored(row.plan_summary)) ||
             !sameMedia(current.media, planMediaResult.media)
           : (current.snapshot.callToAction ?? "") !== (row.call_to_action ?? "") ||
             !sameMedia(current.media, mediaResult.media)));
@@ -379,7 +380,7 @@ export const getContentItem = createServerFn({ method: "GET" })
         cancelled: row.cancelled_at !== null,
         editorialStatus: row.editorial_status as EditorialStatus,
         planRequired: row.plan_required,
-        planSummary: row.plan_summary,
+        planSummary: richDocFromStored(row.plan_summary),
         planMedia: planMediaResult.media,
         planApprovedRevisionId: row.plan_approved_revision_id,
         approvalDueDate: row.approval_due_date,

@@ -17,6 +17,7 @@ export function PlanningStep({
   isNew,
   brands,
   channels,
+  channelsLoading,
   selected,
   locked,
   assignees,
@@ -31,6 +32,7 @@ export function PlanningStep({
   isNew: boolean;
   brands: BrandOption[] | undefined;
   channels: ChannelRow[];
+  channelsLoading: boolean;
   selected: Set<string>;
   locked: Set<string>;
   assignees: { id: string; name: string }[];
@@ -70,6 +72,7 @@ export function PlanningStep({
       <ChannelPicker
         brandId={values.brandId}
         channels={channels}
+        loading={channelsLoading}
         selected={selected}
         locked={locked}
         disabled={!editable || state.planLocked}

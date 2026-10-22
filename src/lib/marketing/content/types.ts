@@ -33,7 +33,7 @@ export type SnapshotChannel = {
 
 export type RevisionSnapshot = {
   title: string;
-  planSummary: string | null;
+  planSummary: RichDoc | null;
   caption: string;
   callToAction: string | null;
   channels: SnapshotChannel[];
@@ -101,7 +101,7 @@ export type ContentDetail = {
   cancelled: boolean;
   editorialStatus: EditorialStatus;
   planRequired: boolean;
-  planSummary: string | null;
+  planSummary: RichDoc | null;
   planMedia: ContentMedia[];
   planApprovedRevisionId: string | null;
   approvalDueDate: string | null;

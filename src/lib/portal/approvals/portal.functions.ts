@@ -5,6 +5,7 @@ import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import type { ContentObjective } from "@/lib/shared/enums";
 import { EXTERNAL_URL_SECONDS } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
+import { richDocFromStored } from "@/lib/shared/rich-text/types";
 import {
   type Page,
   type Result,
@@ -73,7 +74,7 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
     hasDisplay: item.has_display,
   })),
   objectiveKind: (row.objective_kind ?? null) as ContentObjective | null,
-  planSummary: row.plan_summary ?? null,
+  planSummary: richDocFromStored(row.plan_summary),
   brandTimezone: row.brand_timezone,
   revisionNo: row.revision_no,
   dueDate: row.due_date,
@@ -203,7 +204,7 @@ export const getPortalApproval = createServerFn({ method: "GET" })
         revisionId: parsed.revision_id,
         isCurrent: parsed.is_current,
         currentRequestId: parsed.current_request_id,
-        planSummary: parsed.plan_summary ?? null,
+        planSummary: richDocFromStored(parsed.plan_summary),
         objectiveKind: (parsed.objective_kind ?? null) as ContentObjective | null,
         canDecide: parsed.can_decide,
         media: parsed.media.map((item) => ({

@@ -62,4 +62,9 @@ describe("rich text", () => {
     expect(richDocFromStored(null)).toBeNull();
     expect(richDocFromPlain("")).toBeNull();
   });
+
+  it("reads a planning summary saved as a plain string", () => {
+    expect(richDocFromStored("Tema\n\nMensagem")?.content).toHaveLength(2);
+    expect(richDocFromStored("   ")).toBeNull();
+  });
 });

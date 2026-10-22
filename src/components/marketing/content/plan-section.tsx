@@ -1,5 +1,5 @@
 import { FileStrip } from "@/components/marketing/content/file-strip";
-import { TextAreaField } from "@/components/shared/admin/form-fields";
+import { RichTextEditor } from "@/components/shared/admin/rich-text-editor";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import { ContentFormat } from "@/lib/shared/enums";
 
@@ -17,17 +17,14 @@ export function PlanSection({
   const { values } = draft;
   return (
     <div className="space-y-4">
-      <TextAreaField
+      <p className="text-sm text-muted-foreground">
+        É o que o cliente lê para aprovar a ideia: tema, mensagem e direção do texto.
+      </p>
+      <RichTextEditor
         id="plan-summary"
         label="Resumo do planejamento"
-        tip={{
-          label: "Sobre o resumo",
-          content: "É o que o cliente lê para aprovar a ideia: tema, mensagem e direção do texto.",
-        }}
         value={values.planSummary}
         onValueChange={(value) => draft.set("planSummary", value)}
-        maxLength={4000}
-        rows={5}
         disabled={disabled}
         error={errors["planSummary"]}
       />

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Caller } from "@/lib/shared/auth/server-guards.server";
 import { ApprovalStage, type ContentFormat, type Platform } from "@/lib/shared/enums";
 import { kindOfMime } from "@/lib/shared/media/limits";
+import { richDocFromStored } from "@/lib/shared/rich-text/types";
 import { fail, type Result } from "@/lib/shared/server-utils";
 import type { ContentMedia, RevisionRow } from "@/lib/marketing/content/types";
 
@@ -11,7 +12,7 @@ const captionSchema = z.object({ text: z.string() }).nullable().optional();
 
 const snapshotSchema = z.object({
   title: z.string(),
-  plan_summary: z.string().nullable().optional(),
+  plan_summary: z.unknown().optional(),
   caption: captionSchema,
   call_to_action: z.string().nullable().optional(),
   channels: z.array(
@@ -91,7 +92,7 @@ export const toRevision = async (
       createdAt: revision.created_at,
       snapshot: {
         title: snapshot.data.title,
-        planSummary: snapshot.data.plan_summary ?? null,
+        planSummary: richDocFromStored(snapshot.data.plan_summary),
         caption: snapshot.data.caption?.text ?? "",
         callToAction: snapshot.data.call_to_action ?? null,
         channels: snapshot.data.channels.map((channel) => ({

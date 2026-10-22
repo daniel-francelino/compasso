@@ -1,4 +1,5 @@
 import { CalendarClock } from "lucide-react";
+import { RichTextView } from "@/components/shared/admin/rich-text-view";
 import { formatIcons } from "@/components/shared/content/format-icons";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
@@ -22,7 +23,9 @@ export function PlanRequestSummary({ request }: { request: PortalRequest }) {
         </p>
       ) : null}
       {request.planSummary ? (
-        <p className="whitespace-pre-wrap break-words text-sm">{request.planSummary}</p>
+        <div className="text-sm">
+          <RichTextView doc={request.planSummary} />
+        </div>
       ) : null}
       <ul className="divide-y divide-border rounded-xl border border-border">
         {request.channels.map((channel) => {

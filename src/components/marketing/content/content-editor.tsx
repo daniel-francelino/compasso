@@ -29,6 +29,7 @@ import {
   type DraftValues,
   useContentDraft,
 } from "@/hooks/marketing/use-content-draft";
+import { useAutoSelectChannel } from "@/hooks/marketing/use-auto-select-channel";
 import { useBrand } from "@/hooks/marketing/use-brand";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
@@ -168,6 +169,14 @@ export function ContentEditor({
     ]);
   }
 
+  useAutoSelectChannel({
+    enabled: isNew && editable,
+    brandId: values.brandId,
+    channels,
+    hasSelection: values.rows.length > 0,
+    onSelect: toggleChannel,
+  });
+
   const payload = (expectedVersion: number | undefined) => ({
     ...(content === undefined ? {} : { id: content.id }),
     brandId: values.brandId,
@@ -283,7 +292,7 @@ export function ContentEditor({
     <form
       ref={formRef}
       noValidate
-      className="space-y-6"
+      className="mx-auto w-full max-w-7xl space-y-6"
       onSubmit={(event) => {
         event.preventDefault();
         if (event.target !== event.currentTarget) return;
@@ -354,6 +363,7 @@ export function ContentEditor({
               isNew={isNew}
               brands={brands.data}
               channels={channels}
+              channelsLoading={channelsQuery.isLoading}
               selected={selected}
               locked={locked}
               assignees={assignees.data ?? []}

@@ -1,14 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { Radio } from "lucide-react";
-import { PlatformIcon } from "@/components/shared/preview/platform-icon";
+import { Check, Radio } from "lucide-react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
+import { PlatformIcon } from "@/components/shared/preview/platform-icon";
+import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/shared/ui/tooltip";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import { platformLabels } from "@/lib/shared/labels";
 import { cn } from "@/lib/shared/utils";
 
+const SKELETON_COUNT = 3;
+
 export function ChannelPicker({
   brandId,
   channels,
+  loading,
   selected,
   locked,
   disabled,
@@ -17,6 +22,7 @@ export function ChannelPicker({
 }: {
   brandId: string;
   channels: ChannelRow[];
+  loading: boolean;
   selected: ReadonlySet<string>;
   locked: ReadonlySet<string>;
   disabled: boolean;
@@ -26,6 +32,20 @@ export function ChannelPicker({
   if (brandId === "") {
     return (
       <p className="text-sm text-muted-foreground">Escolha a marca para ver os canais dela.</p>
+    );
+  }
+  if (loading) {
+    return (
+      <div
+        className="flex flex-wrap gap-3"
+        role="status"
+        aria-busy="true"
+        aria-label="Carregando canais"
+      >
+        {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+          <Skeleton key={index} className="size-11 rounded-full" />
+        ))}
+      </div>
     );
   }
   if (channels.length === 0) {
@@ -53,38 +73,43 @@ export function ChannelPicker({
         {channels.map((channel) => {
           const isSelected = selected.has(channel.id);
           const isLocked = locked.has(channel.id);
+          const inactive = disabled || isLocked;
+          const name = `${platformLabels[channel.platform]} · ${channel.profileName}`;
           return (
             <li key={channel.id}>
-              <button
-                type="button"
-                aria-pressed={isSelected}
-                disabled={disabled || isLocked}
-                title={
-                  isLocked
-                    ? "Este canal já tem uma publicação registrada."
-                    : `${platformLabels[channel.platform]} · ${channel.profileName}`
-                }
-                onClick={() => onToggle(channel.id)}
-                className={cn(
-                  "flex w-24 flex-col items-center gap-1.5 rounded-xl border p-3 text-center text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
-                  isSelected
-                    ? "border-primary bg-accent text-foreground"
-                    : "border-border bg-card text-muted-foreground hover:bg-accent/50",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-full",
-                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground",
-                  )}
-                >
-                  <PlatformIcon platform={channel.platform} className="size-5" />
-                </span>
-                <span className="w-full truncate font-medium text-foreground">
-                  {platformLabels[channel.platform]}
-                </span>
-                <span className="w-full truncate">{channel.profileName}</span>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={name}
+                    aria-pressed={isSelected}
+                    aria-disabled={inactive}
+                    onClick={() => {
+                      if (!inactive) onToggle(channel.id);
+                    }}
+                    className={cn(
+                      "relative flex size-11 items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-accent",
+                      inactive && "cursor-not-allowed opacity-60",
+                    )}
+                  >
+                    <PlatformIcon platform={channel.platform} className="size-5" />
+                    {isSelected ? (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full border border-background bg-foreground text-background"
+                      >
+                        <Check className="size-3" />
+                      </span>
+                    ) : null}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-64">
+                  {isLocked ? `${name}. Este canal já tem uma publicação registrada.` : name}
+                </TooltipContent>
+              </Tooltip>
             </li>
           );
         })}

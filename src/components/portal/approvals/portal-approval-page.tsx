@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PortalComments } from "@/components/portal/approvals/portal-comments";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { RichTextView } from "@/components/shared/admin/rich-text-view";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { TextAreaField } from "@/components/shared/admin/form-fields";
@@ -104,7 +105,9 @@ function StageNotice({ approval }: { approval: PortalApproval }) {
         </p>
       ) : null}
       {approval.planSummary ? (
-        <p className="whitespace-pre-wrap break-words text-sm">{approval.planSummary}</p>
+        <div className="text-sm">
+          <RichTextView doc={approval.planSummary} />
+        </div>
       ) : null}
     </SectionCard>
   );

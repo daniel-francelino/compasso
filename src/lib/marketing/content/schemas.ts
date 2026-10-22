@@ -72,7 +72,7 @@ export const saveContentSchema = z
     assigneeId: z.string().uuid().nullable().optional(),
     tags: z.array(z.string().trim().min(1).max(40)).max(20),
     productionDueDate: dateOnly.nullable().optional(),
-    planSummary: z.string().trim().max(4000, "O resumo é longo demais.").optional(),
+    planSummary: richDocSchema.nullable().optional(),
     planMedia: z.array(mediaRefSchema).max(10, "No máximo 10 arquivos no planejamento."),
     caption: z.string().max(5000, "A legenda é longa demais.").default(""),
     callToAction: z.string().trim().max(300, "A chamada para ação é longa demais.").optional(),

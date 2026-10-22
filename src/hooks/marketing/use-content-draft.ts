@@ -25,7 +25,7 @@ export type DraftValues = {
   assigneeId: string | null;
   tags: string[];
   productionDueDate: string | null;
-  planSummary: string;
+  planSummary: RichDoc | null;
   planFiles: FileItem[];
   caption: string;
   callToAction: string;
@@ -43,7 +43,7 @@ export const emptyDraft = (brandId: string): DraftValues => ({
   assigneeId: null,
   tags: [],
   productionDueDate: null,
-  planSummary: "",
+  planSummary: null,
   planFiles: [],
   caption: "",
   callToAction: "",
@@ -61,7 +61,7 @@ export const draftOf = (content: ContentDetail): DraftValues => ({
   assigneeId: content.assigneeId,
   tags: content.tags,
   productionDueDate: content.productionDueDate,
-  planSummary: content.planSummary ?? "",
+  planSummary: content.planSummary,
   planFiles: content.planMedia.map((file) => ({
     mediaVersionId: file.mediaVersionId,
     altText: file.altText ?? "",

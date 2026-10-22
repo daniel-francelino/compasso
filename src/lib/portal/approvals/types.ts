@@ -1,3 +1,4 @@
+import type { RichDoc } from "@/lib/shared/rich-text/types";
 import type {
   ApprovalOutcome,
   ApprovalRequestStatus,
@@ -50,7 +51,7 @@ export type PortalRequest = {
   status: ApprovalRequestStatus;
   title: string;
   objectiveKind: ContentObjective | null;
-  planSummary: string | null;
+  planSummary: RichDoc | null;
   channels: PortalChannel[];
   media: PortalMedia[];
   brandTimezone: string | null;
@@ -84,7 +85,7 @@ export type PortalApproval = {
   revisionId: string;
   isCurrent: boolean;
   currentRequestId: string | null;
-  planSummary: string | null;
+  planSummary: RichDoc | null;
   objectiveKind: ContentObjective | null;
   canDecide: boolean;
   media: PortalMedia[];

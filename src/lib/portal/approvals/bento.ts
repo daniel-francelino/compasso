@@ -1,3 +1,4 @@
+import { isRichDocEmpty } from "@/lib/shared/rich-text/types";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { ApprovalStage } from "@/lib/shared/enums";
@@ -51,7 +52,7 @@ const tallestPreviewRatio = (request: PortalRequest): number =>
 
 export const estimateCardHeight = (request: PortalRequest, columnWidth: number): number => {
   if (request.stage === ApprovalStage.Plan) {
-    const summary = request.planSummary === null ? 0 : PLAN_SUMMARY;
+    const summary = isRichDocEmpty(request.planSummary) ? 0 : PLAN_SUMMARY;
     return CARD_CHROME + summary + request.channels.length * PLAN_ROW;
   }
   const previewWidth = Math.min(PREVIEW_MAX_WIDTH, Math.max(columnWidth - CARD_PADDING, 0));
