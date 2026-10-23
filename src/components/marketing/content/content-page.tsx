@@ -319,7 +319,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         ...(assignees.data ?? []).map((person) => ({
           value: person.id,
           label: person.name,
-          icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="xs" />,
+          icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="md" />,
         })),
       ],
       onChange: (value) => void list.setFilter("owner", value === ALL ? undefined : value),

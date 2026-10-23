@@ -3,8 +3,6 @@ import { ChannelPreview } from "@/components/shared/preview/channel-preview";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
-import type { StageState } from "@/lib/marketing/content/stage-state";
-import { ApprovalStage } from "@/lib/shared/enums";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 
@@ -12,17 +10,15 @@ export function EditorPreview({
   draft,
   channels,
   tab,
-  state,
   brandLogoUrl,
 }: {
   draft: ContentDraft;
   channels: ChannelRow[];
   tab: string;
-  state: StageState;
   brandLogoUrl: string | null;
 }) {
   const { values } = draft;
-  const files = state.stage === ApprovalStage.Plan ? values.planFiles : values.files;
+  const files = values.files;
   const urls = useSignedUrls(
     files.map((file) => file.mediaVersionId),
     MediaVariant.Display,

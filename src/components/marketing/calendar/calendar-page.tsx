@@ -396,7 +396,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                     ...(owners.data ?? []).map((person) => ({
                       value: person.id,
                       label: person.name,
-                      icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="xs" />,
+                      icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="md" />,
                     })),
                   ],
                   onChange: (value) => void state.setFilter("owner", value === ALL ? "" : value),

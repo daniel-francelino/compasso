@@ -31,7 +31,7 @@ export function ContentAssigneeField({
         ...assignees.map((person) => ({
           value: person.id,
           label: person.name,
-          icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="xs" />,
+          icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="md" />,
         })),
       ]}
       error={error}

@@ -435,7 +435,6 @@ export function ContentEditor({
                 draft={draft}
                 channels={channels}
                 tab={tab}
-                state={state}
                 brandLogoUrl={brand.data?.logoUrl ?? null}
               />
             ) : null}
