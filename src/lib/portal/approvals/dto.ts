@@ -41,6 +41,7 @@ export const portalRequestRowSchema = z.object({
   decided_at: z.string().nullable(),
   can_decide: z.boolean(),
   decided_by_name: z.string().nullable(),
+  decided_on_behalf: z.boolean(),
 });
 
 export type PortalRequestRow = z.infer<typeof portalRequestRowSchema>;
@@ -114,6 +115,7 @@ export const portalApprovalSchema = z.object({
       comment: z.string().nullable(),
       decided_at: z.string(),
       decided_by_name: z.string().nullable(),
+      decided_on_behalf: z.boolean(),
     })
     .nullable(),
   history: z.array(

@@ -354,6 +354,8 @@ create table approval_decisions (
   decided_by uuid not null references profiles(id),
   outcome text not null check (outcome in ('approved','changes_requested')),
   comment text,
+  on_behalf boolean not null default false,
+  reason text check (reason is null or char_length(reason) <= 500),
   decided_at timestamptz not null default now(),
   check (outcome <> 'changes_requested' or length(btrim(coalesce(comment,''))) >= 5)
 );

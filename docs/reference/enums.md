@@ -26,6 +26,7 @@
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |
 | `CommentVisibility` | `internal`, `external` | `comments.visibility` | "Interno", "Externo" | content |
 | `CalendarView` | `month`, `week`, `list` | URL param `view` (not stored in the database) | "Mês", "Semana", "Lista" | calendar |
+| `EditorStep` | `planning`, `briefing`, `content` | Local state of the content editor (not stored, not a URL param) | "Planejamento", "Briefing", "Conteúdo" | content |
 | `CalendarEntryKind` | `publication`, `published`, `approval_deadline`, `production_deadline`, `idea`, `date`, `event` | `list_calendar_entries` output (`kind`, not stored) | "Publicação planejada", "Publicado", "Prazo de aprovação", "Prazo de produção", "Ideia", "Data", "Evento" | calendar |
 | `CalendarNoteKind` | `idea`, `date`, `event` | `calendar_notes.kind` | "Ideia", "Data", "Evento" | calendar |
 | `CalendarEventType` | `shoot`, `meeting`, `other` | `calendar_notes.event_type` | "Captação", "Reunião", "Outro evento" | calendar |
@@ -76,7 +77,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 |---|---|---|---|---|
 | `NotificationSeverity` | `info`, `warning`, `urgent` | `notifications.severity`, `notification_kinds.severity` | | notifications |
 | `NotificationStatus` | `active`, `resolved` | `notifications.status` | | notifications |
-| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `calendar.event`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
+| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.approved_by_team`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `calendar.event`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
 | `AuditActorKind` | `internal`, `external`, `system` | `audit_events.actor_kind` ✔ | | audit |
 | `AuditAction` | See [../modules/audit.md](../modules/audit.md) | catalog in `audit_write` | | audit |
 | `EmailStatus` | `queued`, `sent`, `failed` | `email_outbox.status` | | notifications |

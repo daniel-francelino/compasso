@@ -58,7 +58,7 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 | **Brands** | `brands.view`, `brands.create`, `brands.update`, `brands.delete`, `brands.manage_members` |
 | **Channels** | `channels.view`, `channels.create`, `channels.update`, `channels.delete` |
 | **Content** | `content.view`, `content.create`, `content.update`, `content.delete`, `content.submit`, `content.cancel`, `content.reopen`, `content.publish_manual` |
-| **Approvals (internal)** | `approvals.view` |
+| **Approvals (internal)** | `approvals.view`, `approvals.override` |
 | **Approvals (external)** | `approvals.decide` |
 | **Comments** | `comments.create_internal`, `comments.create_external` |
 | **Portal** | `portal.view` |
@@ -72,7 +72,7 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 | **Roles** | `roles.manage` (`admin_only`) |
 | **Settings** | `settings.manage` (`admin_only`) |
 
-**Reserved actions (NOT in the MVP catalog; do not use until added here):** `approvals.override` (a manager skipping an approval, with reason and audit), `media.upload_external` (client uploads), `content.assign` (assigning owners as a separate permission), `reports.view`. Adding any of them means adding the row above, the migration seed, the `Action` constant and the starting-role changes in the same change.
+**Reserved actions (NOT in the MVP catalog; do not use until added here):** `media.upload_external` (client uploads), `content.assign` (assigning owners as a separate permission), `reports.view`. Adding any of them means adding the row above, the migration seed, the `Action` constant and the starting-role changes in the same change.
 
 Dependencies (`requires`) stored in the catalog, for example:
 
@@ -81,6 +81,7 @@ Dependencies (`requires`) stored in the catalog, for example:
 - `content.reopen` → `content.update`
 - `content.publish_manual` → `content.view`
 - `approvals.decide` → `portal.view`
+- `approvals.override` → `content.submit`
 - `comments.create_external` → `portal.view`
 - `media.upload` → `media.view`; `media.update` → `media.view`; `media.publish` → `media.update`; `media.share` → `media.view`
 - `site.edit` → `site.view`; `site.structure` → `site.edit`; `site.publish` → `site.view`
@@ -102,7 +103,7 @@ Only the system role `owner` has them; they **do not appear as an option** when 
 | Role | Type | Actions |
 |---|---|---|
 | `owner` ("Proprietário") | System, protected | All (implicit) |
-| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `comments.create_internal`, `calendar.*`, `media.view/upload/update/share`, `invitations.create`, `users.view` |
+| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*`, `content.*` except `delete`, `approvals.view`, `approvals.override`, `comments.create_internal`, `calendar.*`, `media.view/upload/update/share`, `invitations.create`, `users.view` |
 | `collaborator` ("Colaborador") | Pre-created, editable | `clients.view`, `brands.view`, `channels.view`, `content.view/create/update`, `approvals.view`, `comments.create_internal`, `calendar.view`, `media.view/upload` |
 | `external_approver` ("Aprovador externo") | Pre-created, editable, portal only | `portal.view`, `approvals.decide`, `comments.create_external` |
 | `external_commenter` ("Comentarista externo") | Pre-created, editable, portal only | `portal.view`, `comments.create_external` |
@@ -263,7 +264,7 @@ The role selector lists **roles** (from the `roles` table). Whoever has `invitat
 2. Do we need **per-person exceptions** (give or remove an action for a specific user)? The MVP assumes only roles plus brand links.
 3. Does the catalog cover what is wanted? Is any action missing (for example `content.assign`, `reports.view`)?
 4. Is an additional pre-created role wanted (for example "Contador/Leitor" with read-only access)?
-5. Should the manager be able to **skip an approval** (explicit action, with a reason and audit)? Out of the MVP; it would be a new action `approvals.override`.
+5. ~~Should the manager be able to skip an approval?~~ **Decided 2026-10-22: yes**, as an approval recorded on the client's behalf, with the new action `approvals.override` (internal, requires `content.submit`, starting role `manager`). Specified in [../modules/approvals.md](../modules/approvals.md#approval-by-the-team-decided-2026-10-22) and [../modules/content.md](../modules/content.md#flexible-approval-decided-2026-10-22); implemented in migration `20261023110000_approvals_approve_on_behalf.sql` (catalog row, seed, `Action.Approvals.Override`).
 
 ## Implementation status
 

@@ -114,7 +114,7 @@ export function PlanningStep({
             tip={{
               label: "Sobre o planejamento",
               content:
-                "O cliente aprova primeiro o planejamento. Depois da aprovação, canais, formatos e datas ficam travados e começam as artes.",
+                "Escreva o tema, a mensagem e a direção do texto para o cliente aprovar a ideia. Depois da aprovação, canais, formatos e datas ficam travados enquanto as artes são produzidas.",
             }}
           >
             <PlanSection

@@ -22,6 +22,7 @@ const request = (overrides: Partial<PortalRequest>): PortalRequest => ({
   decidedAt: null,
   canDecide: true,
   decidedByName: null,
+  decidedOnBehalf: false,
   objectiveKind: null,
   planSummary: null,
   ...overrides,

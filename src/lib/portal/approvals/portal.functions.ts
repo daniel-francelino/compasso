@@ -82,6 +82,7 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
   decidedAt: row.decided_at,
   canDecide: row.can_decide,
   decidedByName: row.decided_by_name,
+  decidedOnBehalf: row.decided_on_behalf,
 });
 
 const statusParam = (status: string | undefined): string | null =>
@@ -226,6 +227,7 @@ export const getPortalApproval = createServerFn({ method: "GET" })
                 comment: parsed.decision.comment,
                 decidedAt: parsed.decision.decided_at,
                 decidedByName: parsed.decision.decided_by_name,
+                decidedOnBehalf: parsed.decision.decided_on_behalf,
               },
         history: parsed.history.map((item) => ({
           requestId: item.request_id,

@@ -26,6 +26,7 @@ Each kind requires an **action** and, when the subject belongs to a brand, a **b
 |---|---|---|---|---|
 | `approval.requested` | A revision is submitted for approval | Every approver of the brand (`approvals.decide` and a brand link with `can_decide`); the title names the stage ("Planejamento aguarda sua decisão", "Artes aguardam sua decisão") | Event | Immediate |
 | `approval.decided` | The approver approved or requested changes | Whoever submitted (`approvals.view`) | Event | Immediate |
+| `approval.approved_by_team` | The team approved on the client's behalf while a request was pending (not sent when nothing had been requested) | Every approver of the brand (`approvals.decide` and a brand link with `can_decide`) | Event | Immediate |
 | `approval.superseded` | A pending request was replaced by a new revision | The previous approver (`approvals.decide`) | Event | Immediate |
 | `approval.overdue` | A pending request passed its approval deadline | Whoever submitted (`approvals.view`). The external approver is not sent this alert (see the Phase 4 addition) | Scheduled | Next day, then every 2 days until resolved |
 | `content.due_soon` | A production deadline is approaching | The content owner (`content.view`) | Scheduled | 2 days and the same day |
@@ -90,6 +91,7 @@ The "next content, deadlines and pending approvals" block of the dashboard reuse
 |---|---|---|
 | `approval.requested` | Nova aprovação pendente | "O conteúdo «Lançamento de outono» (Instagram) aguarda sua decisão." |
 | `approval.decided` | Aprovação concluída | "Café Aurora aprovou «Lançamento de outono» (Instagram)." / "Café Aurora pediu alterações em «Lançamento de outono»." |
+| `approval.approved_by_team` | A equipe aprovou | "A equipe aprovou «Café Aurora · Lançamento de outono» (Artes)." |
 | `approval.superseded` | Uma nova versão foi enviada | "A versão que você ia avaliar foi substituída. Veja a versão atual." |
 | `approval.overdue` | Aprovação atrasada | "A aprovação de «Lançamento de outono» está pendente desde 12 de outubro." |
 | `content.due_soon` | Prazo de produção chegando | "«Lançamento de outono» deve ficar pronto em 2 dias." |

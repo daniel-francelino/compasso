@@ -13,7 +13,10 @@ import {
 import { ContentFormat, EditorialStatus, Platform } from "@/lib/shared/enums";
 
 const sqlTransitions = (): Record<string, string[]> => {
-  const sql = readFileSync("supabase/migrations/20261020140000_content_published.sql", "utf8");
+  const sql = readFileSync(
+    "supabase/migrations/20261023110000_approvals_approve_on_behalf.sql",
+    "utf8",
+  );
   const body = sql.match(/function public\.editorial_transition_allowed[\s\S]*?\$fn\$;/)?.[0] ?? "";
   const map: Record<string, string[]> = {};
   for (const match of body.matchAll(/when '([a-z_]+)' then p_to in \(([^)]*)\)/g)) {
@@ -34,7 +37,7 @@ describe("editorial transitions", () => {
   it("never leave a cancelled variant", () => {
     expect(EditorialTransitions[EditorialStatus.Cancelled]).toEqual([]);
     expect(canTransition(EditorialStatus.Approved, EditorialStatus.InProduction)).toBe(true);
-    expect(canTransition(EditorialStatus.Draft, EditorialStatus.Approved)).toBe(false);
+    expect(canTransition(EditorialStatus.Published, EditorialStatus.Approved)).toBe(false);
   });
 
   it("allow direct moves only where the transition itself is allowed", () => {

@@ -76,6 +76,7 @@ export const AuditAction = {
     Requested: "approval.requested",
     Decided: "approval.decided",
     Superseded: "approval.superseded",
+    ApprovedByTeam: "approval.approved_by_team",
     Cancelled: "approval.cancelled",
     ApproverReassigned: "approval.approver_reassigned",
     ReminderSent: "approval.reminder_sent",

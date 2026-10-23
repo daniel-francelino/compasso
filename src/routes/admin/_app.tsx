@@ -7,6 +7,7 @@ import { AppBreadcrumbs, BreadcrumbProvider } from "@/components/shared/admin/pa
 import { NotificationBell } from "@/components/shared/notifications/notification-bell";
 import { Separator } from "@/components/shared/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/shared/ui/sidebar";
+import { UploadTrayProvider } from "@/components/shared/media/upload-tray-provider";
 import { Toaster } from "@/components/shared/ui/sonner";
 import { useAdminSpace } from "@/hooks/shared/use-admin-space";
 import { blockedDestination, homeFor } from "@/lib/shared/auth/redirect";
@@ -67,35 +68,37 @@ function AdminLayout() {
 
   return (
     <BreadcrumbProvider>
-      <SidebarProvider>
-        <a
-          href="#main-content"
-          className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
-        >
-          Saltar para o conteúdo
-        </a>
-        <AppSidebar auth={auth} space={space} />
-        <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-border bg-background px-4 pointer-coarse:h-16">
-            <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
-            <Separator orientation="vertical" className="h-5" />
-            <AppBreadcrumbs />
-            <SpaceSwitcher spaces={availableSpaces(auth)} current={space} />
-            {auth.user ? <NotificationBell userId={auth.user.id} /> : null}
-          </header>
-          <main
-            id="main-content"
-            tabIndex={-1}
-            className={cn(
-              "w-full flex-1 px-4 py-6 outline-none sm:px-6 sm:py-8",
-              fullWidth ? "max-w-none" : "mx-auto max-w-6xl",
-            )}
+      <UploadTrayProvider>
+        <SidebarProvider>
+          <a
+            href="#main-content"
+            className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
           >
-            <Outlet />
-          </main>
-        </SidebarInset>
-        <Toaster position="top-right" />
-      </SidebarProvider>
+            Saltar para o conteúdo
+          </a>
+          <AppSidebar auth={auth} space={space} />
+          <SidebarInset>
+            <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-border bg-background px-4 pointer-coarse:h-16">
+              <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
+              <Separator orientation="vertical" className="h-5" />
+              <AppBreadcrumbs />
+              <SpaceSwitcher spaces={availableSpaces(auth)} current={space} />
+              {auth.user ? <NotificationBell userId={auth.user.id} /> : null}
+            </header>
+            <main
+              id="main-content"
+              tabIndex={-1}
+              className={cn(
+                "w-full flex-1 px-4 py-6 outline-none sm:px-6 sm:py-8",
+                fullWidth ? "max-w-none" : "mx-auto max-w-6xl",
+              )}
+            >
+              <Outlet />
+            </main>
+          </SidebarInset>
+          <Toaster position="top-right" />
+        </SidebarProvider>
+      </UploadTrayProvider>
     </BreadcrumbProvider>
   );
 }

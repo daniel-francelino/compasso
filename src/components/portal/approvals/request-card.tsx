@@ -63,6 +63,9 @@ export function RequestCard({
           Decidido por {request.decidedByName}
         </p>
       ) : null}
+      {request.decidedOnBehalf ? (
+        <p className="text-center text-sm text-muted-foreground">Aprovado pela equipe</p>
+      ) : null}
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
         <Button type="button" variant="ghost" onClick={() => setOpen(true)}>
           <Maximize2 aria-hidden="true" />

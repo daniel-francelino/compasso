@@ -12,6 +12,7 @@ export function ReasonDialog({
   confirmLabel,
   icon: Icon = Ban,
   minLength = 3,
+  optional = false,
   onSubmit,
 }: {
   open: boolean;
@@ -21,6 +22,7 @@ export function ReasonDialog({
   confirmLabel: string;
   icon?: LucideIcon;
   minLength?: number;
+  optional?: boolean;
   onSubmit: (reason: string) => Promise<string | null | false>;
 }) {
   const id = useId();
@@ -30,7 +32,7 @@ export function ReasonDialog({
 
   async function submit() {
     if (busy) return;
-    if (reason.trim().length < minLength) {
+    if (!optional && reason.trim().length < minLength) {
       setError("Indique o motivo.");
       return;
     }
@@ -55,14 +57,14 @@ export function ReasonDialog({
       title={title}
       description={description}
       busy={busy}
-      destructive
+      destructive={!optional}
       submitLabel={confirmLabel}
       submitIcon={Icon}
       onSubmit={submit}
     >
       <TextAreaField
         id={`${id}-reason`}
-        label="Motivo"
+        label={optional ? "Motivo (opcional)" : "Motivo"}
         rows={3}
         maxLength={300}
         value={reason}

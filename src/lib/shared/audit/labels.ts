@@ -55,6 +55,7 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Approval.Requested]: "Aprovação solicitada",
   [AuditAction.Approval.Decided]: "Aprovação decidida",
   [AuditAction.Approval.Superseded]: "Aprovação substituída",
+  [AuditAction.Approval.ApprovedByTeam]: "Aprovado pela equipe",
   [AuditAction.Approval.Cancelled]: "Aprovação cancelada",
   [AuditAction.Approval.ApproverReassigned]: "Aprovador trocado",
   [AuditAction.Approval.ReminderSent]: "Lembrete de aprovação enviado",

@@ -68,7 +68,7 @@ const closingText = (request: ApprovalDetail): string => {
   if (request.status === ApprovalRequestStatus.Cancelled) return "Pedido cancelado";
   return request.outcome === null
     ? "Decidida"
-    : `${approvalOutcomeLabels[request.outcome]}${request.decidedByName ? ` por ${request.decidedByName}` : ""}`;
+    : `${request.decidedOnBehalf ? "Aprovado pela equipe" : approvalOutcomeLabels[request.outcome]}${request.decidedByName ? ` por ${request.decidedByName}` : ""}`;
 };
 
 export function ApprovalDetailPage({ requestId }: { requestId: string }) {
@@ -220,9 +220,16 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
       {request.outcome !== null ? (
         <SectionCard title="Decisão">
           <p className="text-sm font-medium">
-            {approvalOutcomeLabels[request.outcome]}
+            {request.decidedOnBehalf
+              ? "Aprovado pela equipe"
+              : approvalOutcomeLabels[request.outcome]}
             {request.decidedByName ? ` por ${request.decidedByName}` : ""}
           </p>
+          {request.decisionReason ? (
+            <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
+              Motivo: {request.decisionReason}
+            </p>
+          ) : null}
           {request.decisionComment ? (
             <p className="whitespace-pre-wrap break-words text-sm">“{request.decisionComment}”</p>
           ) : null}

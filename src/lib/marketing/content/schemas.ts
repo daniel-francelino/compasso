@@ -94,6 +94,13 @@ export const cancelSchema = z.object({ id: z.string().uuid(), reason: reasonSche
 
 export const reopenSchema = cancelSchema.extend({ scope: z.nativeEnum(ApprovalStage) });
 
+export const approveOnBehalfSchema = z.object({
+  id: z.string().uuid(),
+  stage: z.nativeEnum(ApprovalStage),
+  reason: z.string().trim().max(500, "O motivo é longo demais.").optional(),
+  expectedVersion: z.number().int().min(1),
+});
+
 export const moveContentSchema = z.object({
   id: z.string().uuid(),
   to: z.nativeEnum(EditorialStatus),

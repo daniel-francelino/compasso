@@ -113,6 +113,15 @@ Thresholds: AA is 4.5 for normal text; AAA is 7. UI components need 3 or more. T
 | `line-strong` on `ivory` (input border) | 4.32 |
 | `line-strong` on `surface` | 4.65 |
 | `violet-bright` on `ivory` (large ornaments) | 4.04 |
+| `ivory` icon on `platform-instagram` | 5.59 |
+| `ivory` icon on `platform-facebook` | 5.92 |
+| `ivory` icon on `platform-linkedin` | 6.07 |
+| `ivory` icon on `platform-youtube` | 5.76 |
+| `ivory` icon on `platform-pinterest` | 6.50 |
+
+### Platform marks
+
+Channel circles (`PlatformMark`) use the `platform-*` tokens, the recognisable color of each network, only as the fill behind an `ivory` icon. TikTok and X use `ink`, Threads `ink-soft`, Email `violet`, Blog `cactus` and Other `line-strong`. They are never used for text.
 
 ### Usage rules derived from the table
 
@@ -194,6 +203,12 @@ Organic patches are section illustrations using `coral` and `violet-bright`. Tex
   --sidebar-border: var(--line);
   --sidebar-ring: var(--violet);
 
+  --platform-instagram: #b02a78;
+  --platform-facebook: #1559c4;
+  --platform-linkedin: #0a5ea8;
+  --platform-youtube: #c40000;
+  --platform-pinterest: #b3081a;
+
   --success: var(--cactus);
   --info: var(--ink-soft);
 
@@ -223,6 +238,11 @@ Organic patches are section illustrations using `coral` and `violet-bright`. Tex
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-info: var(--info);
+  --color-platform-instagram: var(--platform-instagram);
+  --color-platform-facebook: var(--platform-facebook);
+  --color-platform-linkedin: var(--platform-linkedin);
+  --color-platform-youtube: var(--platform-youtube);
+  --color-platform-pinterest: var(--platform-pinterest);
 }
 ```
 

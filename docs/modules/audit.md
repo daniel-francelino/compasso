@@ -91,6 +91,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `approval.requested` | `approval_request` | `submit_for_approval` (with `stage`) |
 | `approval.decided` | `approval_request` | `portal_decide_approval` |
 | `approval.superseded` | `approval_request` | `submit_for_approval`, `reopen_content`, `reschedule_channel` |
+| `approval.approved_by_team` | `approval_request` | `approve_on_behalf` |
 | `approval.cancelled` | `approval_request` | `cancel_request` |
 | `approval.approver_reassigned` | `approval_request` | legacy: written before 2026-10-20, kept so old history keeps its label |
 | `approval.reminder_sent` | `approval_request` | `send_approval_reminder` |

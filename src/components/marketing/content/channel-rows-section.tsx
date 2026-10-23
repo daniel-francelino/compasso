@@ -1,12 +1,12 @@
 import { CalendarPlus, Megaphone, Trash2 } from "lucide-react";
-import { RowFormatField } from "@/components/marketing/content/row-format-field";
 import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { Button } from "@/components/shared/ui/button";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
-import { platformLabels } from "@/lib/shared/labels";
+import { formatIcons } from "@/components/shared/content/format-icons";
+import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 
 export function ChannelRowsSection({
   draft,
@@ -95,20 +95,17 @@ export function ChannelRowsSection({
               {channelRows.map((row) => {
                 const index = rows.findIndex((entry) => entry.key === row.key);
                 const rowDisabled = disabled || row.published;
+                const FormatIcon = formatIcons[row.format];
 
                 return (
                   <li
                     key={row.key}
                     className="grid gap-3 p-3 md:grid-cols-[minmax(12rem,0.9fr)_minmax(0,1.4fr)_auto] md:items-start"
                   >
-                    <RowFormatField
-                      id={`row-format-${row.key}`}
-                      platform={channel?.platform}
-                      value={row.format}
-                      disabled={rowDisabled}
-                      onChange={(format) => update(row.key, { format })}
-                      error={errors[`channels.${index}.format`]}
-                    />
+                    <div className="flex min-h-10 items-center gap-2 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm">
+                      <FormatIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+                      <span>{contentFormatLabels[row.format]}</span>
+                    </div>
                     <DateTimeField
                       id={`row-planned-${row.key}`}
                       label="Data e hora"

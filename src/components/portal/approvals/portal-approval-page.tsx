@@ -118,10 +118,17 @@ function DecisionCard({ approval }: { approval: PortalApproval }) {
   return (
     <SectionCard title="Decisão registrada">
       <p className="text-sm font-medium">
-        {approvalOutcomeLabels[approval.decision.outcome]}
+        {approval.decision.decidedOnBehalf
+          ? "Aprovado pela equipe"
+          : approvalOutcomeLabels[approval.decision.outcome]}
         {approval.decision.decidedByName ? ` por ${approval.decision.decidedByName}` : ""} em{" "}
         {formatDateTime(approval.decision.decidedAt)}
       </p>
+      {approval.decision.decidedOnBehalf ? (
+        <p className="text-sm text-muted-foreground">
+          A equipe aprovou esta versão. Você ainda pode comentar.
+        </p>
+      ) : null}
       {approval.decision.comment ? (
         <p className="whitespace-pre-wrap break-words text-sm">“{approval.decision.comment}”</p>
       ) : null}

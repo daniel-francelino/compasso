@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { RotateCcw, Save } from "lucide-react";
+import { RotateCcw, Save, UserCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ALL_TAB } from "@/components/marketing/content/caption-section";
@@ -51,6 +51,7 @@ import {
   cancelContentChannel,
   moveContent,
   reopenContent,
+  approveOnBehalf,
   publishContent,
 } from "@/lib/marketing/content/workflow.functions";
 import { Action } from "@/lib/shared/auth/actions";
@@ -59,7 +60,7 @@ import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { resolveLocalTime } from "@/lib/shared/calendar/reschedule";
 import { platformFormats } from "@/lib/shared/editorial/editorial";
-import { type ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
+import { ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -100,6 +101,7 @@ export function ContentEditor({
   const [publishing, setPublishing] = useState<DraftRow | null>(null);
   const [cancellingRow, setCancellingRow] = useState<DraftRow | null>(null);
   const [reopening, setReopening] = useState<ApprovalStage | null>(null);
+  const [approvingStage, setApprovingStage] = useState<ApprovalStage | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [confirmingPublish, setConfirmingPublish] = useState(false);
   const [tab, setTab] = useState(ALL_TAB);
@@ -292,6 +294,7 @@ export function ContentEditor({
       acting={acting}
       onMove={(to) => void move(to)}
       onSubmit={() => setSubmitting(true)}
+      onApproveOnBehalf={setApprovingStage}
       onReopen={setReopening}
       onCancel={() => setCancelling(true)}
     />
@@ -470,6 +473,34 @@ export function ContentEditor({
             { invalidate: refresh, success: "Conteúdo marcado como publicado." },
           );
           return result.ok;
+        }}
+      />
+      <ReasonDialog
+        open={approvingStage !== null}
+        onOpenChange={(next) => !next && setApprovingStage(null)}
+        title="Aprovar no lugar do cliente"
+        description="Você está registrando a aprovação do cliente. Isto fica no histórico com o seu nome. Se houver um pedido aberto, ele será encerrado e o cliente será avisado."
+        confirmLabel={
+          approvingStage === ApprovalStage.Plan ? "Aprovar planejamento" : "Aprovar arte"
+        }
+        icon={UserCheck}
+        optional
+        onSubmit={async (reason) => {
+          if (content === undefined || approvingStage === null) return null;
+          const stage = approvingStage;
+          const result = await run(
+            () =>
+              approveOnBehalf({
+                data: {
+                  id: content.id,
+                  stage,
+                  expectedVersion: content.version,
+                  ...(reason === "" ? {} : { reason }),
+                },
+              }),
+            { invalidate: refresh, success: "Aprovação registrada." },
+          );
+          return result.ok ? null : result.message;
         }}
       />
       <ReasonDialog

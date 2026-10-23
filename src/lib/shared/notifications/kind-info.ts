@@ -53,6 +53,11 @@ export const kindInfo: Record<string, KindInfo> = {
     group: "Aprovações",
     description: "Quem aprova aprovou ou pediu alterações no conteúdo enviado.",
   },
+  "approval.approved_by_team": {
+    icon: ClipboardCheck,
+    group: "Aprovações",
+    description: "A equipe aprovou no lugar de quem aprova, enquanto havia um pedido aberto.",
+  },
   "approval.superseded": {
     icon: Replace,
     group: "Aprovações",

@@ -61,6 +61,7 @@ export type PortalRequest = {
   decidedAt: string | null;
   canDecide: boolean;
   decidedByName: string | null;
+  decidedOnBehalf: boolean;
 };
 
 export type PortalMedia = {
@@ -94,6 +95,7 @@ export type PortalApproval = {
     comment: string | null;
     decidedAt: string;
     decidedByName: string | null;
+    decidedOnBehalf: boolean;
   } | null;
   history: {
     requestId: string;

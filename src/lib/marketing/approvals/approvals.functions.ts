@@ -47,6 +47,7 @@ export type ApprovalRow = {
   revisionNo: number;
   stage: ApprovalStage;
   decidedByName: string | null;
+  decidedOnBehalf: boolean;
   requestedAt: string;
   dueDate: string | null;
   overdue: boolean;
@@ -71,6 +72,8 @@ export type ApprovalDetail = {
   outcome: ApprovalOutcome | null;
   decisionComment: string | null;
   decidedByName: string | null;
+  decidedOnBehalf: boolean;
+  decisionReason: string | null;
   isCurrent: boolean;
   overdue: boolean;
   revision: RevisionRow;
@@ -111,7 +114,7 @@ export const listApprovals = createServerFn({ method: "GET" })
     let query = caller.supabase
       .from("approval_requests")
       .select(
-        "id, status, stage, brand_id, item_id, requested_at, due_date, approval_decisions(decided_by), content_revisions(revision_no, snapshot), content_items!inner(title, brands(name))",
+        "id, status, stage, brand_id, item_id, requested_at, due_date, approval_decisions(decided_by, on_behalf), content_revisions(revision_no, snapshot), content_items!inner(title, brands(name))",
         { count: "exact" },
       );
     const filter = data.status ?? ApprovalFilter.Pending;
@@ -150,6 +153,7 @@ export const listApprovals = createServerFn({ method: "GET" })
         row.approval_decisions[0] === undefined
           ? null
           : (names.get(row.approval_decisions[0].decided_by) ?? null),
+      decidedOnBehalf: row.approval_decisions[0]?.on_behalf ?? false,
       requestedAt: row.requested_at,
       dueDate: row.due_date,
       overdue:
@@ -170,7 +174,7 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("approval_requests")
       .select(
-        "id, status, stage, brand_id, item_id, revision_id, requested_by, requested_at, due_date, message, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by), content_items(current_revision_id, brands(name, timezone))",
+        "id, status, stage, brand_id, item_id, revision_id, requested_by, requested_at, due_date, message, viewed_at, decided_at, cancelled_reason, approval_decisions(outcome, comment, decided_by, on_behalf, reason), content_items(current_revision_id, brands(name, timezone))",
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -223,6 +227,8 @@ export const getApprovalRequest = createServerFn({ method: "GET" })
         outcome: (decision?.outcome ?? null) as ApprovalOutcome | null,
         decisionComment: decision?.comment ?? null,
         decidedByName: decision === undefined ? null : (names.get(decision.decided_by) ?? null),
+        decidedOnBehalf: decision?.on_behalf ?? false,
+        decisionReason: decision?.reason ?? null,
         isCurrent: row.content_items?.current_revision_id === row.revision_id,
         overdue:
           row.status === ApprovalRequestStatus.Pending &&

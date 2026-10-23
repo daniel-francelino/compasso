@@ -75,7 +75,10 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
     {
       id: "approver",
       label: "Quem decidiu",
-      cell: (row) => row.decidedByName ?? "Qualquer aprovador da marca",
+      cell: (row) =>
+        row.decidedOnBehalf
+          ? `Equipe${row.decidedByName ? ` (${row.decidedByName})` : ""}`
+          : (row.decidedByName ?? "Qualquer aprovador da marca"),
     },
     { id: "requested", label: "Enviada em", cell: (row) => formatDateTime(row.requestedAt) },
     {

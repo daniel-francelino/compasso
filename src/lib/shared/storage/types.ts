@@ -23,5 +23,10 @@ export interface ServerStorage {
 }
 
 export interface BrowserStorage {
-  upload(target: UploadTarget, body: Blob, contentType: string): Promise<boolean>;
+  upload(
+    target: UploadTarget,
+    body: Blob,
+    contentType: string,
+    onProgress?: (fraction: number) => void,
+  ): Promise<boolean>;
 }

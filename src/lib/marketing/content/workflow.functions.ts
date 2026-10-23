@@ -6,6 +6,7 @@ import { ApprovalStage } from "@/lib/shared/enums";
 import { purgePublishedMedia } from "@/lib/shared/media/cleanup.server";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 import {
+  approveOnBehalfSchema,
   brandIdSchema,
   cancelSchema,
   moveContentSchema,
@@ -20,6 +21,12 @@ const submittedSchema = z.object({
   request_id: z.string().uuid(),
   revision_id: z.string().uuid(),
   revision_no: z.number().int(),
+  version: z.number().int(),
+  stage: z.nativeEnum(ApprovalStage),
+});
+const approvedOnBehalfSchema = z.object({
+  request_id: z.string().uuid(),
+  revision_id: z.string().uuid(),
   version: z.number().int(),
   stage: z.nativeEnum(ApprovalStage),
 });
@@ -93,6 +100,23 @@ export const submitForApproval = createServerFn({ method: "POST" })
       };
     },
   );
+
+export const approveOnBehalf = createServerFn({ method: "POST" })
+  .validator(approveOnBehalfSchema)
+  .handler(async ({ data }): Promise<Result<{ version: number; stage: ApprovalStage }>> => {
+    const caller = await requireActionServer(Action.Approvals.Override);
+    if (caller === null) return denied;
+    const { data: row, error } = await caller.supabase.rpc("approve_on_behalf", {
+      p_item: data.id,
+      p_stage: data.stage,
+      p_reason: data.reason ?? "",
+      p_expected_version: data.expectedVersion,
+    });
+    if (error) return fail(error);
+    const parsed = parseOutput(approvedOnBehalfSchema, row);
+    if (!parsed.ok) return parsed;
+    return { ok: true, version: parsed.version, stage: parsed.stage };
+  });
 
 export const reopenContent = createServerFn({ method: "POST" })
   .validator(reopenSchema)

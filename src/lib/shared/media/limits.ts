@@ -44,3 +44,12 @@ export const kindOfMime = (mime: string): MediaKind | null => {
 export const isMediaMime = (mime: string): mime is MediaMime => kindOfMime(mime) !== null;
 
 export const acceptAttribute = MEDIA_MIME_TYPES.join(",");
+
+const mimeTypesOf: Record<MediaKind, readonly string[]> = {
+  [MediaKind.Image]: IMAGE_MIME_TYPES,
+  [MediaKind.Video]: VIDEO_MIME_TYPES,
+  [MediaKind.Document]: DOCUMENT_MIME_TYPES,
+};
+
+export const acceptFor = (kinds: readonly MediaKind[]): string =>
+  kinds.flatMap((kind) => mimeTypesOf[kind]).join(",");

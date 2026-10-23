@@ -29,7 +29,11 @@ export type UploadItem = {
   versionId: string | null;
 };
 
-type Target = { scope: MediaScope; brandId?: string | undefined; assetId?: string | undefined };
+export type Target = {
+  scope: MediaScope;
+  brandId?: string | undefined;
+  assetId?: string | undefined;
+};
 
 const MB = 1024 * 1024;
 
@@ -42,7 +46,7 @@ export const rejectionFor = (file: File): string | null => {
     : null;
 };
 
-const newItem = (file: File): UploadItem => ({
+export const newItem = (file: File): UploadItem => ({
   id: crypto.randomUUID(),
   file,
   status: rejectionFor(file) === null ? UploadStatus.Queued : UploadStatus.Failed,
@@ -53,7 +57,11 @@ const newItem = (file: File): UploadItem => ({
 
 type Outcome = { ok: true; assetId: string; versionId: string } | { ok: false; message: string };
 
-const send = async (item: UploadItem, target: Target): Promise<Outcome> => {
+export const sendUpload = async (
+  item: UploadItem,
+  target: Target,
+  onProgress?: (fraction: number) => void,
+): Promise<Outcome> => {
   const { file } = item;
   const kind = kindOfMime(file.type);
   const video = kind === MediaKind.Video ? await inspectVideo(file, THUMB_SIDE) : null;
@@ -77,7 +85,7 @@ const send = async (item: UploadItem, target: Target): Promise<Outcome> => {
 
   const storage = browserStorage();
   const uploads = await Promise.all([
-    storage.upload(planned.original, file, file.type),
+    storage.upload(planned.original, file, file.type, onProgress),
     planned.thumb && thumb ? storage.upload(planned.thumb, thumb, "image/webp") : true,
     planned.display && display ? storage.upload(planned.display, display, "image/webp") : true,
   ]);
@@ -122,7 +130,7 @@ export const useMediaUpload = (target: Target, onFinished: (items: UploadItem[])
     const queue = items.filter((item) => item.status === UploadStatus.Queued);
     for (const item of queue) {
       patch(item.id, { status: UploadStatus.Uploading, message: null });
-      const outcome = await send(item, target);
+      const outcome = await sendUpload(item, target);
       const next: Partial<UploadItem> = outcome.ok
         ? { status: UploadStatus.Done, assetId: outcome.assetId, versionId: outcome.versionId }
         : { status: UploadStatus.Failed, message: outcome.message };

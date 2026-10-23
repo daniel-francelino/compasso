@@ -1,8 +1,26 @@
-import { RowFormatField } from "@/components/marketing/content/row-format-field";
+import { Check } from "lucide-react";
+import { formatIcons } from "@/components/shared/content/format-icons";
 import { PlatformMark } from "@/components/shared/preview/platform-mark";
-import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
+import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
-import { platformLabels } from "@/lib/shared/labels";
+import type { ContentFormat } from "@/lib/shared/enums";
+import { platformFormats } from "@/lib/shared/editorial/editorial";
+import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
+import { cn } from "@/lib/shared/utils";
+
+const MAX_CHANNEL_ROWS = 20;
+
+const newRow = (draft: ContentDraft, source: DraftRow, format: ContentFormat): DraftRow => ({
+  key: draft.nextKey(),
+  id: undefined,
+  channelId: source.channelId,
+  format,
+  caption: "",
+  plannedAt: source.plannedAt,
+  plannedTimezone: source.plannedTimezone,
+  published: false,
+  version: undefined,
+});
 
 export function PlanningFormats({
   draft,
@@ -16,33 +34,102 @@ export function PlanningFormats({
   errors: Record<string, string>;
 }) {
   const rows = draft.values.rows;
-  if (rows.length === 0) return null;
+  const channelIds = [...new Set(rows.map((row) => row.channelId))];
+  if (channelIds.length === 0) return null;
+
   return (
-    <ul className="grid gap-3 border-t border-border pt-4 sm:grid-cols-2" aria-label="Formatos">
-      {rows.map((row, index) => {
-        const channel = channels.find((candidate) => candidate.id === row.channelId);
+    <div className="space-y-4 border-t border-border pt-4" aria-label="Formatos por canal">
+      {channelIds.map((channelId) => {
+        const channel = channels.find((candidate) => candidate.id === channelId);
+        if (channel === undefined) return null;
+        const channelRows = rows.filter((row) => row.channelId === channelId);
+        const selectedFormats = new Set(channelRows.map((row) => row.format));
+        const lockedFormats = new Set(
+          channelRows.filter((row) => row.published).map((row) => row.format),
+        );
+
+        const toggleFormat = (format: ContentFormat) => {
+          const isSelected = selectedFormats.has(format);
+          if (disabled || (isSelected && lockedFormats.has(format))) return;
+          if (isSelected) {
+            draft.set(
+              "rows",
+              rows.filter((row) => row.channelId !== channelId || row.format !== format),
+            );
+            return;
+          }
+          if (rows.length >= MAX_CHANNEL_ROWS) return;
+          const source = channelRows[0];
+          if (source === undefined) return;
+          draft.set("rows", [...rows, newRow(draft, source, format)]);
+        };
+
         return (
-          <li key={row.key} className="flex items-end gap-3">
-            {channel ? <PlatformMark platform={channel.platform} className="mb-1 size-8" /> : null}
-            <div className="min-w-0 flex-1">
-              <RowFormatField
-                id={`plan-format-${row.key}`}
-                label={channel ? `Formato · ${platformLabels[channel.platform]}` : "Formato"}
-                platform={channel?.platform}
-                value={row.format}
-                disabled={disabled || row.published}
-                error={errors[`channels.${index}.format`]}
-                onChange={(format) =>
-                  draft.set(
-                    "rows",
-                    rows.map((entry) => (entry.key === row.key ? { ...entry, format } : entry)),
-                  )
-                }
-              />
+          <section
+            key={channelId}
+            className="space-y-2"
+            aria-label={platformLabels[channel.platform]}
+          >
+            <div className="flex items-center gap-2">
+              <PlatformMark platform={channel.platform} className="size-8" />
+              <div>
+                <h3 className="text-sm font-medium text-foreground">
+                  Formato · {platformLabels[channel.platform]}
+                </h3>
+                <p className="text-xs text-muted-foreground">{channel.profileName}</p>
+              </div>
             </div>
-          </li>
+            <ul className="flex flex-wrap gap-2 pl-10" aria-label="Formatos disponíveis">
+              {platformFormats[channel.platform].map((format) => {
+                const Icon = formatIcons[format];
+                const isSelected = selectedFormats.has(format);
+                const isDisabled =
+                  disabled ||
+                  lockedFormats.has(format) ||
+                  (!isSelected && rows.length >= MAX_CHANNEL_ROWS);
+                const rowErrorIndex = rows.findIndex(
+                  (row) => row.channelId === channelId && row.format === format,
+                );
+                const error =
+                  rowErrorIndex < 0 ? undefined : errors[`channels.${rowErrorIndex}.format`];
+
+                return (
+                  <li key={format}>
+                    <button
+                      type="button"
+                      aria-pressed={isSelected}
+                      aria-label={contentFormatLabels[format]}
+                      aria-disabled={isDisabled}
+                      onClick={() => {
+                        if (!isDisabled) toggleFormat(format);
+                      }}
+                      className={cn(
+                        "relative inline-flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        isSelected
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border bg-background text-muted-foreground hover:bg-muted",
+                        isDisabled && "cursor-not-allowed opacity-60",
+                        error && "border-destructive",
+                      )}
+                    >
+                      <Icon aria-hidden="true" className="size-4" />
+                      <span>{contentFormatLabels[format]}</span>
+                      {isSelected ? (
+                        <Check aria-hidden="true" className="size-4 text-primary" />
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
         );
       })}
-    </ul>
+      {rows.length >= MAX_CHANNEL_ROWS ? (
+        <p className="text-xs text-muted-foreground" role="status">
+          Limite de 20 formatos e publicaÃ§Ãµes por conteÃºdo.
+        </p>
+      ) : null}
+    </div>
   );
 }

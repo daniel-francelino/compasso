@@ -17,9 +17,6 @@ export function PlanSection({
   const { values } = draft;
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">
-        É o que o cliente lê para aprovar a ideia: tema, mensagem e direção do texto.
-      </p>
       <RichTextEditor
         id="plan-summary"
         label="Resumo do planejamento"

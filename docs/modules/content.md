@@ -92,13 +92,11 @@ Routes: `/admin/marketing/content` (all authorized brands), `/admin/marketing/br
 
 - **List:** title, brand, channel logos (up to 4 and "+N"), editorial status, next planned date, owner, deadline. Search; filters by brand, channel, owner, editorial status, publication status and tag in the shared filter popover; sorting by deadline, update or title. A single icon button beside the filter button switches between list and board. Main action "Novo conteúdo".
 - **Board:** columns by editorial status; each card shows the channel logos, the format badges and the next planned date, and has a "Mover para…" menu that calls the transition function and obeys the table above. Card moves use the menu, not drag and drop (decision D13).
-- **Editor** (one screen for create and edit, `ContentEditor`): sections numbered like mLabs.
-  1. **Selecione os canais:** multi-select of the brand's active channels as platform logo buttons (`ChannelPicker`, `PlatformIcon`); a channel with a published row is locked; an empty state links to the channels tab. For a new content the brand is chosen first.
-  2. **Texto do post:** tabs "Todos | one per channel row"; "Todos" holds the base caption, each row tab holds the optional adjustment (with the platform character guidance); the call to action is below.
-  3. **Mídias:** the file strip with `MediaPicker`, drag-and-drop ordering with keyboard-accessible handle and alternative text; the count rule follows the strictest selected format.
-  4. **Data e horário das publicações:** one line per channel row: logo, format select, date and time (`DateTimeField`, brand zone), "Registrar publicação" and "Cancelar este canal" icon buttons, and "Incluir mais dias e horários neste canal".
-  5. **Configurações:** title, objective (select) and detail, briefing (`RichTextEditor`), owner, production deadline (`DatePickerField`), tags, internal notes.
-  Right column: live `ChannelPreview` of the selected tab with the brand logo when registered, history of versions and decisions, internal comments. Actions: "Criar conteúdo"/"Salvar", "Iniciar produção", "Enviar para revisão interna", "Enviar para aprovação", "Reabrir", "Cancelar conteúdo". Unsaved changes warn before leaving; a save conflict keeps the typed text.
+- **Editor** (one screen for create and edit, `ContentEditor`) is split into three compact, connected steps: **Planejamento**, **Briefing** and **Conte?do**. The current step is indicated by a numbered circle; steps are directly selectable and share one draft and save action.
+  1. **Planejamento:** brand selection for new content, active channel selection, multi-selectable formats for each channel, objective, plan summary and planning files, plus owner and production deadline. Each selected channel and format becomes a publication row with its own date and preview. Tags and internal notes remain in the content model but are not shown in the editor.
+  2. **Briefing:** internal rich-text briefing (`RichTextEditor`) in its own step.
+  3. **Conte?do:** caption tabs "Todos | one per channel row", call to action, media strip (`MediaPicker`) with keyboard-accessible ordering and alternative text, and publication rows with the selected format, date/time (`DateTimeField`), "Registrar publica??o", "Cancelar este canal" and "Incluir mais dias e hor?rios neste canal".
+  The right column keeps revision history and internal comments; `ChannelPreview` accompanies the content step. Actions: "Criar conte?do"/"Salvar", "Iniciar produ??o", "Enviar para revis?o interna", "Enviar para aprova??o", "Reabrir", "Cancelar conte?do". Unsaved changes warn before leaving; a save conflict keeps the typed text.
 - **Send for approval dialog:** by stage ("Enviar planejamento para aprovação" or "Enviar artes para aprovação"); it lists who will be asked, the brand's approvers, with no choice to make, and refuses to send when there is nobody ("Convidar aprovador"); optional message; approval deadline; the dialog states "Isto cria a versão nº N … O cliente verá exatamente esta versão."; checks run first (plan: a channel with a planned date, files available; art: at least one channel, text or files, file count for every format, files available, channels active, dates in the future as a warning).
 - **Manual publication:** "Registrar publicação" on a channel row (only when the content is `approved`) asks real date/time, link or evidence file (optional) and a note; it changes that row to `published_manually`, audits it and **never calls a social network**.
 - **Reopen:** requires a reason; supersedes any pending request; the content returns to `in_production`.
@@ -274,10 +272,106 @@ Migration strategy (expand, then contract; DATA-12): count the rows first; add t
 - With the policy off, or on a content created before phase T, the flow is exactly today's single cycle.
 - The board, the list, the calendar and the portal show the stage and use the new statuses.
 
+## Flexible approval (decided 2026-10-22)
+
+> Status: **implemented in the database, the server and the editor** (2026-10-23, see the implementation status); the board, list badge and filter are still missing. The names are in the registries ([../reference/README.md](../reference/README.md)). The request, decision and notification rules are in [approvals.md](approvals.md#approval-by-the-team-decided-2026-10-22).
+
+### Why
+
+The client's approval must not block publication. A client may trust the agency and have no interest in approving every piece, or may simply not answer. Today a content only reaches `approved`, and therefore `published`, through a client decision, so a silent client stops the work. The **content manager** can now record the approval **on the client's behalf**, for the plan and for the art, whenever they judge it appropriate.
+
+This does not break "delay or silence never equals approval" ([approvals.md](approvals.md) rule 6): nothing is approved by itself. A named person with the permission does it explicitly, and the history shows it.
+
+### All editorial statuses at a glance
+
+`EditorialStatus` does **not** change: the approval given by the team lands on the same `plan_approved` and `approved` statuses, so manual publication, locks, reopening and the portal history keep working without a new case.
+
+| Status | Stage | Who puts the content here | The client sees |
+|---|---|---|---|
+| `draft` | — | Creation | Nothing |
+| `planning` | Plan | Team (`content.update`), only when `plan_required` | Nothing |
+| `awaiting_plan_approval` | Plan | Team sends the plan (`content.submit`) | A plan request |
+| `plan_changes_requested` | Plan | Client asks for changes | Their own decision |
+| `plan_approved` | Plan | **Client** approves, **or the manager approves for the client** | The plan as approved |
+| `in_production` | Art | Team (`content.update`) | Nothing |
+| `internal_review` | Art | Team (optional step) | Nothing |
+| `awaiting_approval` | Art | Team sends the art (`content.submit`) | An art request |
+| `changes_requested` | Art | Client asks for changes | Their own decision |
+| `approved` | Art | **Client** approves, **or the manager approves for the client** | The art as approved |
+| `published` | — | Manual only (`content.publish_manual`); terminal | The preview |
+| `cancelled` | — | `content.cancel` | History |
+
+With `plan_required = false` the plan rows do not apply and the content goes `draft → in_production → … → approved → published`.
+
+### What the manager can do
+
+| Situation | Manager action | Result |
+|---|---|---|
+| Plan not yet sent, being written or with changes requested | "Aprovar planejamento pelo cliente" | `plan_approved`; art production can start |
+| Plan sent and the client has not answered | Same action | The pending request is closed (approvals.md), `plan_approved` |
+| Art in production, in internal review, with changes requested or sent and unanswered | "Aprovar arte pelo cliente" | `approved`; the content is ready for manual publication |
+| Client already decided | Nothing to override | The first decision wins; the second attempt gets `request_not_pending` |
+
+Rules:
+
+1. **Permission.** A new action `approvals.override` (internal, requires `content.submit`), held by `owner` (implicit) and by the starting role `manager`; `collaborator` does not have it. It replaces the reserved action of the same name in [../foundations/roles-and-actions.md](../foundations/roles-and-actions.md). The brand link is checked as usual (SEC-2).
+2. **Allowed from any status before that stage's approval**, except `cancelled` and `published`. The action is refused with `transition_not_allowed` otherwise.
+3. **The art needs the plan first** when `plan_required` is true and the plan is not approved (`plan_not_approved`, decision O10). The manager approves the plan, then the art.
+4. **There is always a version.** Approving on behalf freezes the content exactly as sending would, so `approved_revision_id` / `plan_approved_revision_id`, the locks (`plan_locked`, `requires_new_revision`) and manual publication behave as after a client approval. The same checks run as for sending: at least one channel row (`channel_required`), a channel with a planned date for the plan (`plan_incomplete`), files available (`media_not_available`), channels active (`channel_archived`).
+5. **Never by a plain status move.** `content_move` keeps refusing `plan_approved` and `approved` (`transition_not_allowed`); only the dedicated function writes them, because a status without a frozen version would break rule 4.
+6. **Reopening is unchanged** (`content.reopen`, reason required, plan or art scope). After reopening, the manager may approve again or send a new request.
+7. **Optimistic locking** as everywhere: the call carries the expected `version` (`conflict`).
+8. **Visible in the history.** The version list and the decision timeline show "Aprovado pela equipe" with the manager's name internally; the client sees "Aprovado pela equipe" without a name. The optional reason is internal only and is never returned by a `portal_*` function (DATA-2).
+
+### Screens
+
+- **Editor, actions:** for people with `approvals.override`, a secondary action follows the stage: "Aprovar planejamento pelo cliente" or "Aprovar arte pelo cliente". It opens a `ConfirmDialog`/`ReasonDialog` titled "Aprovar no lugar do cliente" with the text "Você está registrando a aprovação do cliente. Isto fica no histórico com o seu nome. Se houver um pedido aberto, ele será encerrado e o cliente será avisado." and an optional reason. The primary action is still "Enviar … para aprovação"; the override is never the default.
+- **Board:** "Mover para…" offers "Planejamento aprovado" and "Aprovado" to those people, and choosing one opens the same dialog instead of calling `content_move`.
+- **List and board badges:** a small "Aprovado pela equipe" marker next to the status badge when the approving decision was made on behalf; filterable in the shared filter popover.
+- **Approvals list and request detail (team):** the decided request shows "Aprovado pela equipe por {nome}" and the reason.
+- **Portal:** a request closed this way leaves "Aguardando você" and appears in the decisions list as "Aprovado pela equipe"; the review screen is read-only and says "A equipe aprovou esta versão. Você ainda pode comentar."
+
+### Acceptance criteria (flexible approval)
+
+- A manager approves a plan that was never sent: the content becomes `plan_approved`, a plan version exists, and art production can start with no client action.
+- A manager approves an art while its request is pending: the request is closed as approved by the team, the content is `approved`, the eligible approvers are notified and their "Aguardando você" entry disappears.
+- A collaborator, or any user without `approvals.override`, cannot call the function and does not see the actions; an external user can never call it; a manager of brand A cannot act on brand B.
+- Moving a card to "Aprovado" without the function is refused; with the function it works from the board.
+- After an approval by the team the content behaves like a client-approved one: channels and text are locked, "Marcar como publicado" works, reopening works with a reason.
+- Two simultaneous attempts (client and manager) leave one decision; the loser gets a clear error and the typed reason is not lost.
+- The audit shows who approved, for which stage and with which version, with ids only (SEC-12).
+
 ## Open decisions
+
+### Briefing step analysis (proposal)
+
+**Current behavior.** The `Briefing` step contains one optional `RichTextEditor` field (`briefing`), up to 8,000 characters. It supports bold, italic, headings and lists, but starts as an empty canvas with no prompts or examples. A new content has no side panel in this step, so the editor provides little context about who will use the briefing or what belongs in it. The briefing is internal and is not included in the client approval version or portal.
+
+**Finding.** The step is functionally separate, but the user has to infer its purpose. It can also overlap with neighboring fields unless their roles are clear:
+
+| Field | Intended purpose |
+|---|---|
+| Objective | The outcome the content should achieve |
+| Planning summary | The direction the client reviews and approves |
+| Briefing | Internal context and production guidance for the team |
+| Caption | The public-facing text prepared for the selected formats |
+
+The main issue appears to be lack of guidance, rather than a lack of storage capacity or formatting controls.
+
+**Recommendation.** Keep one optional internal rich-text field and improve the step around it before adding more persisted fields. Give the step a short introduction explaining that it is a handoff to the production team and is not shown to the client. Show three concise prompts beside or above the editor: **Context and audience** (who this is for and what is happening), **Key message** (what should be understood or remembered), and **Tone and constraints** (voice, required details and things to avoid). Keep each prompt distinct from the objective, the client-facing planning summary and the final caption. Preserve the current character limit, rich-text format, permissions and calendar-note conversion behavior.
+
+This approach adds useful direction without a migration, new fields or changing the plan approval snapshot. A separate field per prompt could make briefs more consistent, but would require a schema and server-contract change and would make existing free-form briefings harder to migrate cleanly. Revisit that option only if usage shows that the team needs structured reporting or validation.
+
+**Acceptance criteria if approved:** the step explains the internal purpose; the three prompts are visible without entering content; the briefing remains optional and stored in the existing `briefing` field; existing content and converted calendar notes still render and save; no briefing is exposed in portal or approval snapshots.
+
 
 | ID | Decision | Status |
 |---|---|---|
+| O10 | Approving the **art on behalf** while `plan_required` and the plan is not approved: refuse (`plan_not_approved`) and have the manager approve the plan first, so the chain stays consistent | Decided 2026-10-23 (the recommendation) |
+| O11 | The **reason** of an approval on behalf is optional ("Motivo (opcional)") so it does not slow the manager down; the record of who approved is mandatory either way | Decided 2026-10-23 (the recommendation) |
+| O12 | Where the flexibility is decided: **per content, by the manager**, with no brand-level setting such as "client approval optional". A default per brand can be added later if managers repeat the click for the same clients | Decided 2026-10-22 |
+| O13 | Status used after the approval by the team: the **same** `plan_approved` and `approved`, with the origin kept in the decision (`on_behalf`), not a new status | Decided 2026-10-22 |
+| O14 | How to improve the `Briefing` step: recommended keep one optional internal rich-text field and add guidance for context/audience, key message and tone/constraints. Alternative: split into persisted structured fields, which needs a schema and migration decision | Open; recommendation above |
 | O1 | The **objective** is per content, from one closed list | Decided (2026-10-19) |
 | O2 | Each channel having **its own files** (a vertical video for Reels, a square image for the feed) | Not in this delivery; add an optional per-channel list later without touching the shared one |
 | O3 | The approval is **per content**; a channel the client does not want is removed by the team in a new version | Decided |
@@ -339,3 +433,34 @@ History of the earlier model (kept for context): phase 3 delivered items, varian
 2026-10-20: fallback for purged originals. Migration `20261020150000_purged_originals_fallback.sql` (applied): `portal_media_urls` returns a null `storage_key` once the original is purged and `publish_content` queues a kept version only when it has a display copy. Code: `getMedia`/`signMedia`/`signPortalMedia` ignore a purged original, `PreviewMedia.unavailable` (`media-urls.ts`) shows "Prévia indisponível" instead of an endless skeleton in the portal preview, the revision view, the portal calendar entry and the editor. Validation performed: `db:verify` (919 assertions, 0 failures; 2 new for the portal keys), typecheck, ESLint. **Not tested** in a browser nor against a real bucket.
 
 2026-10-20: the board view no longer produces a second, page-level horizontal scrollbar: `SidebarInset` got `min-w-0` (`src/components/shared/ui/sidebar.tsx`), so only the board scrolls horizontally. Global scrollbar styling is in `src/styles.css` (see [design-system.md](../standards/design-system.md)). Validation performed: ESLint, typecheck, Prettier. **Not tested**: browser, Firefox, touch devices.
+
+2026-10-22: **flexible approval specified (documents only).** The manager can record the approval of the plan or of the art on the client's behalf (`approvals.override`, `approve_on_behalf`), reusing `plan_approved` and `approved`; section "Flexible approval" above, rules in [approvals.md](approvals.md). Files: this document, `approvals.md`, `../foundations/roles-and-actions.md`. Validation performed: `npm run check:docs`. **Nothing implemented**: no migration, function, action seed, `Action`/`AuditAction` constant, notification kind, screen or test exists yet; the new names are not in the registries on purpose (they enter with the implementation). Open: O10 and O11.
+
+2026-10-22: Content editor reorganized into a compact connected three-step navigation: planning, briefing and content. Planning groups channel and objective details and internal work settings; briefing is isolated; content groups copy, media and publication rows. Files: `src/components/marketing/content/content-editor.tsx`, `src/components/marketing/content/content-settings-section.tsx`. Validation performed: Prettier and TypeScript. **Not tested** in a browser.
+
+2026-10-22: the content editor was split into steps. New generic `StepNav` (`src/components/shared/admin/step-nav.tsx`), `EditorStep`/`editorSteps` (`src/lib/marketing/content/editor-steps.ts`) and one component per step (`planning-step.tsx`, `briefing-step.tsx`, `content-step.tsx`) plus `editor-preview.tsx`; `content-editor.tsx` keeps state, save and dialogs (about 500 lines, was 640). No behavior change; the `??` characters that corrupted "Conteúdo", "Organização" and the nav label were fixed. Validation performed: targeted ESLint, Prettier. `npm run typecheck` fails only in `src/components/marketing/calendar/calendar-page.tsx` (duplicate `StoredKey`/`writeStored` imports, not touched here). **Not run:** Vitest, `check:docs`, the screens in a browser.
+
+2026-10-22: the browser tab title of the "new" routes was "New | Aura Creative" (fallback of `pageTitle` in `src/routes/__root.tsx` capitalized the segment). It now reads "Novo conteúdo", "Nova marca" and "Novo cliente" (resolved from the parent segment). Validation performed: ESLint, Prettier, typecheck. **Not seen in a browser.**
+
+2026-10-22: in the content editor the actions (including "Criar conteúdo"/"Salvar") now sit at the right of the header, on the same line as the title and description, in both the page and the calendar modal. A new content starts with the last brand chosen (`StoredKey.CalendarBrand`, the same key as the calendar), on the page and in the modal; choosing a brand in the editor writes the key. The key is read after mount (the editor shows its skeleton for one frame) so the server and client renders match. Files: `content-editor.tsx`, `content-editor-page.tsx`, `planning-step.tsx`. Validation performed: ESLint, Prettier, typecheck. **Not seen in a browser**; a remembered brand the person can no longer access is not filtered out (the calendar behaves the same way).
+
+2026-10-22: the editor steps got an icon each (`editorSteps`), animated navigation (`StepNav`, active pill, filled connector, check on completed steps), an animated change of step with "back" and "next" buttons (new `StepPanel`, `src/components/shared/admin/step-panel.tsx`) and a layout that uses the width: the side column (preview, history, comments) exists only when it has content (existing content, or the "Conteúdo" step), so "Planejamento" and "Briefing" of a new content fill the whole width, and the planning cards sit in two columns from `xl`. New dependency `motion` ^14.6.0 (MIT, maintained; chosen because the project had only CSS classes from `tw-animate-css`, which cannot animate the exit of a step or the shared active pill); `npm install` also updated `package-lock.json`. Validation performed: ESLint, Prettier, typecheck, `check:docs`. **Not seen in a browser**, not tested: the animation at 360 px, with `prefers-reduced-motion`, and with a field error on a step that is not the visible one (the first invalid field is not focused if its step is hidden).
+
+2026-10-22: the first step of the editor is reorganized: a card "Identificação" with the brand (new content only) and the title (new `content-title-field.tsx`) comes first, then channels and organization on the left and the planning card on the right (from `xl`). The title left `ContentSettingsSection`, and the second copy of the settings ("6. Configurações" in the "Conteúdo" step, a duplicate of "Organização") was removed. Validation performed: ESLint, Prettier, typecheck. **Not seen in a browser.** The planning summary is still plain text (see the open point on rich text in the conversation: it changes `plan_summary`, so it needs a decision first).
+
+2026-10-23: When creating a new content, the only available assignee for its brand is selected automatically after assignee options load. Existing content and a deliberate user choice are preserved. Files: `src/hooks/marketing/use-auto-select-assignee.ts`, `src/components/marketing/content/content-editor.tsx`. Validation performed: targeted ESLint, TypeScript and Prettier. **Not tested**: browser interaction.
+
+2026-10-23: The objective select now displays a matching icon with each option and the selected label; stored objective values are unchanged. File: `src/components/marketing/content/content-settings-section.tsx`. Validation performed: targeted ESLint, TypeScript and Prettier. **Not tested** in a browser.
+
+2026-10-23: Removed the tags and internal notes controls from the content editor. Their existing values remain in the draft and save payload, so editing other fields does not clear them. Files: `src/components/marketing/content/content-settings-section.tsx`. Validation performed: targeted ESLint, Prettier and `git diff --check`. **TypeScript not passed** because of an unrelated unused `label` in `src/components/marketing/content/row-format-field.tsx`. **Not tested** in a browser.
+
+2026-10-23: migration `20261023100000_plan_summary_rich_text.sql` applied to the linked project (`db push`, then `db:types -- --linked`; the types file did not change). Editor polish: `StepNav` shows a pointer cursor and a hover effect; the editor is capped at `max-w-7xl` and centered; channels are shown as round brand-colored marks (`PlatformMark`, new `platform-*` tokens in [color-palette.md](../standards/color-palette.md)) with a tooltip, also in `ChannelLogos`; the format of each channel is now chosen in the "Planejamento" step (`planning-formats.tsx`, shared `RowFormatField`), because format is locked together with the plan; `DatePickerField` now has the same height, radius and border as the other inputs. Validation performed: ESLint, typecheck, `check:consistency`, Prettier. **Not seen in a browser.** Channel gap analysis (not implemented, needs a decision): the `Platform` list has no Google Business Profile, WhatsApp, Telegram, Bluesky or Snapchat.
+
+2026-10-23: Removed the planning summary helper sentence from the form body and moved its guidance into the existing section info tooltip. File: `src/components/marketing/content/planning-step.tsx`, `src/components/marketing/content/plan-section.tsx`. Validation performed: targeted ESLint, Prettier and `git diff --check`. **Not tested** in a browser.
+
+2026-10-23: Formats are now selected as multiple icon-and-label toggles per channel in the planning step. Each selected format creates its own publication row, reusing the planned time from that channel?s first row; the publication step shows the format read-only, and existing per-row preview tabs display each selected format. Removed the obsolete single-format selector. Files: `src/components/marketing/content/planning-formats.tsx`, `src/components/marketing/content/channel-rows-section.tsx`, deleted `src/components/marketing/content/row-format-field.tsx`. Validation performed: targeted ESLint, TypeScript, Prettier and `git diff --check`. **Not tested** in a browser.
+
+2026-10-23: Added an analysis and recommendation for improving the briefing step to the existing content module document. Documentation only; no interface or data contract changed. Validation performed: Prettier, `check:docs` and `git diff --check`.
+
+
+2026-10-23: **flexible approval implemented** (the manager approves the plan or the art on the client's behalf). O10 and O11 were decided with the recommendations (art refused without an approved plan; reason optional). Migration `20261023110000_approvals_approve_on_behalf.sql`: `approval_decisions.on_behalf` and `reason`, the action `approvals.override` (starting role `manager`), the notification kind `approval.approved_by_team`, the audit action of the same name, `editorial_transition_allowed` widened (a status can now reach `plan_approved`/`approved` from the statuses before it; `content_move` still refuses both), the internal helper `content_freeze_revision` (extracted from `submit_for_approval`, which now calls it, so sending and approving freeze a version the same way), `approve_on_behalf`, and `portal_request_row`/`portal_get_approval` returning `decided_on_behalf` and hiding the manager's name. Code: `approveOnBehalf` (`workflow.functions.ts`), `approveStageOf` and the new transitions (`editorial.ts`), the action "Aprovar planejamento pelo cliente"/"Aprovar arte pelo cliente" and its dialog (`content-actions.tsx`, `content-editor.tsx`, `ReasonDialog` got `optional`), the team approval detail and list ("Aprovado pela equipe", the reason), and the portal decision card and request card. Validation performed: `npm run db:verify` (950 assertions, 0 failures; 31 new in `22_approve_on_behalf.test.sql`), Vitest (153), typecheck, ESLint, Prettier, `check:consistency`, `check:docs`; types regenerated with `db:types:offline` (a large diff from the offline generator's ordering). **Not applied to the linked project** (no `db push` yet, so the real `db:types -- --linked` is also pending). **Not done:** the board's "Mover para…" opening the dialog, the "Aprovado pela equipe" marker and filter on the list and board badges, the same text in the revision history of the editor. **Not tested:** the screens in a browser, two simultaneous decisions from real sessions, the notification email.

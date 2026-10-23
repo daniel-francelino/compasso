@@ -6,7 +6,7 @@
 
 Let the team send a content to the client and obtain a **traceable decision about exactly what was sent**. Approval is by **revision** (immutable), by **one designated approver per request**, and never implicit: delay or silence is not approval.
 
-Included: requests, decisions (approve / request changes), supersession, deadlines, overdue handling, history, reopening. Not included in the MVP: multiple approvers or approval chains, anonymous approval links, dispensing approval (a manager's override, to be validated later as `approvals.override`), automatic reminders by email beyond the notification kinds.
+Included: requests, decisions (approve / request changes), supersession, deadlines, overdue handling, history, reopening. Not included in the MVP: multiple approvers or approval chains, anonymous approval links, automatic reminders by email beyond the notification kinds.
 
 ## Concepts
 
@@ -98,6 +98,29 @@ Today the sender picks **one designated approver** and only that person can deci
 | O1 | Quorum: **any one** eligible approver decides. "All must approve" or "N of M" can come later as a brand setting | Decided for this delivery |
 | O2 | Let the sender mark a **preferred** approver who is notified first | Not needed; every eligible approver is notified |
 
+## Approval by the team (decided 2026-10-22)
+
+> Status: **implemented** (2026-10-23; the board, list badge and filter of [content.md](content.md) are missing). The statuses, the manager's options, the screens and the acceptance criteria are in [content.md](content.md#flexible-approval-decided-2026-10-22); this section holds the request, decision, permission and notification rules. Names are proposals and enter the registries in the implementing change (GOLD-4).
+
+The client's approval must not block publication. The content manager records the approval of the plan or of the art **for the client**. It is an explicit, audited act by a named person; rule 6 ("delay or silence never equals approval") still holds, and rule 9 (a decision is never changed) too: the decision is created, not altered.
+
+1. **Function.** `approve_on_behalf(p_item, p_stage, p_reason, p_expected_version)`, one transaction, called by a server function. It locks the content, checks the version and the status (content.md rules 2 and 3), and then:
+   - **With a pending request of that stage:** the request keeps its version (the client sees exactly what is approved), the decision is recorded on it, the request becomes `approved`.
+   - **Without a pending request:** a version is created exactly as `submit_for_approval` would, with a request created already decided.
+   - In both cases it updates the content (`plan_approved` or `approved`, and the approved version), writes the audit event, resolves the notifications of the eligible approvers and notifies them (rule 5).
+2. **Permission.** `approvals.override` (internal, requires `content.submit`) and the brand link (`has_action` + `can_access_brand`). External users never call it; `anon` cannot.
+3. **Decision record.** `approval_decisions` gets `on_behalf boolean not null default false` and `reason text` (internal only). `decided_by` is the manager. The unique decision per request and the immutability trigger stay.
+4. **What the client may still do.** Comment. A decision attempt on the closed request is refused with `request_not_pending`; the first decision wins, whoever it is.
+5. **Notifications.** A new kind `approval.approved_by_team` goes to the eligible approvers **only when a request was pending** (they were asked): "A equipe aprovou «Café Aurora · Lançamento de outono» (Artes)." No notification when nothing had been sent. The email follows the usual preferences and outbox.
+6. **Audit.** One event, proposed action `approval.approved_by_team` (entity `approval_request`, metadata: stage, revision number, whether a request was pending, `reason_given` as a flag; ids and counts only, SEC-12). The reason text stays in the decision row, not in the audit metadata.
+7. **Errors.** Existing codes only: `denied`, `conflict`, `transition_not_allowed`, `plan_not_approved`, `plan_incomplete`, `channel_required`, `media_not_available`, `channel_archived`, `request_not_pending`.
+8. **Portal exposure.** `portal_*` functions return `decided_on_behalf` (boolean) and never the manager's name or the reason.
+
+| Open decision | See |
+|---|---|
+| Art on behalf without an approved plan | O10, decided: refused (`plan_not_approved`), in [content.md](content.md#open-decisions) |
+| Reason optional or required | O11, decided: optional, in [content.md](content.md#open-decisions) |
+
 ## Screens (team side)
 
 Route: `/admin/marketing/approvals` and the "Aprovações" tab of a brand.
@@ -163,3 +186,8 @@ Validation performed: the pgTAP assertions of [content.md](content.md) cover sub
 2026-10-19: The shared list-filter trigger now uses an icon with a tooltip and active-count badge. This applies to the approvals list. Validation performed: targeted ESLint, Prettier and `git diff --check`. `check:docs` is currently blocked by ten audit-action registry mismatches for `calendar_note.*` and `variant.*` in the audit/functions documents. Full typecheck is blocked by existing `brand-logos.server.ts` type errors. **Not tested**: browser interaction.
 
 2026-10-20 (approver pool and two stages, tasks T-02 to T-07): `portal_decide_approval`, `portal_get_approval`, `portal_list_pending`, `portal_record_view`, `portal_list_brands`, `portal_list_calendar`, `portal_request_row`, `submit_for_approval`, `send_approval_reminder`, `cancel_request` and `dashboard_attention` follow the pool (anyone with the right to approve decides; the first decision wins; every approver is notified and their notifications are resolved on the decision); `reassign_approver`, `approver_user_id`, `is_mine`, "Reatribuir aprovador" and the portal section "Pendentes com outras pessoas" were removed (the section is now "Em análise pela marca", read-only, for members who cannot decide). Team screens: the list shows the stage and "Quem decidiu", the detail shows "Quem pode aprovar". Validation performed: see the status of [content.md](content.md) (808 SQL assertions, Vitest, typecheck, lint). **Not tested**: simultaneous decisions from two real sessions, the screens in a browser.
+
+2026-10-22: **approval by the team specified (documents only).** See "Approval by the team" above and [content.md](content.md#flexible-approval-decided-2026-10-22). The "dispensing approval" item left the list of exclusions. Validation performed: `npm run check:docs`. **Nothing implemented** (no migration, `approve_on_behalf`, `on_behalf` column, `approval.approved_by_team` kind or audit action, screens or pgTAP tests).
+
+
+2026-10-23: **flexible approval implemented** (the manager approves the plan or the art on the client's behalf). O10 and O11 were decided with the recommendations (art refused without an approved plan; reason optional). Migration `20261023110000_approvals_approve_on_behalf.sql`: `approval_decisions.on_behalf` and `reason`, the action `approvals.override` (starting role `manager`), the notification kind `approval.approved_by_team`, the audit action of the same name, `editorial_transition_allowed` widened (a status can now reach `plan_approved`/`approved` from the statuses before it; `content_move` still refuses both), the internal helper `content_freeze_revision` (extracted from `submit_for_approval`, which now calls it, so sending and approving freeze a version the same way), `approve_on_behalf`, and `portal_request_row`/`portal_get_approval` returning `decided_on_behalf` and hiding the manager's name. Code: `approveOnBehalf` (`workflow.functions.ts`), `approveStageOf` and the new transitions (`editorial.ts`), the action "Aprovar planejamento pelo cliente"/"Aprovar arte pelo cliente" and its dialog (`content-actions.tsx`, `content-editor.tsx`, `ReasonDialog` got `optional`), the team approval detail and list ("Aprovado pela equipe", the reason), and the portal decision card and request card. Validation performed: `npm run db:verify` (950 assertions, 0 failures; 31 new in `22_approve_on_behalf.test.sql`), Vitest (153), typecheck, ESLint, Prettier, `check:consistency`, `check:docs`; types regenerated with `db:types:offline` (a large diff from the offline generator's ordering). **Not applied to the linked project** (no `db push` yet, so the real `db:types -- --linked` is also pending). **Not done:** the board's "Mover para…" opening the dialog, the "Aprovado pela equipe" marker and filter on the list and board badges, the same text in the revision history of the editor. **Not tested:** the screens in a browser, two simultaneous decisions from real sessions, the notification email.

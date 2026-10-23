@@ -5,9 +5,15 @@ export const EditorialTransitions: Record<EditorialStatus, readonly EditorialSta
   [EditorialStatus.Draft]: [
     EditorialStatus.Planning,
     EditorialStatus.InProduction,
+    EditorialStatus.PlanApproved,
+    EditorialStatus.Approved,
     EditorialStatus.Cancelled,
   ],
-  [EditorialStatus.Planning]: [EditorialStatus.AwaitingPlanApproval, EditorialStatus.Cancelled],
+  [EditorialStatus.Planning]: [
+    EditorialStatus.AwaitingPlanApproval,
+    EditorialStatus.PlanApproved,
+    EditorialStatus.Cancelled,
+  ],
   [EditorialStatus.AwaitingPlanApproval]: [
     EditorialStatus.PlanApproved,
     EditorialStatus.PlanChangesRequested,
@@ -17,22 +23,26 @@ export const EditorialTransitions: Record<EditorialStatus, readonly EditorialSta
   [EditorialStatus.PlanChangesRequested]: [
     EditorialStatus.Planning,
     EditorialStatus.AwaitingPlanApproval,
+    EditorialStatus.PlanApproved,
     EditorialStatus.Cancelled,
   ],
   [EditorialStatus.PlanApproved]: [
     EditorialStatus.InProduction,
     EditorialStatus.Planning,
+    EditorialStatus.Approved,
     EditorialStatus.Cancelled,
   ],
   [EditorialStatus.InProduction]: [
     EditorialStatus.InternalReview,
     EditorialStatus.AwaitingApproval,
+    EditorialStatus.Approved,
     EditorialStatus.Planning,
     EditorialStatus.Cancelled,
   ],
   [EditorialStatus.InternalReview]: [
     EditorialStatus.AwaitingApproval,
     EditorialStatus.InProduction,
+    EditorialStatus.Approved,
     EditorialStatus.Planning,
     EditorialStatus.Cancelled,
   ],
@@ -45,6 +55,7 @@ export const EditorialTransitions: Record<EditorialStatus, readonly EditorialSta
   ],
   [EditorialStatus.ChangesRequested]: [
     EditorialStatus.InProduction,
+    EditorialStatus.Approved,
     EditorialStatus.Planning,
     EditorialStatus.Cancelled,
   ],
@@ -92,6 +103,26 @@ export const submitStageOf = (status: EditorialStatus): ApprovalStage | null => 
     return ApprovalStage.Art;
   }
   return null;
+};
+
+const artApprovableStatuses: readonly EditorialStatus[] = [
+  EditorialStatus.Draft,
+  EditorialStatus.PlanApproved,
+  EditorialStatus.InProduction,
+  EditorialStatus.InternalReview,
+  EditorialStatus.AwaitingApproval,
+  EditorialStatus.ChangesRequested,
+];
+
+export const approveStageOf = (
+  status: EditorialStatus,
+  planRequired: boolean,
+  planApproved: boolean,
+): ApprovalStage | null => {
+  if (planRequired && !planApproved) {
+    return planStageStatuses.includes(status) ? ApprovalStage.Plan : null;
+  }
+  return artApprovableStatuses.includes(status) ? ApprovalStage.Art : null;
 };
 
 export const planLockedStatuses: readonly EditorialStatus[] = [

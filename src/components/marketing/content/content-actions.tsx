@@ -7,6 +7,7 @@ import {
   Save,
   Send,
   Undo2,
+  UserCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { IconButton } from "@/components/shared/admin/icon-button";
@@ -16,7 +17,7 @@ import type { StageState } from "@/lib/marketing/content/stage-state";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { DirectMoves, submitStageOf } from "@/lib/shared/editorial/editorial";
+import { DirectMoves, approveStageOf, submitStageOf } from "@/lib/shared/editorial/editorial";
 import { ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
 
 const MOVE_LABELS: Partial<Record<EditorialStatus, { label: string; icon: LucideIcon }>> = {
@@ -84,6 +85,7 @@ export function ContentActions({
   acting,
   onMove,
   onSubmit,
+  onApproveOnBehalf,
   onReopen,
   onCancel,
   onPublish,
@@ -100,6 +102,7 @@ export function ContentActions({
   acting: boolean;
   onMove: (to: EditorialStatus) => void;
   onSubmit: () => void;
+  onApproveOnBehalf: (stage: ApprovalStage) => void;
   onReopen: (scope: ApprovalStage) => void;
   onCancel: () => void;
   onPublish: () => void;
@@ -110,6 +113,10 @@ export function ContentActions({
     hasContent && can(auth, Action.Content.Update) && !cancelled ? movesOf(status, state) : [];
   const canSubmit =
     hasContent && can(auth, Action.Content.Submit) && !cancelled && submitStageOf(status) !== null;
+  const approveStage =
+    hasContent && can(auth, Action.Approvals.Override) && !cancelled
+      ? approveStageOf(status, state.planRequired, state.planLocked)
+      : null;
   const reopenAllowed = can(auth, Action.Content.Reopen) && !cancelled && !hasPublished;
   const canReopenArt = reopenAllowed && REOPEN_ART.includes(status);
   const canReopenPlan = reopenAllowed && state.planRequired && REOPEN_PLAN.includes(status);
@@ -153,6 +160,22 @@ export function ContentActions({
           <Send aria-hidden="true" />
           {submitLabel(status)}
         </Button>
+      ) : null}
+      {approveStage !== null ? (
+        <WhyDisabled reason={dirty ? "Salve as alterações antes de aprovar." : null}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onApproveOnBehalf(approveStage)}
+            disabled={dirty || acting}
+          >
+            <UserCheck aria-hidden="true" />
+            {approveStage === ApprovalStage.Plan
+              ? "Aprovar planejamento pelo cliente"
+              : "Aprovar arte pelo cliente"}
+          </Button>
+        </WhyDisabled>
       ) : null}
       {canReopenPlan ? (
         <Button

@@ -33,6 +33,7 @@ export const Action = {
   Approvals: {
     View: "approvals.view",
     Decide: "approvals.decide",
+    Override: "approvals.override",
   },
   Comments: {
     CreateInternal: "comments.create_internal",
