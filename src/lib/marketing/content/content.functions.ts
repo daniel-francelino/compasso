@@ -273,7 +273,7 @@ export const getContentItem = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, objective, objective_kind, briefing, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_required, plan_summary, plan_media, plan_approved_revision_id, current_revision_id, approved_revision_id, brands(name, timezone), content_channels(${CHANNEL_SELECT})`,
+        `id, title, brand_id, objective, objective_kind, briefing, briefing_audience, briefing_key_message, briefing_creative_direction, briefing_constraints, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_required, plan_summary, plan_media, plan_approved_revision_id, current_revision_id, approved_revision_id, brands(name, timezone), content_channels(${CHANNEL_SELECT})`,
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -372,6 +372,12 @@ export const getContentItem = createServerFn({ method: "GET" })
         objectiveKind: row.objective_kind as ContentObjective | null,
         objective: row.objective,
         briefing: richDocFromStored(row.briefing),
+        briefingFields: {
+          audience: row.briefing_audience ?? "",
+          keyMessage: row.briefing_key_message ?? "",
+          creativeDirection: row.briefing_creative_direction ?? "",
+          constraints: row.briefing_constraints ?? "",
+        },
         internalNotes: row.internal_notes,
         assigneeId: row.assignee_id,
         assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
@@ -414,6 +420,10 @@ export const saveContentItem = createServerFn({ method: "POST" })
         objective: data.objective ?? null,
         objective_kind: data.objectiveKind ?? null,
         briefing: data.briefing ?? null,
+        briefing_audience: data.briefingFields?.audience ?? null,
+        briefing_key_message: data.briefingFields?.keyMessage ?? null,
+        briefing_creative_direction: data.briefingFields?.creativeDirection ?? null,
+        briefing_constraints: data.briefingFields?.constraints ?? null,
         internal_notes: data.internalNotes ?? null,
         assignee_id: data.assigneeId ?? null,
         tags: data.tags,

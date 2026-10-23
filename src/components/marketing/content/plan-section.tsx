@@ -19,7 +19,8 @@ export function PlanSection({
     <div className="space-y-4">
       <RichTextEditor
         id="plan-summary"
-        label="Resumo do planejamento"
+        label="Ideia inicial"
+        placeholder="Conte a ideia para o cliente aprovar: o tema, a mensagem e a direção do texto. Ex.: campanha de inverno do café, com foco no chocolate quente."
         value={values.planSummary}
         onValueChange={(value) => draft.set("planSummary", value)}
         disabled={disabled}
@@ -31,6 +32,7 @@ export function PlanSection({
         brandId={values.brandId}
         formats={[ContentFormat.Other]}
         maxItems={PLAN_MEDIA_LIMIT}
+        label="Referências"
         disabled={disabled || values.brandId === ""}
         error={errors["planMedia"]}
       />

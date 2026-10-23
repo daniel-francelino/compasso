@@ -821,6 +821,10 @@ export type Database = {
           assignee_id: string | null
           brand_id: string
           briefing: Json | null
+          briefing_audience: string | null
+          briefing_constraints: string | null
+          briefing_creative_direction: string | null
+          briefing_key_message: string | null
           call_to_action: string | null
           cancelled_at: string | null
           caption: Json | null
@@ -849,6 +853,10 @@ export type Database = {
           assignee_id?: string | null
           brand_id: string
           briefing?: Json | null
+          briefing_audience?: string | null
+          briefing_constraints?: string | null
+          briefing_creative_direction?: string | null
+          briefing_key_message?: string | null
           call_to_action?: string | null
           cancelled_at?: string | null
           caption?: Json | null
@@ -877,6 +885,10 @@ export type Database = {
           assignee_id?: string | null
           brand_id?: string
           briefing?: Json | null
+          briefing_audience?: string | null
+          briefing_constraints?: string | null
+          briefing_creative_direction?: string | null
+          briefing_key_message?: string | null
           call_to_action?: string | null
           cancelled_at?: string | null
           caption?: Json | null

@@ -6,6 +6,7 @@ import {
   ContentObjective,
   EditorialStatus,
 } from "@/lib/shared/enums";
+import { BRIEFING_FIELD_MAX } from "@/lib/marketing/content/briefing-fields";
 import { listRequestSchema } from "@/lib/shared/list-search";
 import { richDocSchema } from "@/lib/shared/rich-text/types";
 
@@ -56,6 +57,15 @@ export const channelRowSchema = z.object({
 
 export type ChannelRowInput = z.infer<typeof channelRowSchema>;
 
+const briefingFieldSchema = z.string().trim().max(BRIEFING_FIELD_MAX, "O texto é longo demais.");
+
+const briefingFieldsSchema = z.object({
+  audience: briefingFieldSchema,
+  keyMessage: briefingFieldSchema,
+  creativeDirection: briefingFieldSchema,
+  constraints: briefingFieldSchema,
+});
+
 export const saveContentSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -68,6 +78,7 @@ export const saveContentSchema = z
     objectiveKind: z.nativeEnum(ContentObjective).nullable().optional(),
     objective: z.string().trim().max(2000, "O objetivo é longo demais.").optional(),
     briefing: richDocSchema.nullable().optional(),
+    briefingFields: briefingFieldsSchema.optional(),
     internalNotes: z.string().trim().max(4000, "As notas são longas demais.").optional(),
     assigneeId: z.string().uuid().nullable().optional(),
     tags: z.array(z.string().trim().min(1).max(40)).max(20),

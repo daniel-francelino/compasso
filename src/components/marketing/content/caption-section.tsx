@@ -55,6 +55,7 @@ export function CaptionSection({
             onValueChange={(value) => draft.set("caption", value)}
             maxLength={MAX_CAPTION}
             rows={8}
+            placeholder="Escreva o texto que vai acompanhar a publicação. Ex.: Dias frios pedem um chocolate quente. Vem tomar o seu com a gente."
             error={errors["caption"]}
           />
         </TabsContent>
@@ -84,6 +85,7 @@ export function CaptionSection({
                 }
                 maxLength={MAX_CAPTION}
                 rows={8}
+                placeholder="Escreva só o que muda neste canal. Deixe vazio para usar o texto de “Todos”."
                 error={errors[`channels.${index}.caption`]}
               />
               {limit !== null && shown.length > limit ? (
@@ -103,6 +105,7 @@ export function CaptionSection({
         disabled={disabled}
         onValueChange={(value) => draft.set("callToAction", value)}
         maxLength={300}
+        placeholder="O que a pessoa deve fazer? Ex.: Venha nos visitar hoje."
         error={errors["callToAction"]}
       />
     </div>

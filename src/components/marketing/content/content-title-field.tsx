@@ -19,6 +19,7 @@ export function ContentTitleField({
       disabled={disabled}
       onValueChange={(value) => draft.set("title", value)}
       maxLength={140}
+      placeholder="Ex.: Campanha de inverno — chocolate quente"
       error={error}
       hint="O cliente só vê este título se ele fizer parte do que for enviado."
     />

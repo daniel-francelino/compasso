@@ -195,6 +195,7 @@ export function ContentEditor({
     objectiveKind: values.objectiveKind,
     objective: values.objective,
     briefing: values.briefing,
+    briefingFields: values.briefingFields,
     internalNotes: values.internalNotes,
     assigneeId: values.assigneeId,
     tags: values.tags,
@@ -388,13 +389,7 @@ export function ContentEditor({
             />
           ) : null}
           {step === EditorStep.Briefing ? (
-            <BriefingStep
-              draft={draft}
-              assignees={assignees.data ?? []}
-              disabled={settingsDisabled}
-              state={state}
-              errors={errors}
-            />
+            <BriefingStep draft={draft} disabled={settingsDisabled} errors={errors} />
           ) : null}
           {step === EditorStep.Content ? (
             <ContentStep

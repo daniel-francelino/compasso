@@ -19,7 +19,9 @@
 | Approval request | Pedido de aprovação / Pedidos de aprovação | |
 | Approval (action/result) | Aprovação | |
 | Approver | Aprovador(a) | |
-| Briefing | Briefing | |
+| Briefing | Briefing | Guided fields "Público e contexto", "Mensagem principal", "Direção criativa", "Tom e o que evitar" and the free field "Detalhes e notas" |
+| Planning reference files | Referências | Files of the planning step (label of the file list); the art files of the "Conteúdo" step stay "Arquivos" |
+| Planning summary | Ideia inicial | Rich text of the planning card that the client approves |
 | Site / page / section | Site / Página / Seção | Menu of the space: "Páginas", "Serviços", "Depoimentos", "Portfólio", "Mensagens", "Menu e rodapé", "Configurações", "SEO", "Redirecionamentos", "Publicações" |
 | Publish (site) | Publicar | "Publicar…", "Tirar do ar", "Voltar para esta versão"; states "Fora do site", "No ar", "Despublicada", "Sai na próxima publicação" |
 | Anchor | Âncora | Name of a section used in links such as /pagina#ancora |

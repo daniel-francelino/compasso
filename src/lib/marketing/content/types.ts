@@ -9,6 +9,7 @@ import type {
   Platform,
   PublicationStatus,
 } from "@/lib/shared/enums";
+import type { BriefingFields } from "@/lib/marketing/content/briefing-fields";
 import type { MediaKind } from "@/lib/shared/media/limits";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
 
@@ -93,6 +94,7 @@ export type ContentDetail = {
   objectiveKind: ContentObjective | null;
   objective: string | null;
   briefing: RichDoc | null;
+  briefingFields: BriefingFields;
   internalNotes: string | null;
   assigneeId: string | null;
   assigneeName: string | null;

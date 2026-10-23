@@ -1,6 +1,6 @@
 import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
 import { isSortable, useSortable } from "@dnd-kit/react/sortable";
-import { FileText, Film, GripVertical, Loader2, Trash2 } from "lucide-react";
+import { FileText, Film, GripVertical, Images, Loader2, Trash2 } from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -189,6 +189,7 @@ export function FileStrip({
   disabled,
   error,
   maxItems,
+  label = "Arquivos",
 }: {
   items: FileItem[];
   onChange: (items: FileItem[]) => void;
@@ -197,6 +198,7 @@ export function FileStrip({
   disabled: boolean;
   error?: string | undefined;
   maxItems?: number;
+  label?: string;
 }) {
   const owner = useId();
   const auth = useAuth();
@@ -297,7 +299,22 @@ export function FileStrip({
 
   return (
     <MotionConfig reducedMotion="user">
-      <FieldGroup legend={`Arquivos (${items.length}/${rule.max})`} gap="sm" disabled={disabled}>
+      <FieldGroup legend={label} hideLegend gap="sm" disabled={disabled}>
+        <div className="flex items-center justify-between gap-2">
+          <span aria-hidden="true" className="text-sm font-medium text-foreground">
+            {label}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled || slots <= 0}
+            onClick={() => setPicking(true)}
+          >
+            <Images aria-hidden="true" />
+            Adicionar da biblioteca
+          </Button>
+        </div>
         {items.length + pending.length > 0 ? (
           <DragDropProvider onDragEnd={handleDragEnd}>
             <ol className="space-y-2">
@@ -340,17 +357,20 @@ export function FileStrip({
             </ol>
           </DragDropProvider>
         ) : null}
-        <FileDropzone
-          kinds={rule.kinds}
-          compact={items.length + pending.length > 0}
-          disabled={disabled}
-          full={slots <= 0}
-          canUpload={canUpload}
-          hint={hint}
-          onFiles={receive}
-          onLibrary={() => setPicking(true)}
+        {canUpload ? (
+          <FileDropzone
+            kinds={rule.kinds}
+            compact={items.length + pending.length > 0}
+            disabled={disabled}
+            full={slots <= 0}
+            hint={hint}
+            onFiles={receive}
+          />
+        ) : null}
+        <FieldMessage
+          error={error}
+          hint={`${items.length}/${rule.max} ${rule.max === 1 ? "arquivo" : "arquivos"}`}
         />
-        <FieldMessage error={error} />
         <MediaPicker
           open={picking}
           onOpenChange={setPicking}

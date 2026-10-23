@@ -183,6 +183,7 @@ export function TextAreaField({
   onValueChange,
   maxLength,
   rows,
+  placeholder,
   error,
   disabled,
 }: {
@@ -193,6 +194,7 @@ export function TextAreaField({
   onValueChange: (value: string) => void;
   maxLength: number;
   rows: number;
+  placeholder?: string;
   error?: string | undefined;
   disabled?: boolean;
 }) {
@@ -207,6 +209,7 @@ export function TextAreaField({
         disabled={disabled}
         maxLength={maxLength}
         rows={rows}
+        placeholder={placeholder}
         aria-invalid={error ? true : undefined}
         onChange={(event) => onValueChange(event.target.value)}
       />

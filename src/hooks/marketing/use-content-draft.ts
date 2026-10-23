@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { type BriefingFields, emptyBriefingFields } from "@/lib/marketing/content/briefing-fields";
 import type { ContentDetail, FileItem } from "@/lib/marketing/content/types";
 import type { ContentFormat, ContentObjective } from "@/lib/shared/enums";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
@@ -21,6 +22,7 @@ export type DraftValues = {
   objectiveKind: ContentObjective | null;
   objective: string;
   briefing: RichDoc | null;
+  briefingFields: BriefingFields;
   internalNotes: string;
   assigneeId: string | null;
   tags: string[];
@@ -39,6 +41,7 @@ export const emptyDraft = (brandId: string): DraftValues => ({
   objectiveKind: null,
   objective: "",
   briefing: null,
+  briefingFields: emptyBriefingFields,
   internalNotes: "",
   assigneeId: null,
   tags: [],
@@ -57,6 +60,7 @@ export const draftOf = (content: ContentDetail): DraftValues => ({
   objectiveKind: content.objectiveKind,
   objective: content.objective ?? "",
   briefing: content.briefing,
+  briefingFields: content.briefingFields,
   internalNotes: content.internalNotes ?? "",
   assigneeId: content.assigneeId,
   tags: content.tags,

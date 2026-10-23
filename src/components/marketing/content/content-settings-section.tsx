@@ -9,7 +9,6 @@ import {
   UsersRound,
 } from "lucide-react";
 import { SelectField, TextField } from "@/components/shared/admin/form-fields";
-import { RichTextEditor } from "@/components/shared/admin/rich-text-editor";
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import { ContentObjective } from "@/lib/shared/enums";
@@ -22,29 +21,15 @@ export function ContentSettingsSection({
   assignees,
   disabled,
   objectiveLocked = false,
-  showBriefing = false,
   errors,
 }: {
   draft: ContentDraft;
   assignees: { id: string; name: string }[];
   disabled: boolean;
   objectiveLocked?: boolean;
-  showBriefing?: boolean;
   errors: Record<string, string>;
 }) {
   const { values, set } = draft;
-  if (showBriefing) {
-    return (
-      <RichTextEditor
-        id="content-briefing"
-        label="Briefing (interno)"
-        value={values.briefing}
-        disabled={disabled}
-        onValueChange={(value) => set("briefing", value)}
-        error={errors["briefing"]}
-      />
-    );
-  }
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -88,6 +73,7 @@ export function ContentSettingsSection({
           disabled={disabled || objectiveLocked}
           onValueChange={(value) => set("objective", value)}
           maxLength={2000}
+          placeholder="Explique o resultado esperado. Ex.: aumentar as visitas à loja no fim de semana."
           error={errors["objective"]}
         />
       </div>

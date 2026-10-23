@@ -1,6 +1,5 @@
 import { Check } from "lucide-react";
 import { formatIcons } from "@/components/shared/content/format-icons";
-import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import type { ContentFormat } from "@/lib/shared/enums";
@@ -67,19 +66,16 @@ export function PlanningFormats({
         return (
           <section
             key={channelId}
-            className="space-y-2"
+            className="space-y-3"
             aria-label={platformLabels[channel.platform]}
           >
-            <div className="flex items-center gap-2">
-              <PlatformMark platform={channel.platform} className="size-8" />
-              <div>
-                <h3 className="text-sm font-medium text-foreground">
-                  Formato · {platformLabels[channel.platform]}
-                </h3>
-                <p className="text-xs text-muted-foreground">{channel.profileName}</p>
-              </div>
+            <div>
+              <h3 className="text-sm font-medium text-foreground">
+                Formato · {platformLabels[channel.platform]}
+              </h3>
+              <p className="text-xs text-muted-foreground">{channel.profileName}</p>
             </div>
-            <ul className="flex flex-wrap gap-2 pl-10" aria-label="Formatos disponíveis">
+            <ul className="flex flex-wrap gap-3" aria-label="Formatos disponíveis">
               {platformFormats[channel.platform].map((format) => {
                 const Icon = formatIcons[format];
                 const isSelected = selectedFormats.has(format);
@@ -104,19 +100,38 @@ export function PlanningFormats({
                         if (!isDisabled) toggleFormat(format);
                       }}
                       className={cn(
-                        "relative inline-flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                        isSelected
-                          ? "border-primary bg-primary/10 text-foreground"
-                          : "border-border bg-background text-muted-foreground hover:bg-muted",
-                        isDisabled && "cursor-not-allowed opacity-60",
-                        error && "border-destructive",
+                        "group flex w-16 cursor-pointer flex-col items-center gap-1.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                        isDisabled && "cursor-not-allowed",
                       )}
                     >
-                      <Icon aria-hidden="true" className="size-4" />
-                      <span>{contentFormatLabels[format]}</span>
-                      {isSelected ? (
-                        <Check aria-hidden="true" className="size-4 text-primary" />
-                      ) : null}
+                      <span
+                        className={cn(
+                          "relative flex size-11 items-center justify-center rounded-full bg-primary text-primary-foreground transition duration-200",
+                          isSelected
+                            ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                            : "opacity-50 grayscale group-hover:scale-105 group-hover:opacity-100 group-hover:grayscale-0",
+                          isDisabled && "group-hover:scale-100",
+                          error && "ring-2 ring-destructive ring-offset-2 ring-offset-background",
+                        )}
+                      >
+                        <Icon aria-hidden="true" className="size-5" />
+                        {isSelected ? (
+                          <span
+                            aria-hidden="true"
+                            className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full border border-background bg-foreground text-background"
+                          >
+                            <Check className="size-3" />
+                          </span>
+                        ) : null}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-xs",
+                          isSelected ? "font-medium text-foreground" : "text-muted-foreground",
+                        )}
+                      >
+                        {contentFormatLabels[format]}
+                      </span>
                     </button>
                   </li>
                 );
@@ -127,7 +142,7 @@ export function PlanningFormats({
       })}
       {rows.length >= MAX_CHANNEL_ROWS ? (
         <p className="text-xs text-muted-foreground" role="status">
-          Limite de 20 formatos e publicaÃ§Ãµes por conteÃºdo.
+          Limite de 20 formatos e publicações por conteúdo.
         </p>
       ) : null}
     </div>

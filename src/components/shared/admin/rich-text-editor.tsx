@@ -1,4 +1,4 @@
-import { type JSONContent, EditorContent, useEditor } from "@tiptap/react";
+import { type JSONContent, EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Bold, Heading2, Italic, List, ListOrdered, Redo2, Undo2 } from "lucide-react";
 import { useEffect } from "react";
@@ -17,6 +17,7 @@ export function RichTextEditor({
   label,
   value,
   onValueChange,
+  placeholder,
   error,
   disabled = false,
 }: {
@@ -24,6 +25,7 @@ export function RichTextEditor({
   label: string;
   value: RichDoc | null;
   onValueChange: (value: RichDoc | null) => void;
+  placeholder?: string;
   error?: string | undefined;
   disabled?: boolean;
 }) {
@@ -48,6 +50,7 @@ export function RichTextEditor({
         id,
         role: "textbox",
         "aria-multiline": "true",
+        ...(placeholder === undefined ? {} : { "aria-placeholder": placeholder }),
         "aria-label": label,
         class:
           "min-h-28 max-h-72 overflow-y-auto px-3 py-2 text-sm focus-visible:outline-none [&_h2]:text-base [&_h2]:font-semibold [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_ul]:list-disc [&_ul]:pl-5",
@@ -64,6 +67,10 @@ export function RichTextEditor({
     editor?.setEditable(!disabled);
   }, [editor, disabled]);
 
+  const isEmpty = useEditorState({
+    editor,
+    selector: (state) => state.editor?.isEmpty ?? true,
+  });
   const length = editor?.getText().length ?? 0;
 
   return (
@@ -119,7 +126,17 @@ export function RichTextEditor({
             onClick={() => editor?.chain().focus().redo().run()}
           />
         </div>
-        <EditorContent editor={editor} />
+        <div className="relative">
+          {placeholder !== undefined && isEmpty ? (
+            <p
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-3 top-3 text-sm text-muted-foreground"
+            >
+              {placeholder}
+            </p>
+          ) : null}
+          <EditorContent editor={editor} />
+        </div>
       </div>
       <FieldMessage error={error} hint={`${length}/${RICH_TEXT_MAX_CHARACTERS} caracteres`} />
     </div>
