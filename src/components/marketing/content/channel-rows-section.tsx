@@ -3,6 +3,7 @@ import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { Button } from "@/components/shared/ui/button";
+import { Label } from "@/components/shared/ui/label";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import { formatIcons } from "@/components/shared/content/format-icons";
@@ -100,11 +101,14 @@ export function ChannelRowsSection({
                 return (
                   <li
                     key={row.key}
-                    className="grid gap-3 p-3 md:grid-cols-[minmax(12rem,0.9fr)_minmax(0,1.4fr)_auto] md:items-start"
+                    className="grid gap-3 p-3 md:grid-cols-[minmax(10rem,0.7fr)_minmax(0,1.6fr)_auto] md:items-start"
                   >
-                    <div className="flex min-h-10 items-center gap-2 rounded-md border border-input bg-muted/30 px-3 py-2 text-sm">
-                      <FormatIcon aria-hidden="true" className="size-4 text-muted-foreground" />
-                      <span>{contentFormatLabels[row.format]}</span>
+                    <div className="space-y-1.5">
+                      <Label>Formato</Label>
+                      <div className="flex h-11 items-center gap-2 rounded-md border border-input bg-muted/30 px-3 text-sm md:h-10">
+                        <FormatIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+                        <span>{contentFormatLabels[row.format]}</span>
+                      </div>
                     </div>
                     <DateTimeField
                       id={`row-planned-${row.key}`}

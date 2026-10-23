@@ -5,6 +5,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Ban,
   Columns3,
+  Copy,
   CircleCheck,
   CircleX,
   Eye,
@@ -40,6 +41,7 @@ import {
   type ContentItemRow,
   cancelContentItem,
   deleteContentItem,
+  duplicateContentItem,
   listAssigneeOptions,
   listContentItems,
 } from "@/lib/marketing/content/content.functions";
@@ -136,6 +138,15 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   });
   const invalidate = [QueryKey.Content.all(), QueryKey.Dashboard.all()];
 
+  const duplicate = async (id: string) => {
+    const result = await run(() => duplicateContentItem({ data: { id } }), {
+      invalidate,
+      success: "Conteúdo duplicado. Ajuste o nome e as datas.",
+    });
+    if (!result.ok) return;
+    void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: result.id } });
+  };
+
   const columns: DataTableColumn<ContentItemRow>[] = [
     {
       id: "title",
@@ -210,6 +221,16 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       onSelect: (item) =>
         void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: item.id } }),
     },
+    ...(can(auth, Action.Content.Create)
+      ? [
+          {
+            id: "duplicate",
+            label: "Duplicar conteúdo",
+            icon: Copy,
+            onSelect: (item: ContentItemRow) => void duplicate(item.id),
+          },
+        ]
+      : []),
     ...(can(auth, Action.Content.Cancel) && !row.cancelled
       ? [{ id: "cancel", label: "Cancelar conteúdo", icon: Ban, onSelect: setCancelling }]
       : []),

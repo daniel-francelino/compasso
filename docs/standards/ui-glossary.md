@@ -19,6 +19,8 @@
 | Approval request | Pedido de aprovação / Pedidos de aprovação | |
 | Approval (action/result) | Aprovação | |
 | Approver | Aprovador(a) | |
+| Content name | Nome do conteúdo | Label of the internal title field |
+| Duplicate content | Duplicar conteúdo | Creates a copy named "Cópia de …" without dates |
 | Briefing | Briefing | Guided fields "Público e contexto", "Mensagem principal", "Direção criativa", "Tom e o que evitar" and the free field "Detalhes e notas" |
 | Planning reference files | Referências | Files of the planning step (label of the file list); the art files of the "Conteúdo" step stay "Arquivos" |
 | Planning summary | Ideia inicial | Rich text of the planning card that the client approves |

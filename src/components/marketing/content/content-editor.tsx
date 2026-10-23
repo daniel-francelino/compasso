@@ -41,6 +41,7 @@ import {
   cancelContentItem,
   getContentItem,
   listAssigneeOptions,
+  duplicateContentItem,
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
 import { EditorStep, editorSteps } from "@/lib/marketing/content/editor-steps";
@@ -273,6 +274,16 @@ export function ContentEditor({
   const canPublish = can(auth, Action.Content.PublishManual) && approved && !cancelled;
   const canCancel = content !== undefined && can(auth, Action.Content.Cancel) && !cancelled;
 
+  const duplicate = async () => {
+    if (content === undefined) return;
+    const result = await run(() => duplicateContentItem({ data: { id: content.id } }), {
+      invalidate: refresh,
+      success: "Conteúdo duplicado. Ajuste o nome e as datas.",
+    });
+    if (!result.ok) return;
+    void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: result.id } });
+  };
+
   const labelOf = (row: DraftRow) => {
     const channel = channels.find((candidate) => candidate.id === row.channelId);
     return channel ? `${platformLabels[channel.platform]} · ${channel.profileName}` : "o canal";
@@ -298,6 +309,7 @@ export function ContentEditor({
       onApproveOnBehalf={setApprovingStage}
       onReopen={setReopening}
       onCancel={() => setCancelling(true)}
+      onDuplicate={() => void duplicate()}
     />
   );
 

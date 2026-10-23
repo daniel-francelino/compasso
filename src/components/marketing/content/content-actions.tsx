@@ -1,6 +1,7 @@
 import {
   Ban,
   ClipboardList,
+  Copy,
   Hammer,
   MessageSquare,
   RotateCcw,
@@ -88,6 +89,7 @@ export function ContentActions({
   onApproveOnBehalf,
   onReopen,
   onCancel,
+  onDuplicate,
   onPublish,
 }: {
   status: EditorialStatus;
@@ -105,6 +107,7 @@ export function ContentActions({
   onApproveOnBehalf: (stage: ApprovalStage) => void;
   onReopen: (scope: ApprovalStage) => void;
   onCancel: () => void;
+  onDuplicate: () => void;
   onPublish: () => void;
   canMarkPublished: boolean;
 }) {
@@ -126,6 +129,7 @@ export function ContentActions({
     !cancelled &&
     status === EditorialStatus.Approved;
   const canCancel = hasContent && can(auth, Action.Content.Cancel) && !cancelled;
+  const canDuplicate = hasContent && can(auth, Action.Content.Create);
 
   return (
     <div
@@ -213,6 +217,15 @@ export function ContentActions({
             Marcar como publicado
           </Button>
         </WhyDisabled>
+      ) : null}
+      {canDuplicate ? (
+        <IconButton
+          variant="outline"
+          icon={Copy}
+          label="Duplicar conteúdo"
+          onClick={onDuplicate}
+          disabled={acting}
+        />
       ) : null}
       {canCancel ? (
         <IconButton

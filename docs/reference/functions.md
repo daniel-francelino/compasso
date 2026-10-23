@@ -89,6 +89,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | SQL function | Server function | Act. | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
 | `content_item_save(p_item jsonb)` | `saveContentItem` | `content.create` / `content.update` | `content.created`, `content.updated`, `content_channel.added`, `content_channel.removed`, `calendar_note.converted` (with `source_note`) | — | `conflict`, `requires_new_revision`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `invalid_input`, `transition_not_allowed` |
+| `content_item_save` (new item) | `duplicateContentItem` | `content.create` | `content.created`, `content_channel.added` | — | `invalid_input`, `media_not_available`, `channel_archived`, `brand_archived` |
 | `content_item_cancel(p_item, p_reason)` | `cancelContentItem` | `content.cancel` | `content.cancelled` | — | `reason_required` |
 | `content_item_delete(p_item)` | `deleteContentItem` | `content.delete` | `content.deleted` | — | `content_has_history` |
 | `content_move(p_item, p_to_status, p_expected_version)` | `moveContent` (board) | `content.update` | `content.updated` | — | `transition_not_allowed`, `conflict`, `plan_not_approved` |

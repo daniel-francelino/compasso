@@ -13,7 +13,7 @@ export function ContentTitleField({
   return (
     <TextField
       id="content-title"
-      label="Título interno"
+      label="Nome do conteúdo"
       required
       value={draft.values.title}
       disabled={disabled}

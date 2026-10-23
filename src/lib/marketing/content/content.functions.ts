@@ -456,6 +456,63 @@ export const saveContentItem = createServerFn({ method: "POST" })
     return saved.ok ? { ok: true, id: saved.id, version: saved.version } : saved;
   });
 
+const COPY_PREFIX = "Cópia de ";
+const COPY_SELECT =
+  "title, brand_id, objective, objective_kind, briefing, briefing_audience, briefing_key_message, briefing_creative_direction, briefing_constraints, internal_notes, assignee_id, tags, caption, call_to_action, working_media, plan_summary, plan_media, content_channels(channel_id, format, caption, position, publication_status, channels(archived_at))";
+
+export const duplicateContentItem = createServerFn({ method: "POST" })
+  .validator(idSchema)
+  .handler(async ({ data }): Promise<Result<{ id: string }>> => {
+    const caller = await requireActionServer(Action.Content.Create);
+    if (caller === null) return denied;
+    const { data: row, error } = await caller.supabase
+      .from("content_items")
+      .select(COPY_SELECT)
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) return fail(error);
+    if (row === null) return fail({ message: "not_found" });
+
+    const rows = [...row.content_channels]
+      .filter(
+        (channel) =>
+          channel.publication_status !== PublicationStatus.Cancelled &&
+          channel.channels?.archived_at === null,
+      )
+      .sort((a, b) => a.position - b.position);
+    const working = workingMediaSchema.safeParse(row.working_media);
+    const planned = workingMediaSchema.safeParse(row.plan_media);
+    const { data: saved, error: saveError } = await caller.supabase.rpc("content_item_save", {
+      p_item: {
+        brand_id: row.brand_id,
+        title: `${COPY_PREFIX}${row.title}`.slice(0, 140),
+        objective: row.objective,
+        objective_kind: row.objective_kind,
+        briefing: row.briefing,
+        briefing_audience: row.briefing_audience,
+        briefing_key_message: row.briefing_key_message,
+        briefing_creative_direction: row.briefing_creative_direction,
+        briefing_constraints: row.briefing_constraints,
+        internal_notes: row.internal_notes,
+        assignee_id: row.assignee_id,
+        tags: row.tags,
+        caption: { text: captionText(row.caption) },
+        call_to_action: row.call_to_action,
+        working_media: working.success ? working.data : [],
+        plan_summary: row.plan_summary,
+        plan_media: planned.success ? planned.data : [],
+        channels: rows.map((channel) => ({
+          channel_id: channel.channel_id,
+          format: channel.format,
+          caption: captionText(channel.caption),
+        })),
+      },
+    });
+    if (saveError) return fail(saveError);
+    const result = parseOutput(savedSchema, saved);
+    return result.ok ? { ok: true, id: result.id } : result;
+  });
+
 export const cancelContentItem = createServerFn({ method: "POST" })
   .validator(cancelSchema)
   .handler(async ({ data }): Promise<Result> => {
