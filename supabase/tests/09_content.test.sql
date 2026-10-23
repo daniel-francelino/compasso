@@ -351,7 +351,7 @@ select throws_ok(format($$select public.comment_delete('%s')$$, current_setting(
 reset role;
 
 select is((select count(*)::int from public.notifications where kind = 'comment.created'), 1, 'an external comment notifies the team');
-select throws_ok(format($$update public.comments set body = 'editado' where id = '%s'$$, current_setting('t.comment')), 'record_immutable', 'a comment body cannot be edited');
+select throws_ok(format($$update public.comments set created_at = created_at - interval '1 day' where id = '%s'$$, current_setting('t.comment')), 'record_immutable', 'a comment date cannot be changed');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d2');
 select lives_ok(format($$select public.portal_media_urls(%L, array[%L]::uuid[])$$, current_setting('t.rev1'), current_setting('t.media2')), 'another member of the brand also reads the shared revision files');

@@ -155,6 +155,13 @@ export const commentSchema = z.object({
   itemId: z.string().uuid(),
   visibility: z.nativeEnum(CommentVisibility),
   body: z.string().trim().min(1, "Escreva o comentário.").max(4000, "O comentário é longo demais."),
+  parentId: z.string().uuid().optional(),
+});
+
+export const commentEditSchema = z.object({
+  id: z.string().uuid(),
+  itemId: z.string().uuid(),
+  body: z.string().trim().min(1, "Escreva o comentário.").max(4000, "O comentário é longo demais."),
 });
 
 export const commentIdSchema = z.object({ id: z.string().uuid(), itemId: z.string().uuid() });

@@ -70,6 +70,7 @@ export const AuditAction = {
   },
   Comment: {
     Created: "comment.created",
+    Edited: "comment.edited",
     Deleted: "comment.deleted",
   },
   Approval: {

@@ -87,6 +87,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `variant.cancelled` | `content_variant` | legacy |
 | `variant.published_manually` | `content_variant` | legacy |
 | `comment.created` | `comment` | `comment_add`, `portal_add_comment` |
+| `comment.edited` | `comment` | `comment_edit` (ids only, never the text) |
 | `comment.deleted` | `comment` | `comment_delete` |
 | `approval.requested` | `approval_request` | `submit_for_approval` (with `stage`) |
 | `approval.decided` | `approval_request` | `portal_decide_approval` |

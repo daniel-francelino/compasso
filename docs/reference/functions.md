@@ -108,7 +108,8 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `calendar_note_get(p_note)` (returns the event fields and the internal notes, team only) | `getCalendarNote` | `calendar.view` + brand | — | — | `not_found` |
 | `calendar_note_days(...)`, `calendar_event_when(note)`, `calendar_event_notify(note, change)` (internal helpers, not granted to clients) | — | — | — | — | — |
 | (history only, no function writes them) | — | — | `approval.approver_reassigned` (written by the removed `reassign_approver` until 2026-10-20), `variant.created`, `variant.updated`, `variant.submitted`, `variant.reopened`, `variant.rescheduled`, `variant.cancelled`, `variant.published_manually` | — | — |
-| `comment_add(p_item, p_visibility, p_body)` | `addComment` | `comments.create_internal` for an internal comment, `comments.create_external` for an external one written by the team | `comment.created` | — (only `portal_add_comment` notifies the team) | `invalid_input` |
+| `comment_add(p_item, p_visibility, p_body, p_parent)` | `addComment` | `comments.create_internal` for an internal comment, `comments.create_external` for an external one written by the team | `comment.created` | — (only `portal_add_comment` notifies the team) | `invalid_input` |
+| `comment_edit(p_comment, p_body)` | `editComment` | author | `comment.edited` | — | `denied`, `invalid_input`, `not_found` |
 | `comment_delete(p_comment)` | `deleteComment` | author | `comment.deleted` | — | `denied` |
 | `cancel_request(p_request, p_reason)` | `cancelApprovalRequest` | `content.submit` | `approval.cancelled` | — | `reason_required`, `request_not_pending` |
 | `send_approval_reminder(p_request)` | `remindApprover` | `content.submit` | `approval.reminder_sent` | `approval.requested` (reminder) | `request_not_pending` |

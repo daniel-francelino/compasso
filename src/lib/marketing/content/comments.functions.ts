@@ -4,7 +4,12 @@ import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { CommentVisibility } from "@/lib/shared/enums";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
-import { commentIdSchema, commentSchema, itemIdSchema } from "@/lib/marketing/content/schemas";
+import {
+  commentEditSchema,
+  commentIdSchema,
+  commentSchema,
+  itemIdSchema,
+} from "@/lib/marketing/content/schemas";
 import { parseComments } from "@/lib/marketing/content/comments.server";
 import type { CommentRow } from "@/lib/marketing/content/types";
 
@@ -35,10 +40,24 @@ export const addComment = createServerFn({ method: "POST" })
       p_item: data.itemId,
       p_visibility: data.visibility,
       p_body: data.body,
+      ...(data.parentId === undefined ? {} : { p_parent: data.parentId }),
     });
     if (error) return fail(error);
     const parsed = parseOutput(addedSchema, row);
     return parsed.ok ? { ok: true, id: parsed.id } : parsed;
+  });
+
+export const editComment = createServerFn({ method: "POST" })
+  .validator(commentEditSchema)
+  .handler(async ({ data }): Promise<Result> => {
+    const caller = await requireActionServer(Action.Content.View);
+    if (caller === null) return denied;
+    const { error } = await caller.supabase.rpc("comment_edit", {
+      p_comment: data.id,
+      p_body: data.body,
+    });
+    if (error) return fail(error);
+    return { ok: true };
   });
 
 export const deleteComment = createServerFn({ method: "POST" })

@@ -621,8 +621,10 @@ export type Database = {
           brand_id: string
           created_at: string
           deleted_at: string | null
+          edited_at: string | null
           id: string
           item_id: string
+          parent_id: string | null
           revision_id: string | null
           visibility: string
         }
@@ -632,8 +634,10 @@ export type Database = {
           brand_id: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           item_id: string
+          parent_id?: string | null
           revision_id?: string | null
           visibility: string
         }
@@ -643,8 +647,10 @@ export type Database = {
           brand_id?: string
           created_at?: string
           deleted_at?: string | null
+          edited_at?: string | null
           id?: string
           item_id?: string
+          parent_id?: string | null
           revision_id?: string | null
           visibility?: string
         }
@@ -662,6 +668,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "content_items"
             referencedColumns: ["id", "brand_id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "comments_revision_id_variant_id_fkey"
@@ -2528,10 +2541,14 @@ export type Database = {
         Returns: Json
       }
       comment_add: {
-        Args: { p_body: string | null, p_item: string | null, p_visibility: string | null}
+        Args: {          p_body: string | null,          p_item: string | null,          p_parent?: string | null,          p_visibility: string | null}
         Returns: Json
       }
       comment_delete: { Args: { p_comment: string | null}; Returns: undefined }
+      comment_edit: {
+        Args: { p_body: string | null, p_comment: string | null}
+        Returns: undefined
+      }
       comment_list: { Args: { p_item: string | null}; Returns: Json }
       content_cancel_pending_requests: {
         Args: { p_item: string | null, p_reason: string | null}
@@ -2570,7 +2587,10 @@ export type Database = {
       current_organization_id: { Args: never; Returns: string }
       dashboard_attention: { Args: { p_brands?: string[] | null}; Returns: Json }
       dashboard_my_items: { Args: never; Returns: Json }
-      dashboard_publication_pending: { Args: { p_brands?: string[] | null}; Returns: Json }
+      dashboard_publication_pending: {
+        Args: { p_brands?: string[] | null}
+        Returns: Json
+      }
       dashboard_status_counts: { Args: { p_brands?: string[] | null}; Returns: Json }
       editorial_transition_allowed: {
         Args: { p_from: string | null, p_to: string | null}

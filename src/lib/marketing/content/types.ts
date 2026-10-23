@@ -127,6 +127,9 @@ export type CommentRow = {
   visibility: CommentVisibility;
   body: string;
   createdAt: string;
+  editedAt: string | null;
+  parentId: string | null;
+  deleted: boolean;
   authorId: string;
   authorName: string;
   revisionNo: number | null;

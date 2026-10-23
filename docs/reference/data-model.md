@@ -375,10 +375,13 @@ create table comments (
   visibility text not null check (visibility in ('internal','external')),
   body text not null check (char_length(body) between 1 and 4000),
   created_at timestamptz not null default now(),
+  parent_id uuid references comments(id),
+  edited_at timestamptz,
   deleted_at timestamptz,
   foreign key (item_id, brand_id) references content_items(id, brand_id)
 );
 create index on comments (item_id, created_at);
+create index on comments (parent_id) where parent_id is not null;
 
 create table calendar_notes (
   id uuid primary key default gen_random_uuid(),

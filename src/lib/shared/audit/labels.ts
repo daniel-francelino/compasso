@@ -51,6 +51,7 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Variant.Cancelled]: "Versão cancelada",
   [AuditAction.Variant.PublishedManually]: "Publicação registrada",
   [AuditAction.Comment.Created]: "Comentário criado",
+  [AuditAction.Comment.Edited]: "Comentário editado",
   [AuditAction.Comment.Deleted]: "Comentário excluído",
   [AuditAction.Approval.Requested]: "Aprovação solicitada",
   [AuditAction.Approval.Decided]: "Aprovação decidida",

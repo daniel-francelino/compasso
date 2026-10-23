@@ -70,17 +70,13 @@ const eventsOf = (request: RequestRow): HistoryEvent[] => {
 
 export function RevisionHistory({
   requests,
-  newestFirst,
   avatars,
 }: {
   requests: RequestRow[];
-  newestFirst: boolean;
   avatars: Record<string, string>;
 }) {
   const auth = useAuth();
-  const events = requests
-    .flatMap(eventsOf)
-    .sort((a, b) => (newestFirst ? b.at.localeCompare(a.at) : a.at.localeCompare(b.at)));
+  const events = requests.flatMap(eventsOf).sort((a, b) => b.at.localeCompare(a.at));
 
   if (events.length === 0) {
     return (
