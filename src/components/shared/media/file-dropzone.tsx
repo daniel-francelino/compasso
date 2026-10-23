@@ -1,41 +1,39 @@
 import { UploadCloud } from "lucide-react";
 import { motion } from "motion/react";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { acceptFor, type MediaKind } from "@/lib/shared/media/limits";
 import { cn } from "@/lib/shared/utils";
 
 export function FileDropzone({
   kinds,
-  compact,
+  empty,
   disabled,
   full,
   hint,
   onFiles,
+  children,
 }: {
   kinds: readonly MediaKind[];
-  compact: boolean;
+  empty: boolean;
   disabled: boolean;
   full: boolean;
   hint: string;
   onFiles: (files: File[]) => void;
+  children: (openPicker: () => void) => ReactNode;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const blocked = disabled || full;
+  const openPicker = () => input.current?.click();
   const receive = (files: File[]) => {
     if (files.length > 0) onFiles(files);
   };
 
   return (
     <div
-      className={cn(
-        "overflow-hidden rounded-xl border-2 border-dashed bg-background transition-colors duration-200",
-        over ? "border-primary bg-accent" : "border-input",
-        !over && !blocked && "hover:border-primary/60",
-        blocked && "opacity-60",
-      )}
+      className="relative"
       onDragOver={(event) => {
-        if (blocked) return;
+        if (blocked || !event.dataTransfer.types.includes("Files")) return;
         event.preventDefault();
         setOver(true);
       }}
@@ -45,6 +43,7 @@ export function FileDropzone({
         if (!stillInside) setOver(false);
       }}
       onDrop={(event) => {
+        if (!event.dataTransfer.types.includes("Files")) return;
         event.preventDefault();
         setOver(false);
         if (blocked) return;
@@ -64,35 +63,42 @@ export function FileDropzone({
           event.target.value = "";
         }}
       />
-      <button
-        type="button"
-        disabled={blocked}
-        onClick={() => input.current?.click()}
-        className={cn(
-          "group flex w-full cursor-pointer items-center justify-center gap-3 px-4 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset disabled:cursor-not-allowed",
-          compact ? "flex-row py-3" : "flex-col py-8",
-          !over && !blocked && "hover:bg-accent/50",
-        )}
-      >
-        <motion.span
-          animate={{ y: over ? -4 : 0, scale: over ? 1.1 : 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      {empty ? (
+        <button
+          type="button"
+          disabled={blocked}
+          onClick={openPicker}
           className={cn(
-            "flex shrink-0 items-center justify-center rounded-full bg-muted text-primary transition-colors group-hover:bg-accent",
-            compact ? "size-9" : "size-12",
+            "group flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-input bg-background px-4 py-8 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+            !blocked && "hover:border-primary/60 hover:bg-accent/50",
           )}
         >
-          <UploadCloud className={compact ? "size-4" : "size-5"} aria-hidden="true" />
-        </motion.span>
-        <span className={cn("space-y-0.5", compact && "text-left")}>
-          <span className="block text-sm font-medium">
-            {full ? "Limite de arquivos atingido" : null}
-            {!full && over ? "Solte para enviar" : null}
-            {!full && !over ? "Arraste arquivos aqui ou clique para enviar" : null}
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-primary transition-colors group-hover:bg-accent">
+            <UploadCloud className="size-5" aria-hidden="true" />
           </span>
-          <span className="block text-xs text-muted-foreground">{hint}</span>
-        </span>
-      </button>
+          <span className="space-y-0.5">
+            <span className="block text-sm font-medium">
+              Arraste arquivos aqui ou clique para enviar
+            </span>
+            <span className="block text-xs text-muted-foreground">{hint}</span>
+          </span>
+        </button>
+      ) : (
+        children(openPicker)
+      )}
+      {over ? (
+        <motion.div
+          aria-hidden="true"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-accent/85"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <UploadCloud className="size-5 text-primary" />
+            Solte para enviar
+          </span>
+        </motion.div>
+      ) : null}
     </div>
   );
 }

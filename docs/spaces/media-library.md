@@ -127,7 +127,7 @@ Temporary sessions expire after 24 hours without confirmation. Cleanup removes o
 - **Remove from the record** removes only the association (history rules of the origin apply: approved revisions keep their reference).
 - **Archive** (`trashed_at`) removes the file from new selections, keeping usages and existing access; it does not withdraw publications. Retention in the trash: 30 days (configurable).
 - **Delete permanently** requires no usages, no revision references (the `restrict` foreign key guarantees it), no publication and no applicable retention; the check covers all versions. Deletion marks "pending", blocks new associations, removes originals and derivatives with safe retry and confirms only after storage answers. Races between association and deletion are resolved on the server.
-- Alternative text is required on content images meant for publishing; public videos need an accessible alternative before publishing.
+- Alternative text is not typed in the content editor (decision 2026-10-24); it is no longer required there, and any value already saved is kept; public videos need an accessible alternative before publishing.
 
 ## 10. Data model
 

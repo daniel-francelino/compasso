@@ -1,6 +1,18 @@
 import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
 import { isSortable, useSortable } from "@dnd-kit/react/sortable";
-import { FileText, Film, GripVertical, Images, Loader2, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  FileText,
+  Film,
+  Image,
+  Images,
+  Loader2,
+  MoreVertical,
+  Plus,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { useEffect, useId, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -9,8 +21,12 @@ import { FieldMessage } from "@/components/shared/admin/form-fields";
 import { FileDropzone } from "@/components/shared/media/file-dropzone";
 import { MediaPicker } from "@/components/shared/media/media-picker";
 import { Button } from "@/components/shared/ui/button";
-import { Input } from "@/components/shared/ui/input";
-import { Label } from "@/components/shared/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/shared/ui/dropdown-menu";
 import { Progress } from "@/components/shared/ui/progress";
 import { UploadStatus, rejectionFor } from "@/hooks/shared/use-media-upload";
 import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
@@ -31,12 +47,21 @@ const kindLabels: Record<MediaKind, string> = {
   [MediaKind.Document]: "PDFs",
 };
 
-const itemMotion = {
-  initial: { opacity: 0, y: 8, scale: 0.98 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, scale: 0.96 },
-  transition: { duration: 0.2 },
+const kindIcons: Record<MediaKind, LucideIcon> = {
+  [MediaKind.Image]: Image,
+  [MediaKind.Video]: Film,
+  [MediaKind.Document]: FileText,
 };
+
+const itemMotion = {
+  initial: { opacity: 0, scale: 0.96 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0.94 },
+  transition: { duration: 0.18 },
+};
+
+const cardClass =
+  "rounded-xl border border-border bg-card p-2 transition-[border-color,box-shadow] duration-200";
 
 function Thumb({
   item,
@@ -52,6 +77,7 @@ function Thumb({
       <motion.img
         src={url}
         alt=""
+        draggable={false}
         className="size-full object-cover"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -62,7 +88,7 @@ function Thumb({
   const Icon = item.kind === MediaKind.Video ? Film : FileText;
   return (
     <Icon
-      className={cn("size-6 text-muted-foreground", loading && "animate-pulse")}
+      className={cn("size-8 text-muted-foreground", loading && "animate-pulse")}
       aria-hidden="true"
     />
   );
@@ -71,18 +97,20 @@ function Thumb({
 function SortableMediaItem({
   item,
   index,
+  total,
   url,
   loading,
   disabled,
-  onAltTextChange,
+  onMove,
   onRemove,
 }: {
   item: FileItem;
   index: number;
+  total: number;
   url: string | undefined;
   loading: boolean;
   disabled: boolean;
-  onAltTextChange: (altText: string) => void;
+  onMove: (toIndex: number) => void;
   onRemove: () => void;
 }) {
   const { ref, handleRef, isDragging, isDropping, isDropTarget } = useSortable({
@@ -91,61 +119,68 @@ function SortableMediaItem({
     disabled,
     transition: { duration: 220, easing: "cubic-bezier(0.2, 0, 0, 1)", idle: true },
   });
+  const KindIcon = item.kind === null ? FileText : kindIcons[item.kind];
 
   return (
     <motion.li layout="position" {...itemMotion}>
       <div
         ref={ref}
         className={cn(
-          "flex gap-3 rounded-xl border border-border bg-card p-2 transition-[border-color,box-shadow] duration-200 hover:border-primary/40 hover:shadow-sm",
+          cardClass,
+          "relative hover:border-primary/40 hover:shadow-sm",
           isDragging && "z-10 opacity-70 shadow-lg",
           isDropping && "transition-shadow",
           isDropTarget && "ring-2 ring-primary/40",
         )}
       >
-        <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
-          <Thumb item={item} url={url} loading={loading} />
-        </span>
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="truncate text-sm font-medium">
-            {index + 1}. {item.name}
-          </p>
-          <Label htmlFor={`alt-${item.mediaVersionId}`} className="sr-only">
-            Texto alternativo de {item.name}
-          </Label>
-          <Input
-            id={`alt-${item.mediaVersionId}`}
-            value={item.altText}
-            maxLength={300}
-            placeholder="Texto alternativo (descreva a imagem)"
-            disabled={disabled}
-            onChange={(event) => onAltTextChange(event.target.value)}
-          />
+        <div
+          ref={handleRef}
+          className={cn(!disabled && "cursor-grab touch-none active:cursor-grabbing")}
+        >
+          <div className="flex items-center gap-2 pr-9 pb-2 pl-1">
+            <KindIcon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            <p className="min-w-0 flex-1 truncate text-sm font-medium" title={item.name}>
+              {item.name}
+            </p>
+          </div>
+          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-muted">
+            <Thumb item={item} url={url} loading={loading} />
+            <span className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-foreground/80 text-[0.625rem] font-medium text-background">
+              {index + 1}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col gap-1">
-          <Button
-            ref={handleRef}
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="cursor-grab touch-none active:cursor-grabbing"
-            aria-label={`Reordenar ${item.name}`}
-            disabled={disabled}
-          >
-            <GripVertical aria-hidden="true" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="hover:text-destructive"
-            aria-label={`Remover ${item.name}`}
-            disabled={disabled}
-            onClick={onRemove}
-          >
-            <Trash2 aria-hidden="true" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute top-1.5 right-1.5 size-8"
+              disabled={disabled}
+              aria-label={`Ações de ${item.name}`}
+            >
+              <MoreVertical aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem disabled={index === 0} onSelect={() => onMove(index - 1)}>
+              <ArrowLeft aria-hidden="true" />
+              Mover para antes
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled={index === total - 1} onSelect={() => onMove(index + 1)}>
+              <ArrowRight aria-hidden="true" />
+              Mover para depois
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={onRemove}
+            >
+              <Trash2 aria-hidden="true" />
+              Remover
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.li>
   );
@@ -163,12 +198,12 @@ function PendingItem({
   const percent = Math.round(progress * 100);
   return (
     <motion.li {...itemMotion}>
-      <div className="flex items-center gap-3 rounded-xl border border-dashed border-primary/40 bg-accent/40 p-2">
-        <span className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-muted">
+      <div className={cn(cardClass, "border-dashed border-primary/40 bg-accent/40")}>
+        <p className="truncate pb-2 pl-1 text-sm font-medium" title={name}>
+          {name}
+        </p>
+        <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-lg bg-muted px-4">
           <Loader2 className="size-5 animate-spin text-primary" aria-hidden="true" />
-        </span>
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="truncate text-sm font-medium">{name}</p>
           {queued ? null : (
             <Progress value={percent} className="h-1.5" aria-label={`Enviando ${name}`} />
           )}
@@ -178,6 +213,33 @@ function PendingItem({
         </div>
       </div>
     </motion.li>
+  );
+}
+
+function AddTile({
+  disabled,
+  hint,
+  onClick,
+}: {
+  disabled: boolean;
+  hint: string;
+  onClick: () => void;
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        className="flex h-full min-h-40 w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-background p-3 text-center transition-colors hover:border-primary/60 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <span className="flex size-9 items-center justify-center rounded-full bg-muted text-primary">
+          <Plus className="size-4" aria-hidden="true" />
+        </span>
+        <span className="text-sm font-medium">Adicionar arquivos</span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
+      </button>
+    </li>
   );
 }
 
@@ -297,6 +359,45 @@ export function FileStrip({
     rule.max === 1 ? "arquivo" : "arquivos"
   }`;
 
+  const total = items.length + pending.length;
+
+  const grid = (openPicker: () => void) => (
+    <DragDropProvider onDragEnd={handleDragEnd}>
+      <ol className="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-3">
+        <AnimatePresence initial={false}>
+          {items.map((item, index) => (
+            <SortableMediaItem
+              key={item.mediaVersionId}
+              item={item}
+              index={index}
+              total={items.length}
+              url={urls.data?.[item.mediaVersionId]}
+              loading={urls.isLoading}
+              disabled={disabled}
+              onMove={(toIndex) => move(index, toIndex)}
+              onRemove={() =>
+                onChange(
+                  items.filter((candidate) => candidate.mediaVersionId !== item.mediaVersionId),
+                )
+              }
+            />
+          ))}
+          {pending.map((task) => (
+            <PendingItem
+              key={task.id}
+              name={task.item.file.name}
+              progress={task.progress}
+              queued={task.item.status === UploadStatus.Queued}
+            />
+          ))}
+        </AnimatePresence>
+        {canUpload && slots > 0 ? (
+          <AddTile disabled={disabled} hint={hint} onClick={openPicker} />
+        ) : null}
+      </ol>
+    </DragDropProvider>
+  );
+
   return (
     <MotionConfig reducedMotion="user">
       <FieldGroup legend={label} hideLegend gap="sm" disabled={disabled}>
@@ -315,57 +416,19 @@ export function FileStrip({
             Adicionar da biblioteca
           </Button>
         </div>
-        {items.length + pending.length > 0 ? (
-          <DragDropProvider onDragEnd={handleDragEnd}>
-            <ol className="space-y-2">
-              <AnimatePresence initial={false}>
-                {items.map((item, index) => (
-                  <SortableMediaItem
-                    key={item.mediaVersionId}
-                    item={item}
-                    index={index}
-                    url={urls.data?.[item.mediaVersionId]}
-                    loading={urls.isLoading}
-                    disabled={disabled}
-                    onAltTextChange={(altText) =>
-                      onChange(
-                        items.map((candidate) =>
-                          candidate.mediaVersionId === item.mediaVersionId
-                            ? { ...candidate, altText }
-                            : candidate,
-                        ),
-                      )
-                    }
-                    onRemove={() =>
-                      onChange(
-                        items.filter(
-                          (candidate) => candidate.mediaVersionId !== item.mediaVersionId,
-                        ),
-                      )
-                    }
-                  />
-                ))}
-                {pending.map((task) => (
-                  <PendingItem
-                    key={task.id}
-                    name={task.item.file.name}
-                    progress={task.progress}
-                    queued={task.item.status === UploadStatus.Queued}
-                  />
-                ))}
-              </AnimatePresence>
-            </ol>
-          </DragDropProvider>
-        ) : null}
         {canUpload ? (
           <FileDropzone
             kinds={rule.kinds}
-            compact={items.length + pending.length > 0}
+            empty={total === 0}
             disabled={disabled}
             full={slots <= 0}
             hint={hint}
             onFiles={receive}
-          />
+          >
+            {grid}
+          </FileDropzone>
+        ) : total > 0 ? (
+          grid(() => undefined)
         ) : null}
         <FieldMessage
           error={error}
