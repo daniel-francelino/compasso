@@ -122,67 +122,68 @@ function SortableMediaItem({
   const KindIcon = item.kind === null ? FileText : kindIcons[item.kind];
 
   return (
-    <motion.li layout="position" {...itemMotion}>
-      <div
-        ref={ref}
-        className={cn(
-          cardClass,
-          "relative hover:border-primary/40 hover:shadow-sm",
-          isDragging && "z-10 opacity-70 shadow-lg",
-          isDropping && "transition-shadow",
-          isDropTarget && "ring-2 ring-primary/40",
-        )}
-      >
+    <li ref={ref}>
+      <motion.div {...itemMotion}>
         <div
-          ref={handleRef}
-          className={cn(!disabled && "cursor-grab touch-none active:cursor-grabbing")}
+          className={cn(
+            cardClass,
+            "relative hover:border-primary/40 hover:shadow-sm",
+            isDragging && "z-10 opacity-70 shadow-lg",
+            isDropping && "transition-shadow",
+            isDropTarget && "ring-2 ring-primary/40",
+          )}
         >
-          <div className="flex items-center gap-2 pr-9 pb-2 pl-1">
-            <KindIcon className="size-4 shrink-0 text-primary" aria-hidden="true" />
-            <p className="min-w-0 flex-1 truncate text-sm font-medium" title={item.name}>
-              {item.name}
-            </p>
+          <div
+            ref={handleRef}
+            className={cn(!disabled && "cursor-grab touch-none active:cursor-grabbing")}
+          >
+            <div className="flex items-center gap-2 pr-9 pb-2 pl-1">
+              <KindIcon className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              <p className="min-w-0 flex-1 truncate text-sm font-medium" title={item.name}>
+                {item.name}
+              </p>
+            </div>
+            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-muted">
+              <Thumb item={item} url={url} loading={loading} />
+              <span className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-foreground/80 text-[0.625rem] font-medium text-background">
+                {index + 1}
+              </span>
+            </div>
           </div>
-          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-lg bg-muted">
-            <Thumb item={item} url={url} loading={loading} />
-            <span className="absolute top-1.5 left-1.5 flex size-5 items-center justify-center rounded-full bg-foreground/80 text-[0.625rem] font-medium text-background">
-              {index + 1}
-            </span>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-1.5 right-1.5 size-8"
+                disabled={disabled}
+                aria-label={`Ações de ${item.name}`}
+              >
+                <MoreVertical aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem disabled={index === 0} onSelect={() => onMove(index - 1)}>
+                <ArrowLeft aria-hidden="true" />
+                Mover para antes
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={index === total - 1} onSelect={() => onMove(index + 1)}>
+                <ArrowRight aria-hidden="true" />
+                Mover para depois
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={onRemove}
+              >
+                <Trash2 aria-hidden="true" />
+                Remover
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute top-1.5 right-1.5 size-8"
-              disabled={disabled}
-              aria-label={`Ações de ${item.name}`}
-            >
-              <MoreVertical aria-hidden="true" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled={index === 0} onSelect={() => onMove(index - 1)}>
-              <ArrowLeft aria-hidden="true" />
-              Mover para antes
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled={index === total - 1} onSelect={() => onMove(index + 1)}>
-              <ArrowRight aria-hidden="true" />
-              Mover para depois
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onSelect={onRemove}
-            >
-              <Trash2 aria-hidden="true" />
-              Remover
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </motion.li>
+      </motion.div>
+    </li>
   );
 }
 

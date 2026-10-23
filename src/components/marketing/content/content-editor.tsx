@@ -15,6 +15,7 @@ import { PublishDialog } from "@/components/marketing/content/publish-dialog";
 import { RevisionHistory } from "@/components/marketing/content/revision-history";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -289,6 +290,7 @@ export function ContentEditor({
     const channel = channels.find((candidate) => candidate.id === row.channelId);
     return channel ? `${platformLabels[channel.platform]} · ${channel.profileName}` : "o canal";
   };
+  const brandName = content?.brandName ?? brand.data?.name ?? "";
   const settingsDisabled = !canWrite || cancelled || saving;
   const hasSide = content !== undefined || step === EditorStep.Content;
   const actionsBar = (
@@ -339,6 +341,11 @@ export function ContentEditor({
         </header>
       ) : (
         <PageHeader
+          leading={
+            brandName === "" ? undefined : (
+              <BrandAvatar name={brandName} logoUrl={brand.data?.logoUrl ?? null} size="lg" />
+            )
+          }
           title={isNew ? "Novo conteúdo" : values.title || "Conteúdo"}
           description={
             isNew

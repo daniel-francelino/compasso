@@ -58,9 +58,7 @@ const moveLabel = (from: EditorialStatus, to: EditorialStatus) => {
 };
 
 const submitLabel = (status: EditorialStatus): string =>
-  submitStageOf(status) === ApprovalStage.Plan
-    ? "Enviar planejamento para aprovação"
-    : "Enviar artes para aprovação";
+  submitStageOf(status) === ApprovalStage.Plan ? "Enviar para aprovação" : "Enviar para aprovação";
 
 const movesOf = (status: EditorialStatus, state: StageState): readonly EditorialStatus[] =>
   DirectMoves[status].filter((to) => {
@@ -175,9 +173,7 @@ export function ContentActions({
             disabled={dirty || acting}
           >
             <UserCheck aria-hidden="true" />
-            {approveStage === ApprovalStage.Plan
-              ? "Aprovar planejamento pelo cliente"
-              : "Aprovar arte pelo cliente"}
+            "Aprovar"
           </Button>
         </WhyDisabled>
       ) : null}
