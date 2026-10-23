@@ -5,14 +5,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ALL_TAB } from "@/components/marketing/content/caption-section";
 import { BriefingStep } from "@/components/marketing/content/briefing-step";
-import { CommentsPanel } from "@/components/marketing/content/comments-panel";
+import { ActivitySection } from "@/components/marketing/content/activity-section";
 import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
 import { ContentStep } from "@/components/marketing/content/content-step";
 import { EditorPreview } from "@/components/marketing/content/editor-preview";
 import { PlanningStep } from "@/components/marketing/content/planning-step";
 import { PublishDialog } from "@/components/marketing/content/publish-dialog";
-import { RevisionHistory } from "@/components/marketing/content/revision-history";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { FormError } from "@/components/shared/admin/auth-shell";
 import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
@@ -292,7 +291,7 @@ export function ContentEditor({
   };
   const brandName = content?.brandName ?? brand.data?.name ?? "";
   const settingsDisabled = !canWrite || cancelled || saving;
-  const hasSide = content !== undefined || step === EditorStep.Content;
+  const hasSide = step === EditorStep.Content;
   const actionsBar = (
     <ContentActions
       status={editorialStatus}
@@ -445,15 +444,10 @@ export function ContentEditor({
                 brandLogoUrl={brand.data?.logoUrl ?? null}
               />
             ) : null}
-            {content ? (
-              <>
-                <RevisionHistory requests={content.requests} />
-                <CommentsPanel itemId={content.id} />
-              </>
-            ) : null}
           </div>
         ) : null}
       </div>
+      {content ? <ActivitySection itemId={content.id} requests={content.requests} /> : null}
       {submitting && content ? (
         <SubmitDialog
           content={content}

@@ -4,6 +4,7 @@ import {
   Copy,
   Hammer,
   MessageSquare,
+  MoreHorizontal,
   RotateCcw,
   Save,
   Send,
@@ -11,9 +12,14 @@ import {
   UserCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { IconButton } from "@/components/shared/admin/icon-button";
 import { WhyDisabled } from "@/components/shared/admin/why-disabled";
 import { Button } from "@/components/shared/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/shared/ui/dropdown-menu";
 import type { StageState } from "@/lib/marketing/content/stage-state";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
@@ -129,115 +135,120 @@ export function ContentActions({
   const canCancel = hasContent && can(auth, Action.Content.Cancel) && !cancelled;
   const canDuplicate = hasContent && can(auth, Action.Content.Create);
 
+  const [primaryMove, ...otherMoves] = moves;
+  const hasMenu =
+    otherMoves.length > 0 ||
+    approveStage !== null ||
+    canReopenPlan ||
+    canReopenArt ||
+    canPublish ||
+    canDuplicate ||
+    canCancel;
+  const approveLabel =
+    approveStage === ApprovalStage.Plan ? "Aprovar planejamento" : "Aprovar artes";
+  const primaryMeta = primaryMove === undefined ? undefined : moveLabel(status, primaryMove);
+
   return (
     <div
       className="flex flex-wrap items-center justify-end gap-1.5"
       role="group"
       aria-label="Ações do conteúdo"
     >
-      {moves.map((to) => {
-        const meta = moveLabel(status, to);
-        if (meta === undefined) return null;
-        const Icon = meta.icon;
-        return (
-          <WhyDisabled
-            key={to}
-            reason={dirty ? "Salve as alterações antes de mudar o estado." : null}
+      {primaryMove !== undefined && primaryMeta !== undefined ? (
+        <WhyDisabled reason={dirty ? "Salve as alterações antes de mudar o estado." : null}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={dirty || acting}
+            onClick={() => onMove(primaryMove)}
           >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={dirty || acting}
-              onClick={() => onMove(to)}
-            >
-              <Icon aria-hidden="true" />
-              {meta.label}
-            </Button>
-          </WhyDisabled>
-        );
-      })}
+            <primaryMeta.icon aria-hidden="true" />
+            {primaryMeta.label}
+          </Button>
+        </WhyDisabled>
+      ) : null}
       {canSubmit ? (
         <Button type="button" size="sm" onClick={onSubmit} disabled={acting}>
           <Send aria-hidden="true" />
           {submitLabel(status)}
         </Button>
       ) : null}
-      {approveStage !== null ? (
-        <WhyDisabled reason={dirty ? "Salve as alterações antes de aprovar." : null}>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => onApproveOnBehalf(approveStage)}
-            disabled={dirty || acting}
-          >
-            <UserCheck aria-hidden="true" />
-            "Aprovar"
-          </Button>
-        </WhyDisabled>
-      ) : null}
-      {canReopenPlan ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => onReopen(ApprovalStage.Plan)}
-          disabled={acting}
-        >
-          <ClipboardList aria-hidden="true" />
-          Reabrir planejamento
-        </Button>
-      ) : null}
-      {canReopenArt ? (
-        <IconButton
-          variant="outline"
-          icon={RotateCcw}
-          label="Reabrir artes"
-          onClick={() => onReopen(ApprovalStage.Art)}
-          disabled={acting}
-        />
-      ) : null}
-      {canPublish ? (
-        <WhyDisabled
-          reason={canMarkPublished ? null : "Registre a publicação de todos os canais antes."}
-        >
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={onPublish}
-            disabled={acting || !canMarkPublished}
-          >
-            <Send aria-hidden="true" />
-            Marcar como publicado
-          </Button>
-        </WhyDisabled>
-      ) : null}
-      {canDuplicate ? (
-        <IconButton
-          variant="outline"
-          icon={Copy}
-          label="Duplicar conteúdo"
-          onClick={onDuplicate}
-          disabled={acting}
-        />
-      ) : null}
-      {canCancel ? (
-        <IconButton
-          variant="outline"
-          icon={Ban}
-          label="Cancelar conteúdo"
-          destructive
-          onClick={onCancel}
-          disabled={acting}
-        />
-      ) : null}
       {editable ? (
         <Button type="submit" size="sm" loading={saving} disabled={saving || (!isNew && !dirty)}>
           <Save aria-hidden="true" />
           {isNew ? "Criar conteúdo" : "Salvar"}
         </Button>
+      ) : null}
+      {hasMenu ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="size-9"
+              aria-label="Mais ações do conteúdo"
+              disabled={acting}
+            >
+              <MoreHorizontal aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-56">
+            {otherMoves.map((to) => {
+              const meta = moveLabel(status, to);
+              if (meta === undefined) return null;
+              const Icon = meta.icon;
+              return (
+                <DropdownMenuItem key={to} disabled={dirty} onSelect={() => onMove(to)}>
+                  <Icon aria-hidden="true" />
+                  {meta.label}
+                </DropdownMenuItem>
+              );
+            })}
+            {approveStage !== null ? (
+              <DropdownMenuItem disabled={dirty} onSelect={() => onApproveOnBehalf(approveStage)}>
+                <UserCheck aria-hidden="true" />
+                {dirty ? `${approveLabel} (salve antes)` : approveLabel}
+              </DropdownMenuItem>
+            ) : null}
+            {canReopenPlan ? (
+              <DropdownMenuItem onSelect={() => onReopen(ApprovalStage.Plan)}>
+                <ClipboardList aria-hidden="true" />
+                Reabrir planejamento
+              </DropdownMenuItem>
+            ) : null}
+            {canReopenArt ? (
+              <DropdownMenuItem onSelect={() => onReopen(ApprovalStage.Art)}>
+                <RotateCcw aria-hidden="true" />
+                Reabrir artes
+              </DropdownMenuItem>
+            ) : null}
+            {canPublish ? (
+              <DropdownMenuItem disabled={!canMarkPublished} onSelect={onPublish}>
+                <Send aria-hidden="true" />
+                {canMarkPublished
+                  ? "Marcar como publicado"
+                  : "Marcar como publicado (registre todos os canais)"}
+              </DropdownMenuItem>
+            ) : null}
+            {canDuplicate ? (
+              <DropdownMenuItem onSelect={onDuplicate}>
+                <Copy aria-hidden="true" />
+                Duplicar
+              </DropdownMenuItem>
+            ) : null}
+            {canCancel ? (
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onSelect={onCancel}
+              >
+                <Ban aria-hidden="true" />
+                Cancelar conteúdo
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : null}
     </div>
   );

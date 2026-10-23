@@ -335,7 +335,9 @@ export const getContentItem = createServerFn({ method: "GET" })
         revisionNo: numberOf.get(request.revision_id) ?? 0,
         stage: request.stage === ApprovalStage.Plan ? ApprovalStage.Plan : ApprovalStage.Art,
         status: request.status as ApprovalRequestStatus,
+        decidedById: decision?.decided_by ?? null,
         decidedByName: decision === undefined ? null : (names.get(decision.decided_by) ?? null),
+        requestedById: request.requested_by,
         requestedByName:
           request.requested_by === null ? null : (names.get(request.requested_by) ?? null),
         requestedAt: request.requested_at,

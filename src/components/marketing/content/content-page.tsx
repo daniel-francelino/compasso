@@ -222,7 +222,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       ? [
           {
             id: "edit",
-            label: "Editar conteúdo",
+            label: "Editar",
             icon: Pencil,
             onSelect: (item: ContentItemRow) =>
               void navigate({
@@ -234,7 +234,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       : []),
     {
       id: "open",
-      label: "Abrir conteúdo",
+      label: "Abrir",
       icon: Eye,
       onSelect: (item) =>
         void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: item.id } }),
@@ -243,20 +243,20 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       ? [
           {
             id: "duplicate",
-            label: "Duplicar conteúdo",
+            label: "Duplicar",
             icon: Copy,
             onSelect: (item: ContentItemRow) => void duplicate(item.id),
           },
         ]
       : []),
     ...(can(auth, Action.Content.Cancel) && !row.cancelled
-      ? [{ id: "cancel", label: "Cancelar conteúdo", icon: Ban, onSelect: setCancelling }]
+      ? [{ id: "cancel", label: "Cancelar", icon: Ban, onSelect: setCancelling }]
       : []),
     ...(can(auth, Action.Content.Delete)
       ? [
           {
             id: "delete",
-            label: "Excluir conteúdo",
+            label: "Excluir",
             icon: Trash2,
             destructive: true,
             onSelect: setDeleting,
@@ -349,7 +349,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6">
       <PageHeader
         title="Conteúdos"
         description="Cada conteúdo, os canais onde vai sair e o estado de aprovação."

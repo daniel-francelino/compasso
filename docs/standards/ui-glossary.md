@@ -19,6 +19,7 @@
 | Approval request | Pedido de aprovação / Pedidos de aprovação | |
 | Approval (action/result) | Aprovação | |
 | Approver | Aprovador(a) | |
+| Activity (editor section) | Atividade | Tabs "Comentários" and "Histórico"; sort toggle "Mais recentes primeiro" / "Mais antigas primeiro"; collapsed comment box "Adicionar um comentário…"; buttons "Comentar" and "Cancelar" |
 | Profile photo | Foto de perfil | Buttons "Enviar foto", "Trocar foto", "Remover foto"; library scope "Fotos de perfil"; fallback is the initials of the name |
 | Content name | Nome do conteúdo | Label of the internal title field |
 | Duplicate content | Duplicar conteúdo | Creates a copy named "Cópia de …" without dates |

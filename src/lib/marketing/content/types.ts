@@ -55,7 +55,9 @@ export type RequestRow = {
   revisionNo: number;
   stage: ApprovalStage;
   status: ApprovalRequestStatus;
+  decidedById: string | null;
   decidedByName: string | null;
+  requestedById: string | null;
   requestedByName: string | null;
   requestedAt: string;
   dueDate: string | null;
