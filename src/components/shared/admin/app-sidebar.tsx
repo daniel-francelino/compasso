@@ -15,11 +15,14 @@ import {
   SidebarRail,
 } from "@/components/shared/ui/sidebar";
 import type { AuthState } from "@/lib/shared/auth/types";
+import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { useSignOut } from "@/lib/shared/auth/use-sign-out";
 
 export function AppSidebar({ auth, space }: { auth: AuthState; space: AdminSpace }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const signOut = useSignOut();
+  const avatars = useAvatarUrls([auth.profile?.id]);
   const groups = visibleGroups(auth, space);
 
   return (
@@ -56,7 +59,14 @@ export function AppSidebar({ auth, space }: { auth: AuthState; space: AdminSpace
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <p className="truncate px-2 text-xs text-sidebar-foreground">{auth.profile?.name}</p>
+        <div className="flex items-center gap-2 px-2">
+          <PersonAvatar
+            name={auth.profile?.name ?? ""}
+            url={avatars[auth.profile?.id ?? ""]}
+            size="sm"
+          />
+          <p className="truncate text-xs text-sidebar-foreground">{auth.profile?.name}</p>
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={signOut} tooltip="Sair">

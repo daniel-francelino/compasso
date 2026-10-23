@@ -86,7 +86,7 @@ const orderOptions = [
 ];
 
 const isScope = (value: string | undefined): value is MediaScope =>
-  value === MediaScope.Site || value === MediaScope.Brand;
+  value === MediaScope.Site || value === MediaScope.Brand || value === MediaScope.Profile;
 const isKind = (value: string | undefined): value is MediaKind =>
   Object.values(MediaKind).some((kind) => kind === value);
 const isOrder = (value: string | undefined): value is (typeof MediaSort)[keyof typeof MediaSort] =>
@@ -167,6 +167,7 @@ export function LibraryPage({ fixedBrandId }: { fixedBrandId?: string }) {
               { value: ALL, label: "Todas" },
               { value: MediaScope.Brand, label: "Marcas" },
               { value: MediaScope.Site, label: "Site" },
+              { value: MediaScope.Profile, label: "Fotos de perfil" },
             ],
             onChange: (value: string) => {
               void list.setFilter("scope", value === ALL ? undefined : value);

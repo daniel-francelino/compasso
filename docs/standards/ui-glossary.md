@@ -19,6 +19,7 @@
 | Approval request | Pedido de aprovação / Pedidos de aprovação | |
 | Approval (action/result) | Aprovação | |
 | Approver | Aprovador(a) | |
+| Profile photo | Foto de perfil | Buttons "Enviar foto", "Trocar foto", "Remover foto"; library scope "Fotos de perfil"; fallback is the initials of the name |
 | Content name | Nome do conteúdo | Label of the internal title field |
 | Duplicate content | Duplicar conteúdo | Creates a copy named "Cópia de …" without dates |
 | Briefing | Briefing | Guided fields "Público e contexto", "Mensagem principal", "Direção criativa", "Tom e o que evitar" and the free field "Detalhes e notas" |

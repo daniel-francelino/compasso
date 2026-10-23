@@ -105,6 +105,10 @@ export const QueryKey = {
     all: () => ["share"] as const,
     open: (token: string, grant: string | null) => ["share", "open", token, grant] as const,
   },
+  Avatars: {
+    all: () => ["avatars"] as const,
+    urls: (ids: readonly string[]) => ["avatars", "urls", ids] as const,
+  },
   Media: {
     all: () => ["media"] as const,
     list: (filters: Filters) => ["media", "list", filters] as const,

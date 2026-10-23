@@ -2,10 +2,17 @@ import { FileText, Film, ImageOff, Share2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Checkbox } from "@/components/shared/ui/checkbox";
+import { MediaScope } from "@/lib/shared/enums";
 import { formatBytes } from "@/lib/shared/format";
 import { MediaKind } from "@/lib/shared/media/limits";
 import type { MediaRow } from "@/lib/shared/media/media.functions";
 import { cn } from "@/lib/shared/utils";
+
+const scopeSuffix: Record<MediaScope, string> = {
+  [MediaScope.Site]: " · Site",
+  [MediaScope.Brand]: "",
+  [MediaScope.Profile]: " · Foto de perfil",
+};
 
 function Thumb({ item }: { item: MediaRow }) {
   if (item.thumbUrl !== null) {
@@ -73,7 +80,7 @@ export function MediaGrid({
                 ) : null}
                 <span className="block truncate text-xs text-muted-foreground">
                   {formatBytes(item.sizeBytes)}
-                  {item.brandName ? ` · ${item.brandName}` : item.scope === "site" ? " · Site" : ""}
+                  {item.brandName ? ` · ${item.brandName}` : scopeSuffix[item.scope]}
                 </span>
               </span>
             </button>

@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
-import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
+import { requireActionServer, requireApprovedServer } from "@/lib/shared/auth/server-guards.server";
+import { MediaScope } from "@/lib/shared/enums";
 import {
   abortUploadSchema,
   confirmUploadSchema,
@@ -36,7 +37,10 @@ export type UploadPlan = {
 export const requestUpload = createServerFn({ method: "POST" })
   .validator(requestUploadSchema)
   .handler(async ({ data }): Promise<Result<UploadPlan>> => {
-    const caller = await requireActionServer(Action.Media.Upload);
+    const caller =
+      data.scope === MediaScope.Profile
+        ? await requireApprovedServer()
+        : await requireActionServer(Action.Media.Upload);
     if (caller === null) return denied;
     const storage = serverStorage();
     if (storage === null) return fail({ message: "storage_unavailable" });
@@ -98,7 +102,7 @@ const discard = async (
 export const confirmUpload = createServerFn({ method: "POST" })
   .validator(confirmUploadSchema)
   .handler(async ({ data }): Promise<Result<{ assetId: string; versionId: string }>> => {
-    const caller = await requireActionServer(Action.Media.Upload);
+    const caller = await requireApprovedServer();
     if (caller === null) return denied;
     const storage = serverStorage();
     if (storage === null) return fail({ message: "storage_unavailable" });
@@ -144,7 +148,7 @@ export const confirmUpload = createServerFn({ method: "POST" })
 export const abortUpload = createServerFn({ method: "POST" })
   .validator(abortUploadSchema)
   .handler(async ({ data }): Promise<Result> => {
-    const caller = await requireActionServer(Action.Media.Upload);
+    const caller = await requireApprovedServer();
     if (caller === null) return denied;
     await discard(caller, data.versionId, "aborted");
     return { ok: true };

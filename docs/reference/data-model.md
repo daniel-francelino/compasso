@@ -93,6 +93,7 @@ create table profiles (
   kind text not null default 'internal' check (kind in ('internal','external')),
   role_id uuid references roles(id),
   locale text not null default 'pt-BR',
+  avatar_media_version_id uuid references media_versions(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (status <> 'approved' or role_id is not null)
@@ -427,8 +428,9 @@ Implemented in `20261018100900_content.sql`, `…100910_content_functions.sql`, 
 create table media_assets (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id),
-  scope text not null check (scope in ('site','brand')),
+  scope text not null check (scope in ('site','brand','profile')),
   brand_id uuid references brands(id),
+  owner_id uuid references profiles(id),
   display_name text not null,
   tags text[] not null default '{}',
   current_version_id uuid,
@@ -438,7 +440,8 @@ create table media_assets (
   created_by uuid references profiles(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check ((scope = 'brand') = (brand_id is not null))
+  check ((scope = 'brand') = (brand_id is not null)),
+  check ((scope = 'profile') = (owner_id is not null))
 );
 create index on media_assets (organization_id, scope, brand_id) where trashed_at is null;
 
@@ -504,7 +507,7 @@ create table media_collection_items (
 create table media_usages (
   id uuid primary key default gen_random_uuid(),
   media_version_id uuid not null references media_versions(id) on delete restrict,
-  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity','publication_evidence')),
+  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity','publication_evidence','profile_avatar')),
   usage_ref_id uuid not null,
   alt_text text,
   created_at timestamptz not null default now(),

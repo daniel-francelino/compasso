@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
+import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import {
   type DataTableAction,
   type DataTableColumn,
@@ -100,6 +102,7 @@ export function UsersPage() {
     enabled: showInvitations,
   });
 
+  const avatars = useAvatarUrls((users.data?.rows ?? []).map((row) => row.id));
   const canManage = can(auth, Action.Users.Manage);
   const canInvite = can(auth, Action.Invitations.Create);
 
@@ -107,7 +110,12 @@ export function UsersPage() {
     {
       id: "name",
       label: "Nome",
-      cell: (row) => <span className="font-medium">{row.fullName}</span>,
+      cell: (row) => (
+        <span className="inline-flex items-center gap-2 font-medium">
+          <PersonAvatar name={row.fullName} url={avatars[row.id]} size="sm" />
+          {row.fullName}
+        </span>
+      ),
     },
     { id: "email", label: "E-mail", cell: (row) => row.email },
     { id: "role", label: "Perfil", cell: (row) => row.roleName ?? "—" },

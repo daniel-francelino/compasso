@@ -27,6 +27,8 @@ import {
 import { useUnreadCount } from "@/hooks/shared/use-notifications";
 import { listPortalBrands } from "@/lib/portal/approvals/portal.functions";
 import type { AuthState } from "@/lib/shared/auth/types";
+import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { useSignOut } from "@/lib/shared/auth/use-sign-out";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -75,6 +77,7 @@ function useActiveBrandId(): string | null {
 export function PortalSidebar({ auth }: { auth: AuthState }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const signOut = useSignOut();
+  const avatars = useAvatarUrls([auth.profile?.id]);
   const brandId = useActiveBrandId();
 
   return (
@@ -138,7 +141,14 @@ export function PortalSidebar({ auth }: { auth: AuthState }) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <p className="truncate px-2 text-xs text-sidebar-foreground">{auth.profile?.name}</p>
+        <div className="flex items-center gap-2 px-2">
+          <PersonAvatar
+            name={auth.profile?.name ?? ""}
+            url={avatars[auth.profile?.id ?? ""]}
+            size="sm"
+          />
+          <p className="truncate text-xs text-sidebar-foreground">{auth.profile?.name}</p>
+        </div>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={signOut}>

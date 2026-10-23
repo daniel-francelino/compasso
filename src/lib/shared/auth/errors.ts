@@ -223,6 +223,10 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "A senha do link precisa ter de 8 a 128 caracteres.",
   },
+  avatar_invalid: {
+    category: ErrorCode.Invalid,
+    message: "A foto de perfil precisa ser uma imagem sua, disponível.",
+  },
   logo_invalid: {
     category: ErrorCode.Invalid,
     message: "O logo precisa ser uma imagem disponível desta marca.",

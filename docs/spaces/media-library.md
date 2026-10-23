@@ -30,6 +30,7 @@ A **replacement creates a new version**; it never overwrites an object that is a
 |---|---|---|
 | `brand` | Material of one brand (logos, photos, videos, PDFs, evidence of publication) | Users with `media.view` and a link to that brand; external users **only** files referenced by a revision shared with them |
 | `site` | Material of the public site (hero images, services, portfolio) | Users with `media.view` + `site.view` |
+| `profile` | **Profile photos** of people (internal and external), one asset per photo, owned by one person (`media_assets.owner_id`). Decided 2026-10-24 | The owner always; users with `media.view` see them in the library under "Fotos de perfil", **read only**. Uploading needs no `media.upload`: any approved person uploads and removes their own photo from their profile page. Image only (JPEG, PNG, WebP), up to 5 MB, never shareable, never published, never moved to collections; library actions on these files are refused (`not_found`) |
 
 - **Nothing becomes public by default.** Every upload is private. Only an explicit action (`media.publish`) copies an approved **derivative** (never the original) to the public bucket.
 - A private file does not become public because it is selected in an editor. A brand file used in the portfolio requires explicit authorization of the case study (consent note and date).
@@ -42,6 +43,7 @@ A **replacement creates a new version**; it never overwrites an object that is a
 |---|---|---|
 | Content versions | Carousel images, videos, PDFs of a post | Order and alternative text per usage; the **exact versions** are frozen in the revision (`content_revision_media`) |
 | Brand identity | Logos, guidelines, references | Brand scope; editable by those who can update the brand |
+| Profile photo | Avatar of a person | Profile scope; set and removed only by the owner (`profile_set_avatar`); removing it moves the file to the trash |
 | Publication evidence | Screenshot or file proving a manual publication | Linked to the channel row; kept as history |
 | Site pages and case studies | Images and videos in sections | Site scope; published only through public derivatives |
 | Social image (SEO) | Open Graph image of a page | Needs a published derivative |
@@ -131,7 +133,7 @@ Temporary sessions expire after 24 hours without confirmation. Cleanup removes o
 
 | Entity | Responsibility |
 |---|---|
-| `media_assets` | Name, scope (`site`/`brand`), `brand_id`, tags, `current_version_id`, `trashed_at`, author |
+| `media_assets` | Name, scope (`site`/`brand`/`profile`), `brand_id`, `owner_id` (profile scope), tags, `current_version_id`, `trashed_at`, author |
 | `media_versions` | Asset, `version_no`, `storage_key`, `thumb_key`, `display_key`, original file name, MIME, size, dimensions/duration, checksum, status, `public_published_at` |
 | `media_collections`, `media_collection_items` | Logical organization of the library |
 | `media_usages` | `media_version_id` + `usage_type` + `usage_ref_id`, alternative text |

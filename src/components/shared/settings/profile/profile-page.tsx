@@ -8,6 +8,7 @@ import { TextField } from "@/components/shared/admin/form-fields";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
+import { ProfileAvatarField } from "@/components/shared/settings/profile/profile-avatar-field";
 import { PreferencesFields } from "@/components/shared/notifications/preferences-section";
 import { Button } from "@/components/shared/ui/button";
 import { useUnsavedChanges } from "@/hooks/shared/use-unsaved-changes";
@@ -149,6 +150,7 @@ function ProfileForm({
           <h2 id="profile-data" className="heading-card text-foreground">
             Seus dados
           </h2>
+          <ProfileAvatarField />
           <TextField
             id="profile-name"
             label="Nome"

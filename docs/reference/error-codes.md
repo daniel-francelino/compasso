@@ -98,6 +98,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `upload_size_mismatch` | invalid | "O tamanho do arquivo enviado é diferente do esperado." | `confirmUpload` |
 | `quota_exceeded` | invalid | "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite." | `media_request_upload` |
 | `media_version_immutable` | denied | "Esta versão do arquivo não pode ser alterada." | media version trigger |
+| `avatar_invalid` | invalid | "A foto de perfil precisa ser uma imagem sua, disponível." | `profile_set_avatar` |
 | `logo_invalid` | invalid | "O logo precisa ser uma imagem disponível desta marca." | `brand_set_logo` |
 | `media_in_use` | in_use | "O arquivo tem usos que impedem a exclusão." | `media_delete_permanently` |
 | `share_invalid` | invalid | "Confira os dados do link: nome, mensagem e limite de downloads." | `media_share_create`, `media_share_update` |

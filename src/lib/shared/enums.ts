@@ -94,6 +94,7 @@ export type SettingKey = ValueOf<typeof SettingKey>;
 export const MediaScope = {
   Site: "site",
   Brand: "brand",
+  Profile: "profile",
 } as const;
 export type MediaScope = ValueOf<typeof MediaScope>;
 

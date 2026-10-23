@@ -114,6 +114,9 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `send_approval_reminder(p_request)` | `remindApprover` | `content.submit` | `approval.reminder_sent` | `approval.requested` (reminder) | `request_not_pending` |
 | `comment_list(p_item)` | `listComments` | `content.view` or `approvals.view` + brand | — | — | `not_found` |
 | `approver_options(p_brand)` (the approvers of the brand, who are asked when a content is sent) | `listApproverOptions` | `content.submit` + brand | — | — | `not_found` |
+| `profile_set_avatar(p_version)` | `setAvatar` | approved profile (own photo only) | — (personal preference, not audited) | — | `avatar_invalid`, `denied` |
+| `person_avatar_keys(p_ids uuid[])` (the server signs the thumbnails) | `getAvatarUrls` | approved profile; sees self, owners and people who share a brand | — | — | `denied` |
+| `media_request_upload` / `media_confirm_upload` with scope `profile` | `requestUpload`, `confirmUpload` | approved profile (no `media.upload`); own photo only | — | — | `upload_type_not_allowed`, `upload_too_large` |
 | `person_names(p_ids uuid[])` | (internal helper `personNames`, not a server function) | `content.view` or `approvals.view` | — | — | `denied` |
 | (typed query) | `listAssigneeOptions` | `content.view` + brand | — | — | `not_found` |
 | typed queries | `listContentItems`, `getContentItem`, `listBoard`, `listApprovals`, `getApprovalRequest` | `content.view` / `approvals.view` | — | — | `not_found` |

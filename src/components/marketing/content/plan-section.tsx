@@ -20,7 +20,7 @@ export function PlanSection({
       <RichTextEditor
         id="plan-summary"
         label="Ideia inicial"
-        placeholder="Conte a ideia para o cliente aprovar: o tema, a mensagem e a direção do texto. Ex.: campanha de inverno do café, com foco no chocolate quente."
+        placeholder="Conte a ideia para o cliente aprovar: o tema, a mensagem e a direção do texto."
         value={values.planSummary}
         onValueChange={(value) => draft.set("planSummary", value)}
         disabled={disabled}

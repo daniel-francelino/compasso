@@ -146,7 +146,6 @@ export const platformFormats: Record<Platform, readonly ContentFormat[]> = {
   [Platform.Instagram]: [
     ContentFormat.Image,
     ContentFormat.Carousel,
-    ContentFormat.Video,
     ContentFormat.Story,
     ContentFormat.Reel,
   ],

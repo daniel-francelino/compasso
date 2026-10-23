@@ -51,6 +51,7 @@ export type ContentItemRow = {
   title: string;
   brandId: string;
   brandName: string;
+  assigneeId: string | null;
   assigneeName: string | null;
   productionDueDate: string | null;
   tags: string[];
@@ -226,6 +227,7 @@ export const listContentItems = createServerFn({ method: "GET" })
       title: row.title,
       brandId: row.brand_id,
       brandName: row.brands?.name ?? "",
+      assigneeId: row.assignee_id,
       assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
       productionDueDate: row.production_due_date,
       tags: row.tags,

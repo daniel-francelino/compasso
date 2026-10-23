@@ -1,4 +1,5 @@
 import { ClipboardList } from "lucide-react";
+import { ContentSettingsSection } from "@/components/marketing/content/content-settings-section";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { TextAreaField } from "@/components/shared/admin/form-fields";
 import { RichTextEditor } from "@/components/shared/admin/rich-text-editor";
@@ -8,10 +9,12 @@ import { BRIEFING_FIELD_MAX, briefingFieldSpecs } from "@/lib/marketing/content/
 export function BriefingStep({
   draft,
   disabled,
+  objectiveLocked,
   errors,
 }: {
   draft: ContentDraft;
   disabled: boolean;
+  objectiveLocked: boolean;
   errors: Record<string, string>;
 }) {
   const { values, set } = draft;
@@ -26,6 +29,12 @@ export function BriefingStep({
       }}
     >
       <div className="space-y-4">
+        <ContentSettingsSection
+          draft={draft}
+          disabled={disabled}
+          objectiveLocked={objectiveLocked}
+          errors={errors}
+        />
         <div className="grid gap-4 md:grid-cols-2">
           {briefingFieldSpecs.map((spec) => (
             <TextAreaField
@@ -50,7 +59,7 @@ export function BriefingStep({
           value={values.briefing}
           disabled={disabled}
           onValueChange={(value) => set("briefing", value)}
-          placeholder="Qualquer outra informação útil para quem vai produzir: referências, links combinados, dúvidas em aberto, passo a passo."
+          placeholder="Referências, combinados e dúvidas em aberto para quem vai produzir."
           error={errors["briefing"]}
         />
       </div>

@@ -145,9 +145,10 @@ export function ContentEditor({
     void queryClient.invalidateQueries({ queryKey: QueryKey.Content.item(content.id) });
   };
 
-  function toggleChannel(channelId: string) {
+  function toggleChannel(channelId: string, automatic = false) {
+    const apply = automatic ? draft.setAutomatic : draft.set;
     if (selected.has(channelId)) {
-      draft.set(
+      apply(
         "rows",
         values.rows.filter((row) => row.channelId !== channelId || row.published),
       );
@@ -157,7 +158,7 @@ export function ContentEditor({
     const format = channel ? platformFormats[channel.platform][0] : undefined;
     if (channel === undefined || format === undefined) return;
     const plannedAt = defaultPlanned(defaultDay, zone);
-    draft.set("rows", [
+    apply("rows", [
       ...values.rows,
       {
         key: draft.nextKey(),
@@ -178,7 +179,7 @@ export function ContentEditor({
     brandId: values.brandId,
     channels,
     hasSelection: values.rows.length > 0,
-    onSelect: toggleChannel,
+    onSelect: (channelId) => toggleChannel(channelId, true),
   });
 
   useAutoSelectAssignee({
@@ -186,7 +187,7 @@ export function ContentEditor({
     brandId: values.brandId,
     assignees: assignees.data ?? [],
     selected: values.assigneeId,
-    onSelect: (assigneeId) => draft.set("assigneeId", assigneeId),
+    onSelect: (assigneeId) => draft.setAutomatic("assigneeId", assigneeId),
   });
 
   const payload = (expectedVersion: number | undefined) => ({
@@ -401,7 +402,12 @@ export function ContentEditor({
             />
           ) : null}
           {step === EditorStep.Briefing ? (
-            <BriefingStep draft={draft} disabled={settingsDisabled} errors={errors} />
+            <BriefingStep
+              draft={draft}
+              disabled={settingsDisabled}
+              objectiveLocked={state.planLocked}
+              errors={errors}
+            />
           ) : null}
           {step === EditorStep.Content ? (
             <ContentStep

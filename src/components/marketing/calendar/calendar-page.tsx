@@ -6,6 +6,8 @@ import { useSearch } from "@tanstack/react-router";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { IconButton } from "@/components/shared/admin/icon-button";
+import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { ListFilters } from "@/components/shared/admin/list-filters";
@@ -185,6 +187,8 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
       unwrapResult(await listAssigneeOptions({ data: { brandId: brandId ?? "" } })).people,
     enabled: brandId !== undefined,
   });
+
+  const avatars = useAvatarUrls((owners.data ?? []).map((person) => person.id));
 
   const request = {
     from: state.from.toISOString(),
@@ -392,6 +396,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                     ...(owners.data ?? []).map((person) => ({
                       value: person.id,
                       label: person.name,
+                      icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="xs" />,
                     })),
                   ],
                   onChange: (value) => void state.setFilter("owner", value === ALL ? "" : value),

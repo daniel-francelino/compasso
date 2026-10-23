@@ -101,11 +101,16 @@ const signature = (values: DraftValues): string =>
 
 export const useContentDraft = (initial: DraftValues) => {
   const [values, setValues] = useState<DraftValues>(initial);
-  const baseline = useRef(signature(initial));
+  const baseline = useRef(initial);
   const counter = useRef(0);
 
   const set = <K extends keyof DraftValues>(key: K, value: DraftValues[K]) =>
     setValues((current) => ({ ...current, [key]: value }));
+
+  const setAutomatic = <K extends keyof DraftValues>(key: K, value: DraftValues[K]) => {
+    baseline.current = { ...baseline.current, [key]: value };
+    setValues((current) => ({ ...current, [key]: value }));
+  };
 
   const nextKey = (): string => {
     counter.current += 1;
@@ -113,15 +118,16 @@ export const useContentDraft = (initial: DraftValues) => {
   };
 
   const markSaved = () => {
-    baseline.current = signature(values);
+    baseline.current = values;
   };
 
   return {
     values,
     set,
+    setAutomatic,
     nextKey,
     markSaved,
-    dirty: signature(values) !== baseline.current,
+    dirty: signature(values) !== signature(baseline.current),
   };
 };
 

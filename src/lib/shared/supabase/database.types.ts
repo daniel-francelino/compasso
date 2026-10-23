@@ -1162,6 +1162,7 @@ export type Database = {
           display_name: string
           id: string
           organization_id: string
+          owner_id: string | null
           scope: string
           size_bytes: number
           tags: string[]
@@ -1177,6 +1178,7 @@ export type Database = {
           display_name: string
           id?: string
           organization_id: string
+          owner_id?: string | null
           scope: string
           size_bytes?: number
           tags?: string[]
@@ -1192,6 +1194,7 @@ export type Database = {
           display_name?: string
           id?: string
           organization_id?: string
+          owner_id?: string | null
           scope?: string
           size_bytes?: number
           tags?: string[]
@@ -1226,6 +1229,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_assets_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1953,6 +1963,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_media_version_id: string | null
           created_at: string
           email: string
           full_name: string
@@ -1964,6 +1975,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_media_version_id?: string | null
           created_at?: string
           email: string
           full_name: string
@@ -1975,6 +1987,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_media_version_id?: string | null
           created_at?: string
           email?: string
           full_name?: string
@@ -1986,6 +1999,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_avatar_media_version_id_fkey"
+            columns: ["avatar_media_version_id"]
+            isOneToOne: false
+            referencedRelation: "media_versions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
@@ -2585,6 +2605,7 @@ export type Database = {
           display_name: string
           id: string
           organization_id: string
+          owner_id: string | null
           scope: string
           size_bytes: number
           tags: string[]
@@ -2708,6 +2729,7 @@ export type Database = {
         Args: { p_expected_version: number | null, p_key: string | null, p_value: Json | null}
         Returns: Json
       }
+      person_avatar_keys: { Args: { p_ids: string[] | null}; Returns: Json }
       person_names: { Args: { p_ids: string[] | null}; Returns: Json }
       plan_approval_required: { Args: never; Returns: boolean }
       portal_add_comment: {
@@ -2752,6 +2774,7 @@ export type Database = {
         Args: { p_profile: string | null, p_role?: string | null, p_status: string | null}
         Returns: undefined
       }
+      profile_set_avatar: { Args: { p_version: string | null}; Returns: Json }
       publish_content: {
         Args: { p_expected_version: number | null, p_item: string | null}
         Returns: Json

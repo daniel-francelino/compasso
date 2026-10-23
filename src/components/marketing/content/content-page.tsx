@@ -34,6 +34,8 @@ import { Button } from "@/components/shared/ui/button";
 import { ContentBoard } from "@/components/marketing/content/content-board";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
+import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import { listChannels } from "@/lib/marketing/channels/channels.functions";
@@ -136,6 +138,10 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     placeholderData: keepPreviousData,
     enabled: !board,
   });
+  const avatars = useAvatarUrls([
+    ...(assignees.data ?? []).map((person) => person.id),
+    ...(query.data?.rows ?? []).map((row) => row.assigneeId),
+  ]);
   const invalidate = [QueryKey.Content.all(), QueryKey.Dashboard.all()];
 
   const duplicate = async (id: string) => {
@@ -190,7 +196,19 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         );
       },
     },
-    { id: "owner", label: "Responsável", cell: (row) => row.assigneeName ?? "—" },
+    {
+      id: "owner",
+      label: "Responsável",
+      cell: (row) =>
+        row.assigneeId === null || row.assigneeName === null ? (
+          "—"
+        ) : (
+          <span className="inline-flex items-center gap-2">
+            <PersonAvatar name={row.assigneeName} url={avatars[row.assigneeId]} size="sm" />
+            {row.assigneeName}
+          </span>
+        ),
+    },
     {
       id: "deadline",
       label: "Prazo",
@@ -298,7 +316,11 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
             : undefined,
       options: [
         { value: ALL, label: brandId === undefined ? "Escolha uma marca" : "Todos" },
-        ...(assignees.data ?? []).map((person) => ({ value: person.id, label: person.name })),
+        ...(assignees.data ?? []).map((person) => ({
+          value: person.id,
+          label: person.name,
+          icon: <PersonAvatar name={person.name} url={avatars[person.id]} size="xs" />,
+        })),
       ],
       onChange: (value) => void list.setFilter("owner", value === ALL ? undefined : value),
     },

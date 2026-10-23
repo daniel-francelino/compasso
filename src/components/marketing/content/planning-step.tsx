@@ -1,6 +1,6 @@
-import { ClipboardList, Radio, Settings2, Tag } from "lucide-react";
+import { ClipboardList, Radio, Tag } from "lucide-react";
 import { ChannelPicker } from "@/components/marketing/content/channel-picker";
-import { ContentSettingsSection } from "@/components/marketing/content/content-settings-section";
+import { ContentAssigneeField } from "@/components/marketing/content/content-assignee-field";
 import { ContentTitleField } from "@/components/marketing/content/content-title-field";
 import { PlanningFormats } from "@/components/marketing/content/planning-formats";
 import { PlanSection } from "@/components/marketing/content/plan-section";
@@ -47,7 +47,8 @@ export function PlanningStep({
   const { values, set } = draft;
   const identity = (
     <SectionCard title="Identificação" icon={Tag}>
-      <div className={isNew ? "grid gap-4 md:grid-cols-2" : undefined}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <ContentTitleField draft={draft} disabled={settingsDisabled} error={errors["title"]} />
         {isNew ? (
           <BrandSelect
             id="content-brand"
@@ -64,7 +65,12 @@ export function PlanningStep({
             error={errors["brandId"]}
           />
         ) : null}
-        <ContentTitleField draft={draft} disabled={settingsDisabled} error={errors["title"]} />
+        <ContentAssigneeField
+          draft={draft}
+          assignees={assignees}
+          disabled={settingsDisabled}
+          error={errors["assigneeId"]}
+        />
       </div>
     </SectionCard>
   );
@@ -88,25 +94,11 @@ export function PlanningStep({
       />
     </SectionCard>
   );
-  const organization = (
-    <SectionCard title="Organização" icon={Settings2}>
-      <ContentSettingsSection
-        draft={draft}
-        assignees={assignees}
-        disabled={settingsDisabled}
-        objectiveLocked={state.planLocked}
-        errors={errors}
-      />
-    </SectionCard>
-  );
   return (
     <div className="space-y-6">
       {identity}
       <div className={cn("grid items-start gap-6", state.planRequired && "xl:grid-cols-2")}>
-        <div className="space-y-6">
-          {channelsCard}
-          {organization}
-        </div>
+        <div className="space-y-6">{channelsCard}</div>
         {state.planRequired ? (
           <SectionCard
             title="2. Planejamento"

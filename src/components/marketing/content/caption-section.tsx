@@ -55,7 +55,7 @@ export function CaptionSection({
             onValueChange={(value) => draft.set("caption", value)}
             maxLength={MAX_CAPTION}
             rows={8}
-            placeholder="Escreva o texto que vai acompanhar a publicação. Ex.: Dias frios pedem um chocolate quente. Vem tomar o seu com a gente."
+            placeholder="Escreva o texto que vai acompanhar a publicação."
             error={errors["caption"]}
           />
         </TabsContent>
@@ -105,7 +105,7 @@ export function CaptionSection({
         disabled={disabled}
         onValueChange={(value) => draft.set("callToAction", value)}
         maxLength={300}
-        placeholder="O que a pessoa deve fazer? Ex.: Venha nos visitar hoje."
+        placeholder="O que a pessoa deve fazer?"
         error={errors["callToAction"]}
       />
     </div>
