@@ -2570,6 +2570,7 @@ export type Database = {
       current_organization_id: { Args: never; Returns: string }
       dashboard_attention: { Args: { p_brands?: string[] | null}; Returns: Json }
       dashboard_my_items: { Args: never; Returns: Json }
+      dashboard_publication_pending: { Args: { p_brands?: string[] | null}; Returns: Json }
       dashboard_status_counts: { Args: { p_brands?: string[] | null}; Returns: Json }
       editorial_transition_allowed: {
         Args: { p_from: string | null, p_to: string | null}

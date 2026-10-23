@@ -14,6 +14,16 @@ export type AttentionItem = {
   reasons: DashboardReason[];
 };
 
+export type PublicationPendingItem = {
+  itemId: string;
+  title: string;
+  brandId: string;
+  brandName: string;
+  pendingRows: number;
+  oldestPlannedAt: string;
+  channels: string[];
+};
+
 export type MyItem = {
   itemId: string;
   title: string;
@@ -36,6 +46,20 @@ const attentionSchema = z.object({
       brand_name: z.string(),
       channels: z.array(z.string()),
       reasons: z.array(z.nativeEnum(DashboardReason)),
+    }),
+  ),
+});
+
+const publicationPendingSchema = z.object({
+  list: z.array(
+    z.object({
+      item_id: z.string().uuid(),
+      title: z.string(),
+      brand_id: z.string().uuid(),
+      brand_name: z.string(),
+      pending_rows: z.number().int(),
+      oldest_planned_at: z.string(),
+      channels: z.array(z.string()),
     }),
   ),
 });
@@ -80,6 +104,31 @@ export const getAttention = createServerFn({ method: "GET" })
         brandName: row.brand_name,
         channels: row.channels,
         reasons: row.reasons,
+      })),
+    };
+  });
+
+export const getPublicationPending = createServerFn({ method: "GET" })
+  .validator(brandFilterSchema)
+  .handler(async ({ data }): Promise<Result<{ items: PublicationPendingItem[] }>> => {
+    const caller = await requireActionServer(Action.Content.PublishManual);
+    if (caller === null) return denied;
+    const { data: rows, error } = await caller.supabase.rpc("dashboard_publication_pending", {
+      p_brands: brandsParam(data.brandId),
+    });
+    if (error) return fail(error);
+    const parsed = parseOutput(publicationPendingSchema, { list: rows });
+    if (!parsed.ok) return parsed;
+    return {
+      ok: true,
+      items: parsed.list.map((row) => ({
+        itemId: row.item_id,
+        title: row.title,
+        brandId: row.brand_id,
+        brandName: row.brand_name,
+        pendingRows: row.pending_rows,
+        oldestPlannedAt: row.oldest_planned_at,
+        channels: row.channels,
       })),
     };
   });

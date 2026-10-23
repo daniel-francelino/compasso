@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 import {
   CircleCheck,
   ClipboardCheck,
+  Megaphone,
   TriangleAlert,
   UserRound,
   Workflow,
@@ -27,19 +28,21 @@ import { ApprovalFilter } from "@/lib/marketing/approvals/schemas";
 import {
   getAttention,
   getMyItems,
+  getPublicationPending,
   getStatusCounts,
 } from "@/lib/marketing/dashboard/dashboard.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { EditorialStatus } from "@/lib/shared/enums";
-import { formatDateOnly } from "@/lib/shared/format";
+import { formatDateOnly, formatInZone } from "@/lib/shared/format";
 import { dashboardReasonLabels, editorialStatusLabels, platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
 
 const ALL = "all";
+const DEFAULT_ZONE = "America/Sao_Paulo";
 const STALE_MS = 30_000;
 const PENDING_ROWS = 6;
 
@@ -118,6 +121,67 @@ function AttentionBlock({ brandId }: { brandId: string | undefined }) {
                   </StatusBadge>
                 ))}
               </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Block>
+  );
+}
+
+function PublicationReminderBlock({ brandId }: { brandId: string | undefined }) {
+  const query = useQuery({
+    queryKey: QueryKey.Dashboard.publicationPending(brandId),
+    queryFn: async () =>
+      unwrapResult(await getPublicationPending({ data: brandId ? { brandId } : {} })).items,
+    staleTime: STALE_MS,
+  });
+  return (
+    <Block
+      title="Marcar como publicado"
+      icon={Megaphone}
+      loading={query.isPending}
+      error={query.error?.message ?? null}
+      onRetry={() => void query.refetch()}
+    >
+      <p className="text-sm text-muted-foreground">
+        Ao marcar como publicado, a biblioteca guarda só a pré-visualização e libera o espaço dos
+        arquivos de produção.
+      </p>
+      {query.data?.length === 0 ? (
+        <EmptyState
+          compact
+          icon={CircleCheck}
+          title="Nada a marcar"
+          description="Nenhum conteúdo aprovado passou da data de publicação."
+        />
+      ) : (
+        <ul className="space-y-2">
+          {query.data?.map((item) => (
+            <li
+              key={item.itemId}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"
+            >
+              <span className="min-w-0">
+                <Link
+                  to="/admin/marketing/content/$itemId"
+                  params={{ itemId: item.itemId }}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {item.title}
+                </Link>
+                <span className="block text-xs text-muted-foreground">
+                  {item.brandName} · {item.channels.join(", ")} · {item.pendingRows}{" "}
+                  {item.pendingRows === 1 ? "publicação" : "publicações"} · desde{" "}
+                  {formatInZone(item.oldestPlannedAt, DEFAULT_ZONE)}
+                </span>
+              </span>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/admin/marketing/content/$itemId" params={{ itemId: item.itemId }}>
+                  Registrar publicação
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
             </li>
           ))}
         </ul>
@@ -291,6 +355,7 @@ export function DashboardPage() {
   const brands = useBrandOptions(can(auth, Action.Brands.View));
   const content = can(auth, Action.Content.View);
   const approvals = can(auth, Action.Approvals.View);
+  const publish = can(auth, Action.Content.PublishManual);
 
   return (
     <div className="space-y-6">
@@ -314,6 +379,7 @@ export function DashboardPage() {
         </div>
       ) : null}
       <div className="grid gap-6 lg:grid-cols-2">
+        {publish ? <PublicationReminderBlock brandId={brandId} /> : null}
         {content ? <AttentionBlock brandId={brandId} /> : null}
         {approvals ? <PendingBlock brandId={brandId} /> : null}
         {content ? <CountsBlock brandId={brandId} /> : null}

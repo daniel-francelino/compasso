@@ -99,6 +99,8 @@ export const QueryKey = {
     attention: (brand: string | undefined) => ["dashboard", "attention", brand ?? null] as const,
     pending: (brand: string | undefined) => ["dashboard", "pending", brand ?? null] as const,
     counts: (brand: string | undefined) => ["dashboard", "counts", brand ?? null] as const,
+    publicationPending: (brand: string | undefined) =>
+      ["dashboard", "publication-pending", brand ?? null] as const,
     mine: () => ["dashboard", "mine"] as const,
   },
   Share: {
