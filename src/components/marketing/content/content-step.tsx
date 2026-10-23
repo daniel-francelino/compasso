@@ -62,7 +62,7 @@ export function ContentStep({
           error={errors["media"] ?? (values.files.length > 0 ? fileProblem : null) ?? undefined}
         />
       </SectionCard>
-      <SectionCard title="5. Data e horário das publicações" icon={Calendar}>
+      <SectionCard title="5. Programação das publicações" icon={Calendar}>
         <ChannelRowsSection
           draft={draft}
           channels={channels}

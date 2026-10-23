@@ -74,7 +74,7 @@ export function PublishDialog({
     >
       <DateTimeField
         id="publish-at"
-        label="Data e hora da publicação"
+        label="Data da publicação"
         value={publishedAt}
         timeZone={brandTimezone}
         onValueChange={setPublishedAt}

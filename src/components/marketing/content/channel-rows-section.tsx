@@ -88,7 +88,7 @@ export function ChannelRowsSection({
               {!disabled && lastRow ? (
                 <Button type="button" variant="outline" size="sm" onClick={() => addAfter(lastRow)}>
                   <CalendarPlus aria-hidden="true" />
-                  Incluir mais dias e horários neste canal
+                  Adicionar publicação
                 </Button>
               ) : null}
             </div>
@@ -112,7 +112,7 @@ export function ChannelRowsSection({
                     </div>
                     <DateTimeField
                       id={`row-planned-${row.key}`}
-                      label="Data e hora"
+                      label="Data"
                       value={row.plannedAt}
                       timeZone={row.plannedTimezone ?? brandTimezone}
                       disabled={rowDisabled}

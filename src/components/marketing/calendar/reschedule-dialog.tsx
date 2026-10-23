@@ -136,7 +136,7 @@ export function RescheduleDialog({
           )}
           <DateTimeField
             id="reschedule-at"
-            label="Nova data e hora"
+            label="Nova data"
             value={plannedAt}
             timeZone={publication.brandTimezone}
             initialLocal={publication.initialLocal}

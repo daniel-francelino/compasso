@@ -108,89 +108,95 @@ export function DateTimeField({
         : error;
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-1.5">
-        <FieldLabel htmlFor={id} tip={hintTip(label, hint)}>
-          {label}
-        </FieldLabel>
-        <InfoTip label={zoneLabel}>{zoneLabel}</InfoTip>
-      </div>
-      <div className="flex min-w-0 items-center gap-2">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              id={id}
-              type="button"
-              variant="outline"
-              disabled={disabled}
-              aria-label={
-                selectedDate
-                  ? `Data: ${format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}`
-                  : "Escolher data"
-              }
-              aria-invalid={message ? true : undefined}
-              aria-haspopup="dialog"
-              aria-expanded={open}
-              className={`h-10 min-w-0 flex-1 justify-start gap-2 px-3 text-left font-normal ${
-                selectedDate ? "text-foreground" : "text-muted-foreground"
-              }`}
-            >
-              <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-              <span className="truncate">
-                {selectedDate
-                  ? format(selectedDate, "d 'de' MMM 'de' yyyy", { locale: pt })
-                  : "Escolher data"}
-              </span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto rounded-xl p-2">
-            <Calendar
-              mode="single"
-              locale={pt}
-              selected={selectedDate ?? undefined}
-              defaultMonth={selectedDate ?? new Date()}
-              onSelect={(date) => {
-                if (!date) return;
-                change(toDateValue(date), timeText);
-                setOpen(false);
-              }}
-              initialFocus
+      <div className="flex min-w-0 items-start gap-2">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <FieldLabel htmlFor={id} tip={hintTip(label, hint)}>
+            {label}
+          </FieldLabel>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                id={id}
+                type="button"
+                variant="outline"
+                disabled={disabled}
+                aria-label={
+                  selectedDate
+                    ? `Data: ${format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}`
+                    : "Selecionar data"
+                }
+                aria-invalid={message ? true : undefined}
+                aria-haspopup="dialog"
+                aria-expanded={open}
+                className={`h-10 min-w-0 flex-1 justify-start gap-2 px-3 text-left font-normal ${
+                  selectedDate ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+                <span className="truncate">
+                  {selectedDate
+                    ? format(selectedDate, "d 'de' MMM 'de' yyyy", { locale: pt })
+                    : "Selecionar data"}
+                </span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto rounded-xl p-2">
+              <Calendar
+                mode="single"
+                locale={pt}
+                selected={selectedDate ?? undefined}
+                defaultMonth={selectedDate ?? new Date()}
+                onSelect={(date) => {
+                  if (!date) return;
+                  change(toDateValue(date), timeText);
+                  setOpen(false);
+                }}
+                initialFocus
+              />
+              {selectedDate ? (
+                <div className="border-t border-border px-2 pt-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      change("", "");
+                      setOpen(false);
+                    }}
+                  >
+                    <X aria-hidden="true" />
+                    Limpar data e hora
+                  </Button>
+                </div>
+              ) : null}
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="w-40 shrink-0 space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <FieldLabel htmlFor={`${id}-time`}>Hora</FieldLabel>
+            <InfoTip label={zoneLabel}>{zoneLabel}</InfoTip>
+          </div>
+          <div className="relative">
+            <Clock3
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
             />
-            {selectedDate ? (
-              <div className="border-t border-border px-2 pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    change("", "");
-                    setOpen(false);
-                  }}
-                >
-                  <X aria-hidden="true" />
-                  Limpar data e hora
-                </Button>
-              </div>
-            ) : null}
-          </PopoverContent>
-        </Popover>
-        <div className="relative w-32 shrink-0">
-          <Clock3
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            type="text"
-            aria-label="Horário"
-            inputMode="numeric"
-            autoComplete="off"
-            maxLength={5}
-            placeholder="HH:mm"
-            value={timeText}
-            disabled={disabled}
-            aria-invalid={message ? true : undefined}
-            className="h-10 pl-9 pr-2"
-            onChange={(event) => change(dateText ?? "", normalizeTime(event.target.value))}
-          />
+            <Input
+              id={`${id}-time`}
+              type="text"
+              aria-label="Horário"
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={5}
+              placeholder="Selecionar hora"
+              value={timeText}
+              disabled={disabled}
+              aria-invalid={message ? true : undefined}
+              className="h-10 pl-9 pr-2"
+              onChange={(event) => change(dateText ?? "", normalizeTime(event.target.value))}
+            />
+          </div>
         </div>
       </div>
       {occurrences ? (

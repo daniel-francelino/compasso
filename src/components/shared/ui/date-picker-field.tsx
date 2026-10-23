@@ -73,7 +73,7 @@ export function DatePickerField({
             <span>
               {selected
                 ? format(selected, "d 'de' MMMM 'de' yyyy", { locale: pt })
-                : "Escolher data"}
+                : "Selecionar data"}
             </span>
           </Button>
         </PopoverTrigger>
