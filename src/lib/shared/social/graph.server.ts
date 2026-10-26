@@ -1,4 +1,4 @@
-import type { z } from "zod";
+import { z } from "zod";
 import { logError } from "@/lib/shared/logger";
 import { PublishErrorCode } from "@/lib/shared/social/publish-codes";
 
@@ -14,9 +14,15 @@ export type MetaFailure = {
 
 export type MetaResult<T> = { ok: true; data: T } | MetaFailure;
 
-export type MetaErrorBody = {
-  error?: { message?: string; code?: number; error_subcode?: number };
-};
+const errorBodySchema = z.object({
+  error: z
+    .object({
+      message: z.string().optional(),
+      code: z.number().optional(),
+      error_subcode: z.number().optional(),
+    })
+    .optional(),
+});
 
 const RATE_LIMIT_CODES = new Set([4, 17, 32, 613]);
 const TOKEN_CODES = new Set([102, 190]);
@@ -34,7 +40,8 @@ const failure = (code: PublishErrorCode, provider: string, transient: boolean): 
 });
 
 export const classifyFailure = (status: number, body: unknown): MetaFailure => {
-  const error = (body as MetaErrorBody | null)?.error;
+  const parsed = errorBodySchema.safeParse(body);
+  const error = parsed.success ? parsed.data.error : undefined;
   const code = error?.code;
   const subcode = error?.error_subcode;
   const provider = `${code ?? status}/${subcode ?? 0} ${error?.message ?? ""}`.trim();

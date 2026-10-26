@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import { Button } from "@/components/shared/ui/button";
 import { Label } from "@/components/shared/ui/label";
+import { Skeleton } from "@/components/shared/ui/skeleton";
 import { Switch } from "@/components/shared/ui/switch";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import type { DraftRow } from "@/hooks/marketing/use-content-draft";
@@ -79,6 +80,18 @@ export function PublishAutomationSection({
     queryFn: async () => unwrapResult(await getPublishInfo({ data: { itemId } })).rows,
     refetchInterval: (current) => (isWorking(current.state.data) ? REFRESH_MS : false),
   });
+
+  const hasInstagram = rows.some(
+    (row) =>
+      channels.find((channel) => channel.id === row.channelId)?.platform === Platform.Instagram,
+  );
+  if (query.isPending && hasInstagram) {
+    return (
+      <SectionCard title="6. Publicação automática" icon={Send}>
+        <Skeleton className="h-20 w-full" />
+      </SectionCard>
+    );
+  }
 
   const entries = (query.data ?? []).flatMap((info) => {
     const row = rows.find((candidate) => candidate.id === info.rowId);

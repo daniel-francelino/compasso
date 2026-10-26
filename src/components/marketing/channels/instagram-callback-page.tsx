@@ -10,6 +10,7 @@ import { completeInstagramConnection } from "@/lib/marketing/channels/connection
 import { QueryKey } from "@/lib/shared/query-keys";
 import { AppRoute } from "@/lib/shared/routes";
 
+const UNAVAILABLE = "Não foi possível concluir a conexão agora. Tente de novo em instantes.";
 const DENIED = "O Instagram não autorizou a conexão. Volte ao canal e tente de novo.";
 
 export function InstagramCallbackPage({
@@ -31,18 +32,20 @@ export function InstagramCallbackPage({
   useEffect(() => {
     if (started.current || message !== null || code === undefined || state === undefined) return;
     started.current = true;
-    void completeInstagramConnection({ data: { code, state } }).then(async (result) => {
-      if (!result.ok) {
-        setMessage(result.message);
-        return;
-      }
-      await queryClient.invalidateQueries({ queryKey: QueryKey.Channels.all(result.brandId) });
-      toast.success("Instagram conectado.");
-      await navigate({
-        to: "/admin/marketing/brands/$brandId/channels",
-        params: { brandId: result.brandId },
-      });
-    });
+    void completeInstagramConnection({ data: { code, state } })
+      .then(async (result) => {
+        if (!result.ok) {
+          setMessage(result.message);
+          return;
+        }
+        await queryClient.invalidateQueries({ queryKey: QueryKey.Channels.all(result.brandId) });
+        toast.success("Instagram conectado.");
+        await navigate({
+          to: "/admin/marketing/brands/$brandId/channels",
+          params: { brandId: result.brandId },
+        });
+      })
+      .catch(() => setMessage(UNAVAILABLE));
   }, [code, state, message, navigate, queryClient]);
 
   if (message === null) return <PageSkeleton />;

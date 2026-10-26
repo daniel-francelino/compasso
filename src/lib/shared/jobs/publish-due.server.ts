@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PublishAttemptStatus } from "@/lib/shared/enums";
 import { type InstagramConfig, instagramConfig } from "@/lib/shared/env.server";
 import {
   type AdminClient,
@@ -72,7 +73,21 @@ export type PublishDueResult = {
 
 type Failure = { code: PublishErrorCode; provider: string; transient: boolean };
 
-type Outcome = "started" | "published" | "failed" | "waiting";
+const Outcome = {
+  Started: "started",
+  Published: "published",
+  Failed: "failed",
+  Waiting: "waiting",
+} as const;
+type Outcome = (typeof Outcome)[keyof typeof Outcome];
+
+type RpcReply = { error: { code?: string } | null };
+
+const checked = (reply: RpcReply, step: string): boolean => {
+  if (reply.error === null) return true;
+  logError(`publish due: ${step} failed`, reply.error.code ?? "unknown");
+  return false;
+};
 
 const markFailed = async (
   context: Context,
@@ -80,18 +95,22 @@ const markFailed = async (
   failure: Pick<Failure, "code" | "provider">,
   uncertain = false,
 ): Promise<Outcome> => {
-  await context.admin.rpc("publish_row_failed", {
+  const reply = await context.admin.rpc("publish_row_failed", {
     p_attempt: item.attempt.id,
     p_code: failure.code,
     p_provider: failure.provider,
     p_uncertain: uncertain,
   });
-  return "failed";
+  checked(reply, "mark failed");
+  return Outcome.Failed;
 };
 
 const release = async (context: Context, item: WorkItem, code: PublishErrorCode) => {
-  await context.admin.rpc("publish_row_release", { p_attempt: item.attempt.id, p_code: code });
-  return "waiting" as const;
+  checked(
+    await context.admin.rpc("publish_row_release", { p_attempt: item.attempt.id, p_code: code }),
+    "release",
+  );
+  return Outcome.Waiting;
 };
 
 const isStuck = (item: WorkItem): boolean =>
@@ -113,7 +132,7 @@ const handleFailure = async (
   if (isStuck(item)) {
     return markFailed(context, item, { code: PublishErrorCode.Stuck, provider: failure.provider });
   }
-  return "waiting";
+  return Outcome.Waiting;
 };
 
 const begin = async (context: Context, item: WorkItem): Promise<Outcome> => {
@@ -145,14 +164,15 @@ const begin = async (context: Context, item: WorkItem): Promise<Outcome> => {
 
   const created = await startPublication(token, accountId, request);
   if (!created.ok) return handleFailure(context, item, created);
-  await context.admin.rpc("publish_attempt_set", {
+  const saved = await context.admin.rpc("publish_attempt_set", {
     p_attempt: item.attempt.id,
-    p_status: "container_created",
+    p_status: PublishAttemptStatus.ContainerCreated,
     p_container: created.data.id,
     p_error: null,
     p_provider: null,
   });
-  return "started";
+  if (!checked(saved, "save container")) return Outcome.Waiting;
+  return Outcome.Started;
 };
 
 const finish = async (context: Context, item: WorkItem, containerId: string): Promise<Outcome> => {
@@ -165,7 +185,7 @@ const finish = async (context: Context, item: WorkItem, containerId: string): Pr
   if (status.data.status === ContainerStatus.InProgress) {
     return isStuck(item)
       ? markFailed(context, item, { code: PublishErrorCode.Stuck, provider: "in_progress" })
-      : "waiting";
+      : Outcome.Waiting;
   }
   if (status.data.status === ContainerStatus.Published) {
     return markFailed(
@@ -189,12 +209,12 @@ const finish = async (context: Context, item: WorkItem, containerId: string): Pr
       : handleFailure(context, item, published);
   }
   const link = await getPermalink(token, published.data.id);
-  await context.admin.rpc("publish_row_complete", {
+  const completed = await context.admin.rpc("publish_row_complete", {
     p_attempt: item.attempt.id,
     p_media_id: published.data.id,
     p_permalink: link.ok ? link.data.permalink : "",
   });
-  return "published";
+  return checked(completed, "complete") ? Outcome.Published : Outcome.Failed;
 };
 
 const advance = (context: Context, item: WorkItem): Promise<Outcome> =>
@@ -231,10 +251,10 @@ export const runPublishDue = async (): Promise<PublishDueResult> => {
   for (const item of [...work.data.inflight, ...work.data.claimed]) {
     if (Date.now() - startedAt > BUDGET_MS) break;
     const outcome = await advance(context, item);
-    if (outcome === "started") result.started += 1;
-    if (outcome === "published") result.published += 1;
-    if (outcome === "failed") result.failed += 1;
-    if (outcome === "waiting") result.waiting += 1;
+    if (outcome === Outcome.Started) result.started += 1;
+    if (outcome === Outcome.Published) result.published += 1;
+    if (outcome === Outcome.Failed) result.failed += 1;
+    if (outcome === Outcome.Waiting) result.waiting += 1;
   }
   return result;
 };

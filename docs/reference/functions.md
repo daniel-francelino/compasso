@@ -243,7 +243,7 @@ Specified in [../modules/instagram-publishing.md](../modules/instagram-publishin
 | `channel_connection_disconnect(p_channel)` | `disconnectChannel` | `channels.connect` | `channel.disconnected` | — | `publish_in_progress`, `not_found` |
 | `channel_connection_secret(p_channel)`, `channel_connections_to_renew(p_within_days)` | read by the jobs | service | — | — | — |
 | `channel_connection_renewed(p_channel, p_token_encrypted, p_expires_at)` | `runChannelRenewal` | service | resolves the connection notifications | — | `not_found` |
-| `channel_connection_failed(p_channel, p_status, p_code)` | jobs, `testChannelConnection` | service | `channel.connection_lost` | `channel.connection_expiring`, `channel.connection_expired` | `invalid_input`, `not_found` |
+| `channel_connection_failed(p_channel, p_status, p_code)` | jobs, `probeConnection` | service | `channel.connection_lost` | `channel.connection_expiring`, `channel.connection_expired` | `invalid_input`, `not_found` |
 | `channel_connection_json(c)` | — | internal | the only shape returned to a client | — | — |
 
 ### Automatic publishing
@@ -278,8 +278,9 @@ Specified in [../modules/instagram-publishing.md](../modules/instagram-publishin
 | `dashboard_metrics_report_due(p_brands)` | `getReportsDue` | `metrics.report` | — | — | `denied` |
 | `portal_metrics_report_list(p_brand)`, `portal_metrics_report_get(p_report)` | `portalListMetricReports`, `portalGetMetricReport` | `metrics.portal_view` + portal member | — | — | `denied`, `not_found` |
 | `metrics_collect_targets()`, `metrics_store_daily`, `metrics_store_audience`, `metrics_store_media`, `metrics_media_due`, `metrics_store_post`, `metrics_collection_done` | `runCollectMetrics` | service | — | — | `invalid_input`, `not_found` |
+| `metrics_snapshot_for_portal(p_snapshot, p_blocks)` | — | internal | — | — | — |
 | `metrics_assert_read`, `metrics_totals`, `metrics_report_json`; triggers `metric_reports_guard`, `metric_reports_no_delete` | — | internal | — | — | `report_already_published` |
-| — | `testChannelConnection` (reads the stored token with the service role after checking the brand link) | `channels.connect` | — | — | — |
+| — | `testChannelConnection` (checks the brand link with the caller's client, then `probeConnection` in `lib/shared/jobs/connection-test.server.ts` reads the stored token with the service role) | `channels.connect` | — | — | `not_found` |
 | — | server route `/api/cron/publish-due` | `CRON_SECRET` | runs the publishing, token renewal and metrics collection jobs | — | — |
 
 ## 10. Rules

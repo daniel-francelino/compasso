@@ -1,70 +1,79 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.18"
+  }
   public: {
     Tables: {
       actions: {
         Row: {
+          admin_only: boolean
+          description: string
           key: string
           module: string
-          description: string
-          admin_only: boolean
           portal: boolean
           requires: string[]
         }
         Insert: {
+          admin_only?: boolean
+          description: string
           key: string
           module: string
-          description: string
-          admin_only?: boolean
           portal?: boolean
           requires?: string[]
         }
         Update: {
+          admin_only?: boolean
+          description?: string
           key?: string
           module?: string
-          description?: string
-          admin_only?: boolean
           portal?: boolean
           requires?: string[]
         }
-        Relationships: [
-
-        ]
+        Relationships: []
       }
       approval_decisions: {
         Row: {
-          id: string
-          request_id: string
-          revision_id: string
-          decided_by: string
-          outcome: string
           comment: string | null
           decided_at: string
+          decided_by: string
+          id: string
           on_behalf: boolean
+          outcome: string
           reason: string | null
-        }
-        Insert: {
-          id?: string
           request_id: string
           revision_id: string
-          decided_by: string
-          outcome: string
+        }
+        Insert: {
           comment?: string | null
           decided_at?: string
+          decided_by: string
+          id?: string
           on_behalf?: boolean
+          outcome: string
           reason?: string | null
+          request_id: string
+          revision_id: string
         }
         Update: {
-          id?: string
-          request_id?: string
-          revision_id?: string
-          decided_by?: string
-          outcome?: string
           comment?: string | null
           decided_at?: string
+          decided_by?: string
+          id?: string
           on_behalf?: boolean
+          outcome?: string
           reason?: string | null
+          request_id?: string
+          revision_id?: string
         }
         Relationships: [
           {
@@ -87,62 +96,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "content_revisions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       approval_requests: {
         Row: {
-          id: string
           brand_id: string
-          item_id: string
-          revision_id: string
-          status: string
-          requested_by: string | null
-          requested_at: string
-          due_date: string | null
-          message: string | null
-          viewed_at: string | null
-          decided_at: string | null
           cancelled_reason: string | null
+          decided_at: string | null
+          due_date: string | null
+          id: string
+          item_id: string
+          message: string | null
+          requested_at: string
+          requested_by: string | null
+          revision_id: string
           stage: string
+          status: string
+          viewed_at: string | null
         }
         Insert: {
-          id?: string
           brand_id: string
-          item_id: string
-          revision_id: string
-          status?: string
-          requested_by?: string | null
-          requested_at?: string
-          due_date?: string | null
-          message?: string | null
-          viewed_at?: string | null
-          decided_at?: string | null
           cancelled_reason?: string | null
+          decided_at?: string | null
+          due_date?: string | null
+          id?: string
+          item_id: string
+          message?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          revision_id: string
           stage?: string
+          status?: string
+          viewed_at?: string | null
         }
         Update: {
-          id?: string
           brand_id?: string
-          item_id?: string
-          revision_id?: string
-          status?: string
-          requested_by?: string | null
-          requested_at?: string
-          due_date?: string | null
-          message?: string | null
-          viewed_at?: string | null
-          decided_at?: string | null
           cancelled_reason?: string | null
+          decided_at?: string | null
+          due_date?: string | null
+          id?: string
+          item_id?: string
+          message?: string | null
+          requested_at?: string
+          requested_by?: string | null
+          revision_id?: string
           stage?: string
+          status?: string
+          viewed_at?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "approval_requests_item_id_brand_id_fkey"
-            columns: ["brand_id","item_id"]
+            columns: ["item_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_items"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "approval_requests_requested_by_fkey"
@@ -153,52 +162,52 @@ export type Database = {
           },
           {
             foreignKeyName: "approval_requests_revision_id_variant_id_fkey"
-            columns: ["item_id","revision_id"]
+            columns: ["revision_id", "item_id"]
             isOneToOne: false
             referencedRelation: "content_revisions"
-            referencedColumns: ["id","item_id"]
-          }
+            referencedColumns: ["id", "item_id"]
+          },
         ]
       }
       audit_events: {
         Row: {
-          id: number
-          organization_id: string
-          brand_id: string | null
+          action: string
           actor_id: string | null
           actor_kind: string
-          action: string
-          entity_type: string
+          brand_id: string | null
           entity_id: string | null
+          entity_type: string
+          id: number
           metadata: Json
-          request_id: string | null
           occurred_at: string
+          organization_id: string
+          request_id: string | null
         }
         Insert: {
-          id?: number
-          organization_id: string
-          brand_id?: string | null
+          action: string
           actor_id?: string | null
           actor_kind?: string
-          action: string
-          entity_type: string
+          brand_id?: string | null
           entity_id?: string | null
+          entity_type: string
+          id?: never
           metadata?: Json
-          request_id?: string | null
           occurred_at?: string
+          organization_id: string
+          request_id?: string | null
         }
         Update: {
-          id?: number
-          organization_id?: string
-          brand_id?: string | null
+          action?: string
           actor_id?: string | null
           actor_kind?: string
-          action?: string
-          entity_type?: string
+          brand_id?: string | null
           entity_id?: string | null
+          entity_type?: string
+          id?: never
           metadata?: Json
-          request_id?: string | null
           occurred_at?: string
+          organization_id?: string
+          request_id?: string | null
         }
         Relationships: [
           {
@@ -207,39 +216,39 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       brand_members: {
         Row: {
           brand_id: string
-          user_id: string
-          kind: string
           can_decide: boolean
-          status: string
-          granted_by: string | null
           granted_at: string
+          granted_by: string | null
+          kind: string
           revoked_at: string | null
+          status: string
+          user_id: string
         }
         Insert: {
           brand_id: string
-          user_id: string
-          kind: string
           can_decide?: boolean
-          status?: string
-          granted_by?: string | null
           granted_at?: string
+          granted_by?: string | null
+          kind: string
           revoked_at?: string | null
+          status?: string
+          user_id: string
         }
         Update: {
           brand_id?: string
-          user_id?: string
-          kind?: string
           can_decide?: boolean
-          status?: string
-          granted_by?: string | null
           granted_at?: string
+          granted_by?: string | null
+          kind?: string
           revoked_at?: string | null
+          status?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -262,74 +271,74 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       brands: {
         Row: {
-          id: string
-          organization_id: string
-          client_id: string
-          name: string
-          description: string | null
-          target_audience: string | null
-          tone_of_voice: string | null
-          objectives: string | null
-          references_notes: string | null
-          visual_identity: Json
-          timezone: string
-          version: number
           archived_at: string | null
-          created_by: string | null
+          client_id: string
           created_at: string
-          updated_at: string
+          created_by: string | null
+          description: string | null
+          id: string
           logo_media_version_id: string | null
+          name: string
+          objectives: string | null
+          organization_id: string
+          references_notes: string | null
+          target_audience: string | null
+          timezone: string
+          tone_of_voice: string | null
+          updated_at: string
+          version: number
+          visual_identity: Json
         }
         Insert: {
-          id?: string
-          organization_id: string
-          client_id: string
-          name: string
-          description?: string | null
-          target_audience?: string | null
-          tone_of_voice?: string | null
-          objectives?: string | null
-          references_notes?: string | null
-          visual_identity?: Json
-          timezone: string
-          version?: number
           archived_at?: string | null
-          created_by?: string | null
+          client_id: string
           created_at?: string
-          updated_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
           logo_media_version_id?: string | null
+          name: string
+          objectives?: string | null
+          organization_id: string
+          references_notes?: string | null
+          target_audience?: string | null
+          timezone: string
+          tone_of_voice?: string | null
+          updated_at?: string
+          version?: number
+          visual_identity?: Json
         }
         Update: {
-          id?: string
-          organization_id?: string
-          client_id?: string
-          name?: string
-          description?: string | null
-          target_audience?: string | null
-          tone_of_voice?: string | null
-          objectives?: string | null
-          references_notes?: string | null
-          visual_identity?: Json
-          timezone?: string
-          version?: number
           archived_at?: string | null
-          created_by?: string | null
+          client_id?: string
           created_at?: string
-          updated_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
           logo_media_version_id?: string | null
+          name?: string
+          objectives?: string | null
+          organization_id?: string
+          references_notes?: string | null
+          target_audience?: string | null
+          timezone?: string
+          tone_of_voice?: string | null
+          updated_at?: string
+          version?: number
+          visual_identity?: Json
         }
         Relationships: [
           {
             foreignKeyName: "brands_client_id_organization_id_fkey"
-            columns: ["organization_id","client_id"]
+            columns: ["client_id", "organization_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id","organization_id"]
+            referencedColumns: ["id", "organization_id"]
           },
           {
             foreignKeyName: "brands_created_by_fkey"
@@ -344,84 +353,84 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       calendar_notes: {
         Row: {
-          id: string
+          all_day: boolean
+          archived_at: string | null
           brand_id: string
-          kind: string
-          title: string
+          client_visible: boolean
+          converted_at: string | null
+          converted_item_id: string | null
+          created_at: string
+          created_by: string | null
           description: string | null
+          end_date: string | null
+          ends_at: string | null
+          event_type: string | null
+          id: string
+          internal_notes: string | null
+          kind: string
+          location: string | null
           note_date: string
           repeat: string
-          converted_item_id: string | null
-          converted_at: string | null
-          archived_at: string | null
-          version: number
-          created_by: string | null
-          created_at: string
-          updated_at: string
-          event_type: string | null
-          all_day: boolean
-          end_date: string | null
           starts_at: string | null
-          ends_at: string | null
           timezone: string | null
-          location: string | null
-          client_visible: boolean
-          internal_notes: string | null
+          title: string
+          updated_at: string
+          version: number
         }
         Insert: {
-          id?: string
+          all_day?: boolean
+          archived_at?: string | null
           brand_id: string
-          kind: string
-          title: string
+          client_visible?: boolean
+          converted_at?: string | null
+          converted_item_id?: string | null
+          created_at?: string
+          created_by?: string | null
           description?: string | null
+          end_date?: string | null
+          ends_at?: string | null
+          event_type?: string | null
+          id?: string
+          internal_notes?: string | null
+          kind: string
+          location?: string | null
           note_date: string
           repeat?: string
-          converted_item_id?: string | null
-          converted_at?: string | null
-          archived_at?: string | null
-          version?: number
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          event_type?: string | null
-          all_day?: boolean
-          end_date?: string | null
           starts_at?: string | null
-          ends_at?: string | null
           timezone?: string | null
-          location?: string | null
-          client_visible?: boolean
-          internal_notes?: string | null
+          title: string
+          updated_at?: string
+          version?: number
         }
         Update: {
-          id?: string
+          all_day?: boolean
+          archived_at?: string | null
           brand_id?: string
-          kind?: string
-          title?: string
+          client_visible?: boolean
+          converted_at?: string | null
+          converted_item_id?: string | null
+          created_at?: string
+          created_by?: string | null
           description?: string | null
+          end_date?: string | null
+          ends_at?: string | null
+          event_type?: string | null
+          id?: string
+          internal_notes?: string | null
+          kind?: string
+          location?: string | null
           note_date?: string
           repeat?: string
-          converted_item_id?: string | null
-          converted_at?: string | null
-          archived_at?: string | null
-          version?: number
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          event_type?: string | null
-          all_day?: boolean
-          end_date?: string | null
           starts_at?: string | null
-          ends_at?: string | null
           timezone?: string | null
-          location?: string | null
-          client_visible?: boolean
-          internal_notes?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -433,10 +442,10 @@ export type Database = {
           },
           {
             foreignKeyName: "calendar_notes_converted_item_id_brand_id_fkey"
-            columns: ["brand_id","converted_item_id"]
+            columns: ["converted_item_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_items"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "calendar_notes_created_by_fkey"
@@ -444,124 +453,124 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       channel_audience_snapshot: {
         Row: {
-          channel_id: string
           brand_id: string
-          captured_on: string
-          dimension: string
           breakdown: Json
+          captured_on: string
+          channel_id: string
+          dimension: string
         }
         Insert: {
-          channel_id: string
           brand_id: string
-          captured_on: string
-          dimension: string
           breakdown: Json
+          captured_on: string
+          channel_id: string
+          dimension: string
         }
         Update: {
-          channel_id?: string
           brand_id?: string
-          captured_on?: string
-          dimension?: string
           breakdown?: Json
+          captured_on?: string
+          channel_id?: string
+          dimension?: string
         }
         Relationships: [
           {
             foreignKeyName: "channel_audience_snapshot_channel_id_brand_id_fkey"
-            columns: ["channel_id","brand_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
-          }
+            referencedColumns: ["id", "brand_id"]
+          },
         ]
       }
       channel_connections: {
         Row: {
-          id: string
-          channel_id: string
-          brand_id: string
-          provider: string
-          external_account_id: string
-          username: string
-          display_name: string | null
           account_type: string | null
-          followers_count: number | null
-          token_encrypted: string
-          token_expires_at: string
-          scopes: string[]
-          status: string
           auto_publish_default: boolean
+          brand_id: string
+          channel_id: string
           collect_metrics: boolean
-          connected_by: string | null
           connected_at: string
-          last_refreshed_at: string | null
+          connected_by: string | null
+          created_at: string
+          display_name: string | null
+          external_account_id: string
+          followers_count: number | null
+          id: string
           last_error_code: string | null
           last_metrics_at: string | null
-          version: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          channel_id: string
-          brand_id: string
+          last_refreshed_at: string | null
           provider: string
-          external_account_id: string
-          username: string
-          display_name?: string | null
-          account_type?: string | null
-          followers_count?: number | null
+          scopes: string[]
+          status: string
           token_encrypted: string
           token_expires_at: string
-          scopes?: string[]
-          status?: string
+          updated_at: string
+          username: string
+          version: number
+        }
+        Insert: {
+          account_type?: string | null
           auto_publish_default?: boolean
+          brand_id: string
+          channel_id: string
           collect_metrics?: boolean
-          connected_by?: string | null
           connected_at?: string
-          last_refreshed_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          external_account_id: string
+          followers_count?: number | null
+          id?: string
           last_error_code?: string | null
           last_metrics_at?: string | null
-          version?: number
-          created_at?: string
+          last_refreshed_at?: string | null
+          provider: string
+          scopes?: string[]
+          status?: string
+          token_encrypted: string
+          token_expires_at: string
           updated_at?: string
+          username: string
+          version?: number
         }
         Update: {
-          id?: string
-          channel_id?: string
-          brand_id?: string
-          provider?: string
-          external_account_id?: string
-          username?: string
-          display_name?: string | null
           account_type?: string | null
-          followers_count?: number | null
-          token_encrypted?: string
-          token_expires_at?: string
-          scopes?: string[]
-          status?: string
           auto_publish_default?: boolean
+          brand_id?: string
+          channel_id?: string
           collect_metrics?: boolean
-          connected_by?: string | null
           connected_at?: string
-          last_refreshed_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          display_name?: string | null
+          external_account_id?: string
+          followers_count?: number | null
+          id?: string
           last_error_code?: string | null
           last_metrics_at?: string | null
-          version?: number
-          created_at?: string
+          last_refreshed_at?: string | null
+          provider?: string
+          scopes?: string[]
+          status?: string
+          token_encrypted?: string
+          token_expires_at?: string
           updated_at?: string
+          username?: string
+          version?: number
         }
         Relationships: [
           {
             foreignKeyName: "channel_connections_channel_id_brand_id_fkey"
-            columns: ["channel_id","brand_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "channel_connections_connected_by_fkey"
@@ -569,140 +578,140 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       channel_media_index: {
         Row: {
-          id: string
-          channel_id: string
           brand_id: string
-          external_media_id: string
-          permalink: string | null
-          media_type: string
-          product_type: string | null
-          posted_at: string
           caption_excerpt: string | null
+          channel_id: string
           content_channel_id: string | null
           created_at: string
+          external_media_id: string
+          id: string
+          media_type: string
+          permalink: string | null
+          posted_at: string
+          product_type: string | null
         }
         Insert: {
-          id?: string
-          channel_id: string
           brand_id: string
-          external_media_id: string
-          permalink?: string | null
-          media_type: string
-          product_type?: string | null
-          posted_at: string
           caption_excerpt?: string | null
+          channel_id: string
           content_channel_id?: string | null
           created_at?: string
+          external_media_id: string
+          id?: string
+          media_type: string
+          permalink?: string | null
+          posted_at: string
+          product_type?: string | null
         }
         Update: {
-          id?: string
-          channel_id?: string
           brand_id?: string
-          external_media_id?: string
-          permalink?: string | null
-          media_type?: string
-          product_type?: string | null
-          posted_at?: string
           caption_excerpt?: string | null
+          channel_id?: string
           content_channel_id?: string | null
           created_at?: string
+          external_media_id?: string
+          id?: string
+          media_type?: string
+          permalink?: string | null
+          posted_at?: string
+          product_type?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "channel_media_index_channel_id_brand_id_fkey"
-            columns: ["channel_id","brand_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
-            foreignKeyName: "channel_media_index_content_channel_id_fkey"
-            columns: ["content_channel_id"]
+            foreignKeyName: "channel_media_index_content_channel_id_brand_id_fkey"
+            columns: ["content_channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_channels"
-            referencedColumns: ["id"]
-          }
+            referencedColumns: ["id", "brand_id"]
+          },
         ]
       }
       channel_metric_daily: {
         Row: {
-          channel_id: string
           brand_id: string
+          captured_at: string
+          channel_id: string
           day: string
           metric: string
           value: number
-          captured_at: string
         }
         Insert: {
-          channel_id: string
           brand_id: string
+          captured_at?: string
+          channel_id: string
           day: string
           metric: string
           value: number
-          captured_at?: string
         }
         Update: {
-          channel_id?: string
           brand_id?: string
+          captured_at?: string
+          channel_id?: string
           day?: string
           metric?: string
           value?: number
-          captured_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "channel_metric_daily_channel_id_brand_id_fkey"
-            columns: ["channel_id","brand_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
-          }
+            referencedColumns: ["id", "brand_id"]
+          },
         ]
       }
       channels: {
         Row: {
-          id: string
+          archived_at: string | null
           brand_id: string
+          created_at: string
+          external_id: string | null
+          id: string
+          notes: string | null
           platform: string
           profile_name: string
           profile_url: string | null
-          external_id: string | null
-          notes: string | null
-          version: number
-          archived_at: string | null
-          created_at: string
           updated_at: string
+          version: number
         }
         Insert: {
-          id?: string
+          archived_at?: string | null
           brand_id: string
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          notes?: string | null
           platform: string
           profile_name: string
           profile_url?: string | null
-          external_id?: string | null
-          notes?: string | null
-          version?: number
-          archived_at?: string | null
-          created_at?: string
           updated_at?: string
+          version?: number
         }
         Update: {
-          id?: string
+          archived_at?: string | null
           brand_id?: string
+          created_at?: string
+          external_id?: string | null
+          id?: string
+          notes?: string | null
           platform?: string
           profile_name?: string
           profile_url?: string | null
-          external_id?: string | null
-          notes?: string | null
-          version?: number
-          archived_at?: string | null
-          created_at?: string
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -711,41 +720,41 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "brands"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       client_contacts: {
         Row: {
-          id: string
           client_id: string
-          name: string
+          created_at: string
           email: string | null
+          id: string
+          is_primary: boolean
+          name: string
           phone: string | null
           role_title: string | null
-          is_primary: boolean
-          created_at: string
           updated_at: string
         }
         Insert: {
-          id?: string
           client_id: string
-          name: string
+          created_at?: string
           email?: string | null
+          id?: string
+          is_primary?: boolean
+          name: string
           phone?: string | null
           role_title?: string | null
-          is_primary?: boolean
-          created_at?: string
           updated_at?: string
         }
         Update: {
-          id?: string
           client_id?: string
-          name?: string
+          created_at?: string
           email?: string | null
+          id?: string
+          is_primary?: boolean
+          name?: string
           phone?: string | null
           role_title?: string | null
-          is_primary?: boolean
-          created_at?: string
           updated_at?: string
         }
         Relationships: [
@@ -755,48 +764,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "clients"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       clients: {
         Row: {
-          id: string
-          organization_id: string
-          name: string
-          owner_user_id: string | null
-          internal_notes: string | null
-          tags: string[]
-          version: number
           archived_at: string | null
-          created_by: string | null
           created_at: string
+          created_by: string | null
+          id: string
+          internal_notes: string | null
+          name: string
+          organization_id: string
+          owner_user_id: string | null
+          tags: string[]
           updated_at: string
+          version: number
         }
         Insert: {
-          id?: string
-          organization_id: string
-          name: string
-          owner_user_id?: string | null
-          internal_notes?: string | null
-          tags?: string[]
-          version?: number
           archived_at?: string | null
-          created_by?: string | null
           created_at?: string
+          created_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          name: string
+          organization_id: string
+          owner_user_id?: string | null
+          tags?: string[]
           updated_at?: string
+          version?: number
         }
         Update: {
-          id?: string
-          organization_id?: string
-          name?: string
-          owner_user_id?: string | null
-          internal_notes?: string | null
-          tags?: string[]
-          version?: number
           archived_at?: string | null
-          created_by?: string | null
           created_at?: string
+          created_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          name?: string
+          organization_id?: string
+          owner_user_id?: string | null
+          tags?: string[]
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -819,48 +828,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       comments: {
         Row: {
-          id: string
-          brand_id: string
-          item_id: string
-          revision_id: string | null
           author_id: string
-          visibility: string
           body: string
+          brand_id: string
           created_at: string
           deleted_at: string | null
-          parent_id: string | null
           edited_at: string | null
+          id: string
+          item_id: string
+          parent_id: string | null
+          revision_id: string | null
+          visibility: string
         }
         Insert: {
-          id?: string
-          brand_id: string
-          item_id: string
-          revision_id?: string | null
           author_id: string
-          visibility: string
           body: string
+          brand_id: string
           created_at?: string
           deleted_at?: string | null
-          parent_id?: string | null
           edited_at?: string | null
+          id?: string
+          item_id: string
+          parent_id?: string | null
+          revision_id?: string | null
+          visibility: string
         }
         Update: {
-          id?: string
-          brand_id?: string
-          item_id?: string
-          revision_id?: string | null
           author_id?: string
-          visibility?: string
           body?: string
+          brand_id?: string
           created_at?: string
           deleted_at?: string | null
-          parent_id?: string | null
           edited_at?: string | null
+          id?: string
+          item_id?: string
+          parent_id?: string | null
+          revision_id?: string | null
+          visibility?: string
         }
         Relationships: [
           {
@@ -872,10 +881,10 @@ export type Database = {
           },
           {
             foreignKeyName: "comments_item_id_brand_id_fkey"
-            columns: ["brand_id","item_id"]
+            columns: ["item_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_items"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "comments_parent_id_fkey"
@@ -886,55 +895,55 @@ export type Database = {
           },
           {
             foreignKeyName: "comments_revision_id_variant_id_fkey"
-            columns: ["item_id","revision_id"]
+            columns: ["revision_id", "item_id"]
             isOneToOne: false
             referencedRelation: "content_revisions"
-            referencedColumns: ["id","item_id"]
-          }
+            referencedColumns: ["id", "item_id"]
+          },
         ]
       }
       contact_messages: {
         Row: {
-          id: string
-          site_id: string
-          name: string
-          email: string | null
-          phone: string | null
-          message: string
-          source_slug: string | null
           consent_at: string
-          status: string
-          internal_note: string | null
-          handled_by: string | null
           created_at: string
+          email: string | null
+          handled_by: string | null
+          id: string
+          internal_note: string | null
+          message: string
+          name: string
+          phone: string | null
+          site_id: string
+          source_slug: string | null
+          status: string
         }
         Insert: {
-          id?: string
-          site_id: string
-          name: string
-          email?: string | null
-          phone?: string | null
-          message: string
-          source_slug?: string | null
           consent_at: string
-          status?: string
-          internal_note?: string | null
-          handled_by?: string | null
           created_at?: string
+          email?: string | null
+          handled_by?: string | null
+          id?: string
+          internal_note?: string | null
+          message: string
+          name: string
+          phone?: string | null
+          site_id: string
+          source_slug?: string | null
+          status?: string
         }
         Update: {
-          id?: string
-          site_id?: string
-          name?: string
-          email?: string | null
-          phone?: string | null
-          message?: string
-          source_slug?: string | null
           consent_at?: string
-          status?: string
-          internal_note?: string | null
-          handled_by?: string | null
           created_at?: string
+          email?: string | null
+          handled_by?: string | null
+          id?: string
+          internal_note?: string | null
+          message?: string
+          name?: string
+          phone?: string | null
+          site_id?: string
+          source_slug?: string | null
+          status?: string
         }
         Relationships: [
           {
@@ -950,137 +959,137 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sites"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       content_channel_metrics: {
         Row: {
+          age_bucket: string
+          brand_id: string
+          captured_at: string
           id: string
           media_index_id: string
-          brand_id: string
-          age_bucket: string
-          captured_at: string
           metrics: Json
         }
         Insert: {
+          age_bucket: string
+          brand_id: string
+          captured_at?: string
           id?: string
           media_index_id: string
-          brand_id: string
-          age_bucket: string
-          captured_at?: string
           metrics: Json
         }
         Update: {
+          age_bucket?: string
+          brand_id?: string
+          captured_at?: string
           id?: string
           media_index_id?: string
-          brand_id?: string
-          age_bucket?: string
-          captured_at?: string
           metrics?: Json
         }
         Relationships: [
           {
             foreignKeyName: "content_channel_metrics_media_index_id_brand_id_fkey"
-            columns: ["media_index_id","brand_id"]
+            columns: ["media_index_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channel_media_index"
-            referencedColumns: ["id","brand_id"]
-          }
+            referencedColumns: ["id", "brand_id"]
+          },
         ]
       }
       content_channels: {
         Row: {
-          id: string
+          attempt_count: number
+          auto_publish_state: string | null
           brand_id: string
-          content_item_id: string
+          caption: Json | null
           channel_id: string
+          content_item_id: string
+          created_at: string
+          external_media_id: string | null
           format: string
-          publication_status: string
+          id: string
+          last_error_code: string | null
           planned_at: string | null
           planned_timezone: string | null
-          caption: Json | null
-          published_at: string | null
-          published_url: string | null
-          published_note: string | null
-          published_evidence_media_version_id: string | null
-          version: number
-          created_at: string
-          updated_at: string
           position: number
+          publication_status: string
           publish_mode: string
-          auto_publish_state: string | null
-          published_via: string | null
-          external_media_id: string | null
           publish_retry_at: string | null
-          attempt_count: number
-          last_error_code: string | null
+          published_at: string | null
+          published_evidence_media_version_id: string | null
+          published_note: string | null
+          published_url: string | null
+          published_via: string | null
+          updated_at: string
+          version: number
         }
         Insert: {
-          id?: string
+          attempt_count?: number
+          auto_publish_state?: string | null
           brand_id: string
-          content_item_id: string
+          caption?: Json | null
           channel_id: string
+          content_item_id: string
+          created_at?: string
+          external_media_id?: string | null
           format: string
-          publication_status?: string
+          id?: string
+          last_error_code?: string | null
           planned_at?: string | null
           planned_timezone?: string | null
-          caption?: Json | null
-          published_at?: string | null
-          published_url?: string | null
-          published_note?: string | null
-          published_evidence_media_version_id?: string | null
-          version?: number
-          created_at?: string
-          updated_at?: string
           position?: number
+          publication_status?: string
           publish_mode?: string
-          auto_publish_state?: string | null
-          published_via?: string | null
-          external_media_id?: string | null
           publish_retry_at?: string | null
-          attempt_count?: number
-          last_error_code?: string | null
+          published_at?: string | null
+          published_evidence_media_version_id?: string | null
+          published_note?: string | null
+          published_url?: string | null
+          published_via?: string | null
+          updated_at?: string
+          version?: number
         }
         Update: {
-          id?: string
+          attempt_count?: number
+          auto_publish_state?: string | null
           brand_id?: string
-          content_item_id?: string
+          caption?: Json | null
           channel_id?: string
+          content_item_id?: string
+          created_at?: string
+          external_media_id?: string | null
           format?: string
-          publication_status?: string
+          id?: string
+          last_error_code?: string | null
           planned_at?: string | null
           planned_timezone?: string | null
-          caption?: Json | null
-          published_at?: string | null
-          published_url?: string | null
-          published_note?: string | null
-          published_evidence_media_version_id?: string | null
-          version?: number
-          created_at?: string
-          updated_at?: string
           position?: number
+          publication_status?: string
           publish_mode?: string
-          auto_publish_state?: string | null
-          published_via?: string | null
-          external_media_id?: string | null
           publish_retry_at?: string | null
-          attempt_count?: number
-          last_error_code?: string | null
+          published_at?: string | null
+          published_evidence_media_version_id?: string | null
+          published_note?: string | null
+          published_url?: string | null
+          published_via?: string | null
+          updated_at?: string
+          version?: number
         }
         Relationships: [
           {
             foreignKeyName: "content_variants_channel_id_brand_id_fkey"
-            columns: ["brand_id","channel_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "content_variants_content_item_id_brand_id_fkey"
-            columns: ["brand_id","content_item_id"]
+            columns: ["content_item_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_items"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "content_variants_published_evidence_media_version_id_fkey"
@@ -1088,113 +1097,113 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       content_items: {
         Row: {
-          id: string
-          brand_id: string
-          title: string
-          objective: string | null
-          briefing: Json | null
-          internal_notes: string | null
-          assignee_id: string | null
-          tags: string[]
-          production_due_date: string | null
-          version: number
-          cancelled_at: string | null
-          created_by: string | null
-          created_at: string
-          updated_at: string
-          objective_kind: string | null
-          caption: Json | null
-          call_to_action: string | null
-          working_media: Json
-          editorial_status: string
           approval_due_date: string | null
-          current_revision_id: string | null
           approved_revision_id: string | null
-          plan_required: boolean
-          plan_media: Json
-          plan_approved_revision_id: string | null
-          plan_summary: Json | null
+          assignee_id: string | null
+          brand_id: string
+          briefing: Json | null
           briefing_audience: string | null
-          briefing_key_message: string | null
-          briefing_creative_direction: string | null
           briefing_constraints: string | null
+          briefing_creative_direction: string | null
+          briefing_key_message: string | null
+          call_to_action: string | null
+          cancelled_at: string | null
+          caption: Json | null
+          created_at: string
+          created_by: string | null
+          current_revision_id: string | null
+          editorial_status: string
+          id: string
+          internal_notes: string | null
+          objective: string | null
+          objective_kind: string | null
+          plan_approved_revision_id: string | null
+          plan_media: Json
+          plan_required: boolean
+          plan_summary: Json | null
+          production_due_date: string | null
+          tags: string[]
+          title: string
+          updated_at: string
+          version: number
+          working_media: Json
         }
         Insert: {
-          id?: string
-          brand_id: string
-          title: string
-          objective?: string | null
-          briefing?: Json | null
-          internal_notes?: string | null
-          assignee_id?: string | null
-          tags?: string[]
-          production_due_date?: string | null
-          version?: number
-          cancelled_at?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          objective_kind?: string | null
-          caption?: Json | null
-          call_to_action?: string | null
-          working_media?: Json
-          editorial_status?: string
           approval_due_date?: string | null
-          current_revision_id?: string | null
           approved_revision_id?: string | null
-          plan_required: boolean
-          plan_media?: Json
-          plan_approved_revision_id?: string | null
-          plan_summary?: Json | null
+          assignee_id?: string | null
+          brand_id: string
+          briefing?: Json | null
           briefing_audience?: string | null
-          briefing_key_message?: string | null
-          briefing_creative_direction?: string | null
           briefing_constraints?: string | null
+          briefing_creative_direction?: string | null
+          briefing_key_message?: string | null
+          call_to_action?: string | null
+          cancelled_at?: string | null
+          caption?: Json | null
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          editorial_status?: string
+          id?: string
+          internal_notes?: string | null
+          objective?: string | null
+          objective_kind?: string | null
+          plan_approved_revision_id?: string | null
+          plan_media?: Json
+          plan_required: boolean
+          plan_summary?: Json | null
+          production_due_date?: string | null
+          tags?: string[]
+          title: string
+          updated_at?: string
+          version?: number
+          working_media?: Json
         }
         Update: {
-          id?: string
-          brand_id?: string
-          title?: string
-          objective?: string | null
-          briefing?: Json | null
-          internal_notes?: string | null
-          assignee_id?: string | null
-          tags?: string[]
-          production_due_date?: string | null
-          version?: number
-          cancelled_at?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-          objective_kind?: string | null
-          caption?: Json | null
-          call_to_action?: string | null
-          working_media?: Json
-          editorial_status?: string
           approval_due_date?: string | null
-          current_revision_id?: string | null
           approved_revision_id?: string | null
-          plan_required?: boolean
-          plan_media?: Json
-          plan_approved_revision_id?: string | null
-          plan_summary?: Json | null
+          assignee_id?: string | null
+          brand_id?: string
+          briefing?: Json | null
           briefing_audience?: string | null
-          briefing_key_message?: string | null
-          briefing_creative_direction?: string | null
           briefing_constraints?: string | null
+          briefing_creative_direction?: string | null
+          briefing_key_message?: string | null
+          call_to_action?: string | null
+          cancelled_at?: string | null
+          caption?: Json | null
+          created_at?: string
+          created_by?: string | null
+          current_revision_id?: string | null
+          editorial_status?: string
+          id?: string
+          internal_notes?: string | null
+          objective?: string | null
+          objective_kind?: string | null
+          plan_approved_revision_id?: string | null
+          plan_media?: Json
+          plan_required?: boolean
+          plan_summary?: Json | null
+          production_due_date?: string | null
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          version?: number
+          working_media?: Json
         }
         Relationships: [
           {
             foreignKeyName: "content_items_approved_revision_id_id_fkey"
-            columns: ["id","approved_revision_id"]
+            columns: ["approved_revision_id", "id"]
             isOneToOne: false
             referencedRelation: "content_revisions"
-            referencedColumns: ["id","item_id"]
+            referencedColumns: ["id", "item_id"]
           },
           {
             foreignKeyName: "content_items_assignee_id_fkey"
@@ -1219,38 +1228,38 @@ export type Database = {
           },
           {
             foreignKeyName: "content_items_current_revision_id_id_fkey"
-            columns: ["id","current_revision_id"]
+            columns: ["current_revision_id", "id"]
             isOneToOne: false
             referencedRelation: "content_revisions"
-            referencedColumns: ["id","item_id"]
+            referencedColumns: ["id", "item_id"]
           },
           {
             foreignKeyName: "content_items_plan_approved_revision_id_id_fkey"
-            columns: ["id","plan_approved_revision_id"]
+            columns: ["plan_approved_revision_id", "id"]
             isOneToOne: false
             referencedRelation: "content_revisions"
-            referencedColumns: ["id","item_id"]
-          }
+            referencedColumns: ["id", "item_id"]
+          },
         ]
       }
       content_revision_media: {
         Row: {
-          revision_id: string
+          alt_text: string | null
           media_version_id: string
           position: number
-          alt_text: string | null
+          revision_id: string
         }
         Insert: {
-          revision_id: string
+          alt_text?: string | null
           media_version_id: string
           position: number
-          alt_text?: string | null
+          revision_id: string
         }
         Update: {
-          revision_id?: string
+          alt_text?: string | null
           media_version_id?: string
           position?: number
-          alt_text?: string | null
+          revision_id?: string
         }
         Relationships: [
           {
@@ -1266,38 +1275,38 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "content_revisions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       content_revisions: {
         Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
           id: string
           item_id: string
-          brand_id: string
           revision_no: number
           snapshot: Json
-          created_by: string | null
-          created_at: string
           stage: string
         }
         Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
           id?: string
           item_id: string
-          brand_id: string
           revision_no: number
           snapshot: Json
-          created_by?: string | null
-          created_at?: string
           stage?: string
         }
         Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
           id?: string
           item_id?: string
-          brand_id?: string
           revision_no?: number
           snapshot?: Json
-          created_by?: string | null
-          created_at?: string
           stage?: string
         }
         Relationships: [
@@ -1310,96 +1319,94 @@ export type Database = {
           },
           {
             foreignKeyName: "content_revisions_item_id_brand_id_fkey"
-            columns: ["item_id","brand_id"]
+            columns: ["item_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_items"
-            referencedColumns: ["id","brand_id"]
-          }
+            referencedColumns: ["id", "brand_id"]
+          },
         ]
       }
       email_outbox: {
         Row: {
-          id: string
-          to_email: string
-          template: string
-          payload: Json
-          status: string
           attempts: number
+          created_at: string
+          id: string
           last_error: string | null
           next_attempt_at: string
-          created_at: string
+          payload: Json
+          status: string
+          template: string
+          to_email: string
         }
         Insert: {
+          attempts?: number
+          created_at?: string
           id?: string
-          to_email: string
-          template: string
+          last_error?: string | null
+          next_attempt_at?: string
           payload: Json
           status?: string
-          attempts?: number
-          last_error?: string | null
-          next_attempt_at?: string
-          created_at?: string
+          template: string
+          to_email: string
         }
         Update: {
-          id?: string
-          to_email?: string
-          template?: string
-          payload?: Json
-          status?: string
           attempts?: number
+          created_at?: string
+          id?: string
           last_error?: string | null
           next_attempt_at?: string
-          created_at?: string
+          payload?: Json
+          status?: string
+          template?: string
+          to_email?: string
         }
-        Relationships: [
-
-        ]
+        Relationships: []
       }
       invitations: {
         Row: {
-          id: string
-          organization_id: string
-          email: string
-          role_id: string
-          grants: Json
-          token_hash: string
-          status: string
-          expires_at: string
-          invited_by: string | null
-          accepted_by: string | null
           accepted_at: string | null
-          revoked_at: string | null
+          accepted_by: string | null
           created_at: string
+          email: string
+          expires_at: string
+          grants: Json
+          id: string
+          invited_by: string | null
+          organization_id: string
+          revoked_at: string | null
+          role_id: string
+          status: string
+          token_hash: string
         }
         Insert: {
-          id?: string
-          organization_id: string
-          email: string
-          role_id: string
-          grants?: Json
-          token_hash: string
-          status?: string
-          expires_at: string
-          invited_by?: string | null
-          accepted_by?: string | null
           accepted_at?: string | null
-          revoked_at?: string | null
+          accepted_by?: string | null
           created_at?: string
+          email: string
+          expires_at: string
+          grants?: Json
+          id?: string
+          invited_by?: string | null
+          organization_id: string
+          revoked_at?: string | null
+          role_id: string
+          status?: string
+          token_hash: string
         }
         Update: {
-          id?: string
-          organization_id?: string
-          email?: string
-          role_id?: string
-          grants?: Json
-          token_hash?: string
-          status?: string
-          expires_at?: string
-          invited_by?: string | null
-          accepted_by?: string | null
           accepted_at?: string | null
-          revoked_at?: string | null
+          accepted_by?: string | null
           created_at?: string
+          email?: string
+          expires_at?: string
+          grants?: Json
+          id?: string
+          invited_by?: string | null
+          organization_id?: string
+          revoked_at?: string | null
+          role_id?: string
+          status?: string
+          token_hash?: string
         }
         Relationships: [
           {
@@ -1429,57 +1436,57 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_assets: {
         Row: {
+          brand_id: string | null
+          created_at: string
+          created_by: string | null
+          current_version_id: string | null
+          display_name: string
           id: string
           organization_id: string
-          scope: string
-          brand_id: string | null
-          display_name: string
-          tags: string[]
-          current_version_id: string | null
-          size_bytes: number
-          version: number
-          trashed_at: string | null
-          created_by: string | null
-          created_at: string
-          updated_at: string
           owner_id: string | null
+          scope: string
+          size_bytes: number
+          tags: string[]
+          trashed_at: string | null
+          updated_at: string
+          version: number
         }
         Insert: {
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_version_id?: string | null
+          display_name: string
           id?: string
           organization_id: string
-          scope: string
-          brand_id?: string | null
-          display_name: string
-          tags?: string[]
-          current_version_id?: string | null
-          size_bytes?: number
-          version?: number
-          trashed_at?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
           owner_id?: string | null
+          scope: string
+          size_bytes?: number
+          tags?: string[]
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
         }
         Update: {
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_version_id?: string | null
+          display_name?: string
           id?: string
           organization_id?: string
-          scope?: string
-          brand_id?: string | null
-          display_name?: string
-          tags?: string[]
-          current_version_id?: string | null
-          size_bytes?: number
-          version?: number
-          trashed_at?: string | null
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
           owner_id?: string | null
+          scope?: string
+          size_bytes?: number
+          tags?: string[]
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -1516,21 +1523,21 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_collection_items: {
         Row: {
-          collection_id: string
           asset_id: string
+          collection_id: string
         }
         Insert: {
-          collection_id: string
           asset_id: string
+          collection_id: string
         }
         Update: {
-          collection_id?: string
           asset_id?: string
+          collection_id?: string
         }
         Relationships: [
           {
@@ -1546,36 +1553,36 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_collections"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_collections: {
         Row: {
-          id: string
-          organization_id: string
-          scope: string
           brand_id: string | null
-          parent_id: string | null
-          name: string
           created_at: string
+          id: string
+          name: string
+          organization_id: string
+          parent_id: string | null
+          scope: string
         }
         Insert: {
-          id?: string
-          organization_id: string
-          scope: string
           brand_id?: string | null
-          parent_id?: string | null
-          name: string
           created_at?: string
+          id?: string
+          name: string
+          organization_id: string
+          parent_id?: string | null
+          scope: string
         }
         Update: {
-          id?: string
-          organization_id?: string
-          scope?: string
           brand_id?: string | null
-          parent_id?: string | null
-          name?: string
           created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string
+          parent_id?: string | null
+          scope?: string
         }
         Relationships: [
           {
@@ -1598,30 +1605,30 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_collections"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_share_events: {
         Row: {
+          asset_id: string | null
+          created_at: string
           id: number
           share_id: string
           type: string
-          asset_id: string | null
-          created_at: string
         }
         Insert: {
-          id?: number
+          asset_id?: string | null
+          created_at?: string
+          id?: never
           share_id: string
           type: string
-          asset_id?: string | null
-          created_at?: string
         }
         Update: {
-          id?: number
-          share_id?: string
-          type?: string
           asset_id?: string | null
           created_at?: string
+          id?: never
+          share_id?: string
+          type?: string
         }
         Relationships: [
           {
@@ -1637,30 +1644,30 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_shares"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_share_grants: {
         Row: {
+          created_at: string
+          expires_at: string
           id: string
           share_id: string
           token_hash: string
-          expires_at: string
-          created_at: string
         }
         Insert: {
+          created_at?: string
+          expires_at: string
           id?: string
           share_id: string
           token_hash: string
-          expires_at: string
-          created_at?: string
         }
         Update: {
+          created_at?: string
+          expires_at?: string
           id?: string
           share_id?: string
           token_hash?: string
-          expires_at?: string
-          created_at?: string
         }
         Relationships: [
           {
@@ -1669,87 +1676,87 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_shares"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_shares: {
         Row: {
-          id: string
-          token: string
-          organization_id: string
-          scope: string
-          brand_id: string | null
-          label: string
-          message: string | null
-          asset_id: string | null
-          pinned_version_id: string | null
-          collection_id: string | null
-          include_subcollections: boolean
           allow_download: boolean
-          expires_at: string | null
-          password_hash: string | null
-          has_password: boolean | null
-          max_downloads: number | null
-          download_count: number
-          failed_attempts: number
-          locked_until: string | null
-          status: string
-          created_by: string | null
+          asset_id: string | null
+          brand_id: string | null
+          collection_id: string | null
           created_at: string
-          revoked_at: string | null
+          created_by: string | null
+          download_count: number
+          expires_at: string | null
+          failed_attempts: number
+          has_password: boolean | null
+          id: string
+          include_subcollections: boolean
+          label: string
           last_accessed_at: string | null
+          locked_until: string | null
+          max_downloads: number | null
+          message: string | null
+          organization_id: string
+          password_hash: string | null
+          pinned_version_id: string | null
+          revoked_at: string | null
+          scope: string
+          status: string
+          token: string
         }
         Insert: {
-          id?: string
-          token?: string
-          organization_id: string
-          scope: string
-          brand_id?: string | null
-          label: string
-          message?: string | null
-          asset_id?: string | null
-          pinned_version_id?: string | null
-          collection_id?: string | null
-          include_subcollections?: boolean
           allow_download?: boolean
-          expires_at?: string | null
-          password_hash?: string | null
-          has_password?: boolean | null
-          max_downloads?: number | null
-          download_count?: number
-          failed_attempts?: number
-          locked_until?: string | null
-          status?: string
-          created_by?: string | null
+          asset_id?: string | null
+          brand_id?: string | null
+          collection_id?: string | null
           created_at?: string
-          revoked_at?: string | null
+          created_by?: string | null
+          download_count?: number
+          expires_at?: string | null
+          failed_attempts?: number
+          has_password?: boolean | null
+          id?: string
+          include_subcollections?: boolean
+          label: string
           last_accessed_at?: string | null
+          locked_until?: string | null
+          max_downloads?: number | null
+          message?: string | null
+          organization_id: string
+          password_hash?: string | null
+          pinned_version_id?: string | null
+          revoked_at?: string | null
+          scope: string
+          status?: string
+          token?: string
         }
         Update: {
-          id?: string
-          token?: string
-          organization_id?: string
-          scope?: string
-          brand_id?: string | null
-          label?: string
-          message?: string | null
-          asset_id?: string | null
-          pinned_version_id?: string | null
-          collection_id?: string | null
-          include_subcollections?: boolean
           allow_download?: boolean
-          expires_at?: string | null
-          password_hash?: string | null
-          has_password?: boolean | null
-          max_downloads?: number | null
-          download_count?: number
-          failed_attempts?: number
-          locked_until?: string | null
-          status?: string
-          created_by?: string | null
+          asset_id?: string | null
+          brand_id?: string | null
+          collection_id?: string | null
           created_at?: string
-          revoked_at?: string | null
+          created_by?: string | null
+          download_count?: number
+          expires_at?: string | null
+          failed_attempts?: number
+          has_password?: boolean | null
+          id?: string
+          include_subcollections?: boolean
+          label?: string
           last_accessed_at?: string | null
+          locked_until?: string | null
+          max_downloads?: number | null
+          message?: string | null
+          organization_id?: string
+          password_hash?: string | null
+          pinned_version_id?: string | null
+          revoked_at?: string | null
+          scope?: string
+          status?: string
+          token?: string
         }
         Relationships: [
           {
@@ -1793,42 +1800,42 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_upload_sessions: {
         Row: {
-          id: string
-          version_id: string
           author_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          idempotency_key: string
           purpose: string
           reserved_bytes: number
           status: string
-          idempotency_key: string
-          expires_at: string
-          created_at: string
+          version_id: string
         }
         Insert: {
-          id?: string
-          version_id: string
           author_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          idempotency_key: string
           purpose: string
           reserved_bytes: number
           status?: string
-          idempotency_key: string
-          expires_at: string
-          created_at?: string
+          version_id: string
         }
         Update: {
-          id?: string
-          version_id?: string
           author_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          idempotency_key?: string
           purpose?: string
           reserved_bytes?: number
           status?: string
-          idempotency_key?: string
-          expires_at?: string
-          created_at?: string
+          version_id?: string
         }
         Relationships: [
           {
@@ -1844,33 +1851,33 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_usages: {
         Row: {
-          id: string
-          media_version_id: string
-          usage_type: string
-          usage_ref_id: string
           alt_text: string | null
           created_at: string
+          id: string
+          media_version_id: string
+          usage_ref_id: string
+          usage_type: string
         }
         Insert: {
+          alt_text?: string | null
+          created_at?: string
           id?: string
           media_version_id: string
-          usage_type: string
           usage_ref_id: string
-          alt_text?: string | null
-          created_at?: string
+          usage_type: string
         }
         Update: {
-          id?: string
-          media_version_id?: string
-          usage_type?: string
-          usage_ref_id?: string
           alt_text?: string | null
           created_at?: string
+          id?: string
+          media_version_id?: string
+          usage_ref_id?: string
+          usage_type?: string
         }
         Relationships: [
           {
@@ -1879,81 +1886,81 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       media_versions: {
         Row: {
-          id: string
           asset_id: string
-          version_no: number
+          checksum: string | null
+          created_at: string
+          derivative_bytes: number
+          display_key: string | null
+          duration_ms: number | null
+          failure_reason: string | null
+          height: number | null
+          id: string
+          mime_type: string
+          original_filename: string
+          original_purged_at: string | null
+          public_published_at: string | null
+          purge_keep_preview: boolean
+          purge_requested_at: string | null
+          size_bytes: number
+          status: string
           storage_key: string
           thumb_key: string | null
-          display_key: string | null
-          original_filename: string
-          mime_type: string
-          size_bytes: number
-          derivative_bytes: number
-          width: number | null
-          height: number | null
-          duration_ms: number | null
-          checksum: string | null
-          status: string
-          failure_reason: string | null
-          public_published_at: string | null
           uploaded_by: string | null
-          created_at: string
-          purge_requested_at: string | null
-          purge_keep_preview: boolean
-          original_purged_at: string | null
+          version_no: number
+          width: number | null
         }
         Insert: {
-          id?: string
           asset_id: string
-          version_no: number
+          checksum?: string | null
+          created_at?: string
+          derivative_bytes?: number
+          display_key?: string | null
+          duration_ms?: number | null
+          failure_reason?: string | null
+          height?: number | null
+          id?: string
+          mime_type: string
+          original_filename: string
+          original_purged_at?: string | null
+          public_published_at?: string | null
+          purge_keep_preview?: boolean
+          purge_requested_at?: string | null
+          size_bytes: number
+          status?: string
           storage_key: string
           thumb_key?: string | null
-          display_key?: string | null
-          original_filename: string
-          mime_type: string
-          size_bytes: number
-          derivative_bytes?: number
-          width?: number | null
-          height?: number | null
-          duration_ms?: number | null
-          checksum?: string | null
-          status?: string
-          failure_reason?: string | null
-          public_published_at?: string | null
           uploaded_by?: string | null
-          created_at?: string
-          purge_requested_at?: string | null
-          purge_keep_preview?: boolean
-          original_purged_at?: string | null
+          version_no: number
+          width?: number | null
         }
         Update: {
-          id?: string
           asset_id?: string
-          version_no?: number
+          checksum?: string | null
+          created_at?: string
+          derivative_bytes?: number
+          display_key?: string | null
+          duration_ms?: number | null
+          failure_reason?: string | null
+          height?: number | null
+          id?: string
+          mime_type?: string
+          original_filename?: string
+          original_purged_at?: string | null
+          public_published_at?: string | null
+          purge_keep_preview?: boolean
+          purge_requested_at?: string | null
+          size_bytes?: number
+          status?: string
           storage_key?: string
           thumb_key?: string | null
-          display_key?: string | null
-          original_filename?: string
-          mime_type?: string
-          size_bytes?: number
-          derivative_bytes?: number
-          width?: number | null
-          height?: number | null
-          duration_ms?: number | null
-          checksum?: string | null
-          status?: string
-          failure_reason?: string | null
-          public_published_at?: string | null
           uploaded_by?: string | null
-          created_at?: string
-          purge_requested_at?: string | null
-          purge_keep_preview?: boolean
-          original_purged_at?: string | null
+          version_no?: number
+          width?: number | null
         }
         Relationships: [
           {
@@ -1969,51 +1976,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       metric_marks: {
         Row: {
-          id: string
           brand_id: string
           channel_id: string | null
+          content_item_id: string | null
+          created_at: string
+          created_by: string | null
+          ends_on: string | null
+          id: string
           kind: string
           label: string
           starts_on: string
-          ends_on: string | null
-          content_item_id: string | null
-          version: number
-          created_by: string | null
-          created_at: string
           updated_at: string
+          version: number
         }
         Insert: {
-          id?: string
           brand_id: string
           channel_id?: string | null
+          content_item_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          id?: string
           kind: string
           label: string
           starts_on: string
-          ends_on?: string | null
-          content_item_id?: string | null
-          version?: number
-          created_by?: string | null
-          created_at?: string
           updated_at?: string
+          version?: number
         }
         Update: {
-          id?: string
           brand_id?: string
           channel_id?: string | null
+          content_item_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          ends_on?: string | null
+          id?: string
           kind?: string
           label?: string
           starts_on?: string
-          ends_on?: string | null
-          content_item_id?: string | null
-          version?: number
-          created_by?: string | null
-          created_at?: string
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -2025,17 +2032,17 @@ export type Database = {
           },
           {
             foreignKeyName: "metric_marks_channel_id_brand_id_fkey"
-            columns: ["brand_id","channel_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "metric_marks_content_item_id_brand_id_fkey"
-            columns: ["brand_id","content_item_id"]
+            columns: ["content_item_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_items"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "metric_marks_created_by_fkey"
@@ -2043,75 +2050,75 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       metric_reports: {
         Row: {
-          id: string
+          blocks: Json
           brand_id: string
           channel_id: string
-          period_start: string
-          period_end: string
           compare_mode: string
-          title: string
+          created_at: string
+          created_by: string | null
+          id: string
           message: string | null
           next_steps: Json
-          blocks: Json
+          period_end: string
+          period_start: string
+          previous_report_id: string | null
+          published_at: string | null
+          published_by: string | null
           snapshot: Json | null
           status: string
-          version: number
-          previous_report_id: string | null
-          created_by: string | null
-          published_by: string | null
-          published_at: string | null
-          withdrawn_at: string | null
-          created_at: string
+          title: string
           updated_at: string
+          version: number
+          withdrawn_at: string | null
         }
         Insert: {
-          id?: string
+          blocks?: Json
           brand_id: string
           channel_id: string
-          period_start: string
-          period_end: string
           compare_mode?: string
-          title: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
           message?: string | null
           next_steps?: Json
-          blocks?: Json
+          period_end: string
+          period_start: string
+          previous_report_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
           snapshot?: Json | null
           status?: string
-          version?: number
-          previous_report_id?: string | null
-          created_by?: string | null
-          published_by?: string | null
-          published_at?: string | null
-          withdrawn_at?: string | null
-          created_at?: string
+          title: string
           updated_at?: string
+          version?: number
+          withdrawn_at?: string | null
         }
         Update: {
-          id?: string
+          blocks?: Json
           brand_id?: string
           channel_id?: string
-          period_start?: string
-          period_end?: string
           compare_mode?: string
-          title?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
           message?: string | null
           next_steps?: Json
-          blocks?: Json
+          period_end?: string
+          period_start?: string
+          previous_report_id?: string | null
+          published_at?: string | null
+          published_by?: string | null
           snapshot?: Json | null
           status?: string
-          version?: number
-          previous_report_id?: string | null
-          created_by?: string | null
-          published_by?: string | null
-          published_at?: string | null
-          withdrawn_at?: string | null
-          created_at?: string
+          title?: string
           updated_at?: string
+          version?: number
+          withdrawn_at?: string | null
         }
         Relationships: [
           {
@@ -2123,10 +2130,10 @@ export type Database = {
           },
           {
             foreignKeyName: "metric_reports_channel_id_brand_id_fkey"
-            columns: ["brand_id","channel_id"]
+            columns: ["channel_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "channels"
-            referencedColumns: ["id","brand_id"]
+            referencedColumns: ["id", "brand_id"]
           },
           {
             foreignKeyName: "metric_reports_created_by_fkey"
@@ -2148,42 +2155,42 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       notification_kinds: {
         Row: {
-          kind: string
-          title: string
-          required_action: string
-          severity: string
-          default_lead_days: number[] | null
-          schedulable: boolean
-          portal: boolean
-          default_email: boolean
           available: boolean
+          default_email: boolean
+          default_lead_days: number[] | null
+          kind: string
+          portal: boolean
+          required_action: string
+          schedulable: boolean
+          severity: string
+          title: string
         }
         Insert: {
-          kind: string
-          title: string
-          required_action: string
-          severity?: string
-          default_lead_days?: number[] | null
-          schedulable?: boolean
-          portal?: boolean
-          default_email?: boolean
           available?: boolean
+          default_email?: boolean
+          default_lead_days?: number[] | null
+          kind: string
+          portal?: boolean
+          required_action: string
+          schedulable?: boolean
+          severity?: string
+          title: string
         }
         Update: {
-          kind?: string
-          title?: string
-          required_action?: string
-          severity?: string
-          default_lead_days?: number[] | null
-          schedulable?: boolean
-          portal?: boolean
-          default_email?: boolean
           available?: boolean
+          default_email?: boolean
+          default_lead_days?: number[] | null
+          kind?: string
+          portal?: boolean
+          required_action?: string
+          schedulable?: boolean
+          severity?: string
+          title?: string
         }
         Relationships: [
           {
@@ -2192,30 +2199,30 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "actions"
             referencedColumns: ["key"]
-          }
+          },
         ]
       }
       notification_preferences: {
         Row: {
-          user_id: string
-          kind: string
-          enabled: boolean
           email: boolean
+          enabled: boolean
+          kind: string
           lead_days: number[] | null
+          user_id: string
         }
         Insert: {
-          user_id: string
-          kind: string
-          enabled?: boolean
           email?: boolean
+          enabled?: boolean
+          kind: string
           lead_days?: number[] | null
+          user_id: string
         }
         Update: {
-          user_id?: string
-          kind?: string
-          enabled?: boolean
           email?: boolean
+          enabled?: boolean
+          kind?: string
           lead_days?: number[] | null
+          user_id?: string
         }
         Relationships: [
           {
@@ -2231,60 +2238,60 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       notifications: {
         Row: {
-          id: string
-          user_id: string
-          kind: string
-          brand_id: string | null
-          title: string
           body: string | null
-          link: string | null
-          ref_type: string | null
-          ref_id: string | null
-          severity: string
-          status: string
-          dedupe_key: string
-          read_at: string | null
-          snoozed_until: string | null
+          brand_id: string | null
           created_at: string
+          dedupe_key: string
+          id: string
+          kind: string
+          link: string | null
+          read_at: string | null
+          ref_id: string | null
+          ref_type: string | null
+          severity: string
+          snoozed_until: string | null
+          status: string
+          title: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          kind: string
-          brand_id?: string | null
-          title: string
           body?: string | null
-          link?: string | null
-          ref_type?: string | null
-          ref_id?: string | null
-          severity?: string
-          status?: string
-          dedupe_key: string
-          read_at?: string | null
-          snoozed_until?: string | null
+          brand_id?: string | null
           created_at?: string
+          dedupe_key: string
+          id?: string
+          kind: string
+          link?: string | null
+          read_at?: string | null
+          ref_id?: string | null
+          ref_type?: string | null
+          severity?: string
+          snoozed_until?: string | null
+          status?: string
+          title: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          kind?: string
-          brand_id?: string | null
-          title?: string
           body?: string | null
-          link?: string | null
-          ref_type?: string | null
-          ref_id?: string | null
-          severity?: string
-          status?: string
-          dedupe_key?: string
-          read_at?: string | null
-          snoozed_until?: string | null
+          brand_id?: string | null
           created_at?: string
+          dedupe_key?: string
+          id?: string
+          kind?: string
+          link?: string | null
+          read_at?: string | null
+          ref_id?: string | null
+          ref_type?: string | null
+          severity?: string
+          snoozed_until?: string | null
+          status?: string
+          title?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -2307,30 +2314,30 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       organization_settings: {
         Row: {
           key: string
+          updated_at: string
+          updated_by: string | null
           value: Json
           version: number
-          updated_by: string | null
-          updated_at: string
         }
         Insert: {
           key: string
+          updated_at?: string
+          updated_by?: string | null
           value: Json
           version?: number
-          updated_by?: string | null
-          updated_at?: string
         }
         Update: {
           key?: string
+          updated_at?: string
+          updated_by?: string | null
           value?: Json
           version?: number
-          updated_by?: string | null
-          updated_at?: string
         }
         Relationships: [
           {
@@ -2339,45 +2346,45 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       organizations: {
         Row: {
-          id: string
-          name: string
-          legal_name: string | null
-          tax_id: string | null
-          default_timezone: string
-          logo_media_version_id: string | null
           contact_email: string | null
-          version: number
           created_at: string
+          default_timezone: string
+          id: string
+          legal_name: string | null
+          logo_media_version_id: string | null
+          name: string
+          tax_id: string | null
           updated_at: string
+          version: number
         }
         Insert: {
-          id?: string
-          name: string
-          legal_name?: string | null
-          tax_id?: string | null
-          default_timezone?: string
-          logo_media_version_id?: string | null
           contact_email?: string | null
-          version?: number
           created_at?: string
+          default_timezone?: string
+          id?: string
+          legal_name?: string | null
+          logo_media_version_id?: string | null
+          name: string
+          tax_id?: string | null
           updated_at?: string
+          version?: number
         }
         Update: {
-          id?: string
-          name?: string
-          legal_name?: string | null
-          tax_id?: string | null
-          default_timezone?: string
-          logo_media_version_id?: string | null
           contact_email?: string | null
-          version?: number
           created_at?: string
+          default_timezone?: string
+          id?: string
+          legal_name?: string | null
+          logo_media_version_id?: string | null
+          name?: string
+          tax_id?: string | null
           updated_at?: string
+          version?: number
         }
         Relationships: [
           {
@@ -2386,77 +2393,75 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       profile_audit: {
         Row: {
-          id: number
-          actor_id: string | null
-          profile_id: string
           action: string
-          old_value: Json | null
-          new_value: Json | null
+          actor_id: string | null
           created_at: string
+          id: number
+          new_value: Json | null
+          old_value: Json | null
+          profile_id: string
         }
         Insert: {
-          id?: number
-          actor_id?: string | null
-          profile_id: string
           action: string
-          old_value?: Json | null
-          new_value?: Json | null
+          actor_id?: string | null
           created_at?: string
+          id?: never
+          new_value?: Json | null
+          old_value?: Json | null
+          profile_id: string
         }
         Update: {
-          id?: number
-          actor_id?: string | null
-          profile_id?: string
           action?: string
-          old_value?: Json | null
-          new_value?: Json | null
+          actor_id?: string | null
           created_at?: string
+          id?: never
+          new_value?: Json | null
+          old_value?: Json | null
+          profile_id?: string
         }
-        Relationships: [
-
-        ]
+        Relationships: []
       }
       profiles: {
         Row: {
-          id: string
-          full_name: string
-          email: string
-          status: string
-          kind: string
-          role_id: string | null
-          locale: string
-          created_at: string
-          updated_at: string
           avatar_media_version_id: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          kind: string
+          locale: string
+          role_id: string | null
+          status: string
+          updated_at: string
         }
         Insert: {
-          id: string
-          full_name: string
-          email: string
-          status?: string
-          kind?: string
-          role_id?: string | null
-          locale?: string
-          created_at?: string
-          updated_at?: string
           avatar_media_version_id?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id: string
+          kind?: string
+          locale?: string
+          role_id?: string | null
+          status?: string
+          updated_at?: string
         }
         Update: {
-          id?: string
-          full_name?: string
-          email?: string
-          status?: string
-          kind?: string
-          role_id?: string | null
-          locale?: string
-          created_at?: string
-          updated_at?: string
           avatar_media_version_id?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          kind?: string
+          locale?: string
+          role_id?: string | null
+          status?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -2467,59 +2472,52 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "profiles_role_id_fkey"
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       publish_attempts: {
         Row: {
-          id: string
-          channel_row_id: string
-          brand_id: string
           attempt_no: number
+          brand_id: string
+          channel_row_id: string
           container_id: string | null
-          status: string
-          error_code: string | null
-          provider_error: string | null
-          media_id: string | null
           created_at: string
+          error_code: string | null
+          id: string
+          media_id: string | null
+          provider_error: string | null
+          status: string
           updated_at: string
         }
         Insert: {
-          id?: string
-          channel_row_id: string
-          brand_id: string
           attempt_no: number
+          brand_id: string
+          channel_row_id: string
           container_id?: string | null
-          status?: string
-          error_code?: string | null
-          provider_error?: string | null
-          media_id?: string | null
           created_at?: string
+          error_code?: string | null
+          id?: string
+          media_id?: string | null
+          provider_error?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
-          id?: string
-          channel_row_id?: string
-          brand_id?: string
           attempt_no?: number
+          brand_id?: string
+          channel_row_id?: string
           container_id?: string | null
-          status?: string
-          error_code?: string | null
-          provider_error?: string | null
-          media_id?: string | null
           created_at?: string
+          error_code?: string | null
+          id?: string
+          media_id?: string | null
+          provider_error?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [
@@ -2531,26 +2529,26 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "publish_attempts_channel_row_id_fkey"
-            columns: ["channel_row_id"]
+            foreignKeyName: "publish_attempts_channel_row_id_brand_id_fkey"
+            columns: ["channel_row_id", "brand_id"]
             isOneToOne: false
             referencedRelation: "content_channels"
-            referencedColumns: ["id"]
-          }
+            referencedColumns: ["id", "brand_id"]
+          },
         ]
       }
       role_actions: {
         Row: {
-          role_id: string
           action_key: string
+          role_id: string
         }
         Insert: {
-          role_id: string
           action_key: string
+          role_id: string
         }
         Update: {
-          role_id?: string
           action_key?: string
+          role_id?: string
         }
         Relationships: [
           {
@@ -2566,104 +2564,100 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "roles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       role_audit: {
         Row: {
-          id: number
-          actor_id: string | null
-          role_id: string | null
           action: string
-          old_value: Json | null
-          new_value: Json | null
+          actor_id: string | null
           created_at: string
+          id: number
+          new_value: Json | null
+          old_value: Json | null
+          role_id: string | null
         }
         Insert: {
-          id?: number
-          actor_id?: string | null
-          role_id?: string | null
           action: string
-          old_value?: Json | null
-          new_value?: Json | null
+          actor_id?: string | null
           created_at?: string
+          id?: never
+          new_value?: Json | null
+          old_value?: Json | null
+          role_id?: string | null
         }
         Update: {
-          id?: number
-          actor_id?: string | null
-          role_id?: string | null
           action?: string
-          old_value?: Json | null
-          new_value?: Json | null
+          actor_id?: string | null
           created_at?: string
+          id?: never
+          new_value?: Json | null
+          old_value?: Json | null
+          role_id?: string | null
         }
-        Relationships: [
-
-        ]
+        Relationships: []
       }
       roles: {
         Row: {
+          created_at: string
+          description: string | null
           id: string
+          is_system: boolean
           key: string
           name: string
-          description: string | null
-          is_system: boolean
           portal_only: boolean
-          created_at: string
           updated_at: string
         }
         Insert: {
+          created_at?: string
+          description?: string | null
           id?: string
+          is_system?: boolean
           key: string
           name: string
-          description?: string | null
-          is_system?: boolean
           portal_only?: boolean
-          created_at?: string
           updated_at?: string
         }
         Update: {
+          created_at?: string
+          description?: string | null
           id?: string
+          is_system?: boolean
           key?: string
           name?: string
-          description?: string | null
-          is_system?: boolean
           portal_only?: boolean
-          created_at?: string
           updated_at?: string
         }
-        Relationships: [
-
-        ]
+        Relationships: []
       }
       site_case_study_authorizations: {
         Row: {
+          authorized_at: string
+          authorized_by: string
+          brand_id: string
+          consent_note: string
           id: string
           page_id: string
-          brand_id: string
-          authorized_by: string
-          authorized_at: string
-          consent_note: string
           withdrawn_at: string | null
           withdrawn_by: string | null
         }
         Insert: {
+          authorized_at?: string
+          authorized_by: string
+          brand_id: string
+          consent_note: string
           id?: string
           page_id: string
-          brand_id: string
-          authorized_by: string
-          authorized_at?: string
-          consent_note: string
           withdrawn_at?: string | null
           withdrawn_by?: string | null
         }
         Update: {
+          authorized_at?: string
+          authorized_by?: string
+          brand_id?: string
+          consent_note?: string
           id?: string
           page_id?: string
-          brand_id?: string
-          authorized_by?: string
-          authorized_at?: string
-          consent_note?: string
           withdrawn_at?: string | null
           withdrawn_by?: string | null
         }
@@ -2695,42 +2689,42 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       site_entries: {
         Row: {
-          id: string
-          site_id: string
-          kind: string
           content: Json
+          id: string
+          kind: string
+          site_id: string
           sort_order: number
-          visible: boolean
-          version: number
-          updated_by: string | null
           updated_at: string
+          updated_by: string | null
+          version: number
+          visible: boolean
         }
         Insert: {
-          id?: string
-          site_id: string
-          kind: string
           content: Json
+          id?: string
+          kind: string
+          site_id: string
           sort_order?: number
-          visible?: boolean
-          version?: number
-          updated_by?: string | null
           updated_at?: string
+          updated_by?: string | null
+          version?: number
+          visible?: boolean
         }
         Update: {
-          id?: string
-          site_id?: string
-          kind?: string
           content?: Json
+          id?: string
+          kind?: string
+          site_id?: string
           sort_order?: number
-          visible?: boolean
-          version?: number
-          updated_by?: string | null
           updated_at?: string
+          updated_by?: string | null
+          version?: number
+          visible?: boolean
         }
         Relationships: [
           {
@@ -2746,44 +2740,44 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       site_page_revisions: {
         Row: {
-          id: string
-          page_id: string
-          revision_no: number
-          content: Json
-          note: string | null
-          published_by: string | null
-          published_at: string
-          live_from: string | null
           cancelled_at: string | null
+          content: Json
+          id: string
+          live_from: string | null
+          note: string | null
+          page_id: string
+          published_at: string
+          published_by: string | null
+          revision_no: number
           source_revision_id: string | null
         }
         Insert: {
-          id?: string
-          page_id: string
-          revision_no: number
-          content: Json
-          note?: string | null
-          published_by?: string | null
-          published_at?: string
-          live_from?: string | null
           cancelled_at?: string | null
+          content: Json
+          id?: string
+          live_from?: string | null
+          note?: string | null
+          page_id: string
+          published_at?: string
+          published_by?: string | null
+          revision_no: number
           source_revision_id?: string | null
         }
         Update: {
-          id?: string
-          page_id?: string
-          revision_no?: number
-          content?: Json
-          note?: string | null
-          published_by?: string | null
-          published_at?: string
-          live_from?: string | null
           cancelled_at?: string | null
+          content?: Json
+          id?: string
+          live_from?: string | null
+          note?: string | null
+          page_id?: string
+          published_at?: string
+          published_by?: string | null
+          revision_no?: number
           source_revision_id?: string | null
         }
         Relationships: [
@@ -2807,51 +2801,51 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "site_page_revisions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       site_pages: {
         Row: {
+          created_at: string
+          draft_content: Json
           id: string
-          site_id: string
+          is_system: boolean
           kind: string
+          published_revision_id: string | null
+          site_id: string
           slug: string
           status: string
-          draft_content: Json
-          published_revision_id: string | null
-          is_system: boolean
-          version: number
-          updated_by: string | null
-          created_at: string
           updated_at: string
+          updated_by: string | null
+          version: number
         }
         Insert: {
+          created_at?: string
+          draft_content?: Json
           id?: string
-          site_id: string
+          is_system?: boolean
           kind: string
+          published_revision_id?: string | null
+          site_id: string
           slug: string
           status?: string
-          draft_content?: Json
-          published_revision_id?: string | null
-          is_system?: boolean
-          version?: number
-          updated_by?: string | null
-          created_at?: string
           updated_at?: string
+          updated_by?: string | null
+          version?: number
         }
         Update: {
+          created_at?: string
+          draft_content?: Json
           id?: string
-          site_id?: string
+          is_system?: boolean
           kind?: string
+          published_revision_id?: string | null
+          site_id?: string
           slug?: string
           status?: string
-          draft_content?: Json
-          published_revision_id?: string | null
-          is_system?: boolean
-          version?: number
-          updated_by?: string | null
-          created_at?: string
           updated_at?: string
+          updated_by?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -2874,36 +2868,36 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       site_redirects: {
         Row: {
-          id: string
-          site_id: string
-          from_path: string
-          to_path: string
-          permanent: boolean
-          created_by: string | null
           created_at: string
+          created_by: string | null
+          from_path: string
+          id: string
+          permanent: boolean
+          site_id: string
+          to_path: string
         }
         Insert: {
-          id?: string
-          site_id: string
-          from_path: string
-          to_path: string
-          permanent?: boolean
-          created_by?: string | null
           created_at?: string
+          created_by?: string | null
+          from_path: string
+          id?: string
+          permanent?: boolean
+          site_id: string
+          to_path: string
         }
         Update: {
-          id?: string
-          site_id?: string
-          from_path?: string
-          to_path?: string
-          permanent?: boolean
-          created_by?: string | null
           created_at?: string
+          created_by?: string | null
+          from_path?: string
+          id?: string
+          permanent?: boolean
+          site_id?: string
+          to_path?: string
         }
         Relationships: [
           {
@@ -2919,39 +2913,39 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sites"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       sites: {
         Row: {
+          created_at: string
           id: string
-          organization_id: string
           name: string
-          settings: Json
-          settings_version: number
+          organization_id: string
           published_settings: Json | null
           published_settings_at: string | null
-          created_at: string
+          settings: Json
+          settings_version: number
         }
         Insert: {
+          created_at?: string
           id?: string
-          organization_id: string
           name: string
-          settings?: Json
-          settings_version?: number
+          organization_id: string
           published_settings?: Json | null
           published_settings_at?: string | null
-          created_at?: string
+          settings?: Json
+          settings_version?: number
         }
         Update: {
+          created_at?: string
           id?: string
-          organization_id?: string
           name?: string
-          settings?: Json
-          settings_version?: number
+          organization_id?: string
           published_settings?: Json | null
           published_settings_at?: string | null
-          created_at?: string
+          settings?: Json
+          settings_version?: number
         }
         Relationships: [
           {
@@ -2960,858 +2954,727 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
     }
-    Views: { [_ in never]: never }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      accept_invitation: {
-        Args: { p_token_hash: string | null }
-        Returns: Json
-      }
+      accept_invitation: { Args: { p_token_hash: string | null}; Returns: Json }
       approve_on_behalf: {
-        Args: { p_item: string | null; p_stage: string | null; p_reason: string | null; p_expected_version: number | null }
+        Args: {          p_expected_version: number | null,          p_item: string | null,          p_reason: string | null,          p_stage: string | null}
         Returns: Json
       }
       approver_is_valid: {
-        Args: { p_brand: string | null; p_user: string | null }
+        Args: { p_brand: string | null, p_user: string | null}
         Returns: boolean
       }
-      approver_options: {
-        Args: { p_brand: string | null }
-        Returns: Json
-      }
-      assert_action: {
-        Args: { p_action: string | null }
-        Returns: undefined
-      }
-      assert_brand_access: {
-        Args: { p_brand: string | null }
-        Returns: undefined
-      }
+      approver_options: { Args: { p_brand: string | null}; Returns: Json }
+      assert_action: { Args: { p_action: string | null}; Returns: undefined }
+      assert_brand_access: { Args: { p_brand: string | null}; Returns: undefined }
       audit_list: {
-        Args: { p_filters: Json | null; p_page: number | null; p_export?: boolean | null }
+        Args: { p_export?: boolean | null, p_filters: Json | null, p_page: number | null}
         Returns: Json
       }
       audit_write: {
-        Args: { p_org: string | null; p_brand: string | null; p_action: string | null; p_entity_type: string | null; p_entity_id: string | null; p_metadata: Json | null }
+        Args: {          p_action: string | null,          p_brand: string | null,          p_entity_id: string | null,          p_entity_type: string | null,          p_metadata: Json | null,          p_org: string | null}
         Returns: undefined
       }
-      brand_approver_ids: {
-        Args: { p_brand: string | null }
-        Returns: string[]
-      }
-      brand_delete: {
-        Args: { p_brand: string | null }
-        Returns: undefined
-      }
-      brand_has_history: {
-        Args: { p_brand: string | null }
-        Returns: boolean
-      }
+      brand_approver_ids: { Args: { p_brand: string | null}; Returns: string[] }
+      brand_delete: { Args: { p_brand: string | null}; Returns: undefined }
+      brand_has_history: { Args: { p_brand: string | null}; Returns: boolean }
       brand_logo_keys: {
-        Args: { p_brands: string[] | null }
-        Returns: { brand_id: string; thumb_key: string }[]
+        Args: { p_brands: string[] | null}
+        Returns: {
+          brand_id: string
+          thumb_key: string
+        }[]
       }
       brand_member_set: {
-        Args: { p_brand: string | null; p_user: string | null; p_kind: string | null; p_can_decide: boolean | null; p_status: string | null }
+        Args: {          p_brand: string | null,          p_can_decide: boolean | null,          p_kind: string | null,          p_status: string | null,          p_user: string | null}
         Returns: undefined
       }
-      brand_save: {
-        Args: { p_brand: Json | null }
-        Returns: Json
-      }
+      brand_save: { Args: { p_brand: Json | null}; Returns: Json }
       brand_set_archived: {
-        Args: { p_brand: string | null; p_archived: boolean | null }
+        Args: { p_archived: boolean | null, p_brand: string | null}
         Returns: Json
       }
       brand_set_logo: {
-        Args: { p_brand: string | null; p_version: string | null }
+        Args: { p_brand: string | null, p_version: string | null}
         Returns: Json
       }
       calendar_event_notify: {
-        Args: { p_note: string | null; p_change: string | null }
+        Args: {          p_change: string | null,          p_note: Database["public"]["Tables"]["calendar_notes"]["Row"] | null}
         Returns: undefined
       }
       calendar_event_when: {
-        Args: { p_note: string | null }
+        Args: { p_note: Database["public"]["Tables"]["calendar_notes"]["Row"] | null}
         Returns: string
       }
-      calendar_note_archive: {
-        Args: { p_note: string | null }
-        Returns: undefined
-      }
+      calendar_note_archive: { Args: { p_note: string | null}; Returns: undefined }
       calendar_note_days: {
-        Args: { p_note_date: string | null; p_end_date: string | null; p_repeat: string | null; p_from: string | null; p_to: string | null; p_zone: string | null }
+        Args: {          p_end_date: string | null,          p_from: string | null,          p_note_date: string | null,          p_repeat: string | null,          p_to: string | null,          p_zone: string | null}
         Returns: string[]
       }
-      calendar_note_get: {
-        Args: { p_note: string | null }
-        Returns: Json
-      }
-      calendar_note_save: {
-        Args: { p_note: Json | null }
-        Returns: Json
-      }
+      calendar_note_get: { Args: { p_note: string | null}; Returns: Json }
+      calendar_note_save: { Args: { p_note: Json | null}; Returns: Json }
       calendar_range_ok: {
-        Args: { p_from: string | null; p_to: string | null }
+        Args: { p_from: string | null, p_to: string | null}
         Returns: boolean
       }
-      can_access_brand: {
-        Args: { p_brand: string | null }
-        Returns: boolean
-      }
-      can_view_client: {
-        Args: { p_client: string | null }
-        Returns: boolean
-      }
-      can_view_media_asset: {
-        Args: { p_asset: string | null }
-        Returns: boolean
-      }
+      can_access_brand: { Args: { p_brand: string | null}; Returns: boolean }
+      can_view_client: { Args: { p_client: string | null}; Returns: boolean }
+      can_view_media_asset: { Args: { p_asset: string | null}; Returns: boolean }
       cancel_request: {
-        Args: { p_request: string | null; p_reason: string | null }
+        Args: { p_reason: string | null, p_request: string | null}
         Returns: undefined
       }
       channel_connection_connect: {
-        Args: { p_channel: string | null; p_account: Json | null; p_token_encrypted: string | null; p_expires_at: string | null; p_scopes: string[] | null }
+        Args: {          p_account: Json | null,          p_channel: string | null,          p_expires_at: string | null,          p_scopes: string[] | null,          p_token_encrypted: string | null}
         Returns: Json
       }
       channel_connection_disconnect: {
-        Args: { p_channel: string | null }
+        Args: { p_channel: string | null}
         Returns: undefined
       }
       channel_connection_failed: {
-        Args: { p_channel: string | null; p_status: string | null; p_code: string | null }
+        Args: { p_channel: string | null, p_code: string | null, p_status: string | null}
         Returns: undefined
       }
       channel_connection_json: {
-        Args: { c: string | null }
+        Args: { c: Database["public"]["Tables"]["channel_connections"]["Row"] | null}
         Returns: Json
       }
-      channel_connection_list: {
-        Args: { p_brand: string | null }
-        Returns: Json
-      }
+      channel_connection_list: { Args: { p_brand: string | null}; Returns: Json }
       channel_connection_renewed: {
-        Args: { p_channel: string | null; p_token_encrypted: string | null; p_expires_at: string | null }
+        Args: {          p_channel: string | null,          p_expires_at: string | null,          p_token_encrypted: string | null}
         Returns: undefined
       }
-      channel_connection_secret: {
-        Args: { p_channel: string | null }
-        Returns: Json
-      }
+      channel_connection_secret: { Args: { p_channel: string | null}; Returns: Json }
       channel_connection_settings: {
-        Args: { p_channel: string | null; p_auto_publish_default: boolean | null; p_collect_metrics: boolean | null; p_expected_version: number | null }
+        Args: {          p_auto_publish_default: boolean | null,          p_channel: string | null,          p_collect_metrics: boolean | null,          p_expected_version: number | null}
         Returns: Json
       }
       channel_connections_to_renew: {
-        Args: { p_within_days: number | null }
+        Args: { p_within_days: number | null}
         Returns: Json
       }
-      channel_delete: {
-        Args: { p_channel: string | null }
-        Returns: undefined
-      }
-      channel_is_used: {
-        Args: { p_channel: string | null }
-        Returns: boolean
-      }
+      channel_delete: { Args: { p_channel: string | null}; Returns: undefined }
+      channel_is_used: { Args: { p_channel: string | null}; Returns: boolean }
       channel_row_publish_now: {
-        Args: { p_row: string | null; p_expected_version: number | null }
+        Args: { p_expected_version: number | null, p_row: string | null}
         Returns: Json
       }
       channel_row_set_publish_mode: {
-        Args: { p_row: string | null; p_mode: string | null; p_expected_version: number | null }
+        Args: { p_expected_version: number | null, p_mode: string | null, p_row: string | null}
         Returns: Json
       }
-      channel_save: {
-        Args: { p_channel: Json | null }
-        Returns: Json
-      }
+      channel_save: { Args: { p_channel: Json | null}; Returns: Json }
       channel_set_archived: {
-        Args: { p_channel: string | null; p_archived: boolean | null }
+        Args: { p_archived: boolean | null, p_channel: string | null}
         Returns: Json
       }
-      client_contact_delete: {
-        Args: { p_contact: string | null }
-        Returns: undefined
-      }
-      client_contact_save: {
-        Args: { p_contact: Json | null }
-        Returns: Json
-      }
-      client_delete: {
-        Args: { p_client: string | null }
-        Returns: undefined
-      }
+      client_contact_delete: { Args: { p_contact: string | null}; Returns: undefined }
+      client_contact_save: { Args: { p_contact: Json | null}; Returns: Json }
+      client_delete: { Args: { p_client: string | null}; Returns: undefined }
       client_save: {
-        Args: { p_client: Json | null; p_create_brand?: boolean | null }
+        Args: { p_client: Json | null, p_create_brand?: boolean | null}
         Returns: Json
       }
       client_set_archived: {
-        Args: { p_client: string | null; p_archived: boolean | null; p_archive_brands?: boolean | null }
+        Args: {          p_archive_brands?: boolean | null,          p_archived: boolean | null,          p_client: string | null}
         Returns: Json
       }
       comment_add: {
-        Args: { p_item: string | null; p_visibility: string | null; p_body: string | null; p_parent?: string | null }
+        Args: {          p_body: string | null,          p_item: string | null,          p_parent?: string | null,          p_visibility: string | null}
         Returns: Json
       }
-      comment_delete: {
-        Args: { p_comment: string | null }
-        Returns: undefined
-      }
+      comment_delete: { Args: { p_comment: string | null}; Returns: undefined }
       comment_edit: {
-        Args: { p_comment: string | null; p_body: string | null }
+        Args: { p_body: string | null, p_comment: string | null}
         Returns: undefined
       }
-      comment_list: {
-        Args: { p_item: string | null }
-        Returns: Json
-      }
+      comment_list: { Args: { p_item: string | null}; Returns: Json }
       content_cancel_pending_requests: {
-        Args: { p_item: string | null; p_reason: string | null }
+        Args: { p_item: string | null, p_reason: string | null}
         Returns: undefined
       }
       content_channel_cancel: {
-        Args: { p_channel_row: string | null; p_reason: string | null }
+        Args: { p_channel_row: string | null, p_reason: string | null}
         Returns: undefined
       }
-      content_channels_signature: {
-        Args: { p_item: string | null }
-        Returns: Json
-      }
+      content_channels_signature: { Args: { p_item: string | null}; Returns: Json }
       content_check_channel: {
-        Args: { p_brand: string | null; p_channel: string | null }
+        Args: { p_brand: string | null, p_channel: string | null}
         Returns: undefined
       }
       content_check_media: {
-        Args: { p_brand: string | null; p_media: Json | null }
+        Args: { p_brand: string | null, p_media: Json | null}
         Returns: undefined
       }
       content_freeze_revision: {
-        Args: { v_item: string | null; v_stage: string | null }
+        Args: {          v_item: Database["public"]["Tables"]["content_items"]["Row"] | null,          v_stage: string | null}
         Returns: Json
       }
       content_item_cancel: {
-        Args: { p_item: string | null; p_reason: string | null }
+        Args: { p_item: string | null, p_reason: string | null}
         Returns: undefined
       }
-      content_item_delete: {
-        Args: { p_item: string | null }
-        Returns: undefined
-      }
-      content_item_is_ready: {
-        Args: { p_item: string | null }
-        Returns: boolean
-      }
-      content_item_save: {
-        Args: { p_item: Json | null }
-        Returns: Json
-      }
+      content_item_delete: { Args: { p_item: string | null}; Returns: undefined }
+      content_item_is_ready: { Args: { p_item: string | null}; Returns: boolean }
+      content_item_save: { Args: { p_item: Json | null}; Returns: Json }
       content_move: {
-        Args: { p_item: string | null; p_to_status: string | null; p_expected_version: number | null }
+        Args: {          p_expected_version: number | null,          p_item: string | null,          p_to_status: string | null}
         Returns: Json
       }
-      content_normalize_media: {
-        Args: { p_media: Json | null }
-        Returns: Json
-      }
-      content_plan_signature: {
-        Args: { p_item: string | null }
-        Returns: Json
-      }
-      content_publish_info: {
-        Args: { p_item: string | null }
-        Returns: Json
-      }
-      current_organization_id: {
-        Args: never
-        Returns: string
-      }
-      dashboard_attention: {
-        Args: { p_brands?: string[] | null }
-        Returns: Json
-      }
+      content_normalize_media: { Args: { p_media: Json | null}; Returns: Json }
+      content_plan_signature: { Args: { p_item: string | null}; Returns: Json }
+      content_publish_info: { Args: { p_item: string | null}; Returns: Json }
+      current_organization_id: { Args: never; Returns: string }
+      dashboard_attention: { Args: { p_brands?: string[] | null}; Returns: Json }
       dashboard_metrics_report_due: {
-        Args: { p_brands?: string[] | null }
+        Args: { p_brands?: string[] | null}
         Returns: Json
       }
-      dashboard_my_items: {
-        Args: never
-        Returns: Json
-      }
+      dashboard_my_items: { Args: never; Returns: Json }
       dashboard_publication_pending: {
-        Args: { p_brands?: string[] | null }
+        Args: { p_brands?: string[] | null}
         Returns: Json
       }
-      dashboard_status_counts: {
-        Args: { p_brands?: string[] | null }
-        Returns: Json
-      }
+      dashboard_status_counts: { Args: { p_brands?: string[] | null}; Returns: Json }
       editorial_transition_allowed: {
-        Args: { p_from: string | null; p_to: string | null }
+        Args: { p_from: string | null, p_to: string | null}
         Returns: boolean
       }
-      generate_due_notifications: {
-        Args: never
-        Returns: Json
-      }
-      has_action: {
-        Args: { p_action: string | null }
-        Returns: boolean
-      }
+      generate_due_notifications: { Args: never; Returns: Json }
+      has_action: { Args: { p_action: string | null}; Returns: boolean }
       invitation_create: {
-        Args: { p_email: string | null; p_role: string | null; p_grants: Json | null; p_token_hash: string | null; p_expires_at: string | null }
+        Args: {          p_email: string | null,          p_expires_at: string | null,          p_grants: Json | null,          p_role: string | null,          p_token_hash: string | null}
         Returns: Json
       }
-      invitation_revoke: {
-        Args: { p_invitation: string | null }
-        Returns: undefined
-      }
-      is_admin: {
-        Args: never
-        Returns: boolean
-      }
+      invitation_revoke: { Args: { p_invitation: string | null}; Returns: undefined }
+      is_admin: { Args: never; Returns: boolean }
       is_external_brand_member: {
-        Args: { p_brand: string | null; p_must_decide?: boolean | null }
+        Args: { p_brand: string | null, p_must_decide?: boolean | null}
         Returns: boolean
       }
       list_calendar_entries: {
-        Args: { p_from: string | null; p_to: string | null; p_brands?: string[] | null; p_channels?: string[] | null; p_assignee?: string | null; p_editorial?: string[] | null; p_publication?: string[] | null; p_notes?: string[] | null }
+        Args: {          p_assignee?: string | null,          p_brands?: string[] | null,          p_channels?: string[] | null,          p_editorial?: string[] | null,          p_from: string | null,          p_notes?: string[] | null,          p_publication?: string[] | null,          p_to: string | null}
         Returns: Json
       }
       mark_published: {
-        Args: { p_channel_row: string | null; p_published_at: string | null; p_url: string | null; p_evidence_media_version: string | null; p_note: string | null }
+        Args: {          p_channel_row: string | null,          p_evidence_media_version: string | null,          p_note: string | null,          p_published_at: string | null,          p_url: string | null}
         Returns: Json
       }
       media_assert_asset_access: {
-        Args: { p_asset: string | null }
-        Returns: string
+        Args: { p_asset: string | null}
+        Returns: {
+          brand_id: string | null
+          created_at: string
+          created_by: string | null
+          current_version_id: string | null
+          display_name: string
+          id: string
+          organization_id: string
+          owner_id: string | null
+          scope: string
+          size_bytes: number
+          tags: string[]
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "media_assets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       media_collection_delete: {
-        Args: { p_collection: string | null }
+        Args: { p_collection: string | null}
         Returns: undefined
       }
       media_collection_move_items: {
-        Args: { p_collection: string | null; p_assets: string[] | null }
+        Args: { p_assets: string[] | null, p_collection: string | null}
         Returns: undefined
       }
-      media_collection_save: {
-        Args: { p_collection: Json | null }
-        Returns: Json
-      }
+      media_collection_save: { Args: { p_collection: Json | null}; Returns: Json }
       media_confirm_upload: {
-        Args: { p_version: string | null; p_checksum: string | null; p_width: number | null; p_height: number | null; p_duration: number | null; p_derivative_bytes?: number | null }
+        Args: {          p_checksum: string | null,          p_derivative_bytes?: number | null,          p_duration: number | null,          p_height: number | null,          p_version: string | null,          p_width: number | null}
         Returns: Json
       }
-      media_delete_permanently: {
-        Args: { p_asset: string | null }
-        Returns: Json
-      }
-      media_expire_sessions: {
-        Args: never
-        Returns: Json
-      }
+      media_delete_permanently: { Args: { p_asset: string | null}; Returns: Json }
+      media_expire_sessions: { Args: never; Returns: Json }
       media_mark_failed: {
-        Args: { p_version: string | null; p_reason: string | null }
+        Args: { p_reason: string | null, p_version: string | null}
         Returns: Json
       }
       media_policy_mb: {
-        Args: { p_name: string | null; p_default: number | null }
+        Args: { p_default: number | null, p_name: string | null}
         Returns: number
       }
-      media_publish_derivative: {
-        Args: { p_version: string | null }
-        Returns: Json
-      }
-      media_purge_confirm: {
-        Args: { p_ids: string[] | null }
-        Returns: number
-      }
-      media_purge_pending: {
-        Args: never
-        Returns: Json
-      }
+      media_publish_derivative: { Args: { p_version: string | null}; Returns: Json }
+      media_purge_confirm: { Args: { p_ids: string[] | null}; Returns: number }
+      media_purge_pending: { Args: never; Returns: Json }
       media_replace_version: {
-        Args: { p_asset: string | null; p_version: string | null }
+        Args: { p_asset: string | null, p_version: string | null}
         Returns: Json
       }
       media_request_upload: {
-        Args: { p_scope: string | null; p_brand: string | null; p_filename: string | null; p_size: number | null; p_mime: string | null; p_idempotency_key: string | null; p_asset?: string | null }
+        Args: {          p_asset?: string | null,          p_brand: string | null,          p_filename: string | null,          p_idempotency_key: string | null,          p_mime: string | null,          p_scope: string | null,          p_size: number | null}
         Returns: Json
       }
       media_set_trashed: {
-        Args: { p_asset: string | null; p_trashed: boolean | null }
+        Args: { p_asset: string | null, p_trashed: boolean | null}
         Returns: Json
       }
       media_share_assert_scope: {
-        Args: { p_scope: string | null; p_brand: string | null }
+        Args: { p_brand: string | null, p_scope: string | null}
         Returns: undefined
       }
-      media_share_create: {
-        Args: { p_input: Json | null }
-        Returns: Json
-      }
+      media_share_create: { Args: { p_input: Json | null}; Returns: Json }
       media_share_files: {
-        Args: { p_share: string | null }
-        Returns: { asset_id: string; version_id: string; title: string; filename: string; mime: string; size_bytes: number; width: number; height: number; storage_key: string; thumb_key: string; display_key: string }[]
+        Args: { p_share: string | null}
+        Returns: {
+          asset_id: string
+          display_key: string
+          filename: string
+          height: number
+          mime: string
+          size_bytes: number
+          storage_key: string
+          thumb_key: string
+          title: string
+          version_id: string
+          width: number
+        }[]
       }
       media_share_gate: {
-        Args: { p_token: string | null; p_grant: string | null }
+        Args: { p_grant: string | null, p_token: string | null}
         Returns: string
       }
       media_share_list: {
-        Args: { p_kind: string | null; p_target: string | null }
+        Args: { p_kind: string | null, p_target: string | null}
         Returns: Json
       }
       media_share_public_file: {
-        Args: { p_token: string | null; p_grant: string | null; p_asset: string | null; p_mode: string | null }
+        Args: {          p_asset: string | null,          p_grant: string | null,          p_mode: string | null,          p_token: string | null}
         Returns: Json
       }
       media_share_public_open: {
-        Args: { p_token: string | null; p_grant: string | null }
+        Args: { p_grant: string | null, p_token: string | null}
         Returns: Json
       }
       media_share_public_unlock: {
-        Args: { p_token: string | null; p_password: string | null }
+        Args: { p_password: string | null, p_token: string | null}
         Returns: Json
       }
-      media_share_revoke: {
-        Args: { p_share: string | null }
-        Returns: undefined
-      }
-      media_share_targets: {
-        Args: never
-        Returns: Json
-      }
-      media_share_update: {
-        Args: { p_input: Json | null }
-        Returns: undefined
-      }
-      media_storage_keys: {
-        Args: never
-        Returns: Json
-      }
-      media_storage_summary: {
-        Args: never
-        Returns: Json
-      }
-      media_storage_used: {
-        Args: never
-        Returns: number
-      }
-      media_update: {
-        Args: { p_asset: Json | null }
-        Returns: Json
-      }
-      media_version_in_use: {
-        Args: { p_version: string | null }
-        Returns: boolean
-      }
-      media_withdraw_derivative: {
-        Args: { p_version: string | null }
-        Returns: Json
-      }
-      metric_mark_delete: {
-        Args: { p_mark: string | null }
-        Returns: undefined
-      }
-      metric_mark_save: {
-        Args: { p_mark: Json | null }
-        Returns: Json
-      }
+      media_share_revoke: { Args: { p_share: string | null}; Returns: undefined }
+      media_share_targets: { Args: never; Returns: Json }
+      media_share_update: { Args: { p_input: Json | null}; Returns: undefined }
+      media_storage_keys: { Args: never; Returns: Json }
+      media_storage_summary: { Args: never; Returns: Json }
+      media_storage_used: { Args: never; Returns: number }
+      media_update: { Args: { p_asset: Json | null}; Returns: Json }
+      media_version_in_use: { Args: { p_version: string | null}; Returns: boolean }
+      media_withdraw_derivative: { Args: { p_version: string | null}; Returns: Json }
+      metric_mark_delete: { Args: { p_mark: string | null}; Returns: undefined }
+      metric_mark_save: { Args: { p_mark: Json | null}; Returns: Json }
       metric_marks_list: {
-        Args: { p_brand: string | null; p_from: string | null; p_to: string | null }
+        Args: { p_brand: string | null, p_from: string | null, p_to: string | null}
         Returns: Json
       }
       metrics_assert_read: {
-        Args: { p_brand: string | null; p_channel: string | null }
+        Args: { p_brand: string | null, p_channel: string | null}
         Returns: undefined
       }
       metrics_audience: {
-        Args: { p_brand: string | null; p_channel: string | null }
+        Args: { p_brand: string | null, p_channel: string | null}
         Returns: Json
       }
       metrics_breakdown: {
-        Args: { p_brand: string | null; p_channel: string | null; p_from: string | null; p_to: string | null; p_dimension: string | null; p_by: string | null }
+        Args: {          p_brand: string | null,          p_by: string | null,          p_channel: string | null,          p_dimension: string | null,          p_from: string | null,          p_to: string | null}
         Returns: Json
       }
-      metrics_collect_targets: {
-        Args: never
-        Returns: Json
-      }
+      metrics_collect_targets: { Args: never; Returns: Json }
       metrics_collection_done: {
-        Args: { p_channel: string | null; p_followers: number | null }
+        Args: { p_channel: string | null, p_followers: number | null}
         Returns: undefined
       }
       metrics_media_due: {
-        Args: { p_channel: string | null; p_limit: number | null }
+        Args: { p_channel: string | null, p_limit: number | null}
         Returns: Json
       }
       metrics_overview: {
-        Args: { p_brand: string | null; p_channel: string | null; p_from: string | null; p_to: string | null; p_compare: string | null; p_granularity: string | null }
+        Args: {          p_brand: string | null,          p_channel: string | null,          p_compare: string | null,          p_from: string | null,          p_granularity: string | null,          p_to: string | null}
         Returns: Json
       }
       metrics_plan_summary: {
-        Args: { p_brand: string | null; p_channel: string | null; p_from: string | null; p_to: string | null }
+        Args: {          p_brand: string | null,          p_channel: string | null,          p_from: string | null,          p_to: string | null}
         Returns: Json
       }
-      metrics_report_delete: {
-        Args: { p_report: string | null }
-        Returns: undefined
-      }
-      metrics_report_get: {
-        Args: { p_report: string | null }
-        Returns: Json
-      }
+      metrics_report_delete: { Args: { p_report: string | null}; Returns: undefined }
+      metrics_report_get: { Args: { p_report: string | null}; Returns: Json }
       metrics_report_json: {
-        Args: { r: string | null; p_with_snapshot: boolean | null }
+        Args: {          p_with_snapshot: boolean | null,          r: Database["public"]["Tables"]["metric_reports"]["Row"] | null}
         Returns: Json
       }
-      metrics_report_list: {
-        Args: { p_brand: string | null }
-        Returns: Json
-      }
-      metrics_report_new_version: {
-        Args: { p_report: string | null }
-        Returns: Json
-      }
+      metrics_report_list: { Args: { p_brand: string | null}; Returns: Json }
+      metrics_report_new_version: { Args: { p_report: string | null}; Returns: Json }
       metrics_report_publish: {
-        Args: { p_report: string | null; p_expected_version: number | null; p_snapshot: Json | null }
+        Args: { p_expected_version: number | null, p_report: string | null, p_snapshot: Json | null}
         Returns: Json
       }
-      metrics_report_save: {
-        Args: { p_report: Json | null }
-        Returns: Json
-      }
+      metrics_report_save: { Args: { p_report: Json | null}; Returns: Json }
       metrics_report_withdraw: {
-        Args: { p_report: string | null }
+        Args: { p_report: string | null}
         Returns: undefined
+      }
+      metrics_snapshot_for_portal: {
+        Args: { p_blocks: Json | null, p_snapshot: Json | null}
+        Returns: Json
       }
       metrics_store_audience: {
-        Args: { p_channel: string | null; p_on: string | null; p_rows: Json | null }
+        Args: { p_channel: string | null, p_on: string | null, p_rows: Json | null}
         Returns: number
       }
       metrics_store_daily: {
-        Args: { p_channel: string | null; p_rows: Json | null }
+        Args: { p_channel: string | null, p_rows: Json | null}
         Returns: number
       }
       metrics_store_media: {
-        Args: { p_channel: string | null; p_rows: Json | null }
+        Args: { p_channel: string | null, p_rows: Json | null}
         Returns: number
       }
       metrics_store_post: {
-        Args: { p_channel: string | null; p_external: string | null; p_bucket: string | null; p_metrics: Json | null }
+        Args: {          p_bucket: string | null,          p_channel: string | null,          p_external: string | null,          p_metrics: Json | null}
         Returns: undefined
       }
       metrics_top_posts: {
-        Args: { p_brand: string | null; p_channel: string | null; p_from: string | null; p_to: string | null; p_by: string | null; p_limit: number | null }
+        Args: {          p_brand: string | null,          p_by: string | null,          p_channel: string | null,          p_from: string | null,          p_limit: number | null,          p_to: string | null}
         Returns: Json
       }
       metrics_totals: {
-        Args: { p_channel: string | null; p_from: string | null; p_to: string | null }
+        Args: { p_channel: string | null, p_from: string | null, p_to: string | null}
         Returns: Json
       }
-      my_actions: {
-        Args: never
-        Returns: string[]
-      }
-      notification_date_text: {
-        Args: { p_date: string | null }
-        Returns: string
-      }
+      my_actions: { Args: never; Returns: string[] }
+      notification_date_text: { Args: { p_date: string | null}; Returns: string }
       notification_kind_save: {
-        Args: { p_kind: string | null; p_default_lead_days: number[] | null; p_default_email: boolean | null }
+        Args: {          p_default_email: boolean | null,          p_default_lead_days: number[] | null,          p_kind: string | null}
         Returns: undefined
       }
       notification_lead_days: {
-        Args: { p_user: string | null; p_kind: string | null }
+        Args: { p_kind: string | null, p_user: string | null}
         Returns: number[]
       }
-      notify_scan_content: {
-        Args: never
-        Returns: undefined
-      }
-      notify_scan_invitations: {
-        Args: never
-        Returns: undefined
-      }
+      notify_scan_content: { Args: never; Returns: undefined }
+      notify_scan_invitations: { Args: never; Returns: undefined }
       notify_users: {
-        Args: { p_kind: string | null; p_brand: string | null; p_title: string | null; p_body: string | null; p_link: string | null; p_ref_type: string | null; p_ref_id: string | null; p_dedupe_key: string | null; p_recipients?: string[] | null }
+        Args: {          p_body: string | null,          p_brand: string | null,          p_dedupe_key: string | null,          p_kind: string | null,          p_link: string | null,          p_recipients?: string[] | null,          p_ref_id: string | null,          p_ref_type: string | null,          p_title: string | null}
         Returns: undefined
       }
-      organization_save: {
-        Args: { p_organization: Json | null }
-        Returns: Json
-      }
+      organization_save: { Args: { p_organization: Json | null}; Returns: Json }
       organization_setting_save: {
-        Args: { p_key: string | null; p_value: Json | null; p_expected_version: number | null }
+        Args: { p_expected_version: number | null, p_key: string | null, p_value: Json | null}
         Returns: Json
       }
-      person_avatar_keys: {
-        Args: { p_ids: string[] | null }
-        Returns: Json
-      }
-      person_names: {
-        Args: { p_ids: string[] | null }
-        Returns: Json
-      }
-      plan_approval_required: {
-        Args: never
-        Returns: boolean
-      }
+      person_avatar_keys: { Args: { p_ids: string[] | null}; Returns: Json }
+      person_names: { Args: { p_ids: string[] | null}; Returns: Json }
+      plan_approval_required: { Args: never; Returns: boolean }
       portal_add_comment: {
-        Args: { p_item: string | null; p_body: string | null }
+        Args: { p_body: string | null, p_item: string | null}
         Returns: Json
       }
-      portal_assert_member: {
-        Args: { p_brand: string | null }
-        Returns: undefined
-      }
+      portal_assert_member: { Args: { p_brand: string | null}; Returns: undefined }
       portal_brand_logo_keys: {
-        Args: { p_brands: string[] | null }
-        Returns: { brand_id: string; thumb_key: string }[]
+        Args: { p_brands: string[] | null}
+        Returns: {
+          brand_id: string
+          thumb_key: string
+        }[]
       }
       portal_decide_approval: {
-        Args: { p_request: string | null; p_outcome: string | null; p_comment: string | null }
+        Args: { p_comment: string | null, p_outcome: string | null, p_request: string | null}
         Returns: Json
       }
-      portal_get_approval: {
-        Args: { p_request: string | null }
-        Returns: Json
-      }
-      portal_get_brand: {
-        Args: { p_brand: string | null }
-        Returns: Json
-      }
+      portal_get_approval: { Args: { p_request: string | null}; Returns: Json }
+      portal_get_brand: { Args: { p_brand: string | null}; Returns: Json }
       portal_list_approvals: {
-        Args: { p_brand: string | null; p_status: string | null; p_page: number | null; p_page_size: number | null }
+        Args: {          p_brand: string | null,          p_page: number | null,          p_page_size: number | null,          p_status: string | null}
         Returns: Json
       }
-      portal_list_brands: {
-        Args: never
-        Returns: Json
-      }
+      portal_list_brands: { Args: never; Returns: Json }
       portal_list_calendar: {
-        Args: { p_brand: string | null; p_from: string | null; p_to: string | null }
+        Args: { p_brand: string | null, p_from: string | null, p_to: string | null}
         Returns: Json
       }
-      portal_list_comments: {
-        Args: { p_item: string | null }
-        Returns: Json
-      }
-      portal_list_pending: {
-        Args: { p_brand: string | null }
-        Returns: Json
-      }
+      portal_list_comments: { Args: { p_item: string | null}; Returns: Json }
+      portal_list_pending: { Args: { p_brand: string | null}; Returns: Json }
       portal_media_urls: {
-        Args: { p_revision: string | null; p_version_ids: string[] | null }
+        Args: { p_revision: string | null, p_version_ids: string[] | null}
         Returns: Json
       }
-      portal_metrics_report_get: {
-        Args: { p_report: string | null }
-        Returns: Json
-      }
-      portal_metrics_report_list: {
-        Args: { p_brand: string | null }
-        Returns: Json
-      }
-      portal_record_view: {
-        Args: { p_request: string | null }
-        Returns: undefined
-      }
+      portal_metrics_report_get: { Args: { p_report: string | null}; Returns: Json }
+      portal_metrics_report_list: { Args: { p_brand: string | null}; Returns: Json }
+      portal_record_view: { Args: { p_request: string | null}; Returns: undefined }
       portal_request_row: {
-        Args: { p_request: string | null }
+        Args: {          p_request: Database["public"]["Tables"]["approval_requests"]["Row"] | null}
         Returns: Json
       }
       profile_set_access: {
-        Args: { p_profile: string | null; p_status: string | null; p_role?: string | null }
+        Args: { p_profile: string | null, p_role?: string | null, p_status: string | null}
         Returns: undefined
       }
-      profile_set_avatar: {
-        Args: { p_version: string | null }
-        Returns: Json
-      }
+      profile_set_avatar: { Args: { p_version: string | null}; Returns: Json }
       publish_attempt_set: {
-        Args: { p_attempt: string | null; p_status: string | null; p_container: string | null; p_error: string | null; p_provider: string | null }
+        Args: {          p_attempt: string | null,          p_container: string | null,          p_error: string | null,          p_provider: string | null,          p_status: string | null}
         Returns: undefined
       }
       publish_content: {
-        Args: { p_item: string | null; p_expected_version: number | null }
+        Args: { p_expected_version: number | null, p_item: string | null}
         Returns: Json
       }
-      publish_notify_failed: {
-        Args: { p_row: string | null }
-        Returns: undefined
-      }
+      publish_notify_failed: { Args: { p_row: string | null}; Returns: undefined }
       publish_payload: {
-        Args: { p_row: string | null; p_attempt: string | null }
+        Args: { p_attempt: string | null, p_row: string | null}
         Returns: Json
       }
       publish_row_complete: {
-        Args: { p_attempt: string | null; p_media_id: string | null; p_permalink: string | null }
+        Args: { p_attempt: string | null, p_media_id: string | null, p_permalink: string | null}
         Returns: undefined
       }
       publish_row_failed: {
-        Args: { p_attempt: string | null; p_code: string | null; p_provider: string | null; p_uncertain: boolean | null }
+        Args: {          p_attempt: string | null,          p_code: string | null,          p_provider: string | null,          p_uncertain: boolean | null}
         Returns: undefined
       }
       publish_row_release: {
-        Args: { p_attempt: string | null; p_code: string | null }
+        Args: { p_attempt: string | null, p_code: string | null}
         Returns: undefined
       }
       publish_site_page: {
-        Args: { p_page: string | null; p_note: string | null; p_resolved: Json | null; p_expected_hash: string | null }
+        Args: {          p_expected_hash: string | null,          p_note: string | null,          p_page: string | null,          p_resolved: Json | null}
         Returns: Json
       }
       publish_site_settings: {
-        Args: { p_resolved: Json | null; p_expected_version: number | null }
+        Args: { p_expected_version: number | null, p_resolved: Json | null}
         Returns: Json
       }
       publish_work: {
-        Args: { p_limit: number | null; p_late_hours: number | null }
+        Args: { p_late_hours: number | null, p_limit: number | null}
         Returns: Json
       }
       reopen_content: {
-        Args: { p_item: string | null; p_reason: string | null; p_scope?: string | null }
+        Args: { p_item: string | null, p_reason: string | null, p_scope?: string | null}
         Returns: Json
       }
       reschedule_channel: {
-        Args: { p_channel_row: string | null; p_planned_at: string | null; p_timezone: string | null; p_expected_version: number | null }
+        Args: {          p_channel_row: string | null,          p_expected_version: number | null,          p_planned_at: string | null,          p_timezone: string | null}
         Returns: Json
       }
       reschedule_production_deadline: {
-        Args: { p_item: string | null; p_date: string | null; p_expected_version: number | null }
+        Args: { p_date: string | null, p_expected_version: number | null, p_item: string | null}
         Returns: Json
       }
       resolve_notifications: {
-        Args: { p_ref_type: string | null; p_ref_id: string | null }
+        Args: { p_ref_id: string | null, p_ref_type: string | null}
         Returns: undefined
       }
-      role_delete: {
-        Args: { p_role: string | null }
-        Returns: undefined
-      }
-      role_save: {
-        Args: { p_role: Json | null }
-        Returns: Json
-      }
+      role_delete: { Args: { p_role: string | null}; Returns: undefined }
+      role_save: { Args: { p_role: Json | null}; Returns: Json }
       send_approval_reminder: {
-        Args: { p_request: string | null }
+        Args: { p_request: string | null}
         Returns: undefined
       }
       site_case_study_authorize: {
-        Args: { p_page: string | null; p_brand: string | null; p_consent_note: string | null }
+        Args: { p_brand: string | null, p_consent_note: string | null, p_page: string | null}
         Returns: undefined
       }
-      site_case_study_withdraw: {
-        Args: { p_page: string | null }
-        Returns: undefined
-      }
+      site_case_study_withdraw: { Args: { p_page: string | null}; Returns: undefined }
       site_contact_submit: {
-        Args: { p_site: string | null; p_payload: Json | null }
+        Args: { p_payload: Json | null, p_site: string | null}
         Returns: undefined
       }
       site_contact_update: {
-        Args: { p_message: string | null; p_status: string | null; p_note: string | null }
+        Args: { p_message: string | null, p_note: string | null, p_status: string | null}
         Returns: undefined
       }
-      site_draft_snapshot: {
-        Args: { p_page: string | null }
-        Returns: Json
-      }
-      site_ensure: {
-        Args: never
-        Returns: string
-      }
-      site_entry_delete: {
-        Args: { p_entry: string | null }
-        Returns: undefined
-      }
-      site_entry_save: {
-        Args: { p_entry: Json | null }
-        Returns: Json
-      }
-      site_media_ids: {
-        Args: { p_content: Json | null }
-        Returns: string[]
-      }
-      site_media_in_use: {
-        Args: { p_version: string | null }
-        Returns: boolean
-      }
-      site_media_info: {
-        Args: { p_ids: string[] | null }
-        Returns: Json
-      }
-      site_overview: {
-        Args: never
-        Returns: Json
-      }
-      site_page_delete: {
-        Args: { p_page: string | null }
-        Returns: undefined
-      }
+      site_draft_snapshot: { Args: { p_page: string | null}; Returns: Json }
+      site_ensure: { Args: never; Returns: string }
+      site_entry_delete: { Args: { p_entry: string | null}; Returns: undefined }
+      site_entry_save: { Args: { p_entry: Json | null}; Returns: Json }
+      site_media_ids: { Args: { p_content: Json | null}; Returns: string[] }
+      site_media_in_use: { Args: { p_version: string | null}; Returns: boolean }
+      site_media_info: { Args: { p_ids: string[] | null}; Returns: Json }
+      site_overview: { Args: never; Returns: Json }
+      site_page_delete: { Args: { p_page: string | null}; Returns: undefined }
       site_page_save: {
-        Args: { p_page: Json | null; p_expected_version?: number | null }
+        Args: { p_expected_version?: number | null, p_page: Json | null}
         Returns: Json
       }
-      site_pages_overview: {
-        Args: never
-        Returns: Json
-      }
+      site_pages_overview: { Args: never; Returns: Json }
       site_publish_page_row: {
-        Args: { p_page: string | null; p_resolved: Json | null; p_note: string | null; p_source: string | null }
+        Args: {          p_note: string | null,          p_page: Database["public"]["Tables"]["site_pages"]["Row"] | null,          p_resolved: Json | null,          p_source: string | null}
         Returns: number
       }
-      site_published_page: {
-        Args: { p_slug: string | null }
-        Returns: Json
-      }
-      site_published_settings: {
-        Args: never
-        Returns: Json
-      }
-      site_published_sitemap: {
-        Args: never
-        Returns: Json
-      }
+      site_published_page: { Args: { p_slug: string | null}; Returns: Json }
+      site_published_settings: { Args: never; Returns: Json }
+      site_published_sitemap: { Args: never; Returns: Json }
       site_redirect_check: {
-        Args: { p_site: string | null; p_from: string | null; p_to: string | null }
+        Args: { p_from: string | null, p_site: string | null, p_to: string | null}
         Returns: undefined
       }
-      site_redirect_delete: {
-        Args: { p_redirect: string | null }
-        Returns: undefined
-      }
-      site_redirect_save: {
-        Args: { p_redirect: Json | null }
-        Returns: Json
-      }
+      site_redirect_delete: { Args: { p_redirect: string | null}; Returns: undefined }
+      site_redirect_save: { Args: { p_redirect: Json | null}; Returns: Json }
       site_rollback: {
-        Args: { p_page: string | null; p_revision: string | null }
+        Args: { p_page: string | null, p_revision: string | null}
         Returns: Json
       }
       site_settings_save: {
-        Args: { p_group: string | null; p_value: Json | null; p_expected_version: number | null }
+        Args: { p_expected_version: number | null, p_group: string | null, p_value: Json | null}
         Returns: Json
       }
       submit_for_approval: {
-        Args: { p_item: string | null; p_due_date: string | null; p_message: string | null; p_expected_version: number | null }
+        Args: {          p_due_date: string | null,          p_expected_version: number | null,          p_item: string | null,          p_message: string | null}
         Returns: Json
       }
-      unpublish_site_page: {
-        Args: { p_page: string | null }
-        Returns: undefined
-      }
+      unpublish_site_page: { Args: { p_page: string | null}; Returns: undefined }
       user_can_work_on_brand: {
-        Args: { p_user: string | null; p_brand: string | null }
+        Args: { p_brand: string | null, p_user: string | null}
         Returns: boolean
       }
     }
-    Enums: { [_ in never]: never }
-    CompositeTypes: { [_ in never]: never }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

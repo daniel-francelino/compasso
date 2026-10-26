@@ -8,6 +8,7 @@ import {
   connectionSettingsSchema,
   disconnectSchema,
   startConnectionSchema,
+  testConnectionSchema,
   toConnection,
 } from "@/lib/marketing/channels/connection-schemas";
 import { Action } from "@/lib/shared/auth/actions";
@@ -15,6 +16,7 @@ import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { instagramConfig } from "@/lib/shared/env.server";
 import { AppRoute } from "@/lib/shared/routes";
 import { type Result, denied, fail, invalid, parseOutput } from "@/lib/shared/server-utils";
+import { probeConnection } from "@/lib/shared/jobs/connection-test.server";
 import { siteOrigin } from "@/lib/shared/site-url.server";
 import {
   exchangeCode,
@@ -29,6 +31,7 @@ const EXPIRED_LINK = "Este pedido de conexão expirou. Tente conectar de novo.";
 const REFUSED = "O Instagram não autorizou a conexão. Tente de novo.";
 
 const listSchema = z.object({ connections: z.array(connectionRowSchema) });
+const listedSchema = z.array(z.object({ channel_id: z.string() }));
 
 export const listChannelConnections = createServerFn({ method: "GET" })
   .validator(brandIdSchema)
@@ -118,4 +121,20 @@ export const disconnectChannel = createServerFn({ method: "POST" })
     });
     if (error) return fail(error);
     return { ok: true };
+  });
+
+export const testChannelConnection = createServerFn({ method: "POST" })
+  .validator(testConnectionSchema)
+  .handler(async ({ data }): Promise<Result<{ username: string; followers: number | null }>> => {
+    const caller = await requireActionServer(Action.Channels.Connect);
+    if (caller === null) return denied;
+    const { data: listed, error } = await caller.supabase.rpc("channel_connection_list", {
+      p_brand: data.brandId,
+    });
+    if (error) return fail(error);
+    const known = listedSchema.safeParse(listed);
+    if (!known.success || !known.data.some((row) => row.channel_id === data.channelId)) {
+      return fail({ message: "not_found" });
+    }
+    return probeConnection(data.channelId);
   });

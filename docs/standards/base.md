@@ -52,6 +52,7 @@ Search these locations first. If a row says "forbidden", using that alternative 
 | **File storage** | `lib/shared/storage` (`ServerStorage` / `BrowserStorage`) and `lib/shared/media` | Calling R2/S3 directly, storing signed URLs |
 | **Notifications** | `notify_users(...)` / `resolve_notifications(...)` in the same transaction; kinds in `NotificationKind` and `notification_kinds` | Inserting into `notifications`, notifications from the client |
 | **Email** | `lib/shared/email` adapter + outbox | Calling the email provider elsewhere |
+| **Social platforms (Instagram)** | `lib/shared/social` (the only code that calls Meta; responses validated with zod; failures classified into `PublishErrorCode`), jobs in `lib/shared/jobs`, token encrypted with `token-crypto.server.ts` | Calling the Graph API from a component, a route or another module; reading or logging a token; storing a token in clear text |
 | **Lists** | `useListState` (URL params) + `DataTable` + `PaginationBar` + `ListSkeleton` + `EmptyState` | Own pagination, client-side filtering of paged data |
 | **Forms** | The shared zod schema + `useFormSubmit` (parse on the client, call the server function, field errors, `focusFirstInvalid`) + the field components (`TextField`, `SelectField`, `Field`…) + `useUnsavedChanges`. `react-hook-form` is allowed only for forms with many dynamic fields and needs a written reason | A second submit hook, uncontrolled ad-hoc forms, validation only on the client |
 | **Dialogs** | `ConfirmDialog`, `ReasonDialog`, `FormDialog`, `EditorSheet` | New modal components, `window.confirm` |
@@ -215,7 +216,7 @@ Inside the transactional SQL function: `perform audit_write(v_org, v_brand, 'con
 | SEC-2 | **Effective permission = role action AND brand link.** Never infer scope from the client; resolve the brand from the database | pgTAP |
 | SEC-3 | **Never trust identifiers from the client** (brand, client, organization, user ids): load the record with the user's client and let RLS decide | pgTAP |
 | SEC-4 | **Secrets only on the server** (`SUPABASE_SERVICE_ROLE_KEY`, R2, email, cron). Never with a `VITE_` prefix, never in logs, never in documents or commits; `.env*` files are not read or edited | lint on imports, secret scanning |
-| SEC-5 | **The service-role client is imported only from the allowed server modules** (invitation acceptance, jobs, audit, signing after verification) | ESLint `no-restricted-imports` |
+| SEC-5 | **The service-role client is imported only from the allowed server modules** (invitation acceptance, jobs and the readers of stored connection tokens in `lib/shared/jobs`, audit, signing after verification) | ESLint `no-restricted-imports` |
 | SEC-6 | **Inputs are validated** with zod on the server for every function and route; external data (webhooks, forms, RPC `jsonb` outputs) is validated at runtime | review, tests |
 | SEC-7 | **Uploads:** allowlist of MIME types, verification of real content, size limits, opaque keys, `stat` before reading, private bucket, short signed URLs, authorization checked **before** signing | tests |
 | SEC-8 | **No `dangerouslySetInnerHTML`**; rich text is stored as JSON and rendered by an own component; links from users are validated (`https`/internal only, `rel="noopener noreferrer"`) | ESLint, review |

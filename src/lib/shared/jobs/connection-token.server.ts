@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { InstagramConfig } from "@/lib/shared/env.server";
+import { ConnectionStatus } from "@/lib/shared/enums";
 import { PublishErrorCode } from "@/lib/shared/social/publish-codes";
 import { decryptToken } from "@/lib/shared/social/token-crypto.server";
 import type { adminClient } from "@/lib/shared/supabase/admin.server";
@@ -54,7 +55,7 @@ export const readConnectionSecret = async (
 export const markConnectionLost = async (admin: AdminClient, channelId: string): Promise<void> => {
   await admin.rpc("channel_connection_failed", {
     p_channel: channelId,
-    p_status: "expired",
+    p_status: ConnectionStatus.Expired,
     p_code: PublishErrorCode.ConnectionExpired,
   });
 };

@@ -187,7 +187,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Calendar | FullCalendar (`dayGrid`, `timeGrid`, `list`, `interaction`; MIT modules) | Alternative: port `month-grid` and `time-grid` from Memoria Print. Decide in a spike at the start of phase 4 |
 | Drag and drop | `@dnd-kit` | Content board by status |
 | Rich text | Tiptap (minimal extensions) | Store JSON, never HTML |
-| Charts | Recharts (added 2026-10-26 for the metrics screen, [modules/metrics.md](modules/metrics.md)); colors only from the `chart-*` tokens | Loaded with the metrics routes only |
+| Charts | Recharts 3.10.1, MIT license, actively maintained (added 2026-10-26 for the metrics screen, [modules/metrics.md](modules/metrics.md)); the kit has no chart component and drawing the axes, tooltips and keyboard navigation by hand would repeat well-tested work; colors only from the `chart-*` tokens | Used only by `components/shared/metrics`, so only the metrics routes load it |
 | Dates | `date-fns` v4 | Instants in UTC; IANA time zone per brand; formatters in `format.ts` |
 | Virtualization | `@tanstack/react-virtual` | Large library grids |
 

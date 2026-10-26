@@ -1,6 +1,6 @@
 begin;
 
-select plan(28);
+select plan(40);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -12,14 +12,16 @@ $$;
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000b1', 'manager1@example.test'),
   ('00000000-0000-0000-0000-0000000000b2', 'manager2@example.test'),
-  ('00000000-0000-0000-0000-0000000000c1', 'collab@example.test');
+  ('00000000-0000-0000-0000-0000000000c1', 'collab@example.test'),
+  ('00000000-0000-0000-0000-0000000000d1', 'client@example.test');
 
 insert into public.profiles (id, full_name, email, status, kind, role_id)
 select u.id, u.name, u.email, 'approved', u.kind, r.id
 from (values
   ('00000000-0000-0000-0000-0000000000b1'::uuid, 'Manager One', 'manager1@example.test', 'internal', 'manager'),
   ('00000000-0000-0000-0000-0000000000b2'::uuid, 'Manager Two', 'manager2@example.test', 'internal', 'manager'),
-  ('00000000-0000-0000-0000-0000000000c1'::uuid, 'Collaborator', 'collab@example.test', 'internal', 'collaborator')
+  ('00000000-0000-0000-0000-0000000000c1'::uuid, 'Collaborator', 'collab@example.test', 'internal', 'collaborator'),
+  ('00000000-0000-0000-0000-0000000000d1'::uuid, 'Client', 'client@example.test', 'external', 'external_approver')
 ) as u (id, name, email, kind, role_key)
 join public.roles r on r.key = u.role_key;
 
@@ -46,6 +48,7 @@ select set_config('t.brand', (select id::text from public.brands where name = 'C
 select set_config('t.channel', public.channel_save(format('{"brand_id":"%s","platform":"instagram","profile_name":"aurora.cafe"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select set_config('t.plain', public.channel_save(format('{"brand_id":"%s","platform":"instagram","profile_name":"aurora.sem.conexao"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000c1', 'internal', false, 'active');
+select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', false, 'active');
 select public.channel_connection_connect(
   current_setting('t.channel')::uuid,
   '{"external_account_id":"17841400000","username":"aurora.cafe","account_type":"BUSINESS"}'::jsonb,
@@ -243,6 +246,79 @@ select is(
   (select publish_mode from public.content_channels where id = pg_temp.row_of(current_setting('t.future'))),
   'manual',
   'disconnecting returns the waiting rows to manual publishing'
+);
+
+select set_config('t.rowb', pg_temp.row_of(current_setting('t.b'))::text, true);
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
+select is(
+  (select count(*)::int from public.publish_attempts),
+  0,
+  'an external user reads no publish attempt'
+);
+select throws_ok(
+  format($$select public.content_publish_info('%s'::uuid)$$, current_setting('t.a')),
+  'denied',
+  'an external user cannot read the publish info'
+);
+select throws_ok(
+  format($$select public.channel_row_publish_now('%s'::uuid, 1)$$, current_setting('t.rowb')),
+  'denied',
+  'an external user cannot ask for a publication'
+);
+select throws_ok(
+  $$select public.publish_work(5, 6)$$,
+  '42501',
+  'an external user cannot run the publishing job'
+);
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000b2');
+select throws_ok(
+  format($$select public.channel_row_publish_now('%s'::uuid, 1)$$, current_setting('t.rowb')),
+  'not_found',
+  'a manager of another brand cannot touch the row'
+);
+select is(
+  (select count(*)::int from public.publish_attempts),
+  0,
+  'and reads no attempt of this brand'
+);
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
+select ok(
+  (select count(*) from public.publish_attempts) >= 1,
+  'a manager of the brand reads its attempts'
+);
+select throws_ok(
+  $$select public.publish_row_complete(gen_random_uuid(), 'x', 'https://x.test/')$$,
+  '42501',
+  'a signed-in user cannot complete a publication'
+);
+select throws_ok(
+  $$select public.publish_payload(gen_random_uuid(), gen_random_uuid())$$,
+  '42501',
+  'a signed-in user cannot build a payload'
+);
+reset role;
+
+set local role anon;
+select throws_ok(
+  $$select count(*) from public.publish_attempts$$,
+  '42501',
+  'anon cannot read the attempts'
+);
+select throws_ok(
+  $$select public.publish_work(5, 6)$$,
+  '42501',
+  'anon cannot run the publishing job'
+);
+reset role;
+
+select throws_ok(
+  format($$insert into public.publish_attempts (channel_row_id, brand_id, attempt_no) values ('%s', gen_random_uuid(), 99)$$, pg_temp.row_of(current_setting('t.a'))),
+  '23503',
+  'an attempt cannot carry another brand'
 );
 
 select * from finish();

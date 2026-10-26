@@ -17,6 +17,11 @@ export const connectionSettingsSchema = z.object({
   expectedVersion: z.number().int().min(1),
 });
 
+export const testConnectionSchema = z.object({
+  brandId: z.string().uuid(),
+  channelId: z.string().uuid(),
+});
+
 export const disconnectSchema = z.object({ channelId: z.string().uuid() });
 
 export const connectionRowSchema = z.object({

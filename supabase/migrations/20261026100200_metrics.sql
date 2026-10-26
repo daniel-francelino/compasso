@@ -63,11 +63,12 @@ create table public.channel_media_index (
   product_type text check (product_type is null or char_length(product_type) <= 40),
   posted_at timestamptz not null,
   caption_excerpt text check (caption_excerpt is null or char_length(caption_excerpt) <= 200),
-  content_channel_id uuid references public.content_channels (id),
+  content_channel_id uuid,
   created_at timestamptz not null default now(),
   unique (channel_id, external_media_id),
   unique (id, brand_id),
-  foreign key (channel_id, brand_id) references public.channels (id, brand_id)
+  foreign key (channel_id, brand_id) references public.channels (id, brand_id),
+  foreign key (content_channel_id, brand_id) references public.content_channels (id, brand_id)
 );
 
 create index channel_media_index_posted_idx on public.channel_media_index (channel_id, posted_at desc);
@@ -919,6 +920,61 @@ begin
 end;
 $$;
 
+create function public.metrics_snapshot_for_portal(p_snapshot jsonb, p_blocks jsonb)
+returns jsonb
+language sql
+immutable
+set search_path = ''
+as $$
+  with kinds as (
+    select coalesce(array_agg(b ->> 'kind'), '{}'::text[]) as list
+    from jsonb_array_elements(coalesce(p_blocks, '[]'::jsonb)) b
+  ),
+  parts as (
+    select p_snapshot -> 'analysis' as analysis
+  )
+  select jsonb_build_object(
+    'version', p_snapshot -> 'version',
+    'generatedAt', p_snapshot -> 'generatedAt',
+    'account', jsonb_build_object(
+      'username', p_snapshot #> '{account,username}',
+      'followers', p_snapshot #> '{account,followers}'
+    ),
+    'periodLabel', p_snapshot -> 'periodLabel',
+    'compare', p_snapshot -> 'compare',
+    'summary', p_snapshot -> 'summary',
+    'highlights', coalesce(p_snapshot -> 'highlights', '[]'::jsonb),
+    'analysis', jsonb_build_object(
+      'overview', parts.analysis -> 'overview',
+      'topPosts', case
+        when 'top_posts' = any (kinds.list) then coalesce(
+          (
+            select jsonb_agg((post - 'item_id') - 'item_title' - 'content_channel_id')
+            from jsonb_array_elements(parts.analysis -> 'topPosts') post
+          ),
+          '[]'::jsonb
+        )
+        else '[]'::jsonb
+      end,
+      'formats', case when 'formats' = any (kinds.list)
+        then coalesce(parts.analysis -> 'formats', '[]'::jsonb) else '[]'::jsonb end,
+      'weekdays', case when 'schedule' = any (kinds.list)
+        then coalesce(parts.analysis -> 'weekdays', '[]'::jsonb) else '[]'::jsonb end,
+      'hours', case when 'schedule' = any (kinds.list)
+        then coalesce(parts.analysis -> 'hours', '[]'::jsonb) else '[]'::jsonb end,
+      'audience', case when 'audience' = any (kinds.list)
+        then coalesce(parts.analysis -> 'audience', '[]'::jsonb) else '[]'::jsonb end,
+      'plan', case when 'plan' = any (kinds.list)
+        then parts.analysis -> 'plan'
+        else '{"planned":0,"published":0,"automatic":0,"published_automatically":0,"failed":0}'::jsonb
+      end,
+      'marks', case when 'marks' = any (kinds.list)
+        then coalesce(parts.analysis -> 'marks', '[]'::jsonb) else '[]'::jsonb end
+    )
+  )
+  from kinds, parts
+$$;
+
 create function public.portal_metrics_report_list(p_brand uuid)
 returns jsonb
 language plpgsql
@@ -975,7 +1031,7 @@ begin
     'period_start', v_row.period_start,
     'period_end', v_row.period_end,
     'published_at', v_row.published_at,
-    'snapshot', v_row.snapshot
+    'snapshot', public.metrics_snapshot_for_portal(v_row.snapshot, v_row.blocks)
   );
 end;
 $$;
@@ -1238,6 +1294,7 @@ revoke execute on function
   public.metrics_assert_read(uuid, uuid),
   public.metrics_totals(uuid, date, date),
   public.metrics_report_json(public.metric_reports, boolean),
+  public.metrics_snapshot_for_portal(jsonb, jsonb),
   public.metrics_collect_targets(),
   public.metrics_store_daily(uuid, jsonb),
   public.metrics_store_audience(uuid, date, jsonb),

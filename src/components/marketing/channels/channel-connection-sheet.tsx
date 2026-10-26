@@ -19,11 +19,11 @@ import {
   disconnectChannel,
   saveConnectionSettings,
   startInstagramConnection,
+  testChannelConnection,
 } from "@/lib/marketing/channels/connection.functions";
 import { dbErrorMessage } from "@/lib/shared/auth/errors";
 import { ConnectionStatus } from "@/lib/shared/enums";
 import { formatDateTime, formatNumber } from "@/lib/shared/format";
-import { testChannelConnection } from "@/lib/shared/jobs/connection-test.functions";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { INSTAGRAM_SCOPES, instagramScopeLabels } from "@/lib/shared/social/scopes";
 

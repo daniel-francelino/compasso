@@ -212,22 +212,25 @@ Each phase is one purpose per change (GOLD-5) and updates this document's implem
 | [content-publication.md](content-publication.md) | `publish_content` needs every row `published_manually` | Accept `published_auto` too | One condition |
 | [calendar.md](calendar.md) | "planned" is an editorial date | For an automatic row it is a promise; the calendar shows the mode and status | Copy and badge |
 
-## 9. Open decisions (with a recommendation)
+## 9. Decisions
 
-| ID | Question | Recommendation |
-|---|---|---|
-| A1 | Build this now, or keep the manual flow until the first client asks? | Build phase 1 only after M1 and M4 exist; the long pole is App Review, so start M2 and M3 now |
-| A2 | Scheduler | `pg_cron` + `pg_net` every minute, daily Vercel route as safety net; Vercel Pro if the agency prefers one vendor |
-| A3 | New action `channels.connect`, or reuse `channels.update`? | New action, so connecting a client's account is a conscious permission |
-| A4 | Login path | **Instagram Login** (no Facebook Page, fewer client steps). Facebook Login only if a client needs a feature the other path lacks |
-| A5 | Where the JPEG is made | In the browser when scheduling, server fallback later |
-| A6 | Who connects the account: the client through an invitation link, or the team with the client at hand? | The team starts it from the channel card; the client logs in on Instagram's own screen. A portal-side flow is a later improvement and would need a `portal_*` function |
-| A7 | Grace window for late jobs | 6 hours |
-| A8 | Publish the first comment (hashtags) separately? | No. Hashtags stay in the caption |
-| A9 | Which scopes to request in the first App Review | Basic, content publish and manage insights. Add comments or messaging only when a feature uses them (a new scope later forces every client to authorize again) |
-| A10 | How long to keep metric history | Keep everything; the volume is small. Revisit with the metrics module |
-| A11 | Does the client see metrics for posts made outside Compasso? | Decide in the metrics module; the data is collected either way |
-| A12 | Free Supabase plan and the 7-day pause | Accept only for development. For clients, a paused project stops publishing, token renewal and metrics collection: use a paid plan before go-live (phase 2) |
+All the questions of the proposal were answered on 2026-10-26 by taking the recommendation, unless the person decided otherwise. What is still open is in [../pending-external-setup.md](../pending-external-setup.md).
+
+| ID | Decision |
+|---|---|
+| A1 | Build now, all phases (the product owner asked for it) |
+| A2 | The trigger is `pg_cron` + `pg_net` every minute (or an external scheduler, or Vercel Pro), with the daily Vercel run only as a backup. **Not wired yet**: until it is, a row published through the daily run only starts at 09:30 UTC and the 6-hour lateness window fails most rows. Automatic publishing is therefore not usable in practice before pending item I5 |
+| A3 | New action `channels.connect` |
+| A4 | Instagram Login (no Facebook Page) |
+| A5 | JPEG: not built; the job accepts only JPEG originals (section 5.2) |
+| A6 | The team starts the connection from the channel card; the client logs in on Instagram's own screen |
+| A7 | Lateness window: 6 hours |
+| A8 | Hashtags stay in the caption |
+| A9 | First review asks for basic, content publish and manage insights |
+| A10 | Metric history is kept without a limit |
+| A11 | Posts made outside Compasso are collected; whether the client sees them is chosen per report (block "Melhores posts") |
+| A12 | Free Supabase plan accepted only for development |
+| D1 | The access token is stored encrypted in `channel_connections`; disconnecting **deletes** it (a hard delete on purpose: the token must not outlive the connection; the audit events `channel.connected`, `channel.disconnected` and `channel.connection_lost` keep the trace, and the metrics and publication history stays with the channel) |
 
 ## 10. Risks
 
@@ -261,15 +264,15 @@ Each phase is one purpose per change (GOLD-5) and updates this document's implem
 
 2026-10-26, first delivery of phases 1 to 4b (and the whole of the metrics module, see [metrics.md](metrics.md)).
 
-**Migrations:** `20261026100000_channel_connections.sql`, `20261026100100_instagram_publishing.sql`, `20261026100200_metrics.sql`. **Tests:** pgTAP `26_channel_connections`, `27_instagram_publishing`, `28_metrics`; Vitest `token-crypto`, `oauth-state`, `instagram.server` (faked `fetch`), `days`, `period`, `highlights`, `insights`, `format`.
+**Migrations:** `20261026100000_channel_connections.sql`, `20261026100100_instagram_publishing.sql`, `20261026100200_metrics.sql`. **Tests:** pgTAP `26_channel_connections`, `27_instagram_publishing` (with the per-role matrix: anon, external user, manager of another brand, composite key), `28_metrics` (with the portal projection); Vitest `token-crypto`, `oauth-state`, `instagram.server` (faked `fetch`), `days`, `period`, `highlights`, `insights`, `format`.
 
 **Code:** `src/lib/shared/social/` (`token-crypto.server.ts`, `oauth-state.server.ts`, `graph.server.ts`, `instagram.server.ts`, `instagram-publish.server.ts`, `instagram-insights.server.ts`, `publish-codes.ts`, `scopes.ts`); `src/lib/shared/jobs/` (`connection-token.server.ts`, `channel-connections.server.ts`, `publish-due.server.ts`, `collect-metrics.server.ts`, `connection-test.functions.ts`); `src/routes/api/cron/publish-due.ts` (one route runs the publishing, the token renewal and the metrics collection; `vercel.json` has the daily backup run); `src/lib/marketing/channels/connection*.ts`; `src/lib/marketing/content/publishing.functions.ts`; UI `src/components/marketing/channels/{channel-connection-sheet,connection-badge,instagram-callback-page}.tsx`, `src/components/marketing/content/publish-automation-section.tsx`, the dashboard blocks; route `/admin/marketing/instagram/callback`.
 
 **Decisions taken while building:** the token is encrypted in the server with AES-256-GCM and a key from `CHANNEL_TOKEN_KEY` (not Supabase Vault, so it works in the local test database); the OAuth state is signed and expires in 10 minutes (single use comes from Meta's one-time code); the publishing is two-phase with the container id saved first, and an unconfirmed `media_publish` is marked `uncertain` for a person to check instead of being retried; a row more than 6 hours late fails with `publish_too_late`; `pg_cron` was not wired (the scheduler is an external item, see [../pending-external-setup.md](../pending-external-setup.md) I5).
 
-**Validation performed:** `npm run db:verify` (1081 assertions, 0 failures, including 85 new), `npm run typecheck`, `npm run lint`, `npm run check:consistency`, `npm run check:docs`, `npm run test` (Vitest), `npm run build`.
+**Validation performed:** `npm run db:verify` (1097 assertions, 0 failures, 101 of them new), `npm run typecheck`, `npm run lint`, `npm run check:consistency`, `npm run check:docs`, `npm run test` (Vitest), `npm run build`. The three migrations were applied to the linked project on 2026-10-26 (`supabase db push --linked`, after a dry run) and the database types were regenerated with `npm run db:types -- --linked`.
 
-**Not done / not tested:** **no call to Meta was ever made** (the adapter is tested only against a faked `fetch`; response shapes, metric names and parameters come from Meta's public documentation and must be checked, [../pending-external-setup.md](../pending-external-setup.md) I7); the migrations were not applied to the linked project and the database types were regenerated offline (I1, I2); no browser pass, no Playwright flow; the JPEG derivative (I8); carousel with video, resumable upload, Stories insights; follows and unfollows and the online-hours audience are not collected (I10); the `pg_cron` trigger and the `pg_net` limits (I5); the portal never saw a published report in a real session.
+**Not done / not tested:** **no call to Meta was ever made** (the adapter is tested only against a faked `fetch`; response shapes, metric names and parameters come from Meta's public documentation and must be checked, [../pending-external-setup.md](../pending-external-setup.md) I7); no browser pass, no Playwright flow; the JPEG derivative (I8); carousel with video, resumable upload, Stories insights; follows and unfollows and the online-hours audience are not collected (I10); the `pg_cron` trigger and the `pg_net` limits (I5); the portal never saw a published report in a real session.
 
 ## Sources
 

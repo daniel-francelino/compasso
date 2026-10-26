@@ -25,7 +25,7 @@ create index content_channels_auto_idx on public.content_channels (planned_at)
 
 create table public.publish_attempts (
   id uuid primary key default gen_random_uuid(),
-  channel_row_id uuid not null references public.content_channels (id),
+  channel_row_id uuid not null,
   brand_id uuid not null references public.brands (id),
   attempt_no int not null check (attempt_no >= 1),
   container_id text check (container_id is null or char_length(container_id) <= 80),
@@ -35,7 +35,8 @@ create table public.publish_attempts (
   media_id text check (media_id is null or char_length(media_id) <= 80),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (channel_row_id, attempt_no)
+  unique (channel_row_id, attempt_no),
+  foreign key (channel_row_id, brand_id) references public.content_channels (id, brand_id)
 );
 
 create index publish_attempts_row_idx on public.publish_attempts (channel_row_id, attempt_no desc);

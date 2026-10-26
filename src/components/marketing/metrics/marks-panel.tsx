@@ -1,6 +1,7 @@
 import { Flag, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { SelectField, TextField } from "@/components/shared/admin/form-fields";
 import { IconButton } from "@/components/shared/admin/icon-button";
@@ -126,6 +127,7 @@ export function MarksPanel({
   canEdit: boolean;
 }) {
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<Mark | null>(null);
   const { run, busy } = useServerAction();
   const invalidate = [QueryKey.Metrics.all(brandId)];
 
@@ -167,18 +169,30 @@ export function MarksPanel({
                   icon={Trash2}
                   destructive
                   disabled={busy}
-                  onClick={() =>
-                    void run(() => deleteMetricMark({ data: { id: mark.id } }), {
-                      invalidate,
-                      success: "Marca excluída.",
-                    })
-                  }
+                  onClick={() => setDeleting(mark)}
                 />
               ) : null}
             </li>
           ))}
         </ul>
       )}
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(next) => !next && setDeleting(null)}
+        title="Excluir marca"
+        description={`A marca «${deleting?.label ?? ""}» deixa de aparecer nos gráficos.`}
+        confirmLabel="Excluir"
+        destructive
+        busy={busy}
+        onConfirm={async () => {
+          if (deleting === null) return false;
+          const result = await run(() => deleteMetricMark({ data: { id: deleting.id } }), {
+            invalidate,
+            success: "Marca excluída.",
+          });
+          return result.ok;
+        }}
+      />
       {creating ? (
         <MarkDialog
           brandId={brandId}

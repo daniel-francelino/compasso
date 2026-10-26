@@ -1,6 +1,6 @@
 begin;
 
-select plan(34);
+select plan(38);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -249,6 +249,36 @@ select throws_ok(
   format($$select public.portal_metrics_report_list('%s'::uuid)$$, current_setting('t.brand')),
   '42501',
   'anon cannot call the portal function'
+);
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
+select set_config('t.report2', public.metrics_report_save(format('{"brand_id":"%s","channel_id":"%s","period_start":"%s","period_end":"%s","title":"Com posts","blocks":[{"kind":"summary"},{"kind":"top_posts"}]}', current_setting('t.brand'), current_setting('t.channel'), current_date - 20, current_date - 1)::jsonb) ->> 'id', true);
+select public.metrics_report_publish(
+  current_setting('t.report2')::uuid, 1,
+  '{"version":1,"summary":"ok","highlights":[],"analysis":{"overview":{"x":1},"topPosts":[{"external_media_id":"m1","item_id":"11111111-1111-1111-1111-111111111111","item_title":"Interno","content_channel_id":"22222222-2222-2222-2222-222222222222"}],"formats":[{"key":"REELS"}],"weekdays":[{"key":"1"}],"hours":[],"audience":[{"dimension":"country"}],"plan":{"planned":5,"published":4,"automatic":3,"published_automatically":2,"failed":1},"marks":[{"label":"Interna"}]}}'::jsonb
+);
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
+select is(
+  public.portal_metrics_report_get(current_setting('t.report2')::uuid) -> 'snapshot' -> 'analysis' -> 'marks',
+  '[]'::jsonb,
+  'the portal gets no mark when the block was not chosen'
+);
+select ok(
+  not (public.portal_metrics_report_get(current_setting('t.report2')::uuid) -> 'snapshot' -> 'analysis' -> 'topPosts' -> 0 ? 'item_id'),
+  'and the posts never carry the internal content id'
+);
+select is(
+  (public.portal_metrics_report_get(current_setting('t.report2')::uuid) -> 'snapshot' -> 'analysis' -> 'plan' ->> 'failed')::int,
+  0,
+  'nor the internal publication counts'
+);
+select is(
+  public.portal_metrics_report_get(current_setting('t.report2')::uuid) -> 'snapshot' -> 'analysis' -> 'formats',
+  '[]'::jsonb,
+  'nor data of blocks that were left out'
 );
 reset role;
 

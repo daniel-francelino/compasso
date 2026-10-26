@@ -114,8 +114,8 @@ Specified in [modules/instagram-publishing.md](modules/instagram-publishing.md) 
 
 | ID | Item | Status |
 |---|---|---|
-| I1 | **Apply the three migrations** `20261026100000_channel_connections.sql`, `20261026100100_instagram_publishing.sql`, `20261026100200_metrics.sql` to the linked project (`npx supabase db push`) | Open |
-| I2 | **Regenerate the database types with the real CLI** (`npm run db:types -- --linked`). The committed `database.types.ts` was regenerated on 2026-10-26 with the **offline generator** (`npm run db:types:offline`) because the project was not linked here, so its formatting and argument types differ from the CLI output | Open |
+| I1 | **Apply the three migrations** `20261026100000_channel_connections.sql`, `20261026100100_instagram_publishing.sql`, `20261026100200_metrics.sql` to the linked project | Done 2026-10-26: `npx supabase db push --dry-run` listed only these three, then `npx supabase db push --linked` applied them; `migration list --linked` shows local and remote equal. The functions were not exercised on the remote (no data, no Meta app) |
+| I2 | **Regenerate the database types with the real CLI** | Done 2026-10-26: `npm run db:types -- --linked` after I1; typecheck and lint pass |
 | I3 | **Meta developer app** (type Business, product Instagram with Business Login for Instagram), redirect URI `<SITE_URL>/admin/marketing/instagram/callback`, privacy policy, terms and data-deletion URLs, then **App Review** for `instagram_business_basic`, `instagram_business_content_publish` and `instagram_business_manage_insights` (Advanced Access, needs Business Verification) | Open; until approved only the app's testers can connect |
 | I4 | **Secrets in Vercel**: `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `CHANNEL_TOKEN_KEY` (`openssl rand -base64 32`); keep a safe copy of the key | Open |
 | I5 | **A trigger every minute** for `/api/cron/publish-due`: `pg_cron` + `pg_net` with the secret in Supabase Vault (recommended), an external scheduler, or Vercel Pro. `vercel.json` only has the daily backup run (the Hobby plan limits crons to one a day, and the project already has four) | Open |

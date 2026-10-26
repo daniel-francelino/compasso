@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ConnectionStatus } from "@/lib/shared/enums";
 import { instagramConfig } from "@/lib/shared/env.server";
 import {
   markConnectionLost,
@@ -67,7 +68,7 @@ export const runChannelRenewal = async (): Promise<RenewalResult> => {
     if (expiresIn < WARN_WITHIN_MS) {
       await admin.rpc("channel_connection_failed", {
         p_channel: connection.channel_id,
-        p_status: "expiring",
+        p_status: ConnectionStatus.Expiring,
         p_code: PublishErrorCode.Unavailable,
       });
     }

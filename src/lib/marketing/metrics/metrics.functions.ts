@@ -13,7 +13,7 @@ import {
 } from "@/lib/marketing/metrics/schemas";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
-import { MetricReportStatus } from "@/lib/shared/enums";
+import { MetricGranularity, MetricReportStatus } from "@/lib/shared/enums";
 import { buildHighlights, summarySentence } from "@/lib/shared/metrics/highlights";
 import { bestFormatOf, bestPostOf, bestSlotOf } from "@/lib/shared/metrics/insights";
 import { periodLabel } from "@/lib/shared/metrics/period";
@@ -254,7 +254,7 @@ export const publishMetricReport = createServerFn({ method: "POST" })
       from: report.data.period_start,
       to: report.data.period_end,
       compare: report.data.compare_mode,
-      granularity: "week",
+      granularity: MetricGranularity.Week,
       rankBy: PostRanking.Reach,
     });
     if (!loaded.ok) return loaded;
