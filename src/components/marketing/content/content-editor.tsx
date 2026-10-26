@@ -273,6 +273,7 @@ export function ContentEditor({
   const hasPublished = values.rows.some((row) => row.published);
   const allPublished = hasPublished && values.rows.every((row) => row.published);
   const canPublish = can(auth, Action.Content.PublishManual) && approved && !cancelled;
+  const canAutomate = can(auth, Action.Content.PublishManual) && !cancelled;
   const canCancel = content !== undefined && can(auth, Action.Content.Cancel) && !cancelled;
 
   const duplicate = async () => {
@@ -427,6 +428,8 @@ export function ContentEditor({
               saving={saving}
               canPublish={canPublish}
               canCancelRow={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
+              itemId={content?.id}
+              canAutomate={canAutomate}
               errors={errors}
               onPublishRow={setPublishing}
               onCancelRow={setCancellingRow}

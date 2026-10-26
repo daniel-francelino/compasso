@@ -47,7 +47,7 @@ This document turns the product document into an implementable technical specifi
 - Library versions, TanStack Start API names and plan limits (Vercel, Supabase, Cloudflare) change. Confirm them in the official pages when installing or contracting. As a starting point for versions, use the `package.json` of Memoria Print.
 - Code snippets in this document are illustrative and carry comments only to explain; in the real `src` code there are **no comments** (section 2).
 
-**Out of MVP scope**: automatic publishing to social networks, billing, commercial CRM, multi-organization SaaS, anonymous approval links, AI.
+**Out of MVP scope**: automatic publishing to social networks other than Instagram (Instagram publishing, channel connections and metrics were brought into scope on 2026-10-26, see [modules/instagram-publishing.md](modules/instagram-publishing.md) and [modules/metrics.md](modules/metrics.md)), billing, commercial CRM, multi-organization SaaS, anonymous approval links, AI.
 
 **Scale assumption (to validate)**: one organization, about 10 internal users, dozens of clients, a few hundred brands and channels, thousands of files. Nothing requires infrastructure beyond Vercel, Supabase and R2.
 
@@ -187,6 +187,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Calendar | FullCalendar (`dayGrid`, `timeGrid`, `list`, `interaction`; MIT modules) | Alternative: port `month-grid` and `time-grid` from Memoria Print. Decide in a spike at the start of phase 4 |
 | Drag and drop | `@dnd-kit` | Content board by status |
 | Rich text | Tiptap (minimal extensions) | Store JSON, never HTML |
+| Charts | Recharts (added 2026-10-26 for the metrics screen, [modules/metrics.md](modules/metrics.md)); colors only from the `chart-*` tokens | Loaded with the metrics routes only |
 | Dates | `date-fns` v4 | Instants in UTC; IANA time zone per brand; formatters in `format.ts` |
 | Virtualization | `@tanstack/react-virtual` | Large library grids |
 
@@ -1003,6 +1004,8 @@ Variables (names aligned with Memoria Print):
 | `RESEND_API_KEY`, `EMAIL_FROM` | Server only | Transactional email |
 | `VITE_TURNSTILE_SITE_KEY` (public), `TURNSTILE_SECRET` (server) | Mixed | Contact form |
 | `CRON_SECRET` | Server only | Cron authentication |
+| `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET` | Server only | Meta app of the Instagram integration ([modules/instagram-publishing.md](modules/instagram-publishing.md)); the secret also signs the OAuth state |
+| `CHANNEL_TOKEN_KEY` | Server only | 32 random bytes in base64; encrypts the stored access tokens (AES-256-GCM). Losing it means every channel must be reconnected; rotating it needs a re-encryption job |
 | `OWNER_EMAIL`, `OWNER_PASSWORD` | Only at seed time | First Owner; never versioned |
 
 Rules: `.env.local` outside git (`*.local` in `.gitignore`); `.env.example` versioned with no values; GitHub secret scanning enabled; document key rotation (create new → update Vercel → redeploy → revoke the old one); validate variables at startup in a single `env.ts` per service.

@@ -128,6 +128,26 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `captcha_failed` | invalid | "Não foi possível confirmar que você não é um robô. Tente de novo." | `submitContactMessage` (Turnstile) |
 | `contact_consent_required` | invalid | "É preciso aceitar o consentimento para enviar a mensagem." | `site_contact_submit` |
 
+### Instagram, publishing and metrics
+
+| Code | Category | Message (pt-BR) | Raised by |
+|---|---|---|---|
+| `channel_account_in_use` | invalid | "Esta conta do Instagram já está conectada a outro canal." | channel_connection_connect |
+| `connection_missing` | invalid | "Conecte o canal ao Instagram antes de publicar automaticamente." | channel_row_set_publish_mode, channel_row_publish_now, publish_work (stored) |
+| `connection_expired` | denied | "A conexão com o Instagram expirou. Reconecte o canal." | publish_work, collectors (stored) |
+| `format_not_supported` | invalid | "Este formato ainda não pode ser publicado automaticamente." | channel_row_set_publish_mode, publishing job (stored) |
+| `publish_in_progress` | conflict | "Este conteúdo está sendo publicado agora. Tente de novo em instantes." | content_channels_guard, channel_connection_disconnect |
+| `publish_too_late` | invalid | "O horário planejado já passou há tempo demais. Publique à mão ou tente de novo." | publish_work (stored) |
+| `publish_limit_reached` | unavailable | "O Instagram atingiu o limite de publicações de hoje. Vamos tentar de novo." | publishing job (stored) |
+| `media_not_ready` | invalid | "Os arquivos não puderam ser preparados para o Instagram. Confira o formato e o tamanho." | publishing job (stored) |
+| `instagram_rejected` | invalid | "O Instagram recusou a publicação. Confira o conteúdo e tente de novo." | publishing job (stored) |
+| `publish_uncertain` | unavailable | "Não foi possível confirmar se o post saiu. Confira no Instagram antes de tentar de novo." | publishing job (stored) |
+| `publish_stuck` | unavailable | "A publicação demorou demais e foi interrompida. Tente de novo." | publishing job (stored) |
+| `instagram_unavailable` | unavailable | "O Instagram está indisponível agora. Tente de novo em instantes." | publishing and collection jobs (stored) |
+| `report_empty` | invalid | "Escolha ao menos um bloco para o relatório." | metrics_report_publish |
+| `report_period_invalid` | invalid | "O período do relatório é inválido." | metrics_report_save |
+| `report_already_published` | conflict | "Este relatório já foi publicado e não pode ser alterado." | metric_reports_guard, metrics_report_save, metrics_report_publish, metrics_report_delete |
+
 ## 3. Rules
 
 1. SQL raises only codes from this table; TypeScript maps unknown database errors to `unknown` and logs them.

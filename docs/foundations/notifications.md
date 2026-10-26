@@ -39,6 +39,11 @@ Each kind requires an **action** and, when the subject belongs to a brand, a **b
 | `site.published` | A site version was published or restored | People with `site.publish` | Event | Immediate |
 | `site.contact_message` | A message arrived through the site contact form | People with `site.view` | Event | Immediate |
 | `media.upload_failed` | An upload failed validation | The uploader (`media.upload`) | Event | Immediate |
+| `channel.connection_expiring` | The Instagram token could not be renewed and expires within 7 days | People with `channels.connect` on the brand | Event | Once a day while it lasts |
+| `channel.connection_expired` | The connection was lost (token expired, access removed, password changed) | People with `channels.connect` on the brand | Event | Once a day while it lasts |
+| `content.publish_failed` | An automatic publication failed or could not be confirmed | People with `content.publish_manual` on the brand | Event | Immediate |
+| `content.published_auto` | A content was published automatically | People with `content.view` on the brand | Event | Immediate |
+| `metrics.report_published` | A result report was published to the client | The client members of the brand (`metrics.portal_view`) | Event | Immediate |
 
 The kinds, required actions and default lead times live in a **catalog** (`notification_kinds`), seeded by the migrations just like the actions. Each module adds its own when implemented, with `available = true`. Each notification also has a **severity**: `info`, `warning` (needs attention) or `urgent` (delay/risk); it defines icon, ordering and tone, within the palette.
 

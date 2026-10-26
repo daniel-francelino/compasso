@@ -20,6 +20,7 @@ export type PublicationPendingItem = {
   brandId: string;
   brandName: string;
   pendingRows: number;
+  failedRows: number;
   oldestPlannedAt: string;
   channels: string[];
 };
@@ -58,6 +59,7 @@ const publicationPendingSchema = z.object({
       brand_id: z.string().uuid(),
       brand_name: z.string(),
       pending_rows: z.number().int(),
+      failed_rows: z.number().int(),
       oldest_planned_at: z.string(),
       channels: z.array(z.string()),
     }),
@@ -127,6 +129,7 @@ export const getPublicationPending = createServerFn({ method: "GET" })
         brandId: row.brand_id,
         brandName: row.brand_name,
         pendingRows: row.pending_rows,
+        failedRows: row.failed_rows,
         oldestPlannedAt: row.oldest_planned_at,
         channels: row.channels,
       })),

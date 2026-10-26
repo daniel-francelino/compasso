@@ -8,7 +8,7 @@ Show **what is planned, when and in which state**, for one brand or for all the 
 
 Admin calendar screens use all available content width for the calendar grid and its undated-content panel.
 
-Included: month, week and list views, filters, items without a date, drag to reschedule with confirmation, time zones and daylight saving, shareable URLs, portal calendar. Not included in the MVP: tasks and other free-form events (only ideas and dates exist), external calendar sync (Google/ICS export is a later option), automatic publishing, resource planning.
+Included: month, week and list views, filters, items without a date, drag to reschedule with confirmation, time zones and daylight saving, shareable URLs, portal calendar. Not included in the MVP: tasks and other free-form events (only ideas and dates exist), external calendar sync (Google/ICS export is a later option), resource planning. Automatic publishing exists only for connected Instagram channels ([instagram-publishing.md](instagram-publishing.md)); the calendar shows the mode and status of such rows.
 
 ## What appears on the calendar
 

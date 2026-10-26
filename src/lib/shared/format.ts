@@ -54,6 +54,20 @@ export function formatNumber(value: number, fractionDigits = 0): string {
   }).format(value);
 }
 
+export function formatCompact(value: number): string {
+  return new Intl.NumberFormat(LOCALE, { notation: "compact", maximumFractionDigits: 1 }).format(
+    value,
+  );
+}
+
+export function formatPercent(value: number, fractionDigits = 0): string {
+  return new Intl.NumberFormat(LOCALE, {
+    style: "percent",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value);
+}
+
 export function formatBytes(bytes: number): string {
   const units = ["B", "KB", "MB", "GB", "TB"];
   let value = bytes;

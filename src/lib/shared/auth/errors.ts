@@ -309,6 +309,68 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.InUse,
     message: "Este conteúdo já tem versões ou comentários. Cancele em vez de excluir.",
   },
+  channel_account_in_use: {
+    category: ErrorCode.Invalid,
+    message: "Esta conta do Instagram já está conectada a outro canal.",
+  },
+  connection_missing: {
+    category: ErrorCode.Invalid,
+    message: "Conecte o canal ao Instagram antes de publicar automaticamente.",
+  },
+  connection_expired: {
+    category: ErrorCode.Denied,
+    message: "A conexão com o Instagram expirou. Reconecte o canal.",
+  },
+  format_not_supported: {
+    category: ErrorCode.Invalid,
+    message: "Este formato ainda não pode ser publicado automaticamente.",
+  },
+  publish_in_progress: {
+    category: ErrorCode.Conflict,
+    message: "Este conteúdo está sendo publicado agora. Tente de novo em instantes.",
+  },
+  publish_too_late: {
+    category: ErrorCode.Invalid,
+    message: "O horário planejado já passou há tempo demais. Publique à mão ou tente de novo.",
+  },
+  publish_limit_reached: {
+    category: ErrorCode.Unavailable,
+    message: "O Instagram atingiu o limite de publicações de hoje. Vamos tentar de novo.",
+  },
+  media_not_ready: {
+    category: ErrorCode.Invalid,
+    message:
+      "Os arquivos não puderam ser preparados para o Instagram. Confira o formato e o tamanho.",
+  },
+  instagram_rejected: {
+    category: ErrorCode.Invalid,
+    message: "O Instagram recusou a publicação. Confira o conteúdo e tente de novo.",
+  },
+  publish_uncertain: {
+    category: ErrorCode.Unavailable,
+    message:
+      "Não foi possível confirmar se o post saiu. Confira no Instagram antes de tentar de novo.",
+  },
+  publish_stuck: {
+    category: ErrorCode.Unavailable,
+    message: "A publicação demorou demais e foi interrompida. Tente de novo.",
+  },
+  report_empty: {
+    category: ErrorCode.Invalid,
+    message: "Escolha ao menos um bloco para o relatório.",
+  },
+  report_period_invalid: {
+    category: ErrorCode.Invalid,
+    message: "O período do relatório é inválido.",
+  },
+  report_already_published: {
+    category: ErrorCode.Conflict,
+    message: "Este relatório já foi publicado e não pode ser alterado.",
+  },
+  instagram_unavailable: {
+    category: ErrorCode.Unavailable,
+    message: "O Instagram está indisponível agora. Tente de novo em instantes.",
+  },
   audit_immutable: {
     category: ErrorCode.Denied,
     message: "Registros de auditoria não podem ser alterados.",

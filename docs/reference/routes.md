@@ -58,6 +58,9 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/marketing/brands/new` | `brands.create` | brands |
 | `/admin/marketing/brands/$brandId` | `brands.view` | brands (overview tab) |
 | `/admin/marketing/brands/$brandId/channels` | `channels.view` | channels |
+| `/admin/marketing/brands/$brandId/metrics` | `metrics.view` | metrics (tab; search params `channel`, `preset`, `from`, `to`, `compare`, `rankBy`, `view`) |
+| `/admin/marketing/brands/$brandId/metrics-report/$reportId` | `metrics.view` (edit: `metrics.report`) | metrics (report builder and read-only view) |
+| `/admin/marketing/instagram/callback` | `channels.connect` | instagram-publishing (OAuth return page; search params `code`, `state`, `error`) |
 | `/admin/marketing/brands/$brandId/content` | `content.view` | content |
 | `/admin/marketing/brands/$brandId/calendar` | `calendar.view` | calendar |
 | `/admin/marketing/brands/$brandId/approvals` | `approvals.view` | approvals |
@@ -99,6 +102,8 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/portal/brands/$brandId/calendar` | `portal.view` | portal / calendar |
 | `/portal/brands/$brandId/approvals` | `portal.view` | portal / approvals |
 | `/portal/brands/$brandId/approvals/$requestId` | `portal.view` (decide: `approvals.decide`) | portal / approvals |
+| `/portal/brands/$brandId/metrics` | `portal.view` + `metrics.portal_view` | metrics (published reports) |
+| `/portal/brands/$brandId/metrics/$reportId` | `portal.view` + `metrics.portal_view` | metrics (one published report) |
 | `/portal/notifications` | `portal.view` | notifications |
 | `/portal/profile` | `portal.view` | authentication |
 

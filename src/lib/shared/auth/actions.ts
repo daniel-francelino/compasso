@@ -19,6 +19,12 @@ export const Action = {
     Create: "channels.create",
     Update: "channels.update",
     Delete: "channels.delete",
+    Connect: "channels.connect",
+  },
+  Metrics: {
+    View: "metrics.view",
+    Report: "metrics.report",
+    PortalView: "metrics.portal_view",
   },
   Content: {
     View: "content.view",

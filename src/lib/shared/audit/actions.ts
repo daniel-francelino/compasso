@@ -36,6 +36,9 @@ export const AuditAction = {
     Archived: "channel.archived",
     Reactivated: "channel.reactivated",
     Deleted: "channel.deleted",
+    Connected: "channel.connected",
+    Disconnected: "channel.disconnected",
+    ConnectionLost: "channel.connection_lost",
   },
   Content: {
     Created: "content.created",
@@ -52,6 +55,19 @@ export const AuditAction = {
     Rescheduled: "content_channel.rescheduled",
     PublishedManually: "content_channel.published_manually",
     Cancelled: "content_channel.cancelled",
+    PublishedAuto: "content_channel.published_auto",
+    PublishFailed: "content_channel.publish_failed",
+    PublishModeChanged: "content_channel.publish_mode_changed",
+    PublishRequested: "content_channel.publish_requested",
+  },
+  MetricMark: {
+    Created: "metric_mark.created",
+    Updated: "metric_mark.updated",
+    Deleted: "metric_mark.deleted",
+  },
+  MetricsReport: {
+    Published: "metrics_report.published",
+    Withdrawn: "metrics_report.withdrawn",
   },
   CalendarNote: {
     Created: "calendar_note.created",

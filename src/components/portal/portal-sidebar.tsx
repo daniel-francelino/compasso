@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useRouterState } from "@tanstack/react-router";
 import {
+  BarChart3,
   Bell,
   CalendarDays,
   ClipboardCheck,
@@ -26,6 +27,8 @@ import {
 } from "@/components/shared/ui/sidebar";
 import { useUnreadCount } from "@/hooks/shared/use-notifications";
 import { listPortalBrands } from "@/lib/portal/approvals/portal.functions";
+import { Action, type ActionKey } from "@/lib/shared/auth/actions";
+import { can } from "@/lib/shared/auth/permissions";
 import type { AuthState } from "@/lib/shared/auth/types";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
@@ -42,14 +45,22 @@ type BrandLink = {
   to:
     | "/portal/brands/$brandId"
     | "/portal/brands/$brandId/approvals"
-    | "/portal/brands/$brandId/calendar";
+    | "/portal/brands/$brandId/calendar"
+    | "/portal/brands/$brandId/metrics";
   exact?: boolean;
+  action?: ActionKey;
 };
 
 const brandLinks: BrandLink[] = [
   { title: "Painel", icon: LayoutDashboard, to: "/portal/brands/$brandId", exact: true },
   { title: "Aprovações", icon: ClipboardCheck, to: "/portal/brands/$brandId/approvals" },
   { title: "Calendário", icon: CalendarDays, to: "/portal/brands/$brandId/calendar" },
+  {
+    title: "Resultados",
+    icon: BarChart3,
+    to: "/portal/brands/$brandId/metrics",
+    action: Action.Metrics.PortalView,
+  },
 ];
 
 const hrefOf = (to: string, brandId: string): string => to.replace("$brandId", brandId);
@@ -92,21 +103,23 @@ export function PortalSidebar({ auth }: { auth: AuthState }) {
             <SidebarGroupLabel>Marca</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {brandLinks.map((item) => {
-                  const href = hrefOf(item.to, brandId);
-                  const active =
-                    item.exact === true ? pathname === href : pathname.startsWith(href);
-                  return (
-                    <SidebarMenuItem key={item.to}>
-                      <SidebarMenuButton asChild isActive={active}>
-                        <Link to={item.to} params={{ brandId }}>
-                          <item.icon aria-hidden="true" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                {brandLinks
+                  .filter((item) => item.action === undefined || can(auth, item.action))
+                  .map((item) => {
+                    const href = hrefOf(item.to, brandId);
+                    const active =
+                      item.exact === true ? pathname === href : pathname.startsWith(href);
+                    return (
+                      <SidebarMenuItem key={item.to}>
+                        <SidebarMenuButton asChild isActive={active}>
+                          <Link to={item.to} params={{ brandId }}>
+                            <item.icon aria-hidden="true" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

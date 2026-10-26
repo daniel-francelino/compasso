@@ -164,6 +164,105 @@ export const PublicationStatus = {
 } as const;
 export type PublicationStatus = ValueOf<typeof PublicationStatus>;
 
+export const PublishMode = {
+  Manual: "manual",
+  Automatic: "automatic",
+} as const;
+export type PublishMode = ValueOf<typeof PublishMode>;
+
+export const AutoPublishState = {
+  Publishing: "publishing",
+  Failed: "failed",
+} as const;
+export type AutoPublishState = ValueOf<typeof AutoPublishState>;
+
+export const PublishedVia = {
+  InstagramApi: "instagram_api",
+} as const;
+export type PublishedVia = ValueOf<typeof PublishedVia>;
+
+export const ConnectionStatus = {
+  Active: "active",
+  Expiring: "expiring",
+  Expired: "expired",
+  Revoked: "revoked",
+} as const;
+export type ConnectionStatus = ValueOf<typeof ConnectionStatus>;
+
+export const PublishAttemptStatus = {
+  Claimed: "claimed",
+  ContainerCreated: "container_created",
+  Published: "published",
+  Failed: "failed",
+  Uncertain: "uncertain",
+  Released: "released",
+} as const;
+export type PublishAttemptStatus = ValueOf<typeof PublishAttemptStatus>;
+
+export const MetricKey = {
+  FollowersTotal: "followers_total",
+  Follows: "follows",
+  Unfollows: "unfollows",
+  Reach: "reach",
+  Views: "views",
+  ProfileViews: "profile_views",
+  AccountsEngaged: "accounts_engaged",
+  Interactions: "interactions",
+  Likes: "likes",
+  Comments: "comments",
+  Saves: "saves",
+  Shares: "shares",
+  ProfileLinkTaps: "profile_link_taps",
+} as const;
+export type MetricKey = ValueOf<typeof MetricKey>;
+
+export const AudienceDimension = {
+  AgeGender: "age_gender",
+  City: "city",
+  Country: "country",
+  OnlineHours: "online_hours",
+} as const;
+export type AudienceDimension = ValueOf<typeof AudienceDimension>;
+
+export const PostAgeBucket = {
+  H1: "h1",
+  H24: "h24",
+  D7: "d7",
+  D30: "d30",
+  StoryFinal: "story_final",
+} as const;
+export type PostAgeBucket = ValueOf<typeof PostAgeBucket>;
+
+export const MetricMarkKind = {
+  Campaign: "campaign",
+  ViralPost: "viral_post",
+  Partnership: "partnership",
+  Event: "event",
+  Other: "other",
+} as const;
+export type MetricMarkKind = ValueOf<typeof MetricMarkKind>;
+
+export const MetricReportStatus = {
+  Draft: "draft",
+  Published: "published",
+  Withdrawn: "withdrawn",
+} as const;
+export type MetricReportStatus = ValueOf<typeof MetricReportStatus>;
+
+export const MetricCompare = {
+  Previous: "previous",
+  Year: "year",
+  None: "none",
+} as const;
+export type MetricCompare = ValueOf<typeof MetricCompare>;
+
+export const MetricGranularity = {
+  Day: "day",
+  Week: "week",
+  Month: "month",
+} as const;
+export type MetricGranularity = ValueOf<typeof MetricGranularity>;
+
 export const ContentFormat = {
   Image: "image",
   Carousel: "carousel",

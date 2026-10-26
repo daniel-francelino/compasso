@@ -42,6 +42,21 @@ export const QueryKey = {
   Channels: {
     all: (brandId: string) => ["channels", brandId] as const,
     list: (brandId: string, filters: Filters) => ["channels", brandId, filters] as const,
+    connections: (brandId: string) => ["channels", brandId, "connections"] as const,
+  },
+  Metrics: {
+    all: (brandId: string) => ["metrics", brandId] as const,
+    overview: (brandId: string, filters: Filters) =>
+      ["metrics", brandId, "overview", filters] as const,
+    posts: (brandId: string, filters: Filters) => ["metrics", brandId, "posts", filters] as const,
+    breakdown: (brandId: string, filters: Filters) =>
+      ["metrics", brandId, "breakdown", filters] as const,
+    audience: (brandId: string, channelId: string) =>
+      ["metrics", brandId, "audience", channelId] as const,
+    marks: (brandId: string, filters: Filters) => ["metrics", brandId, "marks", filters] as const,
+    reports: (brandId: string) => ["metrics", brandId, "reports"] as const,
+    report: (reportId: string) => ["metrics", "report", reportId] as const,
+    reportDue: () => ["metrics", "report-due"] as const,
   },
   Content: {
     all: () => ["content"] as const,
@@ -51,6 +66,7 @@ export const QueryKey = {
     comments: (itemId: string) => ["content", "comments", itemId] as const,
     approvers: (brandId: string) => ["content", "approvers", brandId] as const,
     assignees: (brandId: string) => ["content", "assignees", brandId] as const,
+    publishInfo: (itemId: string) => ["content", "publish-info", itemId] as const,
   },
   Approvals: {
     all: () => ["approvals"] as const,
@@ -68,6 +84,8 @@ export const QueryKey = {
     comments: (itemId: string) => ["portal", "comments", itemId] as const,
     calendar: (brandId: string, filters: Filters) =>
       ["portal", "calendar", brandId, filters] as const,
+    metricsReports: (brandId: string) => ["portal", "metrics-reports", brandId] as const,
+    metricsReport: (reportId: string) => ["portal", "metrics-report", reportId] as const,
     urls: (revisionId: string, variant: string, versionIds: readonly string[]) =>
       ["portal", "urls", revisionId, variant, versionIds] as const,
     previewUrls: (requests: readonly { revisionId: string; versionIds: readonly string[] }[]) =>

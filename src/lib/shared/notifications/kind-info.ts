@@ -3,10 +3,12 @@ import {
   CalendarCheck,
   CalendarClock,
   ClipboardCheck,
+  BarChart3,
   FileWarning,
   Globe,
   Hourglass,
   Mail,
+  PlugZap,
   MailCheck,
   MessageSquare,
   Replace,
@@ -39,6 +41,7 @@ export const kindGroupOrder = [
   "Convites",
   "Site",
   "Arquivos",
+  "Canais e métricas",
   "Outros",
 ] as const;
 
@@ -113,6 +116,31 @@ export const kindInfo: Record<string, KindInfo> = {
     group: "Site",
     description: "Chegou uma mensagem pelo formulário de contato do site.",
   },
+  "channel.connection_expiring": {
+    icon: PlugZap,
+    group: "Canais e métricas",
+    description: "A conexão de um canal com o Instagram está perto de expirar e não foi renovada.",
+  },
+  "channel.connection_expired": {
+    icon: PlugZap,
+    group: "Canais e métricas",
+    description: "A conexão de um canal com o Instagram foi perdida e precisa ser refeita.",
+  },
+  "content.publish_failed": {
+    icon: FileWarning,
+    group: "Produção e publicação",
+    description: "Uma publicação automática falhou ou não pôde ser confirmada.",
+  },
+  "content.published_auto": {
+    icon: CalendarCheck,
+    group: "Produção e publicação",
+    description: "Um conteúdo foi publicado automaticamente no Instagram.",
+  },
+  "metrics.report_published": {
+    icon: BarChart3,
+    group: "Canais e métricas",
+    description: "Um relatório de resultados foi publicado para o cliente.",
+  },
   "media.upload_failed": {
     icon: FileWarning,
     group: "Arquivos",
@@ -129,5 +157,6 @@ export const kindGroupIcons: Record<string, LucideIcon> = {
   Convites: UserPlus,
   Site: Globe,
   Arquivos: FileUp,
+  "Canais e métricas": BarChart3,
   Outros: Bell,
 };

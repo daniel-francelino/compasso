@@ -2,6 +2,7 @@ import { Calendar, FileImage, Type } from "lucide-react";
 import { CaptionSection } from "@/components/marketing/content/caption-section";
 import { ChannelRowsSection } from "@/components/marketing/content/channel-rows-section";
 import { FileStrip } from "@/components/marketing/content/file-strip";
+import { PublishAutomationSection } from "@/components/marketing/content/publish-automation-section";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
@@ -19,6 +20,8 @@ export function ContentStep({
   saving,
   canPublish,
   canCancelRow,
+  itemId,
+  canAutomate,
   errors,
   onPublishRow,
   onCancelRow,
@@ -33,6 +36,8 @@ export function ContentStep({
   saving: boolean;
   canPublish: boolean;
   canCancelRow: boolean;
+  itemId: string | undefined;
+  canAutomate: boolean;
   errors: Record<string, string>;
   onPublishRow: (row: DraftRow) => void;
   onCancelRow: (row: DraftRow) => void;
@@ -75,6 +80,15 @@ export function ContentStep({
           onCancelRow={onCancelRow}
         />
       </SectionCard>
+      {itemId === undefined ? null : (
+        <PublishAutomationSection
+          itemId={itemId}
+          rows={values.rows}
+          channels={channels}
+          zone={zone}
+          canManage={canAutomate}
+        />
+      )}
     </>
   );
 }

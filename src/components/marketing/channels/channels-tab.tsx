@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Archive, Pencil, Radio, Trash2 } from "lucide-react";
+import { Archive, Pencil, Plug, Radio, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { ChannelConnectionSheet } from "@/components/marketing/channels/channel-connection-sheet";
 import { ChannelEditor } from "@/components/marketing/channels/channel-editor";
+import { ConnectionBadge } from "@/components/marketing/channels/connection-badge";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { type DataTableAction, DataTableRowActions } from "@/components/shared/admin/data-table";
@@ -17,11 +19,12 @@ import {
   listChannels,
   setChannelArchived,
 } from "@/lib/marketing/channels/channels.functions";
+import { listChannelConnections } from "@/lib/marketing/channels/connection.functions";
 import { ChannelStatusFilter } from "@/lib/marketing/channels/schemas";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { Platform } from "@/lib/shared/enums";
+import { ConnectionStatus, Platform } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -45,6 +48,7 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
   const brand = useBrand(brandId);
   const { run, busy } = useServerAction();
   const [deleting, setDeleting] = useState<ChannelRow | null>(null);
+  const [connecting, setConnecting] = useState<ChannelRow | null>(null);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | undefined>();
   const sheet = useEditorSheet<ChannelRow>(QueryKey.Channels.all(brandId));
 
@@ -54,6 +58,16 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
     queryFn: async () =>
       unwrapResult(await listChannels({ data: { brandId, ...filters } })).channels,
   });
+
+  const connections = useQuery({
+    queryKey: QueryKey.Channels.connections(brandId),
+    queryFn: async () =>
+      unwrapResult(await listChannelConnections({ data: { brandId } })).connections,
+  });
+  const connectionByChannel = new Map(
+    (connections.data ?? []).map((connection) => [connection.channelId, connection]),
+  );
+  const canConnect = can(auth, Action.Channels.Connect);
 
   const canCreate = can(auth, Action.Channels.Create) && brand.data?.archived !== true;
   const canUpdate = can(auth, Action.Channels.Update);
@@ -98,7 +112,8 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Perfis e destinos desta marca. Cadastrar um canal não conecta a plataforma.
+          Perfis e destinos desta marca. Cadastrar um canal não conecta a plataforma; no Instagram,
+          use o botão de conexão do cartão.
         </p>
       </div>
       {query.error ? (
@@ -134,6 +149,18 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
                     />
                   </div>
                 ) : null}
+                {channel?.platform === Platform.Instagram ? (
+                  <div className="absolute bottom-2 right-2 z-10">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Conexão com o Instagram de ${channel.profileName}`}
+                      onClick={() => setConnecting(channel)}
+                    >
+                      <Plug aria-hidden="true" />
+                    </Button>
+                  </div>
+                ) : null}
                 <button
                   type="button"
                   className="flex size-full flex-col items-start justify-between gap-3 p-3 text-left transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
@@ -156,6 +183,13 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
                     <span className="block max-w-full truncate text-xs text-muted-foreground">
                       {channel?.profileName ?? "-"}
                     </span>
+                    {channel && connectionByChannel.has(channel.id) ? (
+                      <ConnectionBadge
+                        status={
+                          connectionByChannel.get(channel.id)?.status ?? ConnectionStatus.Active
+                        }
+                      />
+                    ) : null}
                   </span>
                 </button>
               </SectionCard>
@@ -172,6 +206,15 @@ export function ChannelsTab({ brandId }: { brandId: string }) {
           onDirtyChange={sheet.setFormState}
           onSaved={() => void sheet.saved()}
           restoreFocus={sheet.restoreFocus}
+        />
+      ) : null}
+      {connecting ? (
+        <ChannelConnectionSheet
+          brandId={brandId}
+          channel={connecting}
+          connection={connectionByChannel.get(connecting.id)}
+          canConnect={canConnect}
+          onClose={() => setConnecting(null)}
         />
       ) : null}
       <ConfirmDialog

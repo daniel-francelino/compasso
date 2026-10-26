@@ -229,6 +229,59 @@ Notes on section 8: `site_published_page` answers an object with a status of non
 | — | `listNotifications`, `markRead`, `markAllRead`, `snoozeNotification`, `savePreferences` | approved | |
 | — | server route `/api/cron/email-outbox` | `CRON_SECRET` | sends `email_outbox` rows |
 
+## 9b. Instagram connection, automatic publishing and metrics (modules: instagram-publishing, metrics)
+
+Specified in [../modules/instagram-publishing.md](../modules/instagram-publishing.md) and [../modules/metrics.md](../modules/metrics.md). **Service functions** are callable only with the service-role key (from the jobs in `src/lib/shared/jobs/`); `execute` is revoked from `anon` and `authenticated`.
+
+### Channel connection
+
+| SQL function | Server function | Act. | Audit | Notif. | Errors |
+|---|---|---|---|---|---|
+| `channel_connection_list(p_brand)` | `listChannelConnections` | `channels.view` + brand link | — (never returns the token) | — | `not_found` |
+| `channel_connection_connect(p_channel, p_account jsonb, p_token_encrypted, p_expires_at, p_scopes)` | `startInstagramConnection` (signed state, authorize URL), `completeInstagramConnection` (code exchange, long-lived token, encryption) | `channels.connect` | `channel.connected` | — | `channel_archived`, `channel_account_in_use`, `invalid_input`, `not_found` |
+| `channel_connection_settings(p_channel, p_auto_publish_default, p_collect_metrics, p_expected_version)` | `saveConnectionSettings` | `channels.connect` | `channel.updated` | — | `conflict`, `not_found` |
+| `channel_connection_disconnect(p_channel)` | `disconnectChannel` | `channels.connect` | `channel.disconnected` | — | `publish_in_progress`, `not_found` |
+| `channel_connection_secret(p_channel)`, `channel_connections_to_renew(p_within_days)` | read by the jobs | service | — | — | — |
+| `channel_connection_renewed(p_channel, p_token_encrypted, p_expires_at)` | `runChannelRenewal` | service | resolves the connection notifications | — | `not_found` |
+| `channel_connection_failed(p_channel, p_status, p_code)` | jobs, `testChannelConnection` | service | `channel.connection_lost` | `channel.connection_expiring`, `channel.connection_expired` | `invalid_input`, `not_found` |
+| `channel_connection_json(c)` | — | internal | the only shape returned to a client | — | — |
+
+### Automatic publishing
+
+| SQL function | Server function / route | Act. | Audit | Notif. | Errors |
+|---|---|---|---|---|---|
+| `channel_row_set_publish_mode(p_row, p_mode, p_expected_version)` | `setPublishMode` | `content.publish_manual` + brand link | `content_channel.publish_mode_changed` | — | `connection_missing`, `format_not_supported`, `transition_not_allowed`, `conflict`, `invalid_input` |
+| `channel_row_publish_now(p_row, p_expected_version)` | `publishNow` (also the retry of a failed row) | `content.publish_manual` + brand link | `content_channel.publish_requested` | — | `connection_missing`, `transition_not_allowed`, `conflict` |
+| `content_publish_info(p_item)` | `getPublishInfo` | `content.view` + brand link | — | — | `not_found` |
+| `publish_work(p_limit, p_late_hours)` | server route `/api/cron/publish-due` → `runPublishDue` | service | `content_channel.publish_failed` (connection missing or expired, too late) | `content.publish_failed` | — |
+| `publish_attempt_set(p_attempt, p_status, p_container, p_error, p_provider)` | `runPublishDue` | service | — | — | `invalid_input`, `not_found` |
+| `publish_row_complete(p_attempt, p_media_id, p_permalink)` | `runPublishDue` | service | `content_channel.published_auto` | `content.published_auto` | `not_found` |
+| `publish_row_failed(p_attempt, p_code, p_provider, p_uncertain)` | `runPublishDue` | service | `content_channel.publish_failed` | `content.publish_failed` | `not_found` |
+| `publish_row_release(p_attempt, p_code)` | `runPublishDue` | service | — | — | `not_found` |
+| `publish_payload(p_row, p_attempt)`, `publish_notify_failed(p_row)` | — | internal | — | — | — |
+| trigger `content_channels_guard` | — | — | — | — | `publish_in_progress` (a row being published cannot be rescheduled, cancelled or have its mode changed) |
+| `dashboard_publication_pending(p_brands)` (updated) | `getPublicationPending` | `content.publish_manual` | — | — | `denied` |
+
+### Metrics and reports
+
+| SQL function | Server function | Act. | Audit | Notif. | Errors |
+|---|---|---|---|---|---|
+| `metrics_overview`, `metrics_top_posts`, `metrics_breakdown`, `metrics_audience`, `metrics_plan_summary`, `metric_marks_list` | `getMetricsAnalysis` | `metrics.view` + brand link | — | — | `invalid_input`, `not_found` |
+| `metric_mark_save(p_mark jsonb)` | `saveMetricMark` | `metrics.report` | `metric_mark.created`, `metric_mark.updated` | — | `invalid_input`, `conflict`, `not_found` |
+| `metric_mark_delete(p_mark)` | `deleteMetricMark` | `metrics.report` | `metric_mark.deleted` | — | `not_found` |
+| `metrics_report_list(p_brand)`, `metrics_report_get(p_report)` | `listMetricReports`, `getMetricReport` | `metrics.view` + brand link | — | — | `not_found` |
+| `metrics_report_save(p_report jsonb)` | `saveMetricReport` | `metrics.report` | — | — | `report_period_invalid`, `report_already_published`, `conflict`, `invalid_input` |
+| `metrics_report_new_version(p_report)` | `newMetricReportVersion` | `metrics.report` | — | — | `transition_not_allowed` |
+| `metrics_report_delete(p_report)` | `deleteMetricReport` | `metrics.report` | — | — | `report_already_published` |
+| `metrics_report_publish(p_report, p_expected_version, p_snapshot jsonb)` | `publishMetricReport` (builds the snapshot on the server) | `metrics.report` | `metrics_report.published` | `metrics.report_published` | `report_empty`, `report_already_published`, `conflict`, `invalid_input` |
+| `metrics_report_withdraw(p_report)` | `withdrawMetricReport` | `metrics.report` | `metrics_report.withdrawn` | — | `transition_not_allowed` |
+| `dashboard_metrics_report_due(p_brands)` | `getReportsDue` | `metrics.report` | — | — | `denied` |
+| `portal_metrics_report_list(p_brand)`, `portal_metrics_report_get(p_report)` | `portalListMetricReports`, `portalGetMetricReport` | `metrics.portal_view` + portal member | — | — | `denied`, `not_found` |
+| `metrics_collect_targets()`, `metrics_store_daily`, `metrics_store_audience`, `metrics_store_media`, `metrics_media_due`, `metrics_store_post`, `metrics_collection_done` | `runCollectMetrics` | service | — | — | `invalid_input`, `not_found` |
+| `metrics_assert_read`, `metrics_totals`, `metrics_report_json`; triggers `metric_reports_guard`, `metric_reports_no_delete` | — | internal | — | — | `report_already_published` |
+| — | `testChannelConnection` (reads the stored token with the service role after checking the brand link) | `channels.connect` | — | — | — |
+| — | server route `/api/cron/publish-due` | `CRON_SECRET` | runs the publishing, token renewal and metrics collection jobs | — | — |
+
 ## 10. Rules
 
 1. A server function calls **at most one** write RPC per user action (atomicity lives in SQL).

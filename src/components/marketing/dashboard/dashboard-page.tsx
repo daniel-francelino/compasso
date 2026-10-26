@@ -3,6 +3,7 @@ import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { Link } from "@tanstack/react-router";
 import {
+  BarChart3,
   CircleCheck,
   ClipboardCheck,
   Megaphone,
@@ -31,11 +32,13 @@ import {
   getPublicationPending,
   getStatusCounts,
 } from "@/lib/marketing/dashboard/dashboard.functions";
+import { getReportsDue } from "@/lib/marketing/metrics/metrics.functions";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { EditorialStatus } from "@/lib/shared/enums";
-import { formatDateOnly, formatInZone } from "@/lib/shared/format";
+import { formatDateOnly, formatInZone, formatMonthYear } from "@/lib/shared/format";
+import { PeriodPreset } from "@/lib/shared/metrics/period";
 import { dashboardReasonLabels, editorialStatusLabels, platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -174,11 +177,66 @@ function PublicationReminderBlock({ brandId }: { brandId: string | undefined }) 
                   {item.brandName} · {item.channels.join(", ")} · {item.pendingRows}{" "}
                   {item.pendingRows === 1 ? "publicação" : "publicações"} · desde{" "}
                   {formatInZone(item.oldestPlannedAt, DEFAULT_ZONE)}
+                  {item.failedRows > 0
+                    ? ` · ${item.failedRows} ${item.failedRows === 1 ? "falhou" : "falharam"} na publicação automática`
+                    : ""}
                 </span>
               </span>
               <Button asChild size="sm" variant="outline">
                 <Link to="/admin/marketing/content/$itemId" params={{ itemId: item.itemId }}>
                   Registrar publicação
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Block>
+  );
+}
+
+function ReportDueBlock() {
+  const query = useQuery({
+    queryKey: QueryKey.Metrics.reportDue(),
+    queryFn: async () => unwrapResult(await getReportsDue()).items,
+    staleTime: STALE_MS,
+  });
+  return (
+    <Block
+      title="Relatórios de resultados"
+      icon={BarChart3}
+      loading={query.isPending}
+      error={query.error?.message ?? null}
+      onRetry={() => void query.refetch()}
+    >
+      {query.data?.length === 0 ? (
+        <EmptyState
+          compact
+          icon={CircleCheck}
+          title="Tudo enviado"
+          description="Os relatórios do mês passado já foram publicados para os clientes."
+        />
+      ) : (
+        <ul className="space-y-2">
+          {query.data?.map((item) => (
+            <li
+              key={item.channelId}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"
+            >
+              <span className="min-w-0 text-sm">
+                <span className="block font-medium text-foreground">{item.brandName}</span>
+                <span className="block text-xs text-muted-foreground">
+                  Relatório de {formatMonthYear(item.monthStart)} ainda não enviado
+                </span>
+              </span>
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  to="/admin/marketing/brands/$brandId/metrics"
+                  params={{ brandId: item.brandId }}
+                  search={{ channel: item.channelId, preset: PeriodPreset.LastMonth }}
+                >
+                  Preparar
                   <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
@@ -356,6 +414,7 @@ export function DashboardPage() {
   const content = can(auth, Action.Content.View);
   const approvals = can(auth, Action.Approvals.View);
   const publish = can(auth, Action.Content.PublishManual);
+  const reports = can(auth, Action.Metrics.Report);
 
   return (
     <div className="space-y-6">
@@ -384,6 +443,7 @@ export function DashboardPage() {
         {approvals ? <PendingBlock brandId={brandId} /> : null}
         {content ? <CountsBlock brandId={brandId} /> : null}
         {content ? <MineBlock /> : null}
+        {reports ? <ReportDueBlock /> : null}
       </div>
     </div>
   );

@@ -123,6 +123,22 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 | E-04 | Team screens: "Evento" in the day menu, the event dialog, icons and marks in the grid, legend and filters | calendar, design-system | acceptance criteria of calendar.md | done in code (2026-10-20), not seen in a browser: "Adicionar evento", the event dialog, icons and marks, the legend and the details |
 | E-05 | Portal calendar: events with their icons and the read-only detail | portal | acceptance criteria of calendar.md and portal.md | done in code (2026-10-20), not seen in a browser: the portal calendar with events and the read-only dialog |
 
+## Phase I — Instagram publishing and metrics
+
+> Decided 2026-10-26. Specifications: [modules/instagram-publishing.md](modules/instagram-publishing.md), [modules/metrics.md](modules/metrics.md). External items (Meta app and review, secrets, scheduler): [pending-external-setup.md](pending-external-setup.md) section "Instagram publishing and metrics".
+
+| ID | Task | Read | Done when | Status |
+|---|---|---|---|---|
+| I-01 | Documents first: scope (architecture, modules README, channels, content, calendar, product), rule DATA-15 and AGENTS.md (encrypted token), registries | base.md 9.1, 9.2 | links and registries consistent (`check:docs`) | done (2026-10-26) |
+| I-02 | Migration `channel_connections` (table, `channels.connect`, connection functions, service functions, notification kinds, audit) and pgTAP `26_channel_connections` | instagram-publishing | `db:verify` passes | done (2026-10-26) |
+| I-03 | Migration publishing (`content_channels` columns, `publish_attempts`, guard trigger, `publish_work` and the row functions, dashboard update) and pgTAP `27_instagram_publishing` | instagram-publishing | `db:verify` passes | done (2026-10-26) |
+| I-04 | Migration metrics (history tables, marks, reports, portal functions, collector functions) and pgTAP `28_metrics` | metrics | `db:verify` passes | done (2026-10-26) |
+| I-05 | Server side: token encryption, signed OAuth state, Graph adapter (OAuth, publishing, insights), jobs (renewal, publish in two phases, metrics), cron route, connection server functions | instagram-publishing | Vitest with a faked `fetch`, typecheck, lint | done (2026-10-26); never run against Meta |
+| I-06 | Channel connection panel, OAuth return page, publish mode and retry per channel row, dashboard blocks | instagram-publishing | acceptance criteria | done in code (2026-10-26), not seen in a browser |
+| I-07 | Metrics: server functions, highlights and period logic (Vitest), chart tokens, charts, analysis screen, marks | metrics | acceptance criteria | done in code (2026-10-26), not seen in a browser |
+| I-08 | Reports: builder, preview, publish with frozen snapshot, list, correction, portal pages, print to PDF | metrics | acceptance criteria | done in code (2026-10-26), not seen in a browser |
+| I-09 | Run against the real services (Meta app, review, scheduler, browser pass at 360 px) | pending-external-setup I1–I10 | the acceptance criteria of both modules | open |
+
 ## Phase 6 — Hardening and launch
 
 | ID | Task | Done when | Status |

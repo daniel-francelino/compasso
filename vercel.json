@@ -5,6 +5,7 @@
   "crons": [
     { "path": "/api/cron/media-cleanup", "schedule": "0 4 * * *" },
     { "path": "/api/cron/email-outbox", "schedule": "0 8 * * *" },
-    { "path": "/api/cron/due-notifications", "schedule": "0 9 * * *" }
+    { "path": "/api/cron/due-notifications", "schedule": "0 9 * * *" },
+    { "path": "/api/cron/publish-due", "schedule": "30 9 * * *" }
   ]
 }

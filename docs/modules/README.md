@@ -11,6 +11,8 @@ Functional specification of the modules of Compasso, written before implementati
 | Channels | `marketing` | Profiles/destinations of a brand (Instagram, LinkedIn…) | [channels.md](channels.md) |
 | Content | `marketing` | Content (one content for several channels), immutable versions, internal comments, manual publication, ideas and dates that convert into contents | [content.md](content.md) |
 | Content publication | `marketing` | Proposal: the `published` state and the storage clean-up that keeps only previews | [content-publication.md](content-publication.md) |
+| Instagram publishing | `marketing` + `shared` | Connect an Instagram account in the channel, publish approved contents automatically, collect the account history | [instagram-publishing.md](instagram-publishing.md) |
+| Metrics and reports | `marketing` + `portal` (shared components) | Growth charts of a brand's social network and curated reports the manager sends to the client | [metrics.md](metrics.md) |
 | Approvals | `marketing` (request) + `portal` (decision) | Approval requests, decisions, history, deadlines | [approvals.md](approvals.md) |
 | Calendar | `marketing` + `portal` (shared components) | Editorial calendar, deadlines, rescheduling, time zones | [calendar.md](calendar.md) |
 | Dashboard | `marketing` | Work overview: what needs attention, what is coming | [dashboard.md](dashboard.md) |
@@ -53,7 +55,7 @@ Brand is the isolation boundary: almost everything below the brand carries `bran
 - **Lists:** pagination, search and filters on the server, kept in the URL; states skeleton → error → empty → no results → list.
 - **Forms:** zod on client and server, optimistic locking by `version`, no double submit, unsaved-changes warning.
 - **Errors:** SQL raises `raise exception 'code'`; `errors.ts` maps each code to a pt-BR message; `check:consistency` verifies both sides.
-- **No automatic publishing:** "planned" is an editorial date, not a promise that a platform will publish. Recording a manual publication never calls a social network.
+- **Automatic publishing only where a channel is connected:** "planned" is an editorial date; it becomes a promise only for a channel row set to publish automatically on a connected Instagram channel ([instagram-publishing.md](instagram-publishing.md)). Everywhere else, and for every manual record, no social network is called.
 - **Language:** routes, code, tables and docs in English; UI texts in Brazilian Portuguese.
 
 ## Order of implementation

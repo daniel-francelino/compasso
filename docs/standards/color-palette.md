@@ -41,6 +41,21 @@
 
 State is never communicated by color alone: there is always an icon or text next to it.
 
+### Chart tokens (metrics module)
+
+Chart colors are aliases of palette tokens, so no new hex value exists. Lines, bars and marks need 3:1 against the surface they sit on; all of these reach at least 4.12:1 on `surface`, `ivory` and `cream`. A series is never told apart by color alone: it also has a direct label or a different line style.
+
+| Token | Alias of | Use | Contrast on `surface` / `ivory` / `cream` |
+|---|---|---|---|
+| `chart-1` | `violet` | Main series (current period) | 8.15 / 7.58 / 7.21 |
+| `chart-2` | `coral-dark` | Second series | 8.26 / 7.68 / 7.31 |
+| `chart-3` | `cactus` | Third series, gains | 7.92 / 7.37 / 7.01 |
+| `chart-4` | `warning` | Fourth series | 9.77 / 9.09 / 8.65 |
+| `chart-5` | `ink-soft` | Fifth series | 10.46 / 9.73 / 9.26 |
+| `chart-compare` | `line-strong` | Comparison period (dashed) | 4.65 / 4.32 / 4.12 |
+| `chart-grid` | `line` | Grid lines (decorative, not data) | 1.34 / 1.25 / 1.19 |
+| `chart-fill` | `orchid-light` | Soft area fill under a line (decorative, the line carries the data) | n/a |
+
 ## 4. Editorial statuses (single `statusStyles` map)
 
 | Status | Background | Text and icon | UI label (pt-BR) |

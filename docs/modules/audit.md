@@ -63,6 +63,9 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `channel.archived` | `channel` | `channel_set_archived` |
 | `channel.reactivated` | `channel` | `channel_set_archived` |
 | `channel.deleted` | `channel` | `channel_delete` |
+| `channel.connected` | `channel` | `channel_connection_connect` |
+| `channel.disconnected` | `channel` | `channel_connection_disconnect` |
+| `channel.connection_lost` | `channel` | `channel_connection_failed` (system) |
 | `content.created` | `content_item` | `content_item_save` |
 | `content.updated` | `content_item` | `content_item_save` |
 | `content.cancelled` | `content_item` | `content_item_cancel` |
@@ -74,6 +77,15 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `content_channel.removed` | `content_channel` | `content_item_save` |
 | `content_channel.rescheduled` | `content_channel` | `reschedule_channel` (old and new instant) |
 | `content_channel.published_manually` | `content_channel` | `mark_published` |
+| `content_channel.published_auto` | `content_channel` | `publish_row_complete` (system) |
+| `content_channel.publish_failed` | `content_channel` | `publish_work`, `publish_row_failed` (system) |
+| `content_channel.publish_mode_changed` | `content_channel` | `channel_row_set_publish_mode` |
+| `content_channel.publish_requested` | `content_channel` | `channel_row_publish_now` |
+| `metric_mark.created` | `metric_mark` | `metric_mark_save` |
+| `metric_mark.updated` | `metric_mark` | `metric_mark_save` |
+| `metric_mark.deleted` | `metric_mark` | `metric_mark_delete` |
+| `metrics_report.published` | `metrics_report` | `metrics_report_publish` |
+| `metrics_report.withdrawn` | `metrics_report` | `metrics_report_withdraw` |
 | `content_channel.cancelled` | `content_channel` | `content_channel_cancel` |
 | `calendar_note.created` | `calendar_note` | `calendar_note_save` (metadata: `kind`, `client_visible`) |
 | `calendar_note.updated` | `calendar_note` | `calendar_note_save` |

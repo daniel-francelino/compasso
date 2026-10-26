@@ -3,6 +3,7 @@ import { Link, Outlet, useRouter } from "@tanstack/react-router";
 import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import {
   Archive,
+  BarChart3,
   CalendarDays,
   ClipboardCheck,
   FileText,
@@ -141,6 +142,16 @@ export function BrandLayout({ brandId }: { brandId: string }) {
           >
             <ClipboardCheck aria-hidden="true" />
             Aprovações
+          </Link>
+        ) : null}
+        {can(auth, Action.Metrics.View) ? (
+          <Link
+            to="/admin/marketing/brands/$brandId/metrics"
+            params={{ brandId }}
+            className={tabClass}
+          >
+            <BarChart3 aria-hidden="true" />
+            Métricas
           </Link>
         ) : null}
         {can(auth, Action.Media.View) ? (

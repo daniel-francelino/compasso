@@ -63,6 +63,15 @@
   --success: var(--cactus);
   --info: var(--ink-soft);
 
+  --chart-1: var(--violet);
+  --chart-2: var(--coral-dark);
+  --chart-3: var(--cactus);
+  --chart-4: var(--warning);
+  --chart-5: var(--ink-soft);
+  --chart-compare: var(--line-strong);
+  --chart-grid: var(--line);
+  --chart-fill: var(--orchid-light);
+
   --gradient-hero: linear-gradient(
     135deg,
     var(--peach) 0%,
@@ -97,6 +106,14 @@
   --color-danger: var(--danger);
   --color-success: var(--success);
   --color-info: var(--info);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-compare: var(--chart-compare);
+  --color-chart-grid: var(--chart-grid);
+  --color-chart-fill: var(--chart-fill);
   --color-platform-instagram: var(--platform-instagram);
   --color-platform-facebook: var(--platform-facebook);
   --color-platform-linkedin: var(--platform-linkedin);
@@ -216,5 +233,18 @@
 
   .heading-card {
     @apply font-display text-xl font-semibold text-foreground;
+  }
+}
+
+@media print {
+  [data-sidebar="sidebar"],
+  header,
+  nav,
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  body {
+    background: var(--surface);
   }
 }

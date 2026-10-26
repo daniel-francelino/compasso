@@ -38,3 +38,20 @@ export const r2Config = (): R2Config | null => {
   });
   return parsed.success ? parsed.data : null;
 };
+
+const instagramEnvSchema = z.object({
+  appId: z.string().min(1),
+  appSecret: z.string().min(1),
+  tokenKey: z.string().min(1),
+});
+
+export type InstagramConfig = z.infer<typeof instagramEnvSchema>;
+
+export const instagramConfig = (): InstagramConfig | null => {
+  const parsed = instagramEnvSchema.safeParse({
+    appId: clean(process.env["INSTAGRAM_APP_ID"]),
+    appSecret: clean(process.env["INSTAGRAM_APP_SECRET"]),
+    tokenKey: clean(process.env["CHANNEL_TOKEN_KEY"]),
+  });
+  return parsed.success ? parsed.data : null;
+};

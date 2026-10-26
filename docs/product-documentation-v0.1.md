@@ -21,7 +21,7 @@ Technical decisions closed in version 0.3:
 - Permissions: configurable profiles (roles) made of actions, as in Memoria Print, combined with the user's link to each brand.
 - Color palette and typography: defined in [standards/color-palette.md](standards/color-palette.md).
 
-The remaining choices in this document are still proposals. A single marketing operation is assumed at first, with room for collaborators. A SaaS product with subscriptions is not assumed. Automatic publishing to social networks is not confirmed and stays out of the proposed MVP.
+The remaining choices in this document are still proposals. A single marketing operation is assumed at first, with room for collaborators. A SaaS product with subscriptions is not assumed. Automatic publishing to social networks stays out of the proposed MVP, with one exception decided on 2026-10-26: Instagram publishing and metrics ([modules/instagram-publishing.md](modules/instagram-publishing.md), [modules/metrics.md](modules/metrics.md)).
 
 ## 2. Product reference
 
@@ -165,7 +165,7 @@ Draft → In production → In internal review → Awaiting approval → Approve
 
 A change request moves the content to "changes requested"; the team prepares a new version and submits it again. A content can also be cancelled without deleting its history.
 
-Publication status is separate: Unplanned ("Não planejada"), Planned ("Planejada"), Published manually ("Publicada manualmente") or Cancelled ("Cancelada"). "Planned" means an editorial date exists; it does not mean the platform will publish automatically. "Scheduled" is reserved for a future integration that actually confirms a scheduling.
+Publication status is separate: Unplanned ("Não planejada"), Planned ("Planejada"), Published ("Publicada", by hand or by the Instagram integration) or Cancelled ("Cancelada"). "Planned" means an editorial date exists; it does not mean the platform will publish automatically. "Scheduled" is reserved for a future integration that actually confirms a scheduling.
 
 ### Approval rules
 

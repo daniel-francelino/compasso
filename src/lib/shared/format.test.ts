@@ -5,7 +5,9 @@ import {
   formatDate,
   formatDateOnly,
   formatInZone,
+  formatCompact,
   formatNumber,
+  formatPercent,
   instantToLocalInput,
   localInputToInstant,
   todayInZone,
@@ -48,6 +50,18 @@ describe("formatInZone", () => {
     const summer = formatInZone("2026-07-15T12:00:00Z", "America/New_York");
     expect(winter).toContain("07:00");
     expect(summer).toContain("08:00");
+  });
+});
+
+describe("formatCompact and formatPercent", () => {
+  it("shortens large numbers in pt-BR", () => {
+    expect(formatCompact(1500).replaceAll(String.fromCharCode(160), " ")).toBe("1,5 mil");
+    expect(formatCompact(950)).toBe("950");
+  });
+
+  it("formats a ratio as a percent", () => {
+    expect(formatPercent(0.1834)).toBe("18%");
+    expect(formatPercent(0.1834, 1)).toBe("18,3%");
   });
 });
 

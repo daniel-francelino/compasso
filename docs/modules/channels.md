@@ -6,7 +6,7 @@
 
 A channel is a **concrete profile or destination of a brand**: "@cafeaurora on Instagram", "Café Aurora on LinkedIn", the brand's blog or newsletter. A brand can have at most one active channel per platform. Archived channels remain available as history and free the platform slot for a replacement.
 
-**Registering a channel does not mean there is an authenticated integration with the platform.** In the MVP channels are descriptive: they classify the channel rows of contents, drive previews and calendar filters. Automatic publishing and token management are a separate future project.
+**Registering a channel does not mean there is an authenticated integration with the platform.** In the MVP channels are descriptive: they classify the channel rows of contents, drive previews and calendar filters. Connecting an Instagram account (OAuth, encrypted token, automatic renewal, publishing and metrics settings) is specified in [instagram-publishing.md](instagram-publishing.md) and lives in the channel's connection panel; other platforms stay descriptive.
 
 Included: register, edit, archive, preview rules per platform. Not included: OAuth connections, token renewal, metrics, scheduling through platform APIs.
 
@@ -59,7 +59,7 @@ The descriptors live in code (`Platform` constants with format, limits and previ
 1. A content channel row must reference an **active** channel of the **same brand** when it is planned or sent for approval (composite FK `(channel_id, brand_id)` guarantees the brand; a trigger guarantees the active status).
 2. An archived channel is shown with a badge on existing channel rows; it cannot be chosen for new ones.
 3. Changing the platform of a channel in use is refused (create a new channel instead); changing the profile name or URL is allowed and audited.
-4. Registration never contacts the platform; no secrets are stored here.
+4. Registration never contacts the platform. Connecting an account is a separate, explicit action done in the channel (proposal: [instagram-publishing.md](instagram-publishing.md), section 5.1); only then an encrypted access token is stored (DATA-15). Until that module is built, no secrets are stored here.
 5. Audit: `channel.created/updated/archived/reactivated/deleted`.
 
 ## Data model
@@ -109,3 +109,5 @@ Done: active channel grid, create/edit in a sheet, handle normalization (@), dup
 2026-10-20: Instagram feed posts ("Post" and "Carrossel") no longer use a fixed 4:5 frame: `previewFrameRatio` takes the width and height of the first file and clamps its ratio between 4:5 (tallest) and 1.91:1 (widest), the range the network accepts (square and landscape posts show whole); without dimensions it falls back to the table, and Story, Reel, Video and the other platforms keep their fixed frame. Only the portal passes the dimensions (the editor and the internal approval screen do not have them yet, so they still show 4:5). Files: `platforms.ts`, `channel-preview.tsx`, `revision-view.tsx`, `request-preview.tsx`, `portal-approval-page.tsx`. Validation performed: see the portal entry. **Not tested**: other platforms' real ranges (Facebook, LinkedIn, X, Threads keep one fixed frame); a visual comparison with the live app.
 
 2026-10-20: the profile name on a platform card now ends in an ellipsis instead of overflowing (`w-full min-w-0` on the text wrapper). Files: `src/components/marketing/channels/channels-tab.tsx`. Validation performed: ESLint, typecheck, Prettier. **Not tested**: browser layout.
+
+2026-10-26: **connection and configuration of an Instagram account in the channel** (decisions D1 and D2 of [instagram-publishing.md](instagram-publishing.md)). The Instagram card shows a connection badge and a button that opens the connection panel (account data, status, token expiry, permissions, "Testar conexão", "Reconectar", "Desconectar", and the switches "Publicar automaticamente" and "Coletar métricas"); the OAuth return page is `/admin/marketing/instagram/callback`. New action `channels.connect`. Files: `src/components/marketing/channels/{channel-connection-sheet,connection-badge,instagram-callback-page}.tsx`, `channels-tab.tsx`, `src/lib/marketing/channels/connection*.ts`. Migration `20261026100000_channel_connections.sql`. Validation performed: pgTAP `26_channel_connections` (23 assertions), typecheck, lint, build. **Not tested**: any real connection to Instagram, the panel in a browser.

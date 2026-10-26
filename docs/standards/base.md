@@ -205,7 +205,7 @@ Inside the transactional SQL function: `perform audit_write(v_org, v_brand, 'con
 | DATA-12 | **Never edit an applied migration**; add a new one (expand → migrate code → contract) | `review`, CI |
 | DATA-13 | **Seeds use `on conflict do nothing`/upsert**, never contain passwords or real personal data | `review` |
 | DATA-14 | **Pagination, search and filters in the database/server**, with indexes for the filters; lists never load "everything" | `review` |
-| DATA-15 | **No secrets or signed URLs in the database**; storage keys are opaque | `review` |
+| DATA-15 | **No secrets or signed URLs in the database**; storage keys are opaque. One exception (decided 2026-10-26): access tokens of a connected external account (channel connections, [../modules/instagram-publishing.md](../modules/instagram-publishing.md)), stored **encrypted**, never returned to any client, never logged, deleted on disconnect | `review`, pgTAP |
 
 ## 7. Security rules
 

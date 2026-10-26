@@ -17,7 +17,7 @@
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
 |---|---|---|---|---|
 | `EditorialStatus` | `draft`, `planning`, `awaiting_plan_approval`, `plan_changes_requested`, `plan_approved`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `published`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em planejamento", "Planejamento em aprovação", "Alterações no planejamento", "Planejamento aprovado", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Publicado", "Cancelado" | content |
-| `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_channels.publication_status` | "Não planejada", "Planejada", "Publicada manualmente", "Cancelada" | content |
+| `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_channels.publication_status` | "Não planejada", "Planejada", "Publicada", "Cancelada" | content; `published_manually` means "recorded as published", how it happened is in `content_channels.published_via` (null = by hand, `instagram_api` = automatic) |
 | `RichNodeType` | `doc`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `hardBreak`, `text` | Tiptap JSON of `content_items.briefing` (not a database column check; validated by zod in `lib/shared/rich-text/types.ts`) | (not shown) | content |
 | `RichMarkType` | `bold`, `italic` | Marks allowed in that JSON | (not shown) | content |
 | `ContentFormat` | `image`, `carousel`, `video`, `text`, `story`, `reel`, `article`, `other` | `content_channels.format` | "Post", "Carrossel", "Vídeo", "Texto", "Story", "Reel", "Artigo", "Outro" | content |
@@ -37,6 +37,23 @@
 | `Platform` | `instagram`, `facebook`, `linkedin`, `tiktok`, `youtube`, `x`, `pinterest`, `threads`, `email`, `blog`, `other` | `channels.platform` | "Instagram", "Facebook", "LinkedIn", "TikTok", "YouTube", "X", "Pinterest", "Threads", "E-mail", "Blog", "Outro" | channels |
 
 Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → in_production | cancelled`; `in_production → internal_review | awaiting_approval | cancelled`; `internal_review → awaiting_approval | in_production | cancelled`; `awaiting_approval → approved | changes_requested | in_production (reopen) | cancelled`; `changes_requested → in_production | cancelled`; `approved → in_production (reopen) | cancelled`; `cancelled → ∅`. Only the transactional functions perform a transition; the map is shared by the editor, the board and tests.
+
+## 2b. Instagram, publishing and metrics
+
+| TS constant | Values | DB column ✔ | pt-BR labels | Owner |
+|---|---|---|---|---|
+| `PublishMode` | `manual`, `automatic` | `content_channels.publish_mode` | "Manual", "Automática" | instagram-publishing |
+| `AutoPublishState` | `publishing`, `failed` (null = waiting or not automatic) | `content_channels.auto_publish_state` | "Publicando", "Falhou" | instagram-publishing |
+| `PublishedVia` | `instagram_api` (null = recorded by hand) | `content_channels.published_via` | "Publicado automaticamente" | instagram-publishing |
+| `ConnectionStatus` | `active`, `expiring`, `expired`, `revoked` | `channel_connections.status` | "Conectado", "Perto de expirar", "Reconectar", "Acesso removido" | instagram-publishing |
+| `PublishAttemptStatus` | `claimed`, `container_created`, `published`, `failed`, `uncertain`, `released` | `publish_attempts.status` | (internal) | instagram-publishing |
+| `MetricKey` | `followers_total`, `follows`, `unfollows`, `reach`, `views`, `profile_views`, `accounts_engaged`, `interactions`, `likes`, `comments`, `saves`, `shares`, `profile_link_taps` | `channel_metric_daily.metric` | see [../modules/metrics.md](../modules/metrics.md) section 9 | metrics |
+| `AudienceDimension` | `age_gender`, `city`, `country`, `online_hours` | `channel_audience_snapshot.dimension` | "Idade e gênero", "Cidades", "Países", "Horários" | metrics |
+| `PostAgeBucket` | `h1`, `h24`, `d7`, `d30`, `story_final` | `content_channel_metrics.age_bucket` | (internal) | metrics |
+| `MetricMarkKind` | `campaign`, `viral_post`, `partnership`, `event`, `other` | `metric_marks.kind` | "Campanha", "Post que viralizou", "Parceria", "Evento", "Outro" | metrics |
+| `MetricReportStatus` | `draft`, `published`, `withdrawn` | `metric_reports.status` | "Rascunho", "Publicado", "Retirado" | metrics |
+| `MetricCompare` | `previous`, `year`, `none` | `metric_reports.compare_mode` | "Período anterior", "Mesmo período do ano passado", "Sem comparação" | metrics |
+| `MetricGranularity`, `PostRanking`, `PeriodPreset`, `MetricBlockKind`, `HighlightTone` | TypeScript only (no column): see `src/lib/shared/enums.ts` and `src/lib/shared/metrics/` | — | — | metrics |
 
 ## 3. Media
 
@@ -77,7 +94,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 |---|---|---|---|---|
 | `NotificationSeverity` | `info`, `warning`, `urgent` | `notifications.severity`, `notification_kinds.severity` | | notifications |
 | `NotificationStatus` | `active`, `resolved` | `notifications.status` | | notifications |
-| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.approved_by_team`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `calendar.event`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
+| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.approved_by_team`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `calendar.event`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed`, `channel.connection_expiring`, `channel.connection_expired`, `content.publish_failed`, `content.published_auto`, `metrics.report_published` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
 | `AuditActorKind` | `internal`, `external`, `system` | `audit_events.actor_kind` ✔ | | audit |
 | `AuditAction` | See [../modules/audit.md](../modules/audit.md) | catalog in `audit_write` | | audit |
 | `EmailStatus` | `queued`, `sent`, `failed` | `email_outbox.status` | | notifications |

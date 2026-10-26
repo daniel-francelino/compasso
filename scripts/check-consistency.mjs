@@ -131,11 +131,33 @@ checkValues("site_pages", "status", "SitePageStatus", "src/lib/shared/enums.ts")
 checkValues("site_entries", "kind", "SiteEntryKind", "src/lib/shared/enums.ts");
 checkValues("contact_messages", "status", "ContactMessageStatus", "src/lib/shared/enums.ts");
 
+checkValues("content_channels", "publish_mode", "PublishMode", "src/lib/shared/enums.ts");
+checkValues(
+  "content_channels",
+  "auto_publish_state",
+  "AutoPublishState",
+  "src/lib/shared/enums.ts",
+);
+checkValues("content_channels", "published_via", "PublishedVia", "src/lib/shared/enums.ts");
+checkValues("channel_connections", "status", "ConnectionStatus", "src/lib/shared/enums.ts");
+checkValues("publish_attempts", "status", "PublishAttemptStatus", "src/lib/shared/enums.ts");
+checkValues("channel_metric_daily", "metric", "MetricKey", "src/lib/shared/enums.ts");
+checkValues(
+  "channel_audience_snapshot",
+  "dimension",
+  "AudienceDimension",
+  "src/lib/shared/enums.ts",
+);
+checkValues("content_channel_metrics", "age_bucket", "PostAgeBucket", "src/lib/shared/enums.ts");
+checkValues("metric_marks", "kind", "MetricMarkKind", "src/lib/shared/enums.ts");
+checkValues("metric_reports", "status", "MetricReportStatus", "src/lib/shared/enums.ts");
+checkValues("metric_reports", "compare_mode", "MetricCompare", "src/lib/shared/enums.ts");
+
 if (problems.length > 0) {
   console.error(`\ncheck:consistency found ${problems.length} problem(s):`);
   for (const problem of problems) console.error(` - ${problem}`);
   process.exit(1);
 }
 console.log(
-  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 17 CHECK lists.`,
+  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 28 CHECK lists.`,
 );

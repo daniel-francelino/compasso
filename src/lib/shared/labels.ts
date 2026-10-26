@@ -91,7 +91,7 @@ export const approvalStageLabels: Record<ApprovalStage, string> = {
 export const publicationStatusLabels: Record<PublicationStatus, string> = {
   [PublicationStatus.Unplanned]: "Não planejada",
   [PublicationStatus.Planned]: "Planejada",
-  [PublicationStatus.PublishedManually]: "Publicada manualmente",
+  [PublicationStatus.PublishedManually]: "Publicada",
   [PublicationStatus.Cancelled]: "Cancelada",
 };
 

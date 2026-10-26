@@ -137,8 +137,23 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 3. Numbers and dates through `format.ts` (`pt-BR`): "18 de out. de 2026", "R$ 1.250,00".
 4. Button text never changes meaning between screens; if two verbs exist for the same action, pick the one in this glossary.
 5. The client portal uses the client's vocabulary: "Publicação" (not "canal do conteúdo"), "Versão" (not "revisão"), "Aprovar", "Pedir alterações".
-6. Do not mention automatic publishing: the product records **manual** publication; say "Registrar publicação".
+6. Automatic publishing is mentioned only on a connected Instagram channel ("Publicar automaticamente"); everywhere else the product records **manual** publication and says "Registrar publicação".
 7. Gender: use neutral forms where possible ("Pessoa responsável"), otherwise the form with parentheses only in short labels ("Aprovador(a)").
+
+## 4b. Instagram connection, automatic publishing and metrics
+
+| Term (pt-BR) | Where | Meaning |
+|---|---|---|
+| Conectar ao Instagram / Reconectar / Desconectar / Testar conexão | Channel connection panel | Authorize, renew, remove or check the account link |
+| Publicar automaticamente | Connection panel (default) and content (per channel row) | The post goes out by itself at the planned time, after approval |
+| Publicando agora / Falhou / Tentar de novo / Publicar agora | Content, channel rows | State and actions of an automatic publication |
+| Publicado automaticamente | Content, calendar | A row published by the integration |
+| Coletar métricas | Connection panel | Keep the account and post history for the metrics screen |
+| Métricas / Análise / Relatórios | Brand tabs | The analysis screen and the reports list |
+| Seguidores, Alcance médio por dia, Visualizações, Interações, Visitas ao perfil, Posts publicados | Metric tiles | See [../modules/metrics.md](../modules/metrics.md) section 9 for the plain explanation |
+| Criar relatório / Publicar para o cliente / Corrigir / Retirar | Reports | Build, send, create a new version of, or hide a report |
+| Resultados | Client portal menu | The published reports of the brand |
+| Marca (de métricas) | Metrics | A dated note on the charts (campaign, viral post…); not the same as "Marca" (brand) |
 
 ## 5. Adding a term
 

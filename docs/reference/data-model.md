@@ -15,6 +15,9 @@
 | `clients`, `client_contacts` | clients | no (reached through brands) | `clients.view` + link to a brand of the client |
 | `brands`, `brand_members` | brands | yes (is the boundary) | `brands.view` + `can_access_brand` |
 | `channels` | channels | yes | `channels.view` + `can_access_brand` |
+| `channel_connections` | instagram-publishing | yes | **no policy and no grant for any client role**: read only through `channel_connection_list` (safe columns) and the service functions |
+| `publish_attempts` | instagram-publishing | yes | `content.view` + `can_access_brand` (read); written only by service functions |
+| `channel_metric_daily`, `channel_audience_snapshot`, `channel_media_index`, `content_channel_metrics`, `metric_marks`, `metric_reports` | metrics | yes | `metrics.view` + `can_access_brand` (read); external users read only through `portal_metrics_*` |
 | `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
 | `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
 | `approval_requests`, `approval_decisions` | approvals | yes | `approvals.view` + `can_access_brand`; external only via `portal_*` |
@@ -233,6 +236,20 @@ create index on channels (brand_id) where archived_at is null;
 ```
 
 Triggers: `brand_members.kind` must equal `profiles.kind` of the user; the last internal member rule (`last_internal_member`); channel `platform` immutable once used by a content channel row.
+
+## 4b. Channel connections, publishing and metrics
+
+Migrations `20261026100000_channel_connections.sql`, `20261026100100_instagram_publishing.sql`, `20261026100200_metrics.sql`. Rules: [../modules/instagram-publishing.md](../modules/instagram-publishing.md), [../modules/metrics.md](../modules/metrics.md).
+
+**`channel_connections`** — one row per connected channel (`unique (channel_id)`, composite foreign key `(channel_id, brand_id)`, `unique (provider, external_account_id)`): `provider` (`instagram`), `external_account_id`, `username`, `display_name`, `account_type`, `followers_count`, **`token_encrypted`** (AES-256-GCM from the server, key `CHANNEL_TOKEN_KEY`; the only secret allowed in the database, DATA-15), `token_expires_at`, `scopes text[]`, `status` (`ConnectionStatus`), `auto_publish_default`, `collect_metrics`, `connected_by`, `connected_at`, `last_refreshed_at`, `last_error_code`, `last_metrics_at`, `version`. RLS enabled with **no policy**; `revoke all` from `anon` and `authenticated`.
+
+**`content_channels`** (new columns): `publish_mode` (`manual` default), `auto_publish_state` (null, `publishing`, `failed`), `published_via` (null or `instagram_api`), `external_media_id`, `publish_retry_at`, `attempt_count`, `last_error_code`. `publication_status = 'published_manually'` means "recorded as published"; `published_via` tells how.
+
+**`publish_attempts`** — `channel_row_id`, `brand_id`, `attempt_no` (unique with the row), `container_id`, `status` (`PublishAttemptStatus`), `error_code`, `provider_error` (≤ 200 characters, never shown to the client), `media_id`, timestamps. Written only by service functions; rows are never deleted.
+
+**`channel_metric_daily`** (`channel_id`, `metric`, `day` primary key; `value numeric ≥ 0`; `MetricKey`), **`channel_audience_snapshot`** (`channel_id`, `captured_on`, `dimension`; `breakdown jsonb`), **`channel_media_index`** (post catalogue per channel: `external_media_id`, `permalink`, `media_type`, `product_type`, `posted_at`, `caption_excerpt`, `content_channel_id` when the post was made by Compasso), **`content_channel_metrics`** (`media_index_id`, `age_bucket`, `metrics jsonb`, one row per post and age bucket, never overwritten). Absent data is stored as no row, never as zero.
+
+**`metric_marks`** (`brand_id`, `channel_id`, `kind`, `label`, `starts_on`, `ends_on`, `content_item_id`, `version`) and **`metric_reports`** (`brand_id`, `channel_id`, `period_start`, `period_end`, `compare_mode`, `title`, `message`, `next_steps`, `blocks`, `snapshot`, `status`, `version`, `previous_report_id`, `published_by`, `published_at`, `withdrawn_at`). A published report is immutable except for the withdrawal (trigger `metric_reports_guard`); `snapshot` is null only while `draft`.
 
 ## 5. Content, versions, comments and approvals
 
