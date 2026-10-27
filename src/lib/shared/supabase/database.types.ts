@@ -3031,10 +3031,6 @@ export type Database = {
         Args: { p_reason: string | null, p_request: string | null}
         Returns: undefined
       }
-      channel_connection_connect: {
-        Args: {          p_account: Json | null,          p_channel: string | null,          p_expires_at: string | null,          p_scopes: string[] | null,          p_token_encrypted: string | null}
-        Returns: Json
-      }
       channel_connection_disconnect: {
         Args: { p_channel: string | null}
         Returns: undefined
@@ -3055,6 +3051,10 @@ export type Database = {
       channel_connection_secret: { Args: { p_channel: string | null}; Returns: Json }
       channel_connection_settings: {
         Args: {          p_auto_publish_default: boolean | null,          p_channel: string | null,          p_collect_metrics: boolean | null,          p_expected_version: number | null}
+        Returns: Json
+      }
+      channel_connection_store: {
+        Args: {          p_account: Json | null,          p_actor: string | null,          p_channel: string | null,          p_expires_at: string | null,          p_scopes: string[] | null,          p_token_encrypted: string | null}
         Returns: Json
       }
       channel_connections_to_renew: {
