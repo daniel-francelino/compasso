@@ -1,6 +1,6 @@
 # Routes
 
-> Every URL of Compasso with its space, required action, owner module and the route file that serves it. Routes are English `kebab-case` segments, plural collections, `$param` for ids (the TanStack Router file convention). Route files only wire the guard, the search params and the page component (base.md section 5.2). The menu (`nav-config.ts`) and `requireAction` must use the **action in this table**. Public site addresses are CMS data and are resolved by the catch-all route.
+> Every URL of Aura Creative with its space, required action, owner module and the route file that serves it. Routes are English `kebab-case` segments, plural collections, `$param` for ids (the TanStack Router file convention). Route files only wire the guard, the search params and the page component (base.md section 5.2). The menu (`nav-config.ts`) and `requireAction` must use the **action in this table**. Public site addresses are CMS data and are resolved by the catch-all route.
 
 ## 1. Public site (`site` space, group `(site)`)
 

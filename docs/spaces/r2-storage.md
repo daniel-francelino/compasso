@@ -1,6 +1,6 @@
 # File storage — Cloudflare R2
 
-> How Compasso stores and serves files: Cloudflare R2 behind a storage interface, two buckets (private originals and public derivatives), direct browser upload through presigned URLs, and server-side authorization of every signature. It serves the [media library](media-library.md). The interface and the security rules come from the Memoria Print project (where the same layer was written for R2 using `aws4fetch`). Pricing and limits of Cloudflare change: confirm them in the official pages before deciding. UI messages are Brazilian Portuguese; everything else is English.
+> How Aura Creative stores and serves files: Cloudflare R2 behind a storage interface, two buckets (private originals and public derivatives), direct browser upload through presigned URLs, and server-side authorization of every signature. It serves the [media library](media-library.md). The interface and the security rules come from the Memoria Print project (where the same layer was written for R2 using `aws4fetch`). Pricing and limits of Cloudflare change: confirm them in the official pages before deciding. UI messages are Brazilian Portuguese; everything else is English.
 
 ## 1. Why R2
 
@@ -87,7 +87,7 @@ Without it the browser blocks the upload with a "CORS error" before the request 
 
 The CMS publishes web copies of the images the site uses (see [public-site-delivery.md](public-site-delivery.md)). Setup:
 
-1. Create the public bucket (for example `compasso-site`) in the same account.
+1. Create the public bucket (for example `aura-site`) in the same account.
 2. Give the S3 token "Object Read & Write" access to this bucket too.
 3. In Settings → Custom Domains, attach a domain (for example `media.your-domain.example`). Do not use `r2.dev` in production.
 4. Configure `R2_PUBLIC_BUCKET` and `SITE_MEDIA_BASE_URL` (`https://…`, no trailing slash).

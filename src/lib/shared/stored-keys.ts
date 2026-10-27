@@ -3,14 +3,14 @@ import { logError } from "@/lib/shared/logger";
 import type { ValueOf } from "@/lib/shared/utils";
 
 export const StoredKey = {
-  CalendarView: "compasso:calendar-view",
-  CalendarBrand: "compasso:calendar-brand",
-  CalendarRange: "compasso:calendar-range",
-  CalendarUndatedOpen: "compasso:calendar-undated-open",
-  SidebarOpen: "compasso:sidebar-open",
-  LastSpace: "compasso:last-space",
-  ListColumns: "compasso:list-columns",
-  ApprovalDraftComment: "compasso:approval-draft-comment",
+  CalendarView: "aura:calendar-view",
+  CalendarBrand: "aura:calendar-brand",
+  CalendarRange: "aura:calendar-range",
+  CalendarUndatedOpen: "aura:calendar-undated-open",
+  SidebarOpen: "aura:sidebar-open",
+  LastSpace: "aura:last-space",
+  ListColumns: "aura:list-columns",
+  ApprovalDraftComment: "aura:approval-draft-comment",
 } as const;
 export type StoredKey = ValueOf<typeof StoredKey>;
 

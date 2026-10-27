@@ -1,6 +1,6 @@
 # Folder structure by space
 
-> Where files go in Compasso: type → space → module, and which space may import from which. The import graph is enforced by ESLint (`no-restricted-imports`, one block per space). The rules come from the Memoria Print project, applied here to Compasso's spaces.
+> Where files go in Aura Creative: type → space → module, and which space may import from which. The import graph is enforced by ESLint (`no-restricted-imports`, one block per space). The rules come from the Memoria Print project, applied here to Aura Creative's spaces.
 
 ## 1. Goal
 

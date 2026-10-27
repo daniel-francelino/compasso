@@ -1,4 +1,4 @@
-# Compasso documentation
+# Aura Creative documentation
 
 Documentation, folder names and file names are in **English**; only the user interface copy is in Brazilian Portuguese. The rules of the project are in [../AGENTS.md](../AGENTS.md) and prevail over any document.
 

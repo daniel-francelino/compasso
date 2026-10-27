@@ -1,6 +1,6 @@
 # Data model (authoritative schema)
 
-> The complete, consolidated schema of Compasso. It is the **single source** for tables, columns, constraints, indexes and triggers; migrations implement it and `database.types.ts` is generated from it. The architecture document only summarizes it. Module documents explain the behavior; this document says exactly what exists. Keep it in sync with migrations (GOLD-1, DOC-2). Conventions: `uuid` primary keys with `gen_random_uuid()`, `timestamptz` instants, statuses as `text` + `CHECK` (values in [enums.md](enums.md)), `created_at`/`updated_at` on mutable tables, snake_case, English.
+> The complete, consolidated schema of Aura Creative. It is the **single source** for tables, columns, constraints, indexes and triggers; migrations implement it and `database.types.ts` is generated from it. The architecture document only summarizes it. Module documents explain the behavior; this document says exactly what exists. Keep it in sync with migrations (GOLD-1, DOC-2). Conventions: `uuid` primary keys with `gen_random_uuid()`, `timestamptz` instants, statuses as `text` + `CHECK` (values in [enums.md](enums.md)), `created_at`/`updated_at` on mutable tables, snake_case, English.
 
 ## 1. Table index
 
@@ -247,7 +247,7 @@ Migrations `20261026100000_channel_connections.sql`, `20261026100100_instagram_p
 
 **`publish_attempts`** — `channel_row_id`, `brand_id`, `attempt_no` (unique with the row), `container_id`, `status` (`PublishAttemptStatus`), `error_code`, `provider_error` (≤ 200 characters, never shown to the client), `media_id`, timestamps. Written only by service functions; rows are never deleted.
 
-**`channel_metric_daily`** (`channel_id`, `metric`, `day` primary key; `value numeric ≥ 0`; `MetricKey`), **`channel_audience_snapshot`** (`channel_id`, `captured_on`, `dimension`; `breakdown jsonb`), **`channel_media_index`** (post catalogue per channel: `external_media_id`, `permalink`, `media_type`, `product_type`, `posted_at`, `caption_excerpt`, `content_channel_id` when the post was made by Compasso), **`content_channel_metrics`** (`media_index_id`, `age_bucket`, `metrics jsonb`, one row per post and age bucket, never overwritten). Absent data is stored as no row, never as zero.
+**`channel_metric_daily`** (`channel_id`, `metric`, `day` primary key; `value numeric ≥ 0`; `MetricKey`), **`channel_audience_snapshot`** (`channel_id`, `captured_on`, `dimension`; `breakdown jsonb`), **`channel_media_index`** (post catalogue per channel: `external_media_id`, `permalink`, `media_type`, `product_type`, `posted_at`, `caption_excerpt`, `content_channel_id` when the post was made by Aura Creative), **`content_channel_metrics`** (`media_index_id`, `age_bucket`, `metrics jsonb`, one row per post and age bucket, never overwritten). Absent data is stored as no row, never as zero.
 
 **`metric_marks`** (`brand_id`, `channel_id`, `kind`, `label`, `starts_on`, `ends_on`, `content_item_id`, `version`) and **`metric_reports`** (`brand_id`, `channel_id`, `period_start`, `period_end`, `compare_mode`, `title`, `message`, `next_steps`, `blocks`, `snapshot`, `status`, `version`, `previous_report_id`, `published_by`, `published_at`, `withdrawn_at`). A published report is immutable except for the withdrawal (trigger `metric_reports_guard`); `snapshot` is null only while `draft`.
 

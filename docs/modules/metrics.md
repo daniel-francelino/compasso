@@ -22,7 +22,7 @@ The test of the design: *can the manager open the screen, pick "Último mês", c
 
 ## 3. Data it reads
 
-Only the tables of [instagram-publishing.md](instagram-publishing.md) section 5.6: `channel_metric_daily` (account and followers by day), `channel_audience_snapshot` (audience), `content_channel_metrics` (per post at 1 h, 24 h, 7 d, 30 d) and `channel_media_index` (post catalogue), plus the content and channel row records of Compasso (to link a post to its approved content, format and planned date). Everything is read in the **brand's time zone** ([brands.md](brands.md)); a day is cut there, and every chart and report states the zone (UI-11).
+Only the tables of [instagram-publishing.md](instagram-publishing.md) section 5.6: `channel_metric_daily` (account and followers by day), `channel_audience_snapshot` (audience), `content_channel_metrics` (per post at 1 h, 24 h, 7 d, 30 d) and `channel_media_index` (post catalogue), plus the content and channel row records of Aura Creative (to link a post to its approved content, format and planned date). Everything is read in the **brand's time zone** ([brands.md](brands.md)); a day is cut there, and every chart and report states the zone (UI-11).
 
 What the data cannot give (said on the screen, not hidden):
 
@@ -31,7 +31,7 @@ What the data cannot give (said on the screen, not hidden):
 - **Audience needs 100+ followers** (Meta rule); below it the block says so.
 - **Missing is not zero.** A day without data is a gap in the chart and "Sem dados" in text.
 - **Today is incomplete.** The current day and the last day are marked "parcial" until Meta finishes them.
-- **Posts made outside Compasso** appear (without the link to a content) and are labeled "Publicado fora do Compasso".
+- **Posts made outside Aura Creative** appear (without the link to a content) and are labeled "Publicado fora do Aura Creative".
 
 ## 4. The analysis screen (internal)
 
@@ -60,7 +60,7 @@ The order is the order of the story the manager tells: **how are we, what grew, 
 | 3 | **Crescimento de seguidores** | Total followers over time; below it, bars of new followers and lost followers per day or week. Marks (section 5) appear as labeled vertical lines. The comparison period is drawn as a lighter line | Line/area + bars, shared time axis |
 | 4 | **Alcance e visualizações** | Daily or weekly reach and views, split when possible into "seguidores" and "não seguidores" (growth beyond the current audience is the sign of discovery). Comparison line | Area / stacked bars |
 | 5 | **Interações** | Likes, comments, saves, shares per period, and the **engagement rate** (interactions over reach, defined in the glossary) | Stacked bars + one line |
-| 6 | **Melhores posts** | Ranked list (top 5 by the metric the manager picks: alcance, interações, salvamentos, compartilhamentos), each row with the post preview, date, format, caption excerpt, its numbers and a link to the post and, when it was made in Compasso, to the **content** (so the manager sees what was approved) | Table with inline bars |
+| 6 | **Melhores posts** | Ranked list (top 5 by the metric the manager picks: alcance, interações, salvamentos, compartilhamentos), each row with the post preview, date, format, caption excerpt, its numbers and a link to the post and, when it was made in Aura Creative, to the **content** (so the manager sees what was approved) | Table with inline bars |
 | 7 | **O que funciona** | Average result **by format** (post, carrossel, reel, story) and **by day of week and hour** ("melhor horário"). Shows the number of posts behind each bar and hides a bar with fewer than three posts ("poucos posts para comparar") | Horizontal bars; heat grid (day × hour) |
 | 8 | **Audiência** | Age and gender, top cities and countries, when followers are online. Weekly snapshot, with the comparison to the previous snapshot | Bars; grid |
 | 9 | **Conteúdo planejado x publicado** | Posts planned in the period against published ones, how many were automatic, how many failed. Ties the metrics to the team's work | Small table |
@@ -85,7 +85,7 @@ Numbers alone do not explain growth. The manager records **what happened** on a 
 |---|---|
 | Mark | A date (or range), a short label ("Início da campanha de Dia das Mães"), a type (`campaign`, `viral_post`, `partnership`, `event`, `other`), and optionally a link to a content. Drawn on the time axes of blocks 3 to 5 and listed in block 10 |
 | Note | Free text attached to the period or a block, for the manager's own memory. Internal by default; shown to the client only if the manager includes it in a report |
-| Automatic marks | Compasso adds marks it already knows: the publication of each content ("Publicado: <title>") and a connection event. They can be hidden |
+| Automatic marks | Aura Creative adds marks it already knows: the publication of each content ("Publicado: <title>") and a connection event. They can be hidden |
 | Rules | Create, edit and delete by people with `metrics.report`; audited (ids only); each mark has the author and time |
 
 ## 6. Highlights (automatic text, no AI)
@@ -149,7 +149,7 @@ Routes (proposal): `/portal/brands/$brandId/metrics` (the list and the latest re
 - **Older reports** in a list by month, each openable and printable.
 - **Read-only**; the client can comment on a report block using the same comment component as approvals (a later improvement), which gives the manager a place to answer questions.
 - **Data access**: the portal never reads the metrics tables; it calls `portal_metrics_report_list` and `portal_metrics_report_get`, which return the **frozen snapshot** and explicit columns only (DATA-2). The snapshot is **projected in SQL** (`metrics_snapshot_for_portal`) to the blocks the manager chose: data of a block that was left out comes back empty, and the posts never carry the internal content id, title or channel row id, whatever the stored snapshot holds. The internal marks and the publication counts reach the client only when the blocks "Marcas e anotações" and "Planejado e publicado" are in the report.
-- Thumbnails of posts come from Compasso's own previews (display copies) for content made in the tool; for posts made outside it the report shows the caption excerpt and an "Abrir no Instagram" link, because Meta's image addresses expire and are not stored.
+- Thumbnails of posts come from Aura Creative's own previews (display copies) for content made in the tool; for posts made outside it the report shows the caption excerpt and an "Abrir no Instagram" link, because Meta's image addresses expire and are not stored.
 
 ## 9. Glossary of metrics (UI copy)
 
@@ -251,7 +251,7 @@ The exact metric names depend on Meta's reference (see [instagram-publishing.md]
 | M-4 | PDF by the browser's print or by a server engine | Browser print first; revisit if the layout is not consistent enough |
 | M-5 | AI-written commentary | Not in the first delivery. Fixed rules first; an optional "sugerir texto" that the manager edits can be proposed later, with its own privacy review (SEC-12) |
 | M-6 | Goals and targets | Later; needs a place to set a target per brand and a progress block |
-| M-7 | Does the client see posts made outside Compasso? | The manager decides per report by including the block; the data is collected either way |
+| M-7 | Does the client see posts made outside Aura Creative? | The manager decides per report by including the block; the data is collected either way |
 | M-8 | Cadence of the report | Monthly by default, with the reminder; weekly and custom allowed |
 | M-9 | Benchmarks (average of the brand's segment) | Not available through the API; do not promise them |
 

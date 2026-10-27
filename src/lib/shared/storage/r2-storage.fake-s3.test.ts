@@ -72,7 +72,7 @@ const storage = () =>
 
 describe("r2 storage against a fake S3 server", () => {
   it("uploads through the presigned URL and reads it back with stat, range and checksum", async () => {
-    const body = Buffer.from("hello compasso ".repeat(1000));
+    const body = Buffer.from("hello aura ".repeat(1000));
     const target = await storage().createUploadTarget("object-1");
     const put = await fetch(target?.url ?? "", { method: "PUT", body });
     expect(put.ok).toBe(true);

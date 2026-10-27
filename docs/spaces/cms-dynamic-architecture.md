@@ -1,6 +1,6 @@
 # CMS model: sections, pages, navigation and registry
 
-> The technical model of the CMS of Compasso: a **component registry** in code, **pages made of sections**, **navigation** as data, and **immutable published revisions**. It supports [cms-site.md](cms-site.md) (the space specification) and [public-site-delivery.md](public-site-delivery.md) (how the public site reads the result). The idea of a single registry that drives the editor, the validation, the preview and the public renderer comes from the Memoria Print CMS; Compasso starts with a **smaller scope** (predefined sections, no shared-block library, one content language) and keeps the door open for the full model (section 11). UI texts are Brazilian Portuguese; everything else is English.
+> The technical model of the CMS of Aura Creative: a **component registry** in code, **pages made of sections**, **navigation** as data, and **immutable published revisions**. It supports [cms-site.md](cms-site.md) (the space specification) and [public-site-delivery.md](public-site-delivery.md) (how the public site reads the result). The idea of a single registry that drives the editor, the validation, the preview and the public renderer comes from the Memoria Print CMS; Aura Creative starts with a **smaller scope** (predefined sections, no shared-block library, one content language) and keeps the door open for the full model (section 11). UI texts are Brazilian Portuguese; everything else is English.
 
 ## 1. The problem it solves
 
@@ -215,7 +215,7 @@ Aligned with the CMS delivery phases A to F in [cms-site.md](cms-site.md):
 
 ## 11. Possible evolution (not in the MVP)
 
-The Memoria Print CMS evolved to a fuller model. Compasso can follow the same path **only if the need appears**:
+The Memoria Print CMS evolved to a fuller model. Aura Creative can follow the same path **only if the need appears**:
 
 - **Shared sections** (`scope = 'shared'` with `site_page_blocks`): one section placed on many pages, edited once; "Used on N pages"; "Unlink".
 - **Menus and layouts as entities** (`site_menus`, `site_menu_items`, `site_layouts`) with header and footer components chosen per page and a default per region.

@@ -33,7 +33,7 @@ const colourSelectors = [
   {
     selector: String.raw`${node}[${prop}=/\b(?:bg|text|border|ring|fill|stroke|from|to|via|outline|divide|decoration)-(?:white|black|(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|neutral|stone)-[0-9]{2,3})\b/]`,
     message:
-      "Use a token of the Compasso palette (ink, violet, orchid, coral…) or a semantic token, not pure black/white or the default Tailwind palette.",
+      "Use a token of the Aura Creative palette (ink, violet, orchid, coral…) or a semantic token, not pure black/white or the default Tailwind palette.",
   },
 ]);
 

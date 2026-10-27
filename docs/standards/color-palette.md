@@ -1,4 +1,4 @@
-# Compasso color palette
+# Aura Creative color palette
 
 > Based on the site reference image (peach, pink and lilac gradient, violet and coral ornaments, navy text). Values are estimated by eye from the image and then tuned for **high contrast (WCAG AAA, 7:1, for body text on its intended surfaces)**; they can be refined with the original brand file. Tokens live in `src/styles.css`. No component uses hex values, pure black, pure white or the default Tailwind palette (enforced by ESLint).
 

@@ -1,6 +1,6 @@
 # Authentication, invitations and accounts
 
-> How a person gets an account in Compasso, how access is granted, and how the session and guards work. It applies to both internal users (team) and external users (clients who approve content in the portal). Access is verified **in the database** (RLS) and on the server, never only on screen. The mechanics (Supabase Auth, profiles with roles, account statuses, guards, audit) come from the Memoria Print project; Compasso differs in being **invitation only**, **email login only** and **brand-scoped**. Companion documents: [roles-and-actions.md](roles-and-actions.md), [notifications.md](notifications.md) and `technical-architecture-v0.1.md` (sections 7 and 8). UI texts are Brazilian Portuguese; everything else is English.
+> How a person gets an account in Aura Creative, how access is granted, and how the session and guards work. It applies to both internal users (team) and external users (clients who approve content in the portal). Access is verified **in the database** (RLS) and on the server, never only on screen. The mechanics (Supabase Auth, profiles with roles, account statuses, guards, audit) come from the Memoria Print project; Aura Creative differs in being **invitation only**, **email login only** and **brand-scoped**. Companion documents: [roles-and-actions.md](roles-and-actions.md), [notifications.md](notifications.md) and `technical-architecture-v0.1.md` (sections 7 and 8). UI texts are Brazilian Portuguese; everything else is English.
 
 ## 1. Goals
 
@@ -55,7 +55,7 @@ Email delivery failure never blocks the process. The invitation stays visible in
 
 ## 5. Screens
 
-All under `/admin` (the portal uses the same login), in Brazilian Portuguese and with the Compasso design system.
+All under `/admin` (the portal uses the same login), in Brazilian Portuguese and with the Aura Creative design system.
 
 | Route | Who | Description |
 |---|---|---|
@@ -79,7 +79,7 @@ All under `/admin` (the portal uses the same login), in Brazilian Portuguese and
 
 ## 6. Data model and protection
 
-The executable source is the authentication migration of Compasso (derived from the Memoria Print one). Do not copy snippets from documents into the SQL Editor.
+The executable source is the authentication migration of Aura Creative (derived from the Memoria Print one). Do not copy snippets from documents into the SQL Editor.
 
 | Entity | Responsibility |
 |---|---|
@@ -176,7 +176,7 @@ Tone: calm and direct.
 
 | Screen | Text |
 |---|---|
-| Invitation | "Você foi convidado(a) para acessar o Compasso. Defina uma senha para entrar." |
+| Invitation | "Você foi convidado(a) para acessar o Aura Creative. Defina uma senha para entrar." |
 | Invalid or expired invitation | "Este convite expirou ou já foi usado. Peça um novo convite a quem o enviou." |
 | Pending | "Seu acesso está sendo analisado pela equipe. Assim que for aprovado, você poderá entrar." |
 | Refused | "Não foi possível aprovar o acesso a esta conta. Se acha que é um engano, fale com a equipe." |
@@ -228,4 +228,4 @@ Phase 0 (2026-10-18). Done: migration `20261018100100_auth_roles_profiles.sql` (
 Validation performed: 61 SQL assertions on PGlite (`npm run db:verify`); typecheck and lint; 3 Playwright tests for the unauthenticated flows. **Not tested**: login with a real Supabase, authenticated redirects, `seed-owner` against a real project, `supabase test db` (see [../pending-external-setup.md](../pending-external-setup.md) V1, V3–V5). **Pending**: invitations, users and roles screens (P1-01, P1-02), password recovery and reset screens, MFA (P6-01).
 
 
-2026-10-20: Applied the Aura Creative product brand to the affected authentication, invitation, account, email and settings UI. Files include the shared auth shell and the relevant routes/components/templates; the Aura Creative logo PNG and favicon SVG are in `public/`. Validation performed: source search for remaining user-facing ?Compasso? labels. **Not tested**: browser rendering, generated favicon behavior across browsers, and email delivery.
+2026-10-20: Applied the Aura Creative product brand to the affected authentication, invitation, account, email and settings UI. Files include the shared auth shell and the relevant routes/components/templates; the Aura Creative logo PNG and favicon SVG are in `public/`. Validation performed: source search for remaining user-facing ?Aura Creative? labels. **Not tested**: browser rendering, generated favicon behavior across browsers, and email delivery.

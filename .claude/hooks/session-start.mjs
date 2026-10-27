@@ -2,7 +2,7 @@ import { readStdin } from "./lib.mjs";
 
 await readStdin();
 
-process.stdout.write(`PROJECT STANDARDS (Compasso) — apply them on every task.
+process.stdout.write(`PROJECT STANDARDS (Aura Creative) — apply them on every task.
 
 Source of truth: AGENTS.md (non-negotiables) > docs/standards/base.md (rules with IDs) > docs/modules, docs/spaces, docs/foundations.
 Read docs/README.md for the document map. Work from docs/implementation-plan.md (one task at a time, in order) and read the module document of what you change BEFORE coding.

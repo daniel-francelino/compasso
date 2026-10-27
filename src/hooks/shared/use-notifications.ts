@@ -6,7 +6,7 @@ import { unwrapResult } from "@/lib/shared/result-client";
 import { browserClient } from "@/lib/shared/supabase/client";
 
 const POLL_MS = 60_000;
-const REALTIME_CHANNEL = "compasso-notifications";
+const REALTIME_CHANNEL = "aura-notifications";
 
 export const useUnreadCount = (userId: string) => {
   const queryClient = useQueryClient();

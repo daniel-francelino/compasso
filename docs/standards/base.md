@@ -1,6 +1,6 @@
 # Base standards (rules that every change must follow)
 
-> The single rulebook for code, data, security, interface and documentation in Compasso. It is written to be **applied by an AI assistant and by people alike**: every rule has an **ID**, uses **MUST / MUST NOT** wording, says **how to check it** and, when possible, **which tool enforces it**. `AGENTS.md` summarizes the non-negotiables; this document gives the detail. In case of conflict, `AGENTS.md` prevails, then this document, then the module documents. The origin of many rules is the Memoria Print project, where recurring problems (several different ways of doing the same thing, rules that drifted over time) are exactly what this document is meant to prevent. UI copy is Brazilian Portuguese; everything else is English.
+> The single rulebook for code, data, security, interface and documentation in Aura Creative. It is written to be **applied by an AI assistant and by people alike**: every rule has an **ID**, uses **MUST / MUST NOT** wording, says **how to check it** and, when possible, **which tool enforces it**. `AGENTS.md` summarizes the non-negotiables; this document gives the detail. In case of conflict, `AGENTS.md` prevails, then this document, then the module documents. The origin of many rules is the Memoria Print project, where recurring problems (several different ways of doing the same thing, rules that drifted over time) are exactly what this document is meant to prevent. UI copy is Brazilian Portuguese; everything else is English.
 
 ## 0. How to use this document
 

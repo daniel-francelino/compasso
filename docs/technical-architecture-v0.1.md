@@ -55,11 +55,11 @@ This document turns the product document into an implementable technical specifi
 
 ## 2. Rules inherited from Memoria Print
 
-The `memoria-print` project (TanStack Start + Supabase + R2) is the reference for code, security and organization. Compasso starts from its skeleton (phase 0) and follows the same rules. The `AGENTS.md` of Compasso summarizes them and **prevails over any document**. This chapter says how each rule applies here.
+The `memoria-print` project (TanStack Start + Supabase + R2) is the reference for code, security and organization. Aura Creative starts from its skeleton (phase 0) and follows the same rules. The `AGENTS.md` of Aura Creative summarizes them and **prevails over any document**. This chapter says how each rule applies here.
 
 ### 2.1 Organization
 
-| Rule | Application in Compasso |
+| Rule | Application in Aura Creative |
 |---|---|
 | Type → space → module: `components/<space>/<module>`, same in `lib` and `hooks` | Spaces: `marketing`, `cms`, `site`, `portal`, `shared` (section 6) |
 | A space never imports from another; what two spaces use goes to `shared` | Enforced by `no-restricted-imports` in ESLint, one block per space |
@@ -135,7 +135,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 
 ### 2.7 What is **not** copied from Memoria Print
 
-| Memoria Print item | Decision in Compasso |
+| Memoria Print item | Decision in Aura Creative |
 |---|---|
 | First admin password inside a migration (stays in git history) | The first Owner is created by a seed script that reads the password from an environment variable; the password never enters the repository |
 | Login by username through `email_for_username`, callable with the public key (reveals emails) | Login by email only |
@@ -144,7 +144,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Lovable integration (markers in `AGENTS.md`, `@lovable.dev/vite-tanstack-config`, `.lovable/`) | Removed; `vite.config.ts` uses the TanStack Start plugin and Nitro with the Vercel preset |
 | Cloudflare deployment (wrangler) | Deployment on Vercel |
 | Documentation, folder and file names in Portuguese | Everything in English; only UI copy in Portuguese |
-| Colors, fonts and logo of the Memoria Print brand | Compasso has its own palette ([standards/color-palette.md](standards/color-palette.md)); only the token mechanics and the lint are reused |
+| Colors, fonts and logo of the Memoria Print brand | Aura Creative has its own palette ([standards/color-palette.md](standards/color-palette.md)); only the token mechanics and the lint are reused |
 
 ---
 
@@ -157,7 +157,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | ADR-03 | **Supabase PostgreSQL** | Confirmed | — | — |
 | ADR-04 | **Supabase Auth**, sign-up by invitation only | Confirmed | Auth.js, Clerk | Integrates with `auth.uid()` in RLS |
 | ADR-05 | **RLS on every table** and checks repeated on the server | Confirmed | Authorization only in the application | The product requires isolation even with tampered IDs |
-| ADR-06 | **Configurable profiles made of actions** (`has_action`) combined with the brand link (`brand_members`) | Confirmed | Fixed roles in an enum | Memoria Print model; the brand link is Compasso's specific extension |
+| ADR-06 | **Configurable profiles made of actions** (`has_action`) combined with the brand link (`brand_members`) | Confirmed | Fixed roles in an enum | Memoria Print model; the brand link is Aura Creative's specific extension |
 | ADR-07 | External access (portal) **only through dedicated `security definer` functions**, with no `SELECT` on internal tables | Proposed | Per-row RLS policies on internal tables | RLS is per row, not per column: internal notes would leak |
 | ADR-08 | **Cloudflare R2** behind a storage interface, S3 API through `aws4fetch`, direct browser upload by presigned URL | Confirmed | Supabase Storage, AWS SDK | Avoids the Vercel function body limit; implementation already used in Memoria Print |
 | ADR-09 | Versioned SQL migrations with Supabase CLI; generated types | Confirmed | ORM | RLS, functions and triggers are first-class SQL |
@@ -294,7 +294,7 @@ Design consequences:
 ### 6.3 Folder tree
 
 ```
-compasso/
+aura-criative/
 ├─ AGENTS.md                      project rules (prevail over any document)
 ├─ docs/                          all names in English
 │  ├─ modules/  spaces/  foundations/  standards/  audits/  history/
@@ -453,7 +453,7 @@ Starting profiles (seed migration, with `insert ... on conflict do nothing`):
 
 ### 8.3 SQL authorization functions
 
-The tables `roles`, `actions`, `role_actions` and the functions `is_admin()`, `has_action(p_action)` and `my_actions()` come from the Memoria Print authentication migration (`20261005000000_auth_profiles.sql`), adapted to Compasso. The two new functions implement the brand scope. All are `security definer` with a fixed `search_path`; revoke `execute` from `anon` on those that do not need it.
+The tables `roles`, `actions`, `role_actions` and the functions `is_admin()`, `has_action(p_action)` and `my_actions()` come from the Memoria Print authentication migration (`20261005000000_auth_profiles.sql`), adapted to Aura Creative. The two new functions implement the brand scope. All are `security definer` with a fixed `search_path`; revoke `execute` from `anon` on those that do not need it.
 
 ```sql
 create function public.can_access_brand(p_brand uuid) returns boolean
@@ -888,22 +888,22 @@ src/routes/
 
 ### 17.1 Starting point (the "template")
 
-Instead of an external template, the starting point is the **Memoria Print skeleton**, copied into the Compasso repository in phase 0:
+Instead of an external template, the starting point is the **Memoria Print skeleton**, copied into the Aura Creative repository in phase 0:
 
 | Copy and adapt | Note |
 |---|---|
-| `package.json`, `tsconfig.json`, `.prettierrc`, `eslint.config.js`, `eslint-local/`, `.husky/`, `components.json`, `bunfig.toml` (discard) | Remove the Lovable integration; reset the legacy exception lists; replace the `boundary` blocks with Compasso's spaces |
+| `package.json`, `tsconfig.json`, `.prettierrc`, `eslint.config.js`, `eslint-local/`, `.husky/`, `components.json`, `bunfig.toml` (discard) | Remove the Lovable integration; reset the legacy exception lists; replace the `boundary` blocks with Aura Creative's spaces |
 | `src/start.ts`, `server.ts`, `router.tsx`, `lib/shared/logger.ts`, `server-utils.ts`, `query-keys.ts`, `stored.ts`, `format.ts` | Adjust default time zone and currency |
 | `components/shared/ui`, `components/shared/admin` | Complete back office kit |
 | `lib/shared/auth`, `hooks/shared` | Profiles, actions, guards, session; remove `username` |
 | `lib/shared/storage` (R2) and `lib/shared/media` | Media library; adapt scopes (site and brand) |
 | `lib/shared/notifications` and `components/shared/notifications` | New kind catalog |
 | `scripts/check-consistency.mjs`, `scripts/db-types.mjs` | Replace the checked tables and constants |
-| Documentation of the standards, foundations and spaces | Already adapted to Compasso and written in English under `docs/` (see the document map in section 2.6); nothing else to copy |
+| Documentation of the standards, foundations and spaces | Already adapted to Aura Creative and written in English under `docs/` (see the document map in section 2.6); nothing else to copy |
 
 **Do not copy**: Memoria Print's ERP, POS, CMS and site-specific modules, colors, fonts, logo and brand texts.
 
-The Memoria Print CMS (pages, publishing, published snapshot) is a good reference for `cms` and `shared/content`; reuse what fits and simplify for Compasso's sections.
+The Memoria Print CMS (pages, publishing, published snapshot) is a good reference for `cms` and `shared/content`; reuse what fits and simplify for Aura Creative's sections.
 
 ### 17.2 Design system
 
@@ -914,7 +914,7 @@ The Memoria Print CMS (pages, publishing, published snapshot) is a good referenc
 - Dialog, list and form patterns as in [standards/admin-layout-and-standards.md](standards/admin-layout-and-standards.md); tokens, states and the component kit in [standards/design-system.md](standards/design-system.md).
 - UI texts in Brazilian Portuguese, clear and direct tone.
 
-### 17.3 New Compasso components (in `shared`)
+### 17.3 New Aura Creative components (in `shared`)
 
 `ChannelIcon`, `StatusBadge` (editorial and publication), `DateTimeField` with time zone, `MediaPicker`, `RichTextEditor`, `ChannelPreview` (`shared/preview`), `CalendarView` (`shared/calendar`), `ApprovalTimeline`.
 
@@ -1076,11 +1076,11 @@ Rules: `.env.local` outside git (`*.local` in `.gitignore`); `.env.example` vers
 Rough estimates for one or two people; review after phase 0.
 
 ### Phase 0 — Foundations (about 1 week)
-- Repository with the Memoria Print skeleton (section 17.1), no Lovable and no legacy exceptions; Compasso `AGENTS.md`.
+- Repository with the Memoria Print skeleton (section 17.1), no Lovable and no legacy exceptions; Aura Creative `AGENTS.md`.
 - Supabase projects (staging and production), Vercel project, R2 buckets, domain; deploy an example page to validate Nitro and Vercel.
 - Initial migrations: authentication, profiles, actions, starting profiles, audit; Owner seed script.
 - Login, invitation (skeleton), protected layout, `requireAction`; first pgTAP test; CI and husky.
-- Compasso palette and tokens in `styles.css` ([standards/color-palette.md](standards/color-palette.md)).
+- Aura Creative palette and tokens in `styles.css` ([standards/color-palette.md](standards/color-palette.md)).
 - Review the documents under `docs/standards`, `docs/foundations` and `docs/spaces` against the real code as it is written (they are the specification; update their "Implementation status" with each delivery).
 
 ### Phase 1 — Access and commercial structure (about 1.5 weeks)
@@ -1152,7 +1152,7 @@ Automatic publishing (official APIs, persistent queue, idempotency), multiple ap
 
 - [ ] Copy the Memoria Print skeleton and remove Lovable, ERP, POS and brand
 - [ ] Reset the ESLint exception lists and adjust the boundary blocks (`marketing`, `cms`, `site`, `portal`, `shared`)
-- [ ] Write Compasso's `AGENTS.md`
+- [ ] Write Aura Creative's `AGENTS.md`
 - [ ] Create Supabase staging and production projects; disable public sign-up; enable email confirmation, minimum password of 10 and leaked-password protection
 - [ ] Enable `pg_cron` and Realtime; confirm that `notifications` is in the `supabase_realtime` publication
 - [ ] Create the R2 buckets (private and public), restricted token, CORS, media domain

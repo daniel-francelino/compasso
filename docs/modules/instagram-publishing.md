@@ -4,7 +4,7 @@
 
 ## 1. Objective
 
-When a content is **approved** and its Instagram channel row is **planned** for a date and time, Compasso publishes it on the brand's Instagram account at that time, records the result (link, date, errors) and tells the team when something fails. Today the team publishes by hand and records it ("Marcar como publicado").
+When a content is **approved** and its Instagram channel row is **planned** for a date and time, Aura Creative publishes it on the brand's Instagram account at that time, records the result (link, date, errors) and tells the team when something fails. Today the team publishes by hand and records it ("Marcar como publicado").
 
 The same connection also **collects the data the client metrics screen will show** (account, audience and per-post results), starting on the day of the connection, because Meta keeps user-level data for a limited time (section 5.6).
 
@@ -31,10 +31,10 @@ Source: Meta's page [Publish Content using the Instagram Platform](https://devel
 |---|---|
 | Accounts | Instagram **professional** accounts only. The page does not say whether Business and Creator both work; **(third party)** says both do with Instagram Login. Personal accounts cannot publish by API |
 | Login paths | (a) **Instagram Login** (`graph.instagram.com`; permissions `instagram_business_basic`, `instagram_business_content_publish`; an Instagram user token; **no Facebook Page needed**). (b) **Facebook Login for Business** (`graph.facebook.com`; `instagram_basic`, `instagram_content_publish`, `pages_read_engagement`; Page access token; the Instagram account must be linked to a Page). (c) Unified Login with a Business Integration System User token |
-| Native scheduling | **None.** The API publishes now. Scheduling is the application's job, so Compasso needs its own scheduler |
+| Native scheduling | **None.** The API publishes now. Scheduling is the application's job, so Aura Creative needs its own scheduler |
 | Flow | 1) `POST /<IG_ID>/media` creates a **container** (`image_url` or `video_url`, `caption`, `media_type`). 2) `GET /<CONTAINER_ID>?fields=status_code` until `FINISHED` (values: `IN_PROGRESS`, `FINISHED`, `ERROR`, `EXPIRED`, `PUBLISHED`; Meta suggests one poll a minute for at most five minutes). 3) `POST /<IG_ID>/media_publish` with `creation_id`. A container not published within 24 hours expires |
 | Media source | Meta **downloads** the file itself (cURL) from a **publicly reachable URL** at publish time. Alternative for video: resumable upload to `rupload.facebook.com`, offered only to apps using Facebook Login for Business |
-| Images | **JPEG only.** MPO and JPS are not supported. Compasso's display copy is WebP, so a JPEG must be produced (section 5.2) |
+| Images | **JPEG only.** MPO and JPS are not supported. Aura Creative's display copy is WebP, so a JPEG must be produced (section 5.2) |
 | Types | Feed image, **carousel** (up to 20 images/videos, all cropped to the first item's ratio), **Reels** (`media_type=REELS`), **Stories** (`media_type=STORIES`). Video size, length and codec limits are **not on the page** and must be read from the Reels/Stories reference before phase 3 |
 | Rate limit | 100 API-published posts per rolling 24 hours per account, a carousel counts as one, enforced at `media_publish`. **Meta's own page contradicts itself** (the carousel section says 50). The real quota is read from `GET /<IG_ID>/content_publishing_limit`; the code must read it, never assume |
 | Tokens | **(third party)** short-lived token (1 h) exchanged for a long-lived one (60 days), refreshable only while still valid and at least 24 h old; an expired token needs the person to authorize again |
@@ -150,15 +150,15 @@ The metrics screen is a future module, specified in [metrics.md](metrics.md) (ch
 | Account performance (reach, views/impressions, profile views, accounts engaged, interactions, link taps) | Account insights, `period=day` | Daily, for the previous day, plus a backfill of the last 30 to 90 days at connection | `channel_metric_daily` (`channel_id`, `brand_id`, `metric`, `day`, `value`; unique on the three keys; upsert) |
 | Followers (total, new, lost) | Account fields and insights | Daily snapshot | Same table, metric `followers_count` and the follows/unfollows metrics |
 | Audience (age, gender, city, country, when followers are online) | Demographics insights (only with 100+ followers) | Weekly snapshot | `channel_audience_snapshot` (`channel_id`, `brand_id`, `captured_on`, `dimension`, `breakdown jsonb`) |
-| Per post: reach, views, likes, comments, saves, shares, interactions; for video also plays and watch time | Media insights, `period=lifetime` | At 1 hour, 24 hours, 7 days and 30 days after publication, for posts Compasso published **and** for posts published outside it (a sync of the recent media list) | `content_channel_metrics` (`channel_id`, `brand_id`, `external_media_id`, `content_channel_id` nullable, `captured_at`, `age_bucket`, `metrics jsonb`) |
+| Per post: reach, views, likes, comments, saves, shares, interactions; for video also plays and watch time | Media insights, `period=lifetime` | At 1 hour, 24 hours, 7 days and 30 days after publication, for posts Aura Creative published **and** for posts published outside it (a sync of the recent media list) | `content_channel_metrics` (`channel_id`, `brand_id`, `external_media_id`, `content_channel_id` nullable, `captured_at`, `age_bucket`, `metrics jsonb`) |
 | Post catalogue (permalink, type, caption, date, thumbnail URL) | Media list | With each sync | `channel_media_index` (`channel_id`, `brand_id`, `external_media_id`, `permalink`, `media_type`, `posted_at`, `caption_excerpt`); thumbnails are **not** stored (Meta's URLs expire) |
 | Stories | Story insights | Only inside Meta's short window (see below); webhook only with Facebook Login | Same `content_channel_metrics`, `age_bucket` `story_final` |
 | Comments and mentions (counts) | Account insights | Daily count only | `channel_metric_daily` |
 
 Rules:
 
-- **Link results to content.** A post that Compasso published keeps `content_channel_id`, so the screen can show "this approved content, published on this date, got these results" and compare formats, days and hours. This is the data that is unique to the product.
-- **Posts published outside Compasso** are indexed too (the client keeps posting by hand); they have no `content_channel_id`.
+- **Link results to content.** A post that Aura Creative published keeps `content_channel_id`, so the screen can show "this approved content, published on this date, got these results" and compare formats, days and hours. This is the data that is unique to the product.
+- **Posts published outside Aura Creative** are indexed too (the client keeps posting by hand); they have no `content_channel_id`.
 - **History is append-only** (GOLD-8): snapshots are never edited; a metric that Meta later revises is a new row.
 - **Empty is not zero.** Meta returns an empty set when data is unavailable; the screen shows "Sem dados" and the tables store no row.
 - **Storage is small**: a few hundred rows per account per month; no files. Keep everything; decide any retention later.
@@ -182,7 +182,7 @@ Following the pattern of email ([../standards/base.md](../standards/base.md) sec
 | Late job | Publishes if within a grace window (proposal: 6 hours); beyond it the row becomes `publish_failed` instead of surprising the client with an old post |
 | Content cancelled or date changed while `planned` | The job reads the current row inside the claim, so the change wins; a row already `publishing` cannot be cancelled, only reconciled afterwards |
 | Account rate-limited or Meta outage (HTTP 5xx, code 1/2) | Exponential delay between ticks, at most 5 attempts, then `publish_failed` |
-| Post deleted on Instagram later | Compasso keeps its record; no sync in this scope |
+| Post deleted on Instagram later | Aura Creative keeps its record; no sync in this scope |
 
 ## 7. Phases
 
@@ -193,7 +193,7 @@ Following the pattern of email ([../standards/base.md](../standards/base.md) sec
 | 2. Go live for clients | App Review passed, onboarding flow for client accounts, runbook | M2, M3, M5 | Review time |
 | 3. Carousel | Children containers, ordering, ratio rule | Phase 1 | Small |
 | 4. Reels and Stories | Video derivative, longer processing, limits | content-publication.md P3 | Medium |
-| 4b. Metrics collection | Daily account metrics and followers, weekly audience, post metrics at 1 h / 24 h / 7 d / 30 d, index of posts made outside Compasso, backfill at connection, collection status on the panel. **Can start right after phase 1 and should not wait for the metrics screen**, so history accumulates | Phase 1, the metric list read from Meta's reference | Medium |
+| 4b. Metrics collection | Daily account metrics and followers, weekly audience, post metrics at 1 h / 24 h / 7 d / 30 d, index of posts made outside Aura Creative, backfill at connection, collection status on the panel. **Can start right after phase 1 and should not wait for the metrics screen**, so history accumulates | Phase 1, the metric list read from Meta's reference | Medium |
 | 4c. Metrics screen and reports | Separate module, specified in [metrics.md](metrics.md): reads the tables of 5.6, curated reports to the portal through `portal_*` functions | 4b | Separate project |
 | 5. Other platforms | The adapter contract, one platform at a time | Their own review rules | Per platform |
 
@@ -228,7 +228,7 @@ All the questions of the proposal were answered on 2026-10-26 by taking the reco
 | A8 | Hashtags stay in the caption |
 | A9 | First review asks for basic, content publish and manage insights |
 | A10 | Metric history is kept without a limit |
-| A11 | Posts made outside Compasso are collected; whether the client sees them is chosen per report (block "Melhores posts") |
+| A11 | Posts made outside Aura Creative are collected; whether the client sees them is chosen per report (block "Melhores posts") |
 | A12 | Free Supabase plan accepted only for development |
 | D1 | The access token is stored encrypted in `channel_connections`; disconnecting **deletes** it (a hard delete on purpose: the token must not outlive the connection; the audit events `channel.connected`, `channel.disconnected` and `channel.connection_lost` keep the trace, and the metrics and publication history stays with the channel) |
 
@@ -256,7 +256,7 @@ All the questions of the proposal were answered on 2026-10-26 by taking the reco
 - [ ] The post link, date, status and attempts are visible in the content, the calendar and the dashboard; each publication writes one audit event with ids only.
 - [ ] After one authorization, the connection stays active through at least two automatic token renewals without asking the client again; when renewal is impossible, the panel shows "Reconectar" and the team is notified.
 - [ ] The channel's connection panel shows the account data, the status and the switches of 5.1; no function returns the token to any role (pgTAP).
-- [ ] (Phase 4b) A connected account gets its history backfilled and then daily account rows, weekly audience rows and post rows at 1 h, 24 h, 7 d and 30 d; a post made outside Compasso is indexed; missing data is stored as no row, not zero.
+- [ ] (Phase 4b) A connected account gets its history backfilled and then daily account rows, weekly audience rows and post rows at 1 h, 24 h, 7 d and 30 d; a post made outside Aura Creative is indexed; missing data is stored as no row, not zero.
 - [ ] Manual publication still works for every channel and for a failed automatic row.
 - [ ] SQL and TS constants match (`check:consistency`); documents and registries updated (`check:docs`).
 

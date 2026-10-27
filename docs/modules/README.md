@@ -1,6 +1,6 @@
-# Compasso — Modules
+# Aura Creative — Modules
 
-Functional specification of the modules of Compasso, written before implementation. These documents guide the work; they do not describe features that are already available (each has an "Implementation status" section that is updated with every delivery). The technical foundations are in [../technical-architecture-v0.1.md](../technical-architecture-v0.1.md); the product scope is in [../product-documentation-v0.1.md](../product-documentation-v0.1.md). UI texts are Brazilian Portuguese; everything else is English.
+Functional specification of the modules of Aura Creative, written before implementation. These documents guide the work; they do not describe features that are already available (each has an "Implementation status" section that is updated with every delivery). The technical foundations are in [../technical-architecture-v0.1.md](../technical-architecture-v0.1.md); the product scope is in [../product-documentation-v0.1.md](../product-documentation-v0.1.md). UI texts are Brazilian Portuguese; everything else is English.
 
 ## Modules
 

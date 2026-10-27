@@ -1,6 +1,6 @@
 # Roles and actions (permissions)
 
-> The permission model of Compasso: configurable **roles** made of fixed **actions**, combined with the user's **brand links**. It is used by [authentication.md](authentication.md), the menu, the routes, the server functions and RLS. The model (roles, actions, `has_action`, admin-only actions, audit) comes from the Memoria Print project; the action catalog, the starting roles and the brand scope are Compasso's own. See also `technical-architecture-v0.1.md`, section 8. UI texts are Brazilian Portuguese; everything else is English.
+> The permission model of Aura Creative: configurable **roles** made of fixed **actions**, combined with the user's **brand links**. It is used by [authentication.md](authentication.md), the menu, the routes, the server functions and RLS. The model (roles, actions, `has_action`, admin-only actions, audit) comes from the Memoria Print project; the action catalog, the starting roles and the brand scope are Aura Creative's own. See also `technical-architecture-v0.1.md`, section 8. UI texts are Brazilian Portuguese; everything else is English.
 
 ## 1. Goal
 
@@ -114,7 +114,7 @@ Dependencies are added automatically (for example `content.*` brings `channels.v
 
 ## 8. Data model
 
-Explanatory excerpts; the executable source is the authentication migration of Compasso. Do not use these excerpts as an extra migration. `npm run check:consistency` verifies that SQL, `ACTION_KEYS` and the policies agree.
+Explanatory excerpts; the executable source is the authentication migration of Aura Creative. Do not use these excerpts as an extra migration. `npm run check:consistency` verifies that SQL, `ACTION_KEYS` and the policies agree.
 
 ```sql
 create table roles (
@@ -240,7 +240,7 @@ The role selector lists **roles** (from the `roles` table). Whoever has `invitat
 
 | Step | Task | Result |
 |---|---|---|
-| 1 | Authentication migration with the roles/actions model and the Compasso catalog; seed `owner` and the starting roles | Database ready |
+| 1 | Authentication migration with the roles/actions model and the Aura Creative catalog; seed `owner` and the starting roles | Database ready |
 | 2 | `getAuthState` with role and actions; `can`, `<Can>`, `requireAction`, `requireActionServer`; `Action` object | Permissions available in the app |
 | 3 | "Users" and "Roles" screens; invitations | Access management |
 | 4 | `check:consistency` for actions, error codes and `CHECK` lists | Safety net |

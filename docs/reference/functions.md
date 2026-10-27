@@ -1,6 +1,6 @@
 # Functions (SQL and server)
 
-> Index of every callable of Compasso: **SQL functions** (called through `supabase.rpc`), **server functions** (`createServerFn` in `*.functions.ts`) and **server routes**. For each: who may call it, what it writes (audit, notifications), which errors it raises. Implementation shape: base.md section 5.1 (server function) and 5.5 (SQL). Multi-step writes are SQL functions (transactions); server functions validate the input, check the action, call the RPC and validate the output. Names here are authoritative; add a row before writing the code (GOLD-4).
+> Index of every callable of Aura Creative: **SQL functions** (called through `supabase.rpc`), **server functions** (`createServerFn` in `*.functions.ts`) and **server routes**. For each: who may call it, what it writes (audit, notifications), which errors it raises. Implementation shape: base.md section 5.1 (server function) and 5.5 (SQL). Multi-step writes are SQL functions (transactions); server functions validate the input, check the action, call the RPC and validate the output. Names here are authoritative; add a row before writing the code (GOLD-4).
 >
 > Legend — **Act.**: required action(s) (plus brand link where the data belongs to a brand). **Audit**: `AuditAction` written by `audit_write` ([../modules/audit.md](../modules/audit.md)). **Notif.**: notification kind created. Errors link to [error-codes.md](error-codes.md).
 

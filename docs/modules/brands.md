@@ -25,7 +25,7 @@ Included: register, identity and guidelines, time zone, members and external acc
 | Status | Active or archived |
 | Created / updated / by | Audit stamps |
 
-Brand identity logos and guideline files come from the Media Library (`brand_identity` usages). Brand colors stored as data are **not** the Compasso palette tokens: they exist to inform the team and to render previews.
+Brand identity logos and guideline files come from the Media Library (`brand_identity` usages). Brand colors stored as data are **not** the Aura Creative palette tokens: they exist to inform the team and to render previews.
 
 ## Members and access
 

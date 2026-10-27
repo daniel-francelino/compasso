@@ -1,6 +1,6 @@
 # Back office — Layout and interface standards
 
-> Layout of `/admin` (sidebar, header, pages), the reusable component kit and the patterns for lists, forms and dialogs. It is the reference for building every module consistently. The component names (`PageHeader`, `DataTable`, ...) are those of the `shared/admin` kit that Compasso copies from the Memoria Print project in phase 0 (see `technical-architecture-v0.1.md`, section 17.1) and adapts. Companion documents: [base.md](base.md) (cross-cutting rules), [design-system.md](design-system.md) (tokens and components), [color-palette.md](color-palette.md). UI texts shown in examples are Brazilian Portuguese because they are UI copy.
+> Layout of `/admin` (sidebar, header, pages), the reusable component kit and the patterns for lists, forms and dialogs. It is the reference for building every module consistently. The component names (`PageHeader`, `DataTable`, ...) are those of the `shared/admin` kit that Aura Creative copies from the Memoria Print project in phase 0 (see `technical-architecture-v0.1.md`, section 17.1) and adapts. Companion documents: [base.md](base.md) (cross-cutting rules), [design-system.md](design-system.md) (tokens and components), [color-palette.md](color-palette.md). UI texts shown in examples are Brazilian Portuguese because they are UI copy.
 
 ## 1. Layout
 
@@ -89,7 +89,7 @@ In `src/components/shared/admin/` (generic, no business rules). Before creating 
 | `Can` | Shows content only to those who have the action |
 | `NotificationBell` / `NotificationRow` | Bell and notification row |
 
-Compasso-specific components built on top of the kit live in `shared`: `ChannelIcon`, `DateTimeField` (with time zone), `MediaPicker`, `RichTextEditor`, `ChannelPreview`, `CalendarView`, `ApprovalTimeline`.
+Aura Creative-specific components built on top of the kit live in `shared`: `ChannelIcon`, `DateTimeField` (with time zone), `MediaPicker`, `RichTextEditor`, `ChannelPreview`, `CalendarView`, `ApprovalTimeline`.
 
 Hooks and utilities:
 

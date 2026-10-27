@@ -1,4 +1,4 @@
-# Compasso — instructions for Claude Code
+# Aura Creative — instructions for Claude Code
 
 These instructions apply to every session. The project rules are in the two files imported below; read them as binding, not as suggestions.
 

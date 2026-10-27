@@ -1,6 +1,6 @@
 # Error codes and messages
 
-> Every expected failure in Compasso has a **code** (English, `lowercase_with_underscores`), raised in SQL with `raise exception 'code'` and/or returned by server functions through `fail(...)`, plus a **pt-BR message** shown to the person. The messages live in `src/lib/shared/auth/errors.ts` (`catalog` map); `npm run check:consistency` verifies that every code raised in SQL has a message and that no message is orphaned. Messages explain what happened and what to do, without internal details (rule UI-4, UI-12). Adding a code means: add the row here → raise it in SQL/TS → add the message → map it to an `ErrorCode` category → document it in the module.
+> Every expected failure in Aura Creative has a **code** (English, `lowercase_with_underscores`), raised in SQL with `raise exception 'code'` and/or returned by server functions through `fail(...)`, plus a **pt-BR message** shown to the person. The messages live in `src/lib/shared/auth/errors.ts` (`catalog` map); `npm run check:consistency` verifies that every code raised in SQL has a message and that no message is orphaned. Messages explain what happened and what to do, without internal details (rule UI-4, UI-12). Adding a code means: add the row here → raise it in SQL/TS → add the message → map it to an `ErrorCode` category → document it in the module.
 
 ## 1. Categories (`ErrorCode` in `Result`)
 

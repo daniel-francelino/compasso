@@ -102,8 +102,8 @@ export function ChannelConnectionSheet({
             <div className="space-y-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-sm text-muted-foreground">
                 Este canal ainda não está conectado. Quem for conectar entra na conta do Instagram e
-                autoriza o Compasso uma única vez. A conta precisa ser profissional (comercial ou
-                criador de conteúdo).
+                autoriza o Aura Creative uma única vez. A conta precisa ser profissional (comercial
+                ou criador de conteúdo).
               </p>
               {canConnect ? (
                 <Button onClick={() => void connect()} loading={busy}>

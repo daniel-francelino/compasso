@@ -1,6 +1,6 @@
 # Module — Media Library
 
-> A cross-cutting module that centralizes the files of Compasso (images, videos and documents) and gives every page a reusable picker. It serves the Site and CMS space, Marketing Management (brands, content revisions) and, read-only and through signed URLs, the client portal. Storage is described in [r2-storage.md](r2-storage.md). The patterns (asset/version/usage, immutable versions, upload sessions, shared picker, quota) come from the Memoria Print media library; scopes, usages and permissions are Compasso's own. UI label: "Biblioteca de Mídia". Route: `/admin/library`. UI texts are Brazilian Portuguese; everything else is English.
+> A cross-cutting module that centralizes the files of Aura Creative (images, videos and documents) and gives every page a reusable picker. It serves the Site and CMS space, Marketing Management (brands, content revisions) and, read-only and through signed URLs, the client portal. Storage is described in [r2-storage.md](r2-storage.md). The patterns (asset/version/usage, immutable versions, upload sessions, shared picker, quota) come from the Memoria Print media library; scopes, usages and permissions are Aura Creative's own. UI label: "Biblioteca de Mídia". Route: `/admin/library`. UI texts are Brazilian Portuguese; everything else is English.
 
 ## 1. Goal and scope
 

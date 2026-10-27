@@ -1,6 +1,6 @@
-# Compasso design system
+# Aura Creative design system
 
-> Single reference for whoever designs or builds interface in Compasso: tokens, typography, component states, the component kit and layout patterns. It respects the brand palette in [color-palette.md](color-palette.md) (which defines every color, its contrast ratios and the `styles.css` tokens) and complements [admin-layout-and-standards.md](admin-layout-and-standards.md) (layout and patterns of the back office) and [base.md](base.md) (cross-cutting rules). The mechanics (tokens in `styles.css`, shadcn/ui kit, lint that forbids loose colors) come from the Memoria Print project; the brand, palette and components are Compasso's own. UI copy is Brazilian Portuguese; everything else is English.
+> Single reference for whoever designs or builds interface in Aura Creative: tokens, typography, component states, the component kit and layout patterns. It respects the brand palette in [color-palette.md](color-palette.md) (which defines every color, its contrast ratios and the `styles.css` tokens) and complements [admin-layout-and-standards.md](admin-layout-and-standards.md) (layout and patterns of the back office) and [base.md](base.md) (cross-cutting rules). The mechanics (tokens in `styles.css`, shadcn/ui kit, lint that forbids loose colors) come from the Memoria Print project; the brand, palette and components are Aura Creative's own. UI copy is Brazilian Portuguese; everything else is English.
 
 ## 1. Principles
 
@@ -226,7 +226,7 @@ Fixed order: **skeleton** (1st load) → **error** (with "Tentar novamente") →
 
 ## 12. Enforcement
 
-ESLint (`eslint.config.js`) forbids, in `.tsx` files: hex values, arbitrary hex in Tailwind classes, `white`/`black` and the default Tailwind palette; a raw card instead of `SectionCard`; a raw `<fieldset>` instead of `FieldGroup`; and `as unknown as`. The exemption list starts **empty** in Compasso and can only shrink. The public site cannot import content from the code (see the public site document).
+ESLint (`eslint.config.js`) forbids, in `.tsx` files: hex values, arbitrary hex in Tailwind classes, `white`/`black` and the default Tailwind palette; a raw card instead of `SectionCard`; a raw `<fieldset>` instead of `FieldGroup`; and `as unknown as`. The exemption list starts **empty** in Aura Creative and can only shrink. The public site cannot import content from the code (see the public site document).
 
 ## 13. Status
 

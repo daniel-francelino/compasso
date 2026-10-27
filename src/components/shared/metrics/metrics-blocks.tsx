@@ -266,7 +266,7 @@ function TopPostsBlock({ analysis, zone, rankBy, linkContent }: BlockContext) {
                   <span>Conteúdo: {post.item_title}</span>
                 )
               ) : (
-                <span>Publicado fora do Compasso</span>
+                <span>Publicado fora do Aura Creative</span>
               )}
               {post.permalink ? (
                 <a

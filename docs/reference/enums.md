@@ -1,6 +1,6 @@
 # Statuses, enums and keys
 
-> Every closed set of values in Compasso, with its TypeScript constant, its database column and the pt-BR UI label. Values are English `snake_case` in the database; TypeScript constants are `PascalCase` objects (`as const`) with a derived type (`ValueOf`); schemas use `z.nativeEnum(Constant)`; never write the string values in code (rule CODE-4). `check:consistency` compares each row marked ✔ with the `CHECK` list of the mapped column. Where to put the code: shared sets in `src/lib/shared/enums.ts`; sets owned by one domain in that module's `types.ts` (or `lib/shared/editorial` when marketing and portal both use them).
+> Every closed set of values in Aura Creative, with its TypeScript constant, its database column and the pt-BR UI label. Values are English `snake_case` in the database; TypeScript constants are `PascalCase` objects (`as const`) with a derived type (`ValueOf`); schemas use `z.nativeEnum(Constant)`; never write the string values in code (rule CODE-4). `check:consistency` compares each row marked ✔ with the `CHECK` list of the mapped column. Where to put the code: shared sets in `src/lib/shared/enums.ts`; sets owned by one domain in that module's `types.ts` (or `lib/shared/editorial` when marketing and portal both use them).
 
 ## 1. Account and access
 
@@ -109,7 +109,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 | Constant | Where | Content |
 |---|---|---|
 | `QueryKey` | `lib/shared/query-keys.ts` (+ per-module factories) | One namespace per module: `QueryKey.Clients.list(filters)`, `.detail(id)`, `QueryKey.Brands…`, `QueryKey.Content…`, `QueryKey.Approvals…`, `QueryKey.Calendar…`, `QueryKey.Media…`, `QueryKey.Notifications…`, `QueryKey.Site…`, `QueryKey.Portal…`, `QueryKey.Auth.state` |
-| `StoredKey` | `lib/shared/stored-keys.ts` | `CalendarView`, `CalendarRange`, `CalendarUndatedOpen`, `SidebarOpen`, `LastSpace`, `ListColumns`, `ApprovalDraftComment` (all prefixed `compasso:`) |
+| `StoredKey` | `lib/shared/stored-keys.ts` | `CalendarView`, `CalendarRange`, `CalendarUndatedOpen`, `SidebarOpen`, `LastSpace`, `ListColumns`, `ApprovalDraftComment` (all prefixed `aura:`) |
 | `Action` | `lib/shared/auth/actions.ts` | Generated shape: `Action.<Module>.<Verb>` for every row of the actions catalog |
 | `AuditAction` | `lib/shared/audit/actions.ts` | `AuditAction.<Domain>.<Verb>` for the audit catalog |
 

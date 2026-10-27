@@ -176,7 +176,7 @@ export function MetricsPage({
       <EmptyState
         icon={BarChart3}
         title="Conecte o Instagram para ver as métricas"
-        description="As métricas vêm da conta conectada ao canal. Depois de conectar, o Compasso guarda o histórico a partir daquele dia."
+        description="As métricas vêm da conta conectada ao canal. Depois de conectar, o Aura Creative guarda o histórico a partir daquele dia."
         action={
           <Button
             variant="outline"

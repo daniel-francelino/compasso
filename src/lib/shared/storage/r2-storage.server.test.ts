@@ -5,7 +5,7 @@ const storage = r2ServerStorage({
   endpoint: "https://account.r2.cloudflarestorage.com",
   accessKeyId: "test-access-key",
   secretAccessKey: "test-secret",
-  bucket: "compasso-private",
+  bucket: "aura-private",
 });
 
 describe("r2 presigning (offline)", () => {
@@ -13,7 +13,7 @@ describe("r2 presigning (offline)", () => {
     const target = await storage.createUploadTarget("0b1c-key");
     expect(target).not.toBeNull();
     const url = new URL(target?.url ?? "");
-    expect(url.pathname).toBe("/compasso-private/0b1c-key");
+    expect(url.pathname).toBe("/aura-private/0b1c-key");
     expect(url.searchParams.get("X-Amz-Signature")).toMatch(/^[0-9a-f]{64}$/);
     expect(url.searchParams.get("X-Amz-Expires")).toBe("600");
     expect(url.searchParams.get("X-Amz-SignedHeaders")).toBe("host");

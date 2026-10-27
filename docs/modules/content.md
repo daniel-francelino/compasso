@@ -118,7 +118,7 @@ Comments belong to a content (and optionally a version) with visibility `interna
 
 Decided 2026-10-24, modelled on the **Activity** section of a Jira work item. Reference notes (what is documented by Atlassian and what is general knowledge, so it can be checked later):
 
-| Jira behaviour | Source | Compasso |
+| Jira behaviour | Source | Aura Creative |
 |---|---|---|
 | Activity is near the bottom of the work item, below the fields | [Atlassian: types of activity on an issue](https://support.atlassian.com/jira-software-cloud/docs/what-are-the-different-types-of-activity-on-an-issue/) | Card "Atividade" below the editor steps, full width, only for a saved content |
 | Filters: **All**, **Comments**, **History**, **Work log** ("All" was added to the new issue view in 2021) | same page; [JRACLOUD-73217](https://jira.atlassian.com/browse/JRACLOUD-73217) | Two tabs, **Comentários** (default) and **Histórico**; no "All" or work log (no time tracking exists) |
