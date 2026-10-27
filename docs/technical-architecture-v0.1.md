@@ -104,7 +104,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 - Feature completion checklist: pagination/search/filters on the server, skeleton and states (loading, empty, no result, error, success), double-submit blocking, validation on client and server with focus on the first error, unsaved-changes warning, permissions in menu, route, server and RLS, confirmation of destructive actions, layout tested on phone, tablet and desktop.
 - Colors only through tokens in `styles.css`: no hex, no pure black/white, no default Tailwind palette (enforced by lint). Fonts through `<link>` in `__root.tsx`, never a remote `@import`.
 - A section card is always `SectionCard`; a group of fields is always `FieldGroup`.
-- Money in integer cents; dates formatted by `src/lib/shared/format.ts`.
+- Money in integer cents; dates handled by `src/lib/shared/dates.ts` and formatted by `src/lib/shared/format.ts`.
 - Menu configured in a single file (`nav-config.ts`), each item with the required `action`.
 
 ### 2.6 Process and documentation
@@ -188,7 +188,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Drag and drop | `@dnd-kit` | Content board by status |
 | Rich text | Tiptap (minimal extensions) | Store JSON, never HTML |
 | Charts | Recharts 3.10.1, MIT license, actively maintained (added 2026-10-26 for the metrics screen, [modules/metrics.md](modules/metrics.md)); the kit has no chart component and drawing the axes, tooltips and keyboard navigation by hand would repeat well-tested work; colors only from the `chart-*` tokens | Used only by `components/shared/metrics`, so only the metrics routes load it |
-| Dates | `date-fns` v4 | Instants in UTC; IANA time zone per brand; formatters in `format.ts` |
+| Dates | `date-fns` v4 and `@date-fns/tz` 1.5 (MIT, maintained; `@date-fns/tz` was already installed by the date picker and is now a direct dependency) | Instants in UTC; IANA time zone per brand; all date work in `lib/shared/dates.ts`, display in `format.ts`; the Date API is refused by ESLint elsewhere |
 | Virtualization | `@tanstack/react-virtual` | Large library grids |
 
 ### 4.2 Backend and data

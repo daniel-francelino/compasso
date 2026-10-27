@@ -67,6 +67,7 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
 import { cn } from "@/lib/shared/utils";
+import { toIso } from "@/lib/shared/dates";
 
 const DEFAULT_HOUR = "09:00";
 const FALLBACK_ZONE = "America/Sao_Paulo";
@@ -74,7 +75,7 @@ const FALLBACK_ZONE = "America/Sao_Paulo";
 const defaultPlanned = (day: string | undefined, zone: string): string | null => {
   if (day === undefined) return null;
   const resolved = resolveLocalTime(`${day}T${DEFAULT_HOUR}`, zone);
-  return resolved.ok ? resolved.instant.toISOString() : null;
+  return resolved.ok ? toIso(resolved.instant) : null;
 };
 
 export function ContentEditor({

@@ -30,11 +30,11 @@ import {
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { zodFieldErrors } from "@/lib/shared/forms";
+import { nowDate, plusDays, toIso } from "@/lib/shared/dates";
 
 export type ShareTarget = { kind: ShareKind; id: string; name: string };
 
 const NEVER = "never";
-const DAY_MS = 24 * 60 * 60 * 1000;
 const expiryOptions = [
   { value: NEVER, label: "Sem validade" },
   { value: "1", label: "1 dia" },
@@ -169,8 +169,7 @@ function ShareDialogBody({ target, onClose }: { target: ShareTarget; onClose: ()
       targetId: target.id,
       label,
       message: message === "" ? undefined : message,
-      expiresAt:
-        expiry === NEVER ? null : new Date(Date.now() + Number(expiry) * DAY_MS).toISOString(),
+      expiresAt: expiry === NEVER ? null : toIso(plusDays(nowDate(), Number(expiry))),
       maxDownloads: max,
       allowDownload,
       password: password === "" ? undefined : password,

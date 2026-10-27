@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { MetricKey } from "@/lib/shared/enums";
 import { GRAPH_BASE, type MetaResult, graphGet } from "@/lib/shared/social/graph.server";
+import { utcDayStartSeconds } from "@/lib/shared/dates";
 
 const SECONDS_PER_DAY = 86400;
 const CAPTION_EXCERPT_LENGTH = 200;
@@ -88,14 +89,12 @@ export type AudienceRow = {
   breakdown: Record<string, number | Record<string, number>>;
 };
 
-const dayStart = (day: string): number => Math.floor(Date.parse(`${day}T00:00:00Z`) / 1000);
-
 export const fetchAccountDay = async (
   token: string,
   accountId: string,
   day: string,
 ): Promise<MetaResult<DailyRow[]>> => {
-  const since = dayStart(day);
+  const since = utcDayStartSeconds(day);
   const result = await graphGet(
     `${GRAPH_BASE}/${accountId}/insights`,
     token,

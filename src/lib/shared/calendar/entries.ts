@@ -1,6 +1,6 @@
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
 import { CalendarEntryKind } from "@/lib/shared/enums";
-import { instantToLocalInput } from "@/lib/shared/format";
+import { instantToLocalInput } from "@/lib/shared/dates";
 
 const isDeadline = (entry: CalendarEntry): boolean =>
   entry.kind === CalendarEntryKind.ApprovalDeadline ||

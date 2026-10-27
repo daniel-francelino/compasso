@@ -8,17 +8,18 @@ import {
 import { notificationEmail } from "@/lib/shared/email/templates";
 import { logError } from "@/lib/shared/logger";
 import { adminClient } from "@/lib/shared/supabase/admin.server";
+import { nowDate, toIso } from "@/lib/shared/dates";
 
 export type OutboxResult = { sent: number; retried: number; failed: number; ok: boolean };
 
 export const processEmailOutbox = async (origin: string): Promise<OutboxResult> => {
   const client = adminClient();
-  const now = new Date();
+  const now = nowDate();
   const { data: rows, error } = await client
     .from("email_outbox")
     .select("id, to_email, payload, attempts")
     .eq("status", "queued")
-    .lte("next_attempt_at", now.toISOString())
+    .lte("next_attempt_at", toIso(now))
     .order("created_at")
     .limit(OUTBOX_BATCH);
   if (error) {
@@ -53,7 +54,7 @@ export const processEmailOutbox = async (origin: string): Promise<OutboxResult> 
         status,
         attempts,
         last_error: outcome.reason,
-        next_attempt_at: nextAttemptAt(attempts, now).toISOString(),
+        next_attempt_at: toIso(nextAttemptAt(attempts, now)),
       })
       .eq("id", row.id);
     if (status === "failed") result.failed += 1;

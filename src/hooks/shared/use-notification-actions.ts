@@ -7,15 +7,11 @@ import {
   snoozeNotification,
 } from "@/lib/shared/notifications/notifications.functions";
 import { QueryKey } from "@/lib/shared/query-keys";
+import { toIso, tomorrowAtHour } from "@/lib/shared/dates";
 
 const TOMORROW_HOUR = 9;
 
-const tomorrowMorning = (): string => {
-  const date = new Date();
-  date.setDate(date.getDate() + 1);
-  date.setHours(TOMORROW_HOUR, 0, 0, 0);
-  return date.toISOString();
-};
+const tomorrowMorning = (): string => toIso(tomorrowAtHour(TOMORROW_HOUR));
 
 export const useNotificationActions = () => {
   const router = useRouter();

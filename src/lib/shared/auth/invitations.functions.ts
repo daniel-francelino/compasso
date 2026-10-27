@@ -19,9 +19,9 @@ import { invitationEmail } from "@/lib/shared/email/templates";
 import { AppRoute } from "@/lib/shared/routes";
 import { type Result, denied, fail, parseOutput } from "@/lib/shared/server-utils";
 import { siteOrigin } from "@/lib/shared/site-url.server";
+import { nowDate, plusDays, toIso } from "@/lib/shared/dates";
 
 const INVITATION_DAYS = 7;
-const DAY_MS = 86_400_000;
 const FALLBACK_INVITER = "Alguém da equipe";
 
 const createdSchema = z.object({ id: z.string().uuid() });
@@ -35,7 +35,7 @@ const grantsToJson = (grants: { brandId: string; canDecide: boolean }[]) =>
 
 const inviteLink = (token: string): string => `${siteOrigin()}${AppRoute.Admin}/invite/${token}`;
 
-const expiresAt = (): string => new Date(Date.now() + INVITATION_DAYS * DAY_MS).toISOString();
+const expiresAt = (): string => toIso(plusDays(nowDate(), INVITATION_DAYS));
 
 type Delivery = { id: string; link: string; expiresAt: string; emailSent: boolean };
 

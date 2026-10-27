@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DeadlineUrgency, responseDeadline } from "@/lib/portal/approvals/deadline";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import { ApprovalRequestStatus, ApprovalStage } from "@/lib/shared/enums";
-import { addDaysToDate, todayInZone } from "@/lib/shared/format";
+import { addDaysToDate, todayInZone } from "@/lib/shared/dates";
 
 const ZONE = "America/Sao_Paulo";
 

@@ -3,7 +3,8 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { EntryChip } from "@/components/shared/calendar/entry-chip";
 import { Button } from "@/components/shared/ui/button";
 import type { GridItem } from "@/lib/shared/calendar/grid-item";
-import { addDaysToDate, formatWeekdayShort } from "@/lib/shared/format";
+import { formatWeekdayShort } from "@/lib/shared/format";
+import { addDaysToDate } from "@/lib/shared/dates";
 import { cn } from "@/lib/shared/utils";
 
 const MONTH_LIMIT = 3;

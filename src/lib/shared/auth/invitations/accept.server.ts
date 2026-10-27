@@ -4,6 +4,7 @@ import { logError } from "@/lib/shared/logger";
 import { type Result, fail, parseOutput } from "@/lib/shared/server-utils";
 import { adminClient } from "@/lib/shared/supabase/admin.server";
 import { serverClient } from "@/lib/shared/supabase/server-client.server";
+import { hasPassed } from "@/lib/shared/dates";
 
 const acceptedSchema = z.object({ profile_id: z.string().uuid(), kind: z.string() });
 
@@ -16,7 +17,7 @@ export const findPendingInvitation = async (token: string): Promise<InvitationPr
     .eq("token_hash", hashInvitationToken(token))
     .eq("status", "pending")
     .maybeSingle();
-  if (data === null || new Date(data.expires_at).getTime() <= Date.now()) return null;
+  if (data === null || hasPassed(data.expires_at)) return null;
   return { email: data.email, roleName: data.roles?.name ?? "" };
 };
 

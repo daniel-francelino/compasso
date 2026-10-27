@@ -1,6 +1,6 @@
 begin;
 
-select plan(23);
+select plan(27);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -31,16 +31,18 @@ select set_config('t.other', public.channel_save(format('{"brand_id":"%s","platf
 select set_config('t.blog', public.channel_save(format('{"brand_id":"%s","platform":"blog","profile_name":"blog aurora"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000c1', 'internal', false, 'active');
 
+reset role;
 select is(
-  public.channel_connection_connect(
-    current_setting('t.channel')::uuid,
+  public.channel_connection_store(
+    current_setting('t.channel')::uuid, '00000000-0000-0000-0000-0000000000b1'::uuid,
     '{"external_account_id":"17841400000","username":"aurora.cafe","account_type":"BUSINESS","followers_count":1200}'::jsonb,
     'ciphertext-ciphertext-ciphertext-1', now() + interval '60 days',
     array['instagram_business_basic', 'instagram_business_content_publish']
   ) ->> 'status',
   'active',
-  'a manager with channels.connect connects the channel'
+  'the server stores the connection on behalf of a manager with channels.connect'
 );
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select is(
   (public.channel_connection_list(current_setting('t.brand')::uuid) -> 0 ->> 'username'),
   'aurora.cafe',
@@ -51,20 +53,42 @@ select ok(
   'the listing never carries the token'
 );
 select throws_ok(
-  format($$select public.channel_connection_connect('%s'::uuid, '{"external_account_id":"17841400000","username":"x"}'::jsonb, 'ciphertext-ciphertext-ciphertext-2', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  format($$select public.channel_connection_connect('%s'::uuid, '{"external_account_id":"1","username":"x"}'::jsonb, 'ciphertext-ciphertext-ciphertext-9', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  '42883',
+  'the user-callable connect function no longer exists'
+);
+select throws_ok(
+  format($$select public.channel_connection_store('%s'::uuid, '00000000-0000-0000-0000-0000000000b1'::uuid, '{"external_account_id":"1","username":"x"}'::jsonb, 'ciphertext-ciphertext-ciphertext-9', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  '42501',
+  'a signed-in user cannot call the store function with an account id of their choice'
+);
+reset role;
+select throws_ok(
+  format($$select public.channel_connection_store('%s'::uuid, '00000000-0000-0000-0000-0000000000b1'::uuid, '{"external_account_id":"17841400000","username":"x"}'::jsonb, 'ciphertext-ciphertext-ciphertext-2', now() + interval '1 day', '{}')$$, current_setting('t.other')),
   'channel_account_in_use',
   'the same Instagram account cannot be connected to two channels'
 );
 select throws_ok(
-  format($$select public.channel_connection_connect('%s'::uuid, '{"external_account_id":"1","username":"blog"}'::jsonb, 'ciphertext-ciphertext-ciphertext-3', now() + interval '1 day', '{}')$$, current_setting('t.blog')),
+  format($$select public.channel_connection_store('%s'::uuid, '00000000-0000-0000-0000-0000000000b1'::uuid, '{"external_account_id":"1","username":"blog"}'::jsonb, 'ciphertext-ciphertext-ciphertext-3', now() + interval '1 day', '{}')$$, current_setting('t.blog')),
   'invalid_input',
   'only an Instagram channel can be connected'
 );
 select throws_ok(
-  format($$select public.channel_connection_connect('%s'::uuid, '{"external_account_id":"2","username":"y"}'::jsonb, 'short', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  format($$select public.channel_connection_store('%s'::uuid, '00000000-0000-0000-0000-0000000000b1'::uuid, '{"external_account_id":"2","username":"y"}'::jsonb, 'short', now() + interval '1 day', '{}')$$, current_setting('t.other')),
   '23514',
   'a token that is too short is refused by the table'
 );
+select throws_ok(
+  format($$select public.channel_connection_store('%s'::uuid, null, '{"external_account_id":"2","username":"y"}'::jsonb, 'ciphertext-ciphertext-ciphertext-3', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  'invalid_input',
+  'a store call without an actor is refused'
+);
+select throws_ok(
+  format($$select public.channel_connection_store('%s'::uuid, '00000000-0000-0000-0000-0000000000b2'::uuid, '{"external_account_id":"2","username":"y"}'::jsonb, 'ciphertext-ciphertext-ciphertext-3', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  'not_found',
+  'an actor not linked to the brand cannot have a connection stored for it'
+);
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select is(
   public.channel_connection_settings(current_setting('t.channel')::uuid, true, false, 1) ->> 'collect_metrics',
   'false',
@@ -87,12 +111,12 @@ select throws_ok(
 );
 reset role;
 
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
 select throws_ok(
-  format($$select public.channel_connection_connect('%s'::uuid, '{"external_account_id":"3","username":"z"}'::jsonb, 'ciphertext-ciphertext-ciphertext-4', now() + interval '1 day', '{}')$$, current_setting('t.other')),
+  format($$select public.channel_connection_store('%s'::uuid, '00000000-0000-0000-0000-0000000000c1'::uuid, '{"external_account_id":"3","username":"z"}'::jsonb, 'ciphertext-ciphertext-ciphertext-4', now() + interval '1 day', '{}')$$, current_setting('t.other')),
   'denied',
-  'a role without channels.connect is refused'
+  'an actor without channels.connect is refused'
 );
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
 select throws_ok(
   format($$select public.channel_connection_disconnect('%s'::uuid)$$, current_setting('t.channel')),
   'denied',

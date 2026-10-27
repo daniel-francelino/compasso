@@ -1,5 +1,3 @@
-import { format } from "date-fns";
-import { pt } from "date-fns/locale/pt";
 import { CalendarDays, Clock3, X } from "lucide-react";
 import { useState } from "react";
 import { hintTip } from "@/components/shared/admin/field-tip";
@@ -12,8 +10,15 @@ import { Label } from "@/components/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/shared/ui/radio-group";
 import { LocalTimeProblem, resolveLocalTime } from "@/lib/shared/calendar/reschedule";
-import { formatInZone, instantToLocalInput } from "@/lib/shared/format";
-import { parseDateValue, toDateValue } from "@/lib/shared/date-value";
+import { DATE_LOCALE, formatInZone, formatLongDate, formatMediumDate } from "@/lib/shared/format";
+import {
+  instantToLocalInput,
+  nowDate,
+  parseDateValue,
+  toDateValue,
+  toIso,
+  toMs,
+} from "@/lib/shared/dates";
 
 const NONEXISTENT_TIME = "Este horário não existe nesse dia (mudança de horário de verão).";
 const AMBIGUOUS_TIME = "Este horário acontece duas vezes nesse dia. Escolha qual.";
@@ -92,7 +97,7 @@ export function DateTimeField({
     }
     const resolved = resolveLocalTime(next, timeZone);
     if (resolved.ok) {
-      onValueChange(resolved.instant.toISOString());
+      onValueChange(toIso(resolved.instant));
       return;
     }
     if (resolved.problem === LocalTimeProblem.Ambiguous) setOccurrences(resolved.options);
@@ -121,9 +126,7 @@ export function DateTimeField({
                 variant="outline"
                 disabled={disabled}
                 aria-label={
-                  selectedDate
-                    ? `Data: ${format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: pt })}`
-                    : "Selecionar data"
+                  selectedDate ? `Data: ${formatLongDate(selectedDate)}` : "Selecionar data"
                 }
                 aria-invalid={message ? true : undefined}
                 aria-haspopup="dialog"
@@ -134,18 +137,16 @@ export function DateTimeField({
               >
                 <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
                 <span className="truncate">
-                  {selectedDate
-                    ? format(selectedDate, "d 'de' MMM 'de' yyyy", { locale: pt })
-                    : "Selecionar data"}
+                  {selectedDate ? formatMediumDate(selectedDate) : "Selecionar data"}
                 </span>
               </Button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-auto rounded-xl p-2">
               <Calendar
                 mode="single"
-                locale={pt}
+                locale={DATE_LOCALE}
                 selected={selectedDate ?? undefined}
-                defaultMonth={selectedDate ?? new Date()}
+                defaultMonth={selectedDate ?? nowDate()}
                 onSelect={(date) => {
                   if (!date) return;
                   change(toDateValue(date), timeText);
@@ -208,9 +209,9 @@ export function DateTimeField({
           }}
         >
           {occurrences.map((option) => (
-            <div key={option.toISOString()} className="flex items-center gap-2">
-              <RadioGroupItem id={`${id}-${option.getTime()}`} value={option.toISOString()} />
-              <Label htmlFor={`${id}-${option.getTime()}`} className="font-normal">
+            <div key={toIso(option)} className="flex items-center gap-2">
+              <RadioGroupItem id={`${id}-${toMs(option)}`} value={toIso(option)} />
+              <Label htmlFor={`${id}-${toMs(option)}`} className="font-normal">
                 {formatInZone(option, timeZone, { includeZone: true })}
               </Label>
             </div>

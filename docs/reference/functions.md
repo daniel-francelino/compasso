@@ -238,7 +238,7 @@ Specified in [../modules/instagram-publishing.md](../modules/instagram-publishin
 | SQL function | Server function | Act. | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
 | `channel_connection_list(p_brand)` | `listChannelConnections` | `channels.view` + brand link | — (never returns the token) | — | `not_found` |
-| `channel_connection_connect(p_channel, p_account jsonb, p_token_encrypted, p_expires_at, p_scopes)` | `startInstagramConnection` (signed state, authorize URL), `completeInstagramConnection` (code exchange, long-lived token, encryption) | `channels.connect` | `channel.connected` | — | `channel_archived`, `channel_account_in_use`, `invalid_input`, `not_found` |
+| `channel_connection_store(p_channel, p_actor, p_account jsonb, p_token_encrypted, p_expires_at, p_scopes)` | `completeInstagramConnection` (code exchange, long-lived token, encryption), through `storeConnection` in `lib/shared/jobs/connection-store.server.ts`. **Service only** (no grant to `authenticated`): the account id comes from Meta, never from the client, and the function re-checks `channels.connect` and the brand link for `p_actor` | service | `channel.connected` | — | `channel_archived`, `channel_account_in_use`, `invalid_input`, `not_found`, `denied` |
 | `channel_connection_settings(p_channel, p_auto_publish_default, p_collect_metrics, p_expected_version)` | `saveConnectionSettings` | `channels.connect` | `channel.updated` | — | `conflict`, `not_found` |
 | `channel_connection_disconnect(p_channel)` | `disconnectChannel` | `channels.connect` | `channel.disconnected` | — | `publish_in_progress`, `not_found` |
 | `channel_connection_secret(p_channel)`, `channel_connections_to_renew(p_within_days)` | read by the jobs | service | — | — | — |

@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { nowMs } from "@/lib/shared/dates";
 
 const STATE_TTL_MS = 10 * 60 * 1000;
 const SEPARATOR = ".";
@@ -8,7 +9,7 @@ export type OAuthState = { channelId: string; userId: string };
 const signature = (payload: string, secret: string): string =>
   createHmac("sha256", secret).update(payload).digest("base64url");
 
-export const signState = (state: OAuthState, secret: string, now: number = Date.now()): string => {
+export const signState = (state: OAuthState, secret: string, now: number = nowMs()): string => {
   const payload = [state.channelId, state.userId, String(now + STATE_TTL_MS)].join(SEPARATOR);
   return `${Buffer.from(payload).toString("base64url")}${SEPARATOR}${signature(payload, secret)}`;
 };
@@ -16,7 +17,7 @@ export const signState = (state: OAuthState, secret: string, now: number = Date.
 export const verifyState = (
   value: string,
   secret: string,
-  now: number = Date.now(),
+  now: number = nowMs(),
 ): OAuthState | null => {
   const [encoded, received] = value.split(SEPARATOR);
   if (encoded === undefined || received === undefined) return null;

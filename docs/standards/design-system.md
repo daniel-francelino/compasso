@@ -22,7 +22,7 @@
 | Components used by marketing and portal (calendar, status, preview) | `src/components/shared/{calendar,editorial,preview}/` |
 | Components per space | `src/components/{marketing,cms,site,portal}/` (a space does not import from another) |
 | `cn()` utility (joins classes) | `src/lib/shared/utils.ts` |
-| Date, time zone and number formatting | `src/lib/shared/format.ts` |
+| Date, time zone and number formatting | `src/lib/shared/format.ts` (display) and `src/lib/shared/dates.ts` (values and zones) |
 | Fonts | `<link>` in `src/routes/__root.tsx` (**never** a remote `@import` in the CSS) |
 | Logo | `src/assets/shared/` (fixed asset; do not recolor or distort) |
 | Browser favicon | `public/favicon.ico` (static asset linked by `src/routes/__root.tsx`) |

@@ -25,6 +25,7 @@ import {
   reportSnapshotSchema,
 } from "@/lib/shared/metrics/report";
 import { type Result, denied, fail, invalid, parseOutput } from "@/lib/shared/server-utils";
+import { nowIso } from "@/lib/shared/dates";
 
 const accountsSchema = z.array(
   z.object({
@@ -280,7 +281,7 @@ export const publishMetricReport = createServerFn({ method: "POST" })
     });
     const snapshot: ReportSnapshot = {
       version: 1,
-      generatedAt: new Date().toISOString(),
+      generatedAt: nowIso(),
       account: { username, followers },
       periodLabel: label,
       compare: report.data.compare_mode,

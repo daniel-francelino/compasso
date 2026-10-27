@@ -1,4 +1,4 @@
-import { instantToLocalInput, localInputOccurrences } from "@/lib/shared/format";
+import { instantToLocalInput, localInputOccurrences } from "@/lib/shared/dates";
 
 export const LocalTimeProblem = {
   Nonexistent: "nonexistent",

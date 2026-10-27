@@ -29,6 +29,7 @@
     "*.{ts,tsx,js,mjs,cjs,json,css}": "prettier --write"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.5.0",
     "@dnd-kit/react": "^0.5.1",
     "@hookform/resolvers": "^5.9.2",
     "@radix-ui/react-alert-dialog": "^1.2.1",

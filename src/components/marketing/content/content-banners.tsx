@@ -2,12 +2,13 @@ import { Ban, TriangleAlert } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import { EditorialStatus } from "@/lib/shared/enums";
+import { isInPast } from "@/lib/shared/dates";
 
 export function ContentBanners({ content }: { content: ContentDetail }) {
   const overdue = content.channels.some(
     (channel) =>
       channel.plannedAt !== null &&
-      new Date(channel.plannedAt).getTime() < Date.now() &&
+      isInPast(channel.plannedAt) &&
       channel.published === null &&
       (content.editorialStatus === EditorialStatus.Approved ||
         content.editorialStatus === EditorialStatus.AwaitingApproval),

@@ -18,6 +18,7 @@ import { resolveLocalTime } from "@/lib/shared/calendar/reschedule";
 import { EditorialStatus } from "@/lib/shared/enums";
 import { formatDateOnly, formatInZone } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
+import { isInPast, toIso } from "@/lib/shared/dates";
 
 export type RescheduleTarget =
   | {
@@ -48,7 +49,7 @@ const initialInstant = (target: RescheduleTarget): string | null => {
   if (target.kind !== "publication") return null;
   if (target.initialLocal === undefined) return target.currentAt;
   const resolved = resolveLocalTime(target.initialLocal, target.brandTimezone);
-  return resolved.ok ? resolved.instant.toISOString() : null;
+  return resolved.ok ? toIso(resolved.instant) : null;
 };
 
 export function RescheduleDialog({
@@ -70,7 +71,7 @@ export function RescheduleDialog({
   const deadline = target.kind === "deadline" ? target : null;
   const resubmits =
     publication !== null && NEEDS_NEW_APPROVAL.includes(publication.editorialStatus);
-  const inPast = plannedAt !== null && new Date(plannedAt).getTime() < Date.now();
+  const inPast = plannedAt !== null && isInPast(plannedAt);
 
   return (
     <FormDialog

@@ -61,7 +61,6 @@ import {
   EditorialStatus,
   PublicationStatus,
 } from "@/lib/shared/enums";
-import { instantToLocalInput, todayInZone } from "@/lib/shared/format";
 import {
   editorialStatusLabels,
   platformLabels,
@@ -71,6 +70,13 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
 import { cn } from "@/lib/shared/utils";
+import {
+  browserTimeZone,
+  instantToLocalInput,
+  nowDate,
+  todayInZone,
+  toIso,
+} from "@/lib/shared/dates";
 
 const ALL = "all";
 const DEFAULT_PLAN_TIME = "T09:00";
@@ -160,7 +166,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   }, []);
 
   useEffect(() => {
-    if (brandId === undefined) setBrowserZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (brandId === undefined) setBrowserZone(browserTimeZone());
   }, [brandId]);
 
   function toggleUndated() {
@@ -191,8 +197,8 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const avatars = useAvatarUrls((owners.data ?? []).map((person) => person.id));
 
   const request = {
-    from: state.from.toISOString(),
-    to: state.to.toISOString(),
+    from: toIso(state.from),
+    to: toIso(state.to),
     ...(brandId ? { brandId } : {}),
     ...(state.search.channel ? { channelId: state.search.channel } : {}),
     ...(state.search.owner ? { ownerId: state.search.owner } : {}),
@@ -214,7 +220,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     [query.data, state.search.deadlines],
   );
   const alerts = useMemo(
-    () => calendarAlerts(entries, activeZone, new Date()),
+    () => calendarAlerts(entries, activeZone, nowDate()),
     [entries, activeZone],
   );
   const movableEntry = (entry: CalendarEntry) =>

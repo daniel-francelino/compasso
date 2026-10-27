@@ -132,7 +132,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 
 | Code | Category | Message (pt-BR) | Raised by |
 |---|---|---|---|
-| `channel_account_in_use` | invalid | "Esta conta do Instagram já está conectada a outro canal." | channel_connection_connect |
+| `channel_account_in_use` | invalid | "Esta conta do Instagram já está conectada a outro canal." | channel_connection_store |
 | `connection_missing` | invalid | "Conecte o canal ao Instagram antes de publicar automaticamente." | channel_row_set_publish_mode, channel_row_publish_now, publish_work (stored) |
 | `connection_expired` | denied | "A conexão com o Instagram expirou. Reconecte o canal." | publish_work, collectors (stored) |
 | `format_not_supported` | invalid | "Este formato ainda não pode ser publicado automaticamente." | channel_row_set_publish_mode, publishing job (stored) |

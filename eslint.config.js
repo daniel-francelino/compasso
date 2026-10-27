@@ -53,6 +53,23 @@ const rawFieldset = {
   message: "Use FieldGroup (components/shared/admin/field-group) instead of a raw <fieldset>.",
 };
 
+const dateMessage =
+  "Use lib/shared/dates (and format for display) instead of the Date API, so dates are handled in one place.";
+
+const rawDate = [
+  { selector: "NewExpression[callee.name='Date']", message: dateMessage },
+  { selector: "MemberExpression[object.name='Date']", message: dateMessage },
+  {
+    selector:
+      "CallExpression[callee.property.name=/^(toISOString|getTime|toLocaleString|toLocaleDateString|toLocaleTimeString|getTimezoneOffset|setDate|setHours|setMinutes|setMonth|setFullYear|getFullYear|getMonth|getDate|getDay|getHours|getMinutes|getUTCDay|getUTCDate|getUTCHours|getUTCFullYear|getUTCMonth|setUTCDate|setUTCHours)$/]",
+    message: dateMessage,
+  },
+  {
+    selector: "MemberExpression[object.name='Intl'][property.name='DateTimeFormat']",
+    message: dateMessage,
+  },
+];
+
 const KINDS = ["components", "lib", "hooks"];
 
 const noSiteContentInCode = {
@@ -171,20 +188,33 @@ export default tseslint.config(
     files: ["src/**/*.tsx"],
     ignores: [...colourExempt, ...cardDefinition],
     rules: {
-      "no-restricted-syntax": ["error", ...colourSelectors, rawFieldset, asUnknownAs, ...rawCard],
+      "no-restricted-syntax": [
+        "error",
+        ...colourSelectors,
+        rawFieldset,
+        asUnknownAs,
+        ...rawCard,
+        ...rawDate,
+      ],
     },
   },
   {
     files: cardDefinition,
-    rules: { "no-restricted-syntax": ["error", ...colourSelectors, rawFieldset, asUnknownAs] },
+    rules: {
+      "no-restricted-syntax": ["error", ...colourSelectors, rawFieldset, asUnknownAs, ...rawDate],
+    },
   },
   {
     files: colourExempt,
-    rules: { "no-restricted-syntax": ["error", asUnknownAs] },
+    rules: { "no-restricted-syntax": ["error", asUnknownAs, ...rawDate] },
   },
   {
     files: ["src/**/*.ts"],
     ignores: ["src/routeTree.gen.ts"],
+    rules: { "no-restricted-syntax": ["error", asUnknownAs, ...rawDate] },
+  },
+  {
+    files: ["src/lib/shared/dates.ts", "src/**/*.test.{ts,tsx}"],
     rules: { "no-restricted-syntax": ["error", asUnknownAs] },
   },
   {

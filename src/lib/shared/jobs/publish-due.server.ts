@@ -20,6 +20,7 @@ import { PublishErrorCode } from "@/lib/shared/social/publish-codes";
 import { serverStorage } from "@/lib/shared/storage/server-storage.server";
 import type { ServerStorage } from "@/lib/shared/storage/types";
 import { adminClient } from "@/lib/shared/supabase/admin.server";
+import { isOlderThan, nowMs } from "@/lib/shared/dates";
 
 const CLAIM_LIMIT = 3;
 const LATE_HOURS = 6;
@@ -113,8 +114,7 @@ const release = async (context: Context, item: WorkItem, code: PublishErrorCode)
   return Outcome.Waiting;
 };
 
-const isStuck = (item: WorkItem): boolean =>
-  Date.now() - Date.parse(item.attempt.created_at) > STUCK_MS;
+const isStuck = (item: WorkItem): boolean => isOlderThan(item.attempt.created_at, STUCK_MS);
 
 const handleFailure = async (
   context: Context,
@@ -247,9 +247,9 @@ export const runPublishDue = async (): Promise<PublishDueResult> => {
   }
 
   const context: Context = { admin, config, storage };
-  const startedAt = Date.now();
+  const startedAt = nowMs();
   for (const item of [...work.data.inflight, ...work.data.claimed]) {
-    if (Date.now() - startedAt > BUDGET_MS) break;
+    if (nowMs() - startedAt > BUDGET_MS) break;
     const outcome = await advance(context, item);
     if (outcome === Outcome.Started) result.started += 1;
     if (outcome === Outcome.Published) result.published += 1;

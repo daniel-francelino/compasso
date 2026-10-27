@@ -16,6 +16,7 @@ import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { instagramConfig } from "@/lib/shared/env.server";
 import { AppRoute } from "@/lib/shared/routes";
 import { type Result, denied, fail, invalid, parseOutput } from "@/lib/shared/server-utils";
+import { storeConnection } from "@/lib/shared/jobs/connection-store.server";
 import { probeConnection } from "@/lib/shared/jobs/connection-test.server";
 import { siteOrigin } from "@/lib/shared/site-url.server";
 import {
@@ -76,24 +77,18 @@ export const completeInstagramConnection = createServerFn({ method: "POST" })
     const sealed = encryptToken(exchanged.data.token, config.tokenKey);
     if (sealed === null) return invalid(NOT_CONFIGURED);
 
-    const { data: row, error } = await caller.supabase.rpc("channel_connection_connect", {
-      p_channel: state.channelId,
-      p_account: {
-        external_account_id: profile.data.accountId,
-        username: profile.data.username,
-        display_name: profile.data.displayName,
-        account_type: profile.data.accountType,
-        followers_count: profile.data.followersCount,
-      },
-      p_token_encrypted: sealed,
-      p_expires_at: exchanged.data.expiresAt.toISOString(),
-      p_scopes: exchanged.data.scopes,
+    return storeConnection({
+      channelId: state.channelId,
+      actorId: caller.userId,
+      accountId: profile.data.accountId,
+      username: profile.data.username,
+      displayName: profile.data.displayName,
+      accountType: profile.data.accountType,
+      followersCount: profile.data.followersCount,
+      tokenEncrypted: sealed,
+      expiresAt: exchanged.data.expiresAt,
+      scopes: exchanged.data.scopes,
     });
-    if (error) return fail(error);
-    const parsed = parseOutput(connectionRowSchema, row);
-    return parsed.ok
-      ? { ok: true, channelId: parsed.channel_id, brandId: parsed.brand_id }
-      : parsed;
   });
 
 export const saveConnectionSettings = createServerFn({ method: "POST" })

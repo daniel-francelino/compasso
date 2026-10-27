@@ -4,6 +4,7 @@ import { requireApprovedServer } from "@/lib/shared/auth/server-guards.server";
 import type { NotificationSeverity } from "@/lib/shared/enums";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { type Page, type Result, denied, fail, pageOf, rangeOf } from "@/lib/shared/server-utils";
+import { nowIso } from "@/lib/shared/dates";
 
 export const NotificationFilter = {
   All: "all",
@@ -79,7 +80,7 @@ export const listNotifications = createServerFn({ method: "GET" })
     const caller = await requireApprovedServer();
     if (caller === null) return denied;
 
-    const now = new Date().toISOString();
+    const now = nowIso();
     const [from, to] = rangeOf(data.page, PAGE_SIZE);
     let query = caller.supabase
       .from("notifications")
@@ -105,7 +106,7 @@ export const countUnread = createServerFn({ method: "GET" }).handler(
   async (): Promise<Result<{ count: number }>> => {
     const caller = await requireApprovedServer();
     if (caller === null) return denied;
-    const now = new Date().toISOString();
+    const now = nowIso();
     const { count, error } = await caller.supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
@@ -124,7 +125,7 @@ export const markRead = createServerFn({ method: "POST" })
     if (caller === null) return denied;
     const { error } = await caller.supabase
       .from("notifications")
-      .update({ read_at: new Date().toISOString() })
+      .update({ read_at: nowIso() })
       .in("id", data.ids);
     if (error) return fail(error);
     return { ok: true };
@@ -135,7 +136,7 @@ export const markAllRead = createServerFn({ method: "POST" }).handler(async (): 
   if (caller === null) return denied;
   const { error } = await caller.supabase
     .from("notifications")
-    .update({ read_at: new Date().toISOString() })
+    .update({ read_at: nowIso() })
     .is("read_at", null);
   if (error) return fail(error);
   return { ok: true };

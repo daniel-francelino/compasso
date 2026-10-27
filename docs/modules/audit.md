@@ -63,7 +63,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `channel.archived` | `channel` | `channel_set_archived` |
 | `channel.reactivated` | `channel` | `channel_set_archived` |
 | `channel.deleted` | `channel` | `channel_delete` |
-| `channel.connected` | `channel` | `channel_connection_connect` |
+| `channel.connected` | `channel` | `channel_connection_store` |
 | `channel.disconnected` | `channel` | `channel_connection_disconnect` |
 | `channel.connection_lost` | `channel` | `channel_connection_failed` (system) |
 | `content.created` | `content_item` | `content_item_save` |

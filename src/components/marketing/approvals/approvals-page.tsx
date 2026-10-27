@@ -19,6 +19,7 @@ import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { daysSince } from "@/lib/shared/dates";
 
 const ALL = "all";
 
@@ -29,9 +30,6 @@ const tabs = [
   { value: ApprovalFilter.ChangesRequested, label: "Alterações solicitadas", icon: Undo2 },
   { value: ApprovalFilter.Superseded, label: "Substituídas", icon: Layers },
 ];
-
-const ageInDays = (requestedAt: string): number =>
-  Math.max(0, Math.floor((Date.now() - new Date(requestedAt).getTime()) / 86_400_000));
 
 export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const list = useListState<string>(ApprovalFilter.Pending);
@@ -95,7 +93,7 @@ export function ApprovalsPage({ fixedBrandId }: { fixedBrandId?: string }) {
         </span>
       ),
     },
-    { id: "age", label: "Há", cell: (row) => `${ageInDays(row.requestedAt)} dia(s)` },
+    { id: "age", label: "Há", cell: (row) => `${daysSince(row.requestedAt)} dia(s)` },
     { id: "status", label: "Situação", cell: (row) => <RequestStatusBadge status={row.status} /> },
   ];
 

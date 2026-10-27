@@ -20,6 +20,7 @@ import type { PortalRequest } from "@/lib/portal/approvals/types";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
+import { isInFuture } from "@/lib/shared/dates";
 
 const RECENT = 5;
 
@@ -120,7 +121,7 @@ export function PortalBrandPage({ brandId }: { brandId: string }) {
   const upcoming = (approved.data ?? [])
     .filter((request) => {
       const planned = nextPlanned(request);
-      return planned !== null && new Date(planned.at).getTime() > Date.now();
+      return planned !== null && isInFuture(planned.at);
     })
     .slice(0, RECENT);
   const recent = [...(approved.data ?? []), ...(decided.data ?? [])]

@@ -1,5 +1,5 @@
 import { formatDateOnly, formatMonthYear } from "@/lib/shared/format";
-import { addDays, endOfMonth, startOfMonth } from "@/lib/shared/metrics/days";
+import { addDaysToDate, endOfMonthDate, startOfMonthDate } from "@/lib/shared/dates";
 
 export const PeriodPreset = {
   Last7: "last7",
@@ -25,18 +25,18 @@ export type DateRange = { from: string; to: string };
 const LAST_DAYS = { [PeriodPreset.Last7]: 7, [PeriodPreset.Last30]: 30, [PeriodPreset.Last90]: 90 };
 
 export const presetRange = (preset: PeriodPreset, today: string): DateRange | null => {
-  const yesterday = addDays(today, -1);
-  if (preset === PeriodPreset.ThisMonth) return { from: startOfMonth(today), to: today };
+  const yesterday = addDaysToDate(today, -1);
+  if (preset === PeriodPreset.ThisMonth) return { from: startOfMonthDate(today), to: today };
   if (preset === PeriodPreset.LastMonth) {
-    const lastDay = addDays(startOfMonth(today), -1);
-    return { from: startOfMonth(lastDay), to: lastDay };
+    const lastDay = addDaysToDate(startOfMonthDate(today), -1);
+    return { from: startOfMonthDate(lastDay), to: lastDay };
   }
   if (preset === PeriodPreset.Custom) return null;
-  return { from: addDays(yesterday, 1 - LAST_DAYS[preset]), to: yesterday };
+  return { from: addDaysToDate(yesterday, 1 - LAST_DAYS[preset]), to: yesterday };
 };
 
 export const isFullMonth = (range: DateRange): boolean =>
-  range.from === startOfMonth(range.from) && range.to === endOfMonth(range.from);
+  range.from === startOfMonthDate(range.from) && range.to === endOfMonthDate(range.from);
 
 export const periodLabel = (range: DateRange): string =>
   isFullMonth(range)

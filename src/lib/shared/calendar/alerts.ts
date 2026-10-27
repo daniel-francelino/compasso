@@ -1,11 +1,10 @@
 import { entryDay, entryKey } from "@/lib/shared/calendar/entries";
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
 import { CalendarAlert, CalendarEntryKind, EditorialStatus } from "@/lib/shared/enums";
+import { MINUTE_MS, toMs } from "@/lib/shared/dates";
 
 export const MAX_PER_CHANNEL_PER_DAY = 3;
 export const MIN_MINUTES_BETWEEN = 30;
-
-const MINUTE_MS = 60000;
 
 export const calendarAlerts = (
   entries: CalendarEntry[],
@@ -33,17 +32,17 @@ export const calendarAlerts = (
   }
 
   for (const entry of planned) {
-    const time = new Date(entry.at ?? "").getTime();
+    const time = toMs(entry.at ?? "");
     const close = planned.some(
       (other) =>
         other !== entry &&
         other.channelId === entry.channelId &&
-        Math.abs(new Date(other.at ?? "").getTime() - time) < MIN_MINUTES_BETWEEN * MINUTE_MS,
+        Math.abs(toMs(other.at ?? "") - time) < MIN_MINUTES_BETWEEN * MINUTE_MS,
     );
     if (close) add(entry, CalendarAlert.TooClose);
     if (entry.editorialStatus !== EditorialStatus.Approved)
       add(entry, CalendarAlert.NotApprovedYet);
-    if (time < now.getTime()) add(entry, CalendarAlert.DatePassed);
+    if (time < toMs(now)) add(entry, CalendarAlert.DatePassed);
   }
   return result;
 };

@@ -5,8 +5,8 @@ import { useIsMobile } from "@/hooks/shared/use-mobile";
 import { rangeInstants, shiftAnchor, visibleRange } from "@/lib/shared/calendar/range";
 import { type CalendarSearch, calendarSearchSchema } from "@/lib/shared/calendar/search";
 import { CalendarView } from "@/lib/shared/enums";
-import { todayInZone } from "@/lib/shared/format";
 import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
+import { todayInZone } from "@/lib/shared/dates";
 
 const storedViewSchema = z.nativeEnum(CalendarView);
 

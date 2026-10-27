@@ -1,5 +1,3 @@
-import { format } from "date-fns";
-import { pt } from "date-fns/locale/pt";
 import { CalendarDays, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { InfoTip } from "@/components/shared/admin/info-tip";
@@ -7,8 +5,9 @@ import { Button } from "@/components/shared/ui/button";
 import { Calendar } from "@/components/shared/ui/calendar";
 import { Label } from "@/components/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
-import { parseDateValue, toDateValue } from "@/lib/shared/date-value";
 import { cn } from "@/lib/shared/utils";
+import { monthStart, parseDateValue, toDateValue } from "@/lib/shared/dates";
+import { DATE_LOCALE, formatLongDate } from "@/lib/shared/format";
 
 export function DatePickerField({
   id,
@@ -70,25 +69,21 @@ export function DatePickerField({
             )}
           >
             <CalendarDays className="size-4" aria-hidden="true" />
-            <span>
-              {selected
-                ? format(selected, "d 'de' MMMM 'de' yyyy", { locale: pt })
-                : "Selecionar data"}
-            </span>
+            <span>{selected ? formatLongDate(selected) : "Selecionar data"}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent align="start" className="w-auto rounded-xl p-2">
           <Calendar
             mode="single"
-            locale={pt}
+            locale={DATE_LOCALE}
             selected={selected}
             {...(earliest ? { disabled: { before: earliest } } : {})}
             {...(yearRange
               ? {
                   captionLayout: "dropdown" as const,
-                  startMonth: new Date(yearRange.from, 0),
-                  endMonth: new Date(yearRange.to, 11),
-                  defaultMonth: selected ?? new Date(Math.min(yearRange.to, 1990), 0),
+                  startMonth: monthStart(yearRange.from, 0),
+                  endMonth: monthStart(yearRange.to, 11),
+                  defaultMonth: selected ?? monthStart(Math.min(yearRange.to, 1990), 0),
                 }
               : {})}
             onSelect={(date) => {

@@ -14,15 +14,15 @@ import type { ContentDetail } from "@/lib/marketing/content/types";
 import { listApproverOptions, submitForApproval } from "@/lib/marketing/content/workflow.functions";
 import { mediaProblem, submitStageOf } from "@/lib/shared/editorial/editorial";
 import { ApprovalStage } from "@/lib/shared/enums";
-import { addDaysToDate, todayInZone } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { addDaysToDate, isInFuture, todayInZone } from "@/lib/shared/dates";
 
 type Check = { ok: boolean; warning?: boolean; text: string };
 
 const futureDates = (content: ContentDetail): Check => ({
   ok: content.channels.every(
-    (channel) => channel.plannedAt === null || new Date(channel.plannedAt).getTime() > Date.now(),
+    (channel) => channel.plannedAt === null || isInFuture(channel.plannedAt),
   ),
   warning: true,
   text: "As datas previstas estão no futuro",

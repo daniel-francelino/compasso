@@ -3,6 +3,7 @@ import type { InstagramConfig } from "@/lib/shared/env.server";
 import { INSTAGRAM_SCOPES } from "@/lib/shared/social/scopes";
 import { PublishErrorCode } from "@/lib/shared/social/publish-codes";
 import { GRAPH_BASE, type MetaResult, graphGet, graphPost } from "@/lib/shared/social/graph.server";
+import { nowDate, plusMs } from "@/lib/shared/dates";
 
 const AUTHORIZE_URL = "https://www.instagram.com/oauth/authorize";
 const CODE_EXCHANGE_URL = "https://api.instagram.com/oauth/access_token";
@@ -73,7 +74,7 @@ const scopesOf = (value: string | string[] | undefined): string[] => {
   return typeof value === "string" ? value.split(",").map((item) => item.trim()) : value;
 };
 
-const expiryOf = (seconds: number): Date => new Date(Date.now() + seconds * 1000);
+const expiryOf = (seconds: number): Date => plusMs(nowDate(), seconds * 1000);
 
 export const exchangeCode = async (
   config: InstagramConfig,

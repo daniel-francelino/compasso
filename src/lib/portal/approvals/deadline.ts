@@ -1,9 +1,9 @@
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import { ApprovalRequestStatus } from "@/lib/shared/enums";
-import { formatDateOnly, todayInZone } from "@/lib/shared/format";
+import { formatDateOnly } from "@/lib/shared/format";
+import { daysBetweenDates, todayInZone } from "@/lib/shared/dates";
 
 const DEFAULT_ZONE = "America/Sao_Paulo";
-const DAY_MS = 86_400_000;
 
 export const DeadlineUrgency = {
   Overdue: "overdue",
@@ -14,14 +14,12 @@ export type DeadlineUrgency = (typeof DeadlineUrgency)[keyof typeof DeadlineUrge
 
 export type ResponseDeadline = { urgency: DeadlineUrgency; label: string };
 
-const dayNumber = (date: string): number => Date.parse(`${date}T00:00:00Z`) / DAY_MS;
-
 const plural = (days: number): string => (days === 1 ? "1 dia" : `${days} dias`);
 
 export const responseDeadline = (request: PortalRequest): ResponseDeadline | null => {
   if (request.status !== ApprovalRequestStatus.Pending || request.dueDate === null) return null;
   const today = todayInZone(request.brandTimezone ?? DEFAULT_ZONE);
-  const days = dayNumber(request.dueDate) - dayNumber(today);
+  const days = daysBetweenDates(today, request.dueDate);
 
   if (days < 0) {
     return {

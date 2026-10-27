@@ -12,6 +12,7 @@ import { publishSchema } from "@/lib/marketing/content/schemas";
 import { markPublished } from "@/lib/marketing/content/workflow.functions";
 import { MediaScope } from "@/lib/shared/enums";
 import { MediaKind } from "@/lib/shared/media/limits";
+import { nowIso } from "@/lib/shared/dates";
 
 const EVIDENCE_KINDS = [MediaKind.Image, MediaKind.Document] as const;
 
@@ -33,7 +34,7 @@ export function PublishDialog({
   onPublished: () => void;
 }) {
   const { formRef, errors, error, busy, submit } = useFormSubmit();
-  const [publishedAt, setPublishedAt] = useState<string | null>(new Date().toISOString());
+  const [publishedAt, setPublishedAt] = useState<string | null>(nowIso());
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
   const [evidence, setEvidence] = useState<{ versionId: string; name: string } | null>(null);

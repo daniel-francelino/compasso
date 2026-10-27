@@ -13,6 +13,7 @@ import {
   pageOf,
   rangeOf,
 } from "@/lib/shared/server-utils";
+import { hasPassed, nowMs } from "@/lib/shared/dates";
 
 export const UsersTab = { Active: "active", Inactive: "inactive" } as const;
 
@@ -98,10 +99,9 @@ export const listInvitations = createServerFn({ method: "GET" })
       .range(from, to);
     if (error) return fail(error);
 
-    const now = Date.now();
+    const now = nowMs();
     const mapped = (rows ?? []).map((row) => {
-      const expired =
-        row.status === InvitationStatus.Pending && new Date(row.expires_at).getTime() <= now;
+      const expired = row.status === InvitationStatus.Pending && hasPassed(row.expires_at, now);
       return {
         id: row.id,
         email: row.email,

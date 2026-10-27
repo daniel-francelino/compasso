@@ -23,7 +23,6 @@ import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { MetricCompare, MetricGranularity } from "@/lib/shared/enums";
-import { daysBetween, todayIn } from "@/lib/shared/metrics/days";
 import { buildHighlights, summarySentence } from "@/lib/shared/metrics/highlights";
 import { bestFormatOf, bestPostOf, bestSlotOf } from "@/lib/shared/metrics/insights";
 import {
@@ -36,6 +35,7 @@ import { PostRanking, postRankingLabels } from "@/lib/shared/metrics/ranking";
 import { MetricBlockKind, defaultReportBlocks } from "@/lib/shared/metrics/report";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { daysBetweenDates, todayInZone } from "@/lib/shared/dates";
 
 const View = { Analysis: "analysis", Reports: "reports" } as const;
 
@@ -82,7 +82,7 @@ export function MetricsPage({
   const { run, busy } = useServerAction();
   const brand = useBrand(brandId);
   const zone = brand.data?.timezone ?? "America/Sao_Paulo";
-  const today = todayIn(zone);
+  const today = todayInZone(zone);
 
   const connections = useQuery({
     queryKey: QueryKey.Channels.connections(brandId),
@@ -115,7 +115,7 @@ export function MetricsPage({
       : (presetRange(preset, today) ?? fallback);
   const compare = search.compare ?? MetricCompare.Previous;
   const rankBy = search.rankBy ?? PostRanking.Reach;
-  const granularity = granularityFor(daysBetween(range.from, range.to) + 1);
+  const granularity = granularityFor(daysBetweenDates(range.from, range.to) + 1);
   const view = search.view === View.Reports ? View.Reports : View.Analysis;
   const canReport = can(auth, Action.Metrics.Report);
 

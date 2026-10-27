@@ -17,11 +17,11 @@ import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { type CalendarNote, saveCalendarNote } from "@/lib/marketing/calendar/notes.functions";
 import { saveNoteSchema } from "@/lib/marketing/calendar/schemas";
 import { CalendarEventType, CalendarNoteKind, CalendarNoteRepeat } from "@/lib/shared/enums";
-import { instantToLocalInput } from "@/lib/shared/format";
 import { calendarEventTypeLabels, calendarNoteRepeatLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
 import { z } from "zod";
+import { instantToLocalInput, plusMs, toIso } from "@/lib/shared/dates";
 
 const FALLBACK_ZONE = "America/Sao_Paulo";
 const ONE_HOUR_MS = 3_600_000;
@@ -32,8 +32,7 @@ export type EventDialogTarget = {
   note: CalendarNote | undefined;
 };
 
-const plusOneHour = (instant: string): string =>
-  new Date(new Date(instant).getTime() + ONE_HOUR_MS).toISOString();
+const plusOneHour = (instant: string): string => toIso(plusMs(instant, ONE_HOUR_MS));
 
 export function EventDialog({
   target,

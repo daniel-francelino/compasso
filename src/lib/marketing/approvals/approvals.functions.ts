@@ -9,7 +9,6 @@ import {
   CommentVisibility,
   type Platform,
 } from "@/lib/shared/enums";
-import { todayInZone } from "@/lib/shared/format";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { personNames } from "@/lib/shared/people.server";
 import {
@@ -35,6 +34,7 @@ import {
   toRevision,
 } from "@/lib/marketing/content/revisions.server";
 import type { CommentRow, RevisionRow } from "@/lib/marketing/content/types";
+import { todayInZone } from "@/lib/shared/dates";
 
 export type ApprovalRow = {
   id: string;

@@ -8,7 +8,6 @@ import {
 } from "@/lib/shared/jobs/connection-token.server";
 import { logError } from "@/lib/shared/logger";
 import { MetricKey } from "@/lib/shared/enums";
-import { addDays, daysBetween, todayIn } from "@/lib/shared/metrics/days";
 import {
   fetchAccountDay,
   fetchAudience,
@@ -18,6 +17,13 @@ import {
 import { getProfile } from "@/lib/shared/social/instagram.server";
 import { PublishErrorCode } from "@/lib/shared/social/publish-codes";
 import { adminClient } from "@/lib/shared/supabase/admin.server";
+import {
+  addDaysToDate,
+  daysBetweenDates,
+  isOlderThan,
+  nowMs,
+  todayInZone,
+} from "@/lib/shared/dates";
 
 const COLLECT_INTERVAL_MS = 60 * 60 * 1000;
 const BACKFILL_DAYS = 30;
@@ -54,8 +60,7 @@ export type CollectResult = {
 };
 
 const isDue = (target: Target): boolean =>
-  target.last_metrics_at === null ||
-  Date.now() - Date.parse(target.last_metrics_at) > COLLECT_INTERVAL_MS;
+  target.last_metrics_at === null || isOlderThan(target.last_metrics_at, COLLECT_INTERVAL_MS);
 
 const lastStoredDay = async (admin: AdminClient, channelId: string): Promise<string | null> => {
   const { data } = await admin
@@ -85,15 +90,15 @@ const collectDays = async (
   startedAt: number,
 ): Promise<{ stored: number; complete: boolean; lost: boolean }> => {
   const last = await lastStoredDay(admin, secret.channelId);
-  const first = last === null ? addDays(today, -BACKFILL_DAYS) : addDays(last, 1);
-  const yesterday = addDays(today, -1);
-  const pending = Math.max(daysBetween(first, yesterday) + 1, 0);
+  const first = last === null ? addDaysToDate(today, -BACKFILL_DAYS) : addDaysToDate(last, 1);
+  const yesterday = addDaysToDate(today, -1);
+  const pending = Math.max(daysBetweenDates(first, yesterday) + 1, 0);
   const days = Array.from({ length: Math.min(pending, DAYS_PER_RUN) }, (_, index) =>
-    addDays(first, index),
+    addDaysToDate(first, index),
   );
   let stored = 0;
   for (const day of days) {
-    if (Date.now() - startedAt > BUDGET_MS) return { stored, complete: false, lost: false };
+    if (nowMs() - startedAt > BUDGET_MS) return { stored, complete: false, lost: false };
     const rows = await fetchAccountDay(secret.token, secret.accountId, day);
     if (!rows.ok) {
       return {
@@ -154,7 +159,7 @@ const collectAudience = async (
 ): Promise<void> => {
   if (followers === null || followers < AUDIENCE_MIN_FOLLOWERS) return;
   const last = await lastAudienceDay(admin, secret.channelId);
-  if (last !== null && daysBetween(last, today) < AUDIENCE_EVERY_DAYS) return;
+  if (last !== null && daysBetweenDates(last, today) < AUDIENCE_EVERY_DAYS) return;
   const audience = await fetchAudience(secret.token, secret.accountId);
   if (!audience.ok) return;
   await admin.rpc("metrics_store_audience", {
@@ -188,8 +193,8 @@ const collectChannel = async (admin: AdminClient, target: Target): Promise<Colle
     return { ...result, ok: false };
   }
 
-  const startedAt = Date.now();
-  const today = todayIn(target.timezone);
+  const startedAt = nowMs();
+  const today = todayInZone(target.timezone);
   const profile = await getProfile(secret.secret.token);
   if (!profile.ok) {
     await dropIfLost(admin, target.channel_id, profile.code);

@@ -27,20 +27,21 @@ import { auditActionLabels, auditDomains } from "@/lib/shared/audit/labels";
 import { formatDateTime } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { parseDateValue, plusLocalDays, toIso } from "@/lib/shared/dates";
 
 const route = getRouteApi("/admin/_app/(shared)/settings/audit");
 const ALL_DOMAINS = "all";
 
 const labelOf = (action: string): string => auditActionLabels[action as AuditActionKey] ?? action;
 
-const dayStart = (value: string | undefined): string | undefined =>
-  value ? new Date(`${value}T00:00:00`).toISOString() : undefined;
+const dayStart = (value: string | undefined): string | undefined => {
+  const start = value ? parseDateValue(value) : undefined;
+  return start === undefined ? undefined : toIso(start);
+};
 
 const dayAfter = (value: string | undefined): string | undefined => {
-  if (!value) return undefined;
-  const end = new Date(`${value}T00:00:00`);
-  end.setDate(end.getDate() + 1);
-  return end.toISOString();
+  const start = value ? parseDateValue(value) : undefined;
+  return start === undefined ? undefined : toIso(plusLocalDays(start, 1));
 };
 
 export function AuditPage() {

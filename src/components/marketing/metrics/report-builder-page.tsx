@@ -37,6 +37,7 @@ import {
 } from "@/lib/shared/metrics/report";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { nowIso } from "@/lib/shared/dates";
 
 type Entry = { kind: MetricBlockKind; enabled: boolean; title: string; comment: string };
 
@@ -170,7 +171,7 @@ export function ReportBuilderPage({ brandId, reportId }: { brandId: string; repo
     });
     return {
       version: 1,
-      generatedAt: new Date().toISOString(),
+      generatedAt: nowIso(),
       account: { username: "", followers: null },
       periodLabel: label,
       compare: compareMode,

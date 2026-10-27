@@ -51,7 +51,7 @@ Brand is the isolation boundary: almost everything below the brand carries `bran
 
 - **Isolation:** effective permission = role action **and** brand link. External users never read internal tables; they use the `portal_*` functions.
 - **History is preserved:** archive instead of delete; revisions, decisions and audit events are immutable.
-- **Dates:** instants in UTC plus the IANA time zone of the brand; deadlines as local dates; formatting through `src/lib/shared/format.ts`.
+- **Dates:** instants in UTC plus the IANA time zone of the brand; deadlines as local dates; date work through `src/lib/shared/dates.ts` and formatting through `src/lib/shared/format.ts`.
 - **Lists:** pagination, search and filters on the server, kept in the URL; states skeleton → error → empty → no results → list.
 - **Forms:** zod on client and server, optimistic locking by `version`, no double submit, unsaved-changes warning.
 - **Errors:** SQL raises `raise exception 'code'`; `errors.ts` maps each code to a pt-BR message; `check:consistency` verifies both sides.

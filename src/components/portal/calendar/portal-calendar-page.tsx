@@ -19,7 +19,6 @@ import { type GridItem, StatusMark } from "@/lib/shared/calendar/grid-item";
 import { rangeTitle } from "@/lib/shared/calendar/range";
 import type { PortalCalendarEntry, PortalCalendarEvent } from "@/lib/shared/calendar/types";
 import { ApprovalRequestStatus, CalendarNoteKind, CalendarView } from "@/lib/shared/enums";
-import { instantToLocalInput, todayInZone } from "@/lib/shared/format";
 import {
   approvalRequestStatusLabels,
   calendarEventTypeLabels,
@@ -28,6 +27,7 @@ import {
 } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { browserTimeZone, instantToLocalInput, todayInZone, toIso } from "@/lib/shared/dates";
 
 const LEGEND = [
   ApprovalRequestStatus.Pending,
@@ -68,7 +68,7 @@ const toEventItem = (event: PortalCalendarEvent, zone: string): GridItem => ({
   muted: false,
 });
 
-const requestZone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
+const requestZone = (): string => browserTimeZone();
 
 const toItem = (entry: PortalCalendarEntry, zone: string): GridItem => {
   const style = requestStyle(entry.status);
@@ -97,7 +97,7 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
   const navigate = useNavigate();
   const [openEvent, setOpenEvent] = useState<PortalCalendarEvent | null>(null);
   const state = useCalendarState(requestZone());
-  const request = { brandId, from: state.from.toISOString(), to: state.to.toISOString() };
+  const request = { brandId, from: toIso(state.from), to: toIso(state.to) };
   const query = useQuery({
     queryKey: QueryKey.Portal.calendar(brandId, request),
     queryFn: async () => unwrapResult(await listPortalCalendar({ data: request })),

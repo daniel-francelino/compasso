@@ -33,12 +33,12 @@ select set_config('t.brand', (select id::text from public.brands where name = 'C
 select set_config('t.channel', public.channel_save(format('{"brand_id":"%s","platform":"instagram","profile_name":"aurora.cafe"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000c1', 'internal', false, 'active');
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d1', 'external', false, 'active');
-select public.channel_connection_connect(
-  current_setting('t.channel')::uuid,
+reset role;
+select public.channel_connection_store(
+  current_setting('t.channel')::uuid, '00000000-0000-0000-0000-0000000000b1'::uuid,
   '{"external_account_id":"17841400000","username":"aurora.cafe","account_type":"BUSINESS"}'::jsonb,
   'ciphertext-ciphertext-ciphertext-1', now() + interval '60 days', array['instagram_business_manage_insights']
 );
-reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b2');
 select public.client_save('{"name":"Outra Marca"}'::jsonb, true);

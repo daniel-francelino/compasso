@@ -45,6 +45,7 @@ import type {
   RequestRow,
   RevisionRow,
 } from "@/lib/marketing/content/types";
+import { toMs } from "@/lib/shared/dates";
 
 export type ContentItemRow = {
   id: string;
@@ -249,8 +250,7 @@ const sameMedia = (left: ContentMedia[], right: ContentMedia[]): boolean =>
       (item.altText ?? "") === (right[index]?.altText ?? ""),
   );
 
-const instantOf = (value: string | null): number | null =>
-  value === null ? null : new Date(value).getTime();
+const instantOf = (value: string | null): number | null => (value === null ? null : toMs(value));
 
 const sameChannels = (revision: RevisionRow, rows: ChannelRowDetail[]): boolean =>
   revision.snapshot.channels.length === rows.length &&

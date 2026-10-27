@@ -45,7 +45,7 @@ Search these locations first. If a row says "forbidden", using that alternative 
 | **Statuses and unions** | `const X = {...} as const` + `type X = ValueOf<typeof X>` in `lib/shared/enums.ts` or the module's `types.ts`; `z.nativeEnum(X)` | Literal strings (`"draft"`), TS `enum`, `z.enum([...])` |
 | **Cache keys** | `QueryKey.*` factories in `lib/shared/query-keys.ts` and per module | Inline arrays in `useQuery` / `invalidateQueries` |
 | **Browser storage** | `StoredKey` + `readStored` / `writeStored` | Direct `localStorage` / `sessionStorage` |
-| **Dates, time zones, numbers** | `lib/shared/format.ts` | `toLocaleString`, `new Date().toISOString()` for display, manual offsets |
+| **Dates, time zones, numbers** | `lib/shared/dates.ts` (values: now, arithmetic, comparison, ISO, time zones, date-only strings; built on `date-fns` and `@date-fns/tz`) and `lib/shared/format.ts` (display, pt-BR) | The Date API outside `dates.ts` (`new Date`, `Date.now`, `Date.parse`, `.toISOString()`, `.getTime()`, `Intl.DateTimeFormat`, `toLocale*String`, `setDate`…), hand-rolled offsets and day arithmetic, a second date helper |
 | **Server logic** | `createServerFn` in `*.functions.ts`, input `.validator(schema)` | Route handlers for business logic, logic inside components |
 | **Database access (client)** | Supabase client typed with `Database` (`lib/shared/supabase`), RPCs for transactions | Untyped clients, raw SQL strings built from input |
 | **Service-role client** | `lib/shared/supabase/admin.server.ts`, only in the allowed modules | Importing it elsewhere, in components, or in any `VITE_` context |
@@ -246,7 +246,7 @@ Inside the transactional SQL function: `perform audit_write(v_org, v_brand, 'con
 | UI-11 | **Time zones:** every date-time shown carries its zone or the zone is visible on the screen; use `DateTimeField` / `formatInZone` |
 | UI-12 | **Copy:** Brazilian Portuguese, clear and direct, no internal codes; messages say what happened and what to do; labels follow the glossary in the module documents ("Aprovar", "Pedir alterações", "Marca", "Canal"…) |
 | UI-13 | **Permissions in UI:** items and buttons appear only with the action; a disabled control explains why (`WhyDisabled`) when the reason is not obvious |
-| UI-14 | **Dates and money formatting** only through `format.ts`; no manual formatting |
+| UI-14 | **Dates and money formatting** only through `format.ts`; no manual formatting. Any other date work (now, add days, compare, convert a zone) only through `dates.ts`; ESLint (`no-restricted-syntax`) refuses the Date API in `src` outside `dates.ts` and the tests |
 
 ### 8.2 Documentation
 
