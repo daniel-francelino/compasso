@@ -10,6 +10,7 @@ import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
 import { ContentStep } from "@/components/marketing/content/content-step";
 import { EditorPreview } from "@/components/marketing/content/editor-preview";
+import { PlanScheduleFields } from "@/components/marketing/content/plan-schedule-fields";
 import { PlanningStep } from "@/components/marketing/content/planning-step";
 import { PublishDialog } from "@/components/marketing/content/publish-dialog";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
@@ -260,6 +261,18 @@ export function ContentEditor({
     );
   }
 
+  async function saveScheduleBeforeApproval(stage: ApprovalStage): Promise<number | string> {
+    if (content === undefined) return "Salve o conteúdo antes de aprovar.";
+    if (stage !== ApprovalStage.Plan || !draft.dirty) return content.version;
+    const parsed = saveContentSchema.safeParse(payload(content.version));
+    if (!parsed.success) return "Confira as datas e os horários antes de aprovar.";
+    const saved = await saveContentItem({ data: parsed.data });
+    if (!saved.ok) return saved.message;
+    draft.markSaved();
+    void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() });
+    return saved.version;
+  }
+
   async function move(to: EditorialStatus) {
     if (content === undefined) return;
     await run(
@@ -505,13 +518,15 @@ export function ContentEditor({
         onSubmit={async (reason) => {
           if (content === undefined || approvingStage === null) return null;
           const stage = approvingStage;
+          const saved = await saveScheduleBeforeApproval(stage);
+          if (typeof saved === "string") return saved;
           const result = await run(
             () =>
               approveOnBehalf({
                 data: {
                   id: content.id,
                   stage,
-                  expectedVersion: content.version,
+                  expectedVersion: saved,
                   ...(reason === "" ? {} : { reason }),
                 },
               }),
@@ -519,7 +534,17 @@ export function ContentEditor({
           );
           return result.ok ? null : result.message;
         }}
-      />
+      >
+        {approvingStage === ApprovalStage.Plan ? (
+          <PlanScheduleFields
+            draft={draft}
+            channels={channels}
+            zone={zone}
+            disabled={!editable || acting}
+            errors={errors}
+          />
+        ) : null}
+      </ReasonDialog>
       <ReasonDialog
         open={reopening !== null}
         onOpenChange={(next) => !next && setReopening(null)}

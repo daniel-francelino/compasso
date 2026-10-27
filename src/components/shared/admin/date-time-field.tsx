@@ -131,7 +131,7 @@ export function DateTimeField({
                 aria-invalid={message ? true : undefined}
                 aria-haspopup="dialog"
                 aria-expanded={open}
-                className={`h-10 min-w-0 flex-1 justify-start gap-2 px-3 text-left font-normal ${
+                className={`h-10 w-full min-w-0 justify-start gap-2 px-3 text-left font-normal ${
                   selectedDate ? "text-foreground" : "text-muted-foreground"
                 }`}
               >

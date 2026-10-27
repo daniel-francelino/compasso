@@ -14,6 +14,7 @@ export function ReasonDialog({
   minLength = 3,
   optional = false,
   onSubmit,
+  children,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -24,6 +25,7 @@ export function ReasonDialog({
   minLength?: number;
   optional?: boolean;
   onSubmit: (reason: string) => Promise<string | null | false>;
+  children?: ReactNode;
 }) {
   const id = useId();
   const [reason, setReason] = useState("");
@@ -62,6 +64,7 @@ export function ReasonDialog({
       submitIcon={Icon}
       onSubmit={submit}
     >
+      {children}
       <TextAreaField
         id={`${id}-reason`}
         label={optional ? "Motivo (opcional)" : "Motivo"}
