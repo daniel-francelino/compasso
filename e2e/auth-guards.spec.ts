@@ -92,7 +92,9 @@ test("the home is the landing page of Rayana Vasconcelos and does not depend on 
   const response = await request.get("/");
   expect(response.status()).toBe(200);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Sua marca");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "Sua marca aparece nas redes sociais.",
+  );
   await expect(page.getByRole("link", { name: "Vamos conversar" })).toBeVisible();
 });
 

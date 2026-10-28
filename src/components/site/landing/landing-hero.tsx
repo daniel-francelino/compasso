@@ -48,13 +48,16 @@ export function LandingHero() {
             aria-level={1}
             className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-ink sm:text-6xl"
           >
-            <TextAnimate animation="blurInUp" by="word" as="span" className="block">
-              Sua marca
-            </TextAnimate>
-            <WordRotate words={heroWords} className="block text-violet-deep" duration={2400} />
-            <TextAnimate animation="blurInUp" by="word" as="span" delay={0.3} className="block">
-              nas redes sociais.
-            </TextAnimate>
+            <span className="sr-only">Sua marca aparece nas redes sociais.</span>
+            <span aria-hidden="true" className="block">
+              <TextAnimate animation="blurInUp" by="word" as="span" className="block">
+                Sua marca
+              </TextAnimate>
+              <WordRotate words={heroWords} className="block text-violet-deep" duration={2400} />
+              <TextAnimate animation="blurInUp" by="word" as="span" delay={0.3} className="block">
+                nas redes sociais.
+              </TextAnimate>
+            </span>
           </div>
           <BlurFade delay={0.4}>
             <p className="max-w-xl text-lg text-ink-soft">
