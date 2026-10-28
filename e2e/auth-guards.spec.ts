@@ -17,8 +17,7 @@ test("the login form validates on the client before calling the server", async (
   await page.goto("/admin/login");
   await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "Entrar" }).click();
-  await expect(page.getByText("Informe o e-mail.")).toBeVisible();
-  await expect(page.getByText("Informe a senha.")).toBeVisible();
+  await expect(page.getByText("Este campo é obrigatório")).toHaveCount(2);
 });
 
 for (const path of [

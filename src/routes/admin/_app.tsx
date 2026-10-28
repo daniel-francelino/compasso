@@ -1,20 +1,13 @@
 import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
 import { AdminErrorPage, AdminNotFoundPage } from "@/components/shared/admin/admin-fallbacks";
-import { AppSidebar } from "@/components/shared/admin/app-sidebar";
-import { availableSpaces } from "@/components/shared/admin/nav-config";
-import { SpaceSwitcher } from "@/components/shared/admin/space-switcher";
-import { AppBreadcrumbs, BreadcrumbProvider } from "@/components/shared/admin/page-header";
-import { NotificationBell } from "@/components/shared/notifications/notification-bell";
-import { Separator } from "@/components/shared/ui/separator";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/shared/ui/sidebar";
+import { AdminBackoffice } from "@/components/shared/admin/admin-backoffice";
+import { BreadcrumbProvider } from "@/components/shared/admin/page-header";
 import { UploadTrayProvider } from "@/components/shared/media/upload-tray-provider";
-import { Toaster } from "@/components/shared/ui/sonner";
 import { useAdminSpace } from "@/hooks/shared/use-admin-space";
 import { blockedDestination, homeFor } from "@/lib/shared/auth/redirect";
 import { getAuthState } from "@/lib/shared/auth/session.functions";
 import { ProfileKind } from "@/lib/shared/enums";
 import { AppRoute } from "@/lib/shared/routes";
-import { cn } from "@/lib/shared/utils";
 
 export const Route = createFileRoute("/admin/_app")({
   beforeLoad: async ({ location }) => {
@@ -55,49 +48,12 @@ function AdminLayout() {
     },
   });
 
-  if (fullScreen) {
-    return (
-      <>
-        <main id="main-content" tabIndex={-1} className="outline-none">
-          <Outlet />
-        </main>
-        <Toaster position="top-center" />
-      </>
-    );
-  }
-
   return (
     <BreadcrumbProvider>
       <UploadTrayProvider>
-        <SidebarProvider>
-          <a
-            href="#main-content"
-            className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:left-3 focus:top-3"
-          >
-            Saltar para o conteúdo
-          </a>
-          <AppSidebar auth={auth} space={space} />
-          <SidebarInset>
-            <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-border bg-background px-4 pointer-coarse:h-16">
-              <SidebarTrigger aria-label="Abrir ou fechar a barra lateral" />
-              <Separator orientation="vertical" className="h-5" />
-              <AppBreadcrumbs />
-              <SpaceSwitcher spaces={availableSpaces(auth)} current={space} />
-              {auth.user ? <NotificationBell userId={auth.user.id} /> : null}
-            </header>
-            <main
-              id="main-content"
-              tabIndex={-1}
-              className={cn(
-                "w-full flex-1 px-4 py-6 outline-none sm:px-6 sm:py-8",
-                fullWidth ? "max-w-none" : "mx-auto max-w-6xl",
-              )}
-            >
-              <Outlet />
-            </main>
-          </SidebarInset>
-          <Toaster position="top-right" />
-        </SidebarProvider>
+        <AdminBackoffice auth={auth} space={space} fullScreen={fullScreen} fullWidth={fullWidth}>
+          <Outlet />
+        </AdminBackoffice>
       </UploadTrayProvider>
     </BreadcrumbProvider>
   );

@@ -133,7 +133,7 @@ src/
   lib/shared/auth/          types.ts · actions.ts (Action.*) · schemas.ts · redirect.ts · errors.ts
                             session.functions.ts (getAuthState) · login.functions.ts (signIn, signOut) · users.functions.ts · invitations.functions.ts
                             guards.ts (requireAction) · server-guards.server.ts (requireActionServer returns the caller or null) · permissions.ts (can) · use-sign-out.ts
-  components/shared/admin/  auth-shell.tsx
+  components/shared/admin/  auth-brand.tsx (logo, side image, text link) · auth-images.ts · render-auth-link.tsx · invitation-form.tsx · auth-shell.tsx (form fields)
   routes/admin/             login · invite.$token · recover-password · reset-password · callback
                             confirm-email · pending · access-denied
   routes/admin/_app.tsx     protected layout (guard)
@@ -229,3 +229,7 @@ Validation performed: 61 SQL assertions on PGlite (`npm run db:verify`); typeche
 
 
 2026-10-20: Applied the Aura Creative product brand to the affected authentication, invitation, account, email and settings UI. Files include the shared auth shell and the relevant routes/components/templates; the Aura Creative logo PNG and favicon SVG are in `public/`. Validation performed: source search for remaining user-facing ?Aura Creative? labels. **Not tested**: browser rendering, generated favicon behavior across browsers, and email delivery.
+
+2026-10-28: Replaced the authentication screens (`/admin/login`, `/admin/recover-password`, `/admin/reset-password`, `/admin/invite/$token`, `/admin/confirm-email`, `/admin/callback`, `/admin/pending`, `/admin/access-denied`) with the page templates of the shared library `lost-ui` (installed as the npm alias `"lost-ui": "npm:@danielsoaresf/lost-ui"`): `LoginPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `AuthMessagePage` and `AuthLayout` (the invitation form is `InvitationForm`, built with the library's form fields). Each handler calls the same server function as before and returns `failureMessage(result)`, so the server still validates and decides every message. The library texts are Brazilian Portuguese through `LostI18nProvider` in `__root.tsx`; its styles come from `@import "lost-ui/styles.css"` in `src/styles.css`. Side images (free Unsplash License photos, in `public/`): `auth-social.jpg` (login), `auth-analytics.jpg` (invitation), `auth-brand.jpg` (the other screens), chosen through `AuthImage`. `AuthShell` was removed (no screen used it any more); `Field`, `PasswordField` and `FormError` stay in `auth-shell.tsx` for the other forms.
+
+Validation performed: typecheck, lint and production build; the login page rendered in a browser (Playwright, desktop and phone width) with the validation errors; the screens that need a session or a real invitation were not opened. **Not tested**: sign in, password recovery and reset, and invitation acceptance against a real Supabase; the `e2e` suite after the change of the required-field message (it now expects the library text "Este campo é obrigatório").

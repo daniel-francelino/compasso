@@ -29,6 +29,7 @@ export function InvitationForm({ token, email }: { token: string; email: string 
       description="Você foi convidado(a) para acessar a Aura Creative. Defina uma senha para entrar."
     >
       <Form
+        greedy
         className="grid gap-6"
         noValidate
         onSubmit={() => {
@@ -45,6 +46,7 @@ export function InvitationForm({ token, email }: { token: string; email: string 
           name="fullName"
           label="Nome completo"
           autoComplete="name"
+          required
           rules={[rules.required(), rules.minLength(2)]}
           value={fullName}
           onValueChange={setFullName}
@@ -53,6 +55,7 @@ export function InvitationForm({ token, email }: { token: string; email: string 
           name="password"
           label="Senha"
           autoComplete="new-password"
+          required
           help={`Pelo menos ${MIN_PASSWORD_LENGTH} caracteres.`}
           rules={[rules.required(), rules.minLength(MIN_PASSWORD_LENGTH)]}
           value={password}

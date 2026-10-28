@@ -1,29 +1,12 @@
-import { Link } from "@tanstack/react-router";
-import { House } from "lucide-react";
+import { useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  Fragment,
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/shared/ui/breadcrumb";
+  BreadcrumbItemsContext,
+  SetBreadcrumbsContext,
+  type Crumb,
+} from "@/components/shared/admin/breadcrumb-context";
 import { AppRoute } from "@/lib/shared/routes";
-import type { FileRoutesByTo } from "@/routeTree.gen";
 
-export type Crumb = { label: string; to?: keyof FileRoutesByTo };
-
-const BreadcrumbItemsContext = createContext<Crumb[]>([]);
-const SetBreadcrumbsContext = createContext<((items: Crumb[]) => void) | null>(null);
+export type { Crumb };
 
 export function BreadcrumbProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Crumb[]>([]);
@@ -31,47 +14,6 @@ export function BreadcrumbProvider({ children }: { children: ReactNode }) {
     <SetBreadcrumbsContext.Provider value={setItems}>
       <BreadcrumbItemsContext.Provider value={items}>{children}</BreadcrumbItemsContext.Provider>
     </SetBreadcrumbsContext.Provider>
-  );
-}
-
-export function AppBreadcrumbs() {
-  const items = useContext(BreadcrumbItemsContext);
-  if (items.length === 0) return <div className="min-w-0 flex-1" />;
-
-  return (
-    <Breadcrumb aria-label="Localização na aplicação" className="min-w-0 flex-1 overflow-hidden">
-      <BreadcrumbList className="flex-nowrap gap-x-1 overflow-hidden whitespace-nowrap sm:gap-x-2">
-        {items.map((crumb, index) => {
-          const current = index === items.length - 1;
-          return (
-            <Fragment key={`${crumb.to ?? crumb.label}-${index}`}>
-              {index > 0 ? <BreadcrumbSeparator className="shrink-0" /> : null}
-              <BreadcrumbItem className="min-w-0 max-w-[35%] shrink">
-                {current ? (
-                  <BreadcrumbPage className="block truncate py-2 font-medium text-foreground">
-                    {crumb.label}
-                  </BreadcrumbPage>
-                ) : crumb.to ? (
-                  <BreadcrumbLink
-                    asChild
-                    className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-md px-2 text-violet-deep underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <Link to={crumb.to}>
-                      {crumb.to === AppRoute.Admin ? (
-                        <House className="size-4 shrink-0" aria-hidden="true" />
-                      ) : null}
-                      <span className="truncate">{crumb.label}</span>
-                    </Link>
-                  </BreadcrumbLink>
-                ) : (
-                  <span className="truncate py-2">{crumb.label}</span>
-                )}
-              </BreadcrumbItem>
-            </Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
   );
 }
 
