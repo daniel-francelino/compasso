@@ -56,7 +56,7 @@ const entries: Entry[] = [
     description: "Os tipos que a equipe escolhe em cada conteúdo, com cor ou emoji.",
     icon: Tags,
     to: AppRoute.ContentTypes,
-    action: Action.Settings.Manage,
+    action: Action.Content.ManageTypes,
   },
   {
     title: "Avisos padrão",

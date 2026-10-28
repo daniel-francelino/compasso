@@ -1136,47 +1136,6 @@ export type Database = {
           },
         ]
       }
-      content_types: {
-        Row: {
-          archived_at: string | null
-          color: string
-          created_at: string
-          emoji: string | null
-          id: string
-          name: string
-          organization_id: string
-          updated_at: string
-        }
-        Insert: {
-          archived_at?: string | null
-          color?: string
-          created_at?: string
-          emoji?: string | null
-          id?: string
-          name: string
-          organization_id: string
-          updated_at?: string
-        }
-        Update: {
-          archived_at?: string | null
-          color?: string
-          created_at?: string
-          emoji?: string | null
-          id?: string
-          name?: string
-          organization_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "content_types_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       content_items: {
         Row: {
           approval_due_date: string | null
@@ -1403,6 +1362,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "content_items"
             referencedColumns: ["id", "brand_id"]
+          },
+        ]
+      }
+      content_types: {
+        Row: {
+          archived_at: string | null
+          color: string
+          created_at: string
+          emoji: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
           },
         ]
       }

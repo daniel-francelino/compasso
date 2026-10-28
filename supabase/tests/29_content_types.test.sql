@@ -1,6 +1,6 @@
 begin;
 
-select plan(19);
+select plan(20);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -48,15 +48,16 @@ select is((public.content_type_save(format('{"id":"%s","name":"Produto","color":
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select throws_ok($$select public.content_type_save('{"name":"Novo"}'::jsonb)$$, 'denied', 'a manager cannot manage the catalog');
-select throws_ok(format($$select public.content_type_set_archived('%s', true)$$, current_setting('t.type1')), 'denied', 'a manager cannot archive a type');
-select is((select count(*)::int from public.content_types), 2, 'a manager reads the catalog');
+select is((public.content_type_save('{"name":"Do gestor","color":"sage"}'::jsonb) ->> 'id') is not null, true, 'a manager creates a type');
+select lives_ok(format($$select public.content_type_set_archived('%s', false)$$, current_setting('t.type1')), 'a manager archives and reactivates a type');
+select is((select count(*)::int from public.content_types), 3, 'a manager reads the catalog');
 select set_config('t.item', public.content_item_save(format('{"brand_id":"%s","title":"Tarde boa","type_ids":["%s","%s"]}', current_setting('t.brand'), current_setting('t.type1'), current_setting('t.type2'))::jsonb) ->> 'id', true);
 select is((select count(*)::int from public.content_item_types where content_item_id = current_setting('t.item')::uuid), 2, 'a content carries several types');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
 select throws_ok($$select public.content_type_save('{"name":"Colab"}'::jsonb)$$, 'denied', 'a collaborator cannot manage the catalog');
+select throws_ok(format($$select public.content_type_set_archived('%s', true)$$, current_setting('t.type1')), 'denied', 'a collaborator cannot archive a type');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
@@ -83,7 +84,7 @@ select throws_ok($$select * from public.content_types$$, 'permission denied for 
 select throws_ok($$select public.content_type_save('{"name":"Anon"}'::jsonb)$$, 'permission denied for function content_type_save', 'anon cannot save a type');
 reset role;
 
-select is((select count(*)::int from public.audit_events where action in ('content_type.saved', 'content_type.archived')), 4, 'catalog changes are audited');
+select is((select count(*)::int from public.audit_events where action in ('content_type.saved', 'content_type.archived')), 6, 'catalog changes are audited');
 
 select * from finish();
 rollback;

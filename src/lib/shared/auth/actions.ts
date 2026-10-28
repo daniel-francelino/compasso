@@ -35,6 +35,7 @@ export const Action = {
     Cancel: "content.cancel",
     Reopen: "content.reopen",
     PublishManual: "content.publish_manual",
+    ManageTypes: "content.manage_types",
   },
   Approvals: {
     View: "approvals.view",

@@ -49,7 +49,7 @@ export const listContentTypes = createServerFn({ method: "GET" }).handler(
 
 export const listContentTypeCatalog = createServerFn({ method: "GET" }).handler(
   async (): Promise<Result<{ types: ContentTypeCatalogRow[] }>> => {
-    const caller = await requireActionServer(Action.Settings.Manage);
+    const caller = await requireActionServer(Action.Content.ManageTypes);
     if (caller === null) return denied;
     const { data, error } = await caller.supabase
       .from("content_types")
@@ -74,7 +74,7 @@ export const listContentTypeCatalog = createServerFn({ method: "GET" }).handler(
 export const saveContentType = createServerFn({ method: "POST" })
   .validator(saveContentTypeSchema)
   .handler(async ({ data }): Promise<Result<{ id: string }>> => {
-    const caller = await requireActionServer(Action.Settings.Manage);
+    const caller = await requireActionServer(Action.Content.ManageTypes);
     if (caller === null) return denied;
     const { data: row, error } = await caller.supabase.rpc("content_type_save", {
       p_type: {
@@ -91,7 +91,7 @@ export const saveContentType = createServerFn({ method: "POST" })
 export const archiveContentType = createServerFn({ method: "POST" })
   .validator(archiveContentTypeSchema)
   .handler(async ({ data }): Promise<Result<{ id: string }>> => {
-    const caller = await requireActionServer(Action.Settings.Manage);
+    const caller = await requireActionServer(Action.Content.ManageTypes);
     if (caller === null) return denied;
     const { data: row, error } = await caller.supabase.rpc("content_type_set_archived", {
       p_type: data.id,

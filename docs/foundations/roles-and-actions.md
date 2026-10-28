@@ -58,7 +58,7 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 | **Brands** | `brands.view`, `brands.create`, `brands.update`, `brands.delete`, `brands.manage_members` |
 | **Channels** | `channels.view`, `channels.create`, `channels.update`, `channels.delete`, `channels.connect` (connect and configure the platform account; requires `channels.update`) |
 | **Metrics** | `metrics.view` (read the analysis and reports of linked brands; requires `brands.view`), `metrics.report` (write marks, build, publish and withdraw reports; requires `metrics.view`), `metrics.portal_view` (external: read published reports; requires `portal.view`) |
-| **Content** | `content.view`, `content.create`, `content.update`, `content.delete`, `content.submit`, `content.cancel`, `content.reopen`, `content.publish_manual` |
+| **Content** | `content.view`, `content.create`, `content.update`, `content.delete`, `content.submit`, `content.cancel`, `content.reopen`, `content.publish_manual`, `content.manage_types` (create, edit and archive the content types; requires `content.view`; decided 2026-10-28) |
 | **Approvals (internal)** | `approvals.view`, `approvals.override` |
 | **Approvals (external)** | `approvals.decide` |
 | **Comments** | `comments.create_internal`, `comments.create_external` |
@@ -78,6 +78,7 @@ Convention: `module.verb`, in English. `view` = see; the others write. Each modu
 Dependencies (`requires`) stored in the catalog, for example:
 
 - `content.update` → `content.view`, `channels.view`
+- `content.manage_types` → `content.view`
 - `content.submit` → `content.update`
 - `content.reopen` → `content.update`
 - `content.publish_manual` → `content.view`
@@ -105,7 +106,7 @@ Only the system role `owner` has them; they **do not appear as an option** when 
 | Role | Type | Actions |
 |---|---|---|
 | `owner` ("Proprietário") | System, protected | All (implicit) |
-| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*` (including `channels.connect`), `content.*` except `delete`, `metrics.view`, `metrics.report`, `approvals.view`, `approvals.override`, `comments.create_internal`, `calendar.*`, `media.view/upload/update/share`, `invitations.create`, `users.view` |
+| `manager` ("Gestor") | Pre-created, editable | `clients.*`, `brands.view/create/update/manage_members`, `channels.*` (including `channels.connect`), `content.*` except `delete` (including `content.manage_types`), `metrics.view`, `metrics.report`, `approvals.view`, `approvals.override`, `comments.create_internal`, `calendar.*`, `media.view/upload/update/share`, `invitations.create`, `users.view` |
 | `collaborator` ("Colaborador") | Pre-created, editable | `clients.view`, `brands.view`, `channels.view`, `content.view/create/update`, `approvals.view`, `comments.create_internal`, `calendar.view`, `media.view/upload` |
 | `external_approver` ("Aprovador externo") | Pre-created, editable, portal only | `portal.view`, `approvals.decide`, `comments.create_external` |
 | `external_commenter` ("Comentarista externo") | Pre-created, editable, portal only | `portal.view`, `comments.create_external` |

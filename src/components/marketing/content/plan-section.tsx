@@ -1,9 +1,16 @@
+import { Plus } from "lucide-react";
+import { useRef, useState } from "react";
 import { FileStrip } from "@/components/marketing/content/file-strip";
 import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
+import { ContentTypeSheet } from "@/components/shared/content/content-type-sheet";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { MultiSelectField } from "@/components/shared/admin/multi-select-field";
 import { RichTextEditor } from "@/components/shared/admin/rich-text-editor";
 import { DatePickerField } from "@/components/shared/ui/date-picker-field";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
+import { Action } from "@/lib/shared/auth/actions";
+import { can } from "@/lib/shared/auth/permissions";
+import { useAuth } from "@/lib/shared/auth/use-auth";
 import type { ContentTypeRow } from "@/lib/shared/content-types/content-types.functions";
 import { ContentFormat } from "@/lib/shared/enums";
 
@@ -25,6 +32,10 @@ export function PlanSection({
   errors: Record<string, string>;
 }) {
   const { values } = draft;
+  const auth = useAuth();
+  const [creating, setCreating] = useState(false);
+  const opener = useRef<HTMLElement | null>(null);
+  const canCreate = can(auth, Action.Content.ManageTypes) && !typesDisabled;
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -48,6 +59,19 @@ export function PlanSection({
           emptyText="Nenhum tipo encontrado."
           disabled={typesDisabled}
           error={errors["typeIds"]}
+          trailing={
+            canCreate ? (
+              <IconButton
+                variant="outline"
+                label="Novo tipo de conteúdo"
+                icon={Plus}
+                onClick={() => {
+                  opener.current = document.activeElement as HTMLElement | null;
+                  setCreating(true);
+                }}
+              />
+            ) : null
+          }
         />
         <DatePickerField
           id="content-publish-date"
@@ -64,6 +88,15 @@ export function PlanSection({
           error={errors["publishDate"]}
         />
       </div>
+      <ContentTypeSheet
+        open={creating}
+        onClose={() => setCreating(false)}
+        restoreFocus={(event) => {
+          event.preventDefault();
+          opener.current?.focus();
+        }}
+        onCreated={(typeId) => draft.set("typeIds", [...values.typeIds, typeId])}
+      />
       <RichTextEditor
         id="plan-summary"
         label="Ideia inicial"

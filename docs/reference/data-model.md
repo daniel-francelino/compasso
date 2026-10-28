@@ -19,7 +19,7 @@
 | `publish_attempts` | instagram-publishing | yes | `content.view` + `can_access_brand` (read); written only by service functions |
 | `channel_metric_daily`, `channel_audience_snapshot`, `channel_media_index`, `content_channel_metrics`, `metric_marks`, `metric_reports` | metrics | yes | `metrics.view` + `can_access_brand` (read); external users read only through `portal_metrics_*` |
 | `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
-| `content_types`, `content_item_types` | content | yes | `content.view` (read; the catalog is per organization) and `content.view` + `can_access_brand` through the item (links); written only by `content_type_save`, `content_type_set_archived` (`settings.manage`) and `content_item_save`; **no policy for external roles** |
+| `content_types`, `content_item_types` | content | yes | `content.view` (read; the catalog is per organization) and `content.view` + `can_access_brand` through the item (links); written only by `content_type_save`, `content_type_set_archived` (`content.manage_types`) and `content_item_save`; **no policy for external roles** |
 | `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
 | `approval_requests`, `approval_decisions` | approvals | yes | `approvals.view` + `can_access_brand`; external only via `portal_*` |
 | `media_assets`, `media_versions`, `media_upload_sessions`, `media_collections`, `media_collection_items`, `media_usages` | media-library | scope `brand` or `site` | `media.view` + brand link (or `site.view` for site scope) |

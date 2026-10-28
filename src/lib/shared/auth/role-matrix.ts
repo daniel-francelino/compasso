@@ -38,6 +38,7 @@ export const ACTION_DESCRIPTION_LABELS: Record<string, string> = {
   [Action.Content.Cancel]: "Cancelar conteúdos",
   [Action.Content.Reopen]: "Reabrir conteúdos",
   [Action.Content.PublishManual]: "Marcar conteúdos como publicados manualmente",
+  [Action.Content.ManageTypes]: "Criar, editar e arquivar os tipos de conteúdo",
   [Action.Approvals.View]: "Visualizar aprovações",
   [Action.Approvals.Decide]: "Aprovar ou solicitar alterações no portal",
   [Action.Comments.CreateInternal]: "Escrever comentários internos",
