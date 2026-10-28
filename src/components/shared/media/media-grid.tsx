@@ -16,6 +16,20 @@ const scopeSuffix: Record<MediaScope, string> = {
 
 function Thumb({ item }: { item: MediaRow }) {
   const [broken, setBroken] = useState(false);
+  if (item.kind === MediaKind.Video && item.videoUrl !== null && !broken) {
+    return (
+      <video
+        src={`${item.videoUrl}#t=0.5`}
+        preload="metadata"
+        muted
+        playsInline
+        aria-hidden="true"
+        tabIndex={-1}
+        className="pointer-events-none size-full object-cover"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
   if (item.thumbUrl !== null && !broken) {
     return (
       <img

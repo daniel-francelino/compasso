@@ -45,6 +45,7 @@ export type MediaRow = {
   createdAt: string;
   currentVersionId: string;
   thumbUrl: string | null;
+  videoUrl: string | null;
 };
 
 export type MediaVersionRow = {
@@ -63,7 +64,7 @@ export type MediaVersionRow = {
 };
 
 export type MediaDetail = {
-  asset: Omit<MediaRow, "thumbUrl">;
+  asset: Omit<MediaRow, "thumbUrl" | "videoUrl">;
   versions: MediaVersionRow[];
   usageCount: number;
   previewUrl: string | null;
@@ -74,7 +75,7 @@ const versionedSchema = z.object({ id: z.string().uuid(), version: z.number().in
 const keysSchema = z.object({ keys: z.array(z.string()) });
 
 const listColumns =
-  "id, display_name, scope, brand_id, tags, size_bytes, version, trashed_at, created_at, brands(name), current:media_versions!media_assets_current_version_fkey!inner(id, mime_type, width, height, thumb_key, status)";
+  "id, display_name, scope, brand_id, tags, size_bytes, version, trashed_at, created_at, brands(name), current:media_versions!media_assets_current_version_fkey!inner(id, mime_type, width, height, thumb_key, storage_key, original_purged_at, status)";
 
 const MIME_PATTERNS: Record<MediaKind, string> = {
   [MediaKind.Image]: "image/*",
@@ -148,6 +149,15 @@ export const listMedia = createServerFn({ method: "GET" })
             (rows ?? []).map((row) => row.current.thumb_key),
             INTERNAL_URL_SECONDS,
           );
+    const videoKeyOf = (row: NonNullable<typeof rows>[number]) =>
+      kindOfMime(row.current.mime_type) === MediaKind.Video &&
+      row.current.original_purged_at === null
+        ? row.current.storage_key
+        : null;
+    const videos =
+      storage === null
+        ? new Map<string, string>()
+        : await storage.signUrls((rows ?? []).map(videoKeyOf), INTERNAL_URL_SECONDS);
     const mapped = (rows ?? []).map((row) => ({
       id: row.id,
       name: row.display_name,
@@ -165,6 +175,7 @@ export const listMedia = createServerFn({ method: "GET" })
       createdAt: row.created_at,
       currentVersionId: row.current.id,
       thumbUrl: row.current.thumb_key ? (thumbs.get(row.current.thumb_key) ?? null) : null,
+      videoUrl: videos.get(videoKeyOf(row) ?? "") ?? null,
     }));
     return { ok: true, ...pageOf(mapped, count ?? 0, { page: data.page, pageSize: PAGE_SIZE }) };
   });
