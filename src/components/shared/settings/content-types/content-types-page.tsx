@@ -5,14 +5,15 @@ import { toast } from "sonner";
 import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { FormError } from "@/components/shared/admin/auth-shell";
+import { FieldGroup } from "@/components/shared/admin/field-group";
 import { FormDialog } from "@/components/shared/admin/form-dialog";
 import { TextField } from "@/components/shared/admin/form-fields";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
+import { SectionCard } from "@/components/shared/admin/section-card";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Button } from "@/components/shared/ui/button";
-import { Label } from "@/components/shared/ui/label";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import {
@@ -97,10 +98,7 @@ function TypeDialog({ editing, onClose }: { editing: Editing | null; onClose: ()
         onValueChange={(emoji) => setDraft({ ...draft, emoji })}
         error={errors["emoji"]}
       />
-      <fieldset className="space-y-1.5">
-        <Label asChild>
-          <legend>Cor</legend>
-        </Label>
+      <FieldGroup legend="Cor" gap="sm">
         <div className="flex flex-wrap gap-2">
           {Object.values(ContentTypeColor).map((color) => (
             <button
@@ -122,7 +120,7 @@ function TypeDialog({ editing, onClose }: { editing: Editing | null; onClose: ()
           ))}
         </div>
         {errors["color"] ? <p className="text-xs text-destructive">{errors["color"]}</p> : null}
-      </fieldset>
+      </FieldGroup>
       <FormError message={error} />
     </FormDialog>
   );
@@ -180,39 +178,41 @@ export function ContentTypesPage() {
         />
       ) : null}
       {types.length > 0 ? (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
-          {types.map((type) => (
-            <li
-              key={type.id}
-              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
-            >
-              <div className="flex min-w-0 flex-wrap items-center gap-3">
-                <ContentTypeChip type={type} />
-                {type.archived ? (
-                  <StatusBadge tone="neutral" icon={Archive}>
-                    Arquivado
-                  </StatusBadge>
-                ) : null}
-                <span className="text-sm text-muted-foreground">
-                  {type.contentCount === 1 ? "1 conteúdo" : `${type.contentCount} conteúdos`}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <IconButton
-                  label={`Editar ${type.name}`}
-                  icon={Pencil}
-                  onClick={() => edit(type)}
-                />
-                <IconButton
-                  label={`${type.archived ? "Reativar" : "Arquivar"} ${type.name}`}
-                  icon={type.archived ? ArchiveRestore : Archive}
-                  disabled={busy}
-                  onClick={() => void toggleArchived(type)}
-                />
-              </div>
-            </li>
-          ))}
-        </ul>
+        <SectionCard as="div" padding="none">
+          <ul className="divide-y divide-border">
+            {types.map((type) => (
+              <li
+                key={type.id}
+                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="flex min-w-0 flex-wrap items-center gap-3">
+                  <ContentTypeChip type={type} />
+                  {type.archived ? (
+                    <StatusBadge tone="neutral" icon={Archive}>
+                      Arquivado
+                    </StatusBadge>
+                  ) : null}
+                  <span className="text-sm text-muted-foreground">
+                    {type.contentCount === 1 ? "1 conteúdo" : `${type.contentCount} conteúdos`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <IconButton
+                    label={`Editar ${type.name}`}
+                    icon={Pencil}
+                    onClick={() => edit(type)}
+                  />
+                  <IconButton
+                    label={`${type.archived ? "Reativar" : "Arquivar"} ${type.name}`}
+                    icon={type.archived ? ArchiveRestore : Archive}
+                    disabled={busy}
+                    onClick={() => void toggleArchived(type)}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </SectionCard>
       ) : null}
       {editing === null ? null : (
         <TypeDialog key={editing.id ?? "new"} editing={editing} onClose={() => setEditing(null)} />

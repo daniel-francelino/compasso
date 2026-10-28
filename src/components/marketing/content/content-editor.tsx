@@ -32,6 +32,7 @@ import {
 import { useAutoSelectChannel } from "@/hooks/marketing/use-auto-select-channel";
 import { useAutoSelectAssignee } from "@/hooks/marketing/use-auto-select-assignee";
 import { useBrand } from "@/hooks/marketing/use-brand";
+import { useContentTypeOptions } from "@/hooks/marketing/use-content-type-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useFormSubmit } from "@/hooks/shared/use-form-submit";
 import { useServerAction } from "@/hooks/shared/use-server-action";
@@ -50,6 +51,7 @@ import {
   stepToShow,
   stepsWithErrors,
 } from "@/lib/marketing/content/editor-steps";
+import { draftPayload } from "@/lib/marketing/content/draft-payload";
 import { followPublishDate, plannedOnDay } from "@/lib/marketing/content/publish-date";
 import { saveContentSchema } from "@/lib/marketing/content/schemas";
 import { stageStateOf } from "@/lib/marketing/content/stage-state";
@@ -69,7 +71,6 @@ import { platformFormats } from "@/lib/shared/editorial/editorial";
 import { ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
-import { listContentTypes } from "@/lib/shared/content-types/content-types.functions";
 import { focusFirstInvalid } from "@/lib/shared/forms";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
@@ -149,17 +150,7 @@ export function ContentEditor({
     enabled: values.brandId !== "",
   });
   const channels = channelsQuery.data ?? [];
-  const typesQuery = useQuery({
-    queryKey: QueryKey.Content.types(),
-    queryFn: async () => unwrapResult(await listContentTypes()).types,
-    enabled: can(auth, Action.Content.View),
-  });
-  const typeOptions = [
-    ...(typesQuery.data ?? []),
-    ...(content?.types ?? []).filter(
-      (type) => type.archived && !(typesQuery.data ?? []).some((active) => active.id === type.id),
-    ),
-  ];
+  const typeOptions = useContentTypeOptions(content?.types ?? []);
 
   useEffect(() => {
     if (!focusPending.current) return;
@@ -226,36 +217,8 @@ export function ContentEditor({
     onSelect: (assigneeId) => draft.setAutomatic("assigneeId", assigneeId),
   });
 
-  const payload = (expectedVersion: number | undefined) => ({
-    ...(content === undefined ? {} : { id: content.id }),
-    brandId: values.brandId,
-    title: values.title,
-    internalNotes: values.internalNotes,
-    assigneeId: values.assigneeId,
-    typeIds: values.typeIds,
-    publishDate: values.publishDate,
-    planSummary: values.planSummary,
-    planMedia: values.planFiles.map((file) => ({
-      mediaVersionId: file.mediaVersionId,
-      altText: file.altText,
-    })),
-    caption: values.caption,
-    callToAction: values.callToAction,
-    media: values.files.map((file) => ({
-      mediaVersionId: file.mediaVersionId,
-      altText: file.altText,
-    })),
-    channels: values.rows.map((row) => ({
-      ...(row.id === undefined ? {} : { id: row.id }),
-      channelId: row.channelId,
-      format: row.format,
-      caption: row.caption,
-      plannedAt: row.plannedAt,
-      plannedTimezone: row.plannedAt === null ? null : (row.plannedTimezone ?? zone),
-    })),
-    ...(sourceNote === undefined || content !== undefined ? {} : { sourceNote }),
-    ...(expectedVersion === undefined ? {} : { expectedVersion }),
-  });
+  const payload = (expectedVersion: number | undefined) =>
+    draftPayload(values, zone, { contentId: content?.id, sourceNote, expectedVersion });
 
   async function save(forceLatest: boolean) {
     const base =

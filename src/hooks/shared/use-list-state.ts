@@ -4,7 +4,7 @@ import { type ListSearch, listSearchSchema } from "@/lib/shared/list-search";
 import { type ListSort, SortDirection } from "@/lib/shared/list-sort";
 import { useDebouncedValue } from "./use-debounced-value";
 
-export const useListState = <S extends string>(initialStatus: S) => {
+export const useListState = <S extends string>(initialStatus: S, defaultSort: ListSort = null) => {
   const raw = useSearch({ strict: false });
   const navigate = useNavigate();
   const search: ListSearch = listSearchSchema.parse(raw);
@@ -12,7 +12,9 @@ export const useListState = <S extends string>(initialStatus: S) => {
   const status = (search.status ?? initialStatus) as S;
   const page = search.page ?? 1;
   const sort: ListSort =
-    search.sort === undefined ? null : { key: search.sort, dir: search.dir ?? SortDirection.Asc };
+    search.sort === undefined
+      ? defaultSort
+      : { key: search.sort, dir: search.dir ?? SortDirection.Asc };
 
   const [text, setText] = useState(search.q ?? "");
   const debouncedSearch = useDebouncedValue(text.trim(), 300);
@@ -48,6 +50,7 @@ export const useListState = <S extends string>(initialStatus: S) => {
       order: search.order,
       owner: search.owner,
       tag: search.tag,
+      contentType: search.contentType,
       client: search.client,
       platform: search.platform,
       editorial: search.editorial,
@@ -59,6 +62,7 @@ export const useListState = <S extends string>(initialStatus: S) => {
       key:
         | "owner"
         | "tag"
+        | "contentType"
         | "client"
         | "platform"
         | "scope"

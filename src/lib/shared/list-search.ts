@@ -11,6 +11,7 @@ export const listSearchSchema = z.object({
   dir: z.nativeEnum(SortDirection).optional().catch(undefined),
   owner: z.string().uuid().optional().catch(undefined),
   tag: z.string().max(40).optional().catch(undefined),
+  contentType: z.string().uuid().optional().catch(undefined),
   client: z.string().uuid().optional().catch(undefined),
   platform: z.string().max(20).optional().catch(undefined),
   scope: z.string().max(10).optional().catch(undefined),

@@ -22,17 +22,16 @@ import {
   DataTable,
 } from "@/components/shared/admin/data-table";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
-import { InfoTip } from "@/components/shared/admin/info-tip";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
-import { TextField } from "@/components/shared/admin/form-fields";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { Button } from "@/components/shared/ui/button";
 import { ContentBoard } from "@/components/marketing/content/content-board";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
+import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
@@ -47,18 +46,21 @@ import {
   listAssigneeOptions,
   listContentItems,
 } from "@/lib/marketing/content/content.functions";
-import { ContentStatusFilter } from "@/lib/marketing/content/schemas";
+import { ContentSort, ContentStatusFilter } from "@/lib/marketing/content/schemas";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
+import { listContentTypes } from "@/lib/shared/content-types/content-types.functions";
 import { EditorialStatus, PublicationStatus } from "@/lib/shared/enums";
-import { formatDateOnly, formatInZone } from "@/lib/shared/format";
+import { formatDateOnly } from "@/lib/shared/format";
 import {
+  contentFormatLabels,
   editorialStatusLabels,
   platformLabels,
   publicationStatusLabels,
 } from "@/lib/shared/labels";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
+import { SortDirection } from "@/lib/shared/list-sort";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
@@ -86,19 +88,15 @@ const publicationOptions = [
   })),
 ];
 
-const nextPlanned = (row: ContentItemRow): { at: string; timeZone: string } | null => {
-  const planned = row.channels
-    .filter((variant) => variant.plannedAt !== null && variant.plannedTimezone !== null)
-    .sort((a, b) => (a.plannedAt ?? "").localeCompare(b.plannedAt ?? ""))[0];
-  return planned?.plannedAt && planned.plannedTimezone
-    ? { at: planned.plannedAt, timeZone: planned.plannedTimezone }
-    : null;
-};
+const DEFAULT_SORT = { key: ContentSort.Date, dir: SortDirection.Asc };
+
+const formatsOf = (row: ContentItemRow): string =>
+  [...new Set(row.channels.map((channel) => contentFormatLabels[channel.format]))].join(", ");
 
 export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const navigate = useNavigate();
-  const list = useListState<string>(ContentStatusFilter.Active);
+  const list = useListState<string>(ContentStatusFilter.Active, DEFAULT_SORT);
   const [cancelling, setCancelling] = useState<ContentItemRow | null>(null);
   const [deleting, setDeleting] = useState<ContentItemRow | null>(null);
   const { run, busy } = useServerAction();
@@ -114,7 +112,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     ...(list.filters.owner ? { ownerId: list.filters.owner } : {}),
     ...(list.filters.editorial ? { editorial: list.filters.editorial as EditorialStatus } : {}),
     ...(list.filters.publication ? { publication: list.filters.publication } : {}),
-    ...(list.filters.tag ? { tag: list.filters.tag } : {}),
+    ...(list.filters.contentType ? { typeId: list.filters.contentType } : {}),
     ...(list.sort ? { sort: list.sort.key, dir: list.sort.dir } : {}),
   };
 
@@ -124,6 +122,10 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     queryFn: async () =>
       unwrapResult(await listChannels({ data: { brandId: brandId ?? "" } })).channels,
     enabled: brandId !== undefined && can(auth, Action.Channels.View),
+  });
+  const types = useQuery({
+    queryKey: QueryKey.Content.types(),
+    queryFn: async () => unwrapResult(await listContentTypes()).types,
   });
   const assignees = useQuery({
     queryKey: QueryKey.Content.assignees(brandId ?? ""),
@@ -155,6 +157,26 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
 
   const columns: DataTableColumn<ContentItemRow>[] = [
     {
+      id: "date",
+      label: "Data",
+      sortable: true,
+      cell: (row) => (row.publishDate ? formatDateOnly(row.publishDate) : "—"),
+    },
+    {
+      id: "types",
+      label: "Tipos",
+      cell: (row) =>
+        row.types.length === 0 ? (
+          "—"
+        ) : (
+          <span className="flex flex-wrap gap-1">
+            {row.types.map((type) => (
+              <ContentTypeChip key={type.id} type={type} />
+            ))}
+          </span>
+        ),
+    },
+    {
       id: "title",
       label: "Conteúdo",
       sortable: true,
@@ -168,6 +190,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         </Link>
       ),
     },
+    { id: "format", label: "Formato", cell: (row) => formatsOf(row) || "—" },
     { id: "brand", label: "Marca", cell: (row) => row.brandName },
     {
       id: "channels",
@@ -178,23 +201,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       id: "status",
       label: "Estado",
       cell: (row) => <EditorialStatusBadge status={row.editorialStatus} />,
-    },
-    {
-      id: "planned",
-      label: "Prevista",
-      cell: (row) => {
-        const planned = nextPlanned(row);
-        return planned ? (
-          <span className="inline-flex items-center gap-1.5">
-            {formatInZone(planned.at, planned.timeZone)}
-            <InfoTip label={`Fuso horário: ${planned.timeZone}`}>
-              Fuso horário: {planned.timeZone}
-            </InfoTip>
-          </span>
-        ) : (
-          "—"
-        );
-      },
     },
     {
       id: "owner",
@@ -208,12 +214,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
             {row.assigneeName}
           </span>
         ),
-    },
-    {
-      id: "deadline",
-      label: "Prazo",
-      sortable: true,
-      cell: (row) => (row.productionDueDate ? formatDateOnly(row.productionDueDate) : "—"),
     },
   ];
 
@@ -324,6 +324,23 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       ],
       onChange: (value) => void list.setFilter("owner", value === ALL ? undefined : value),
     },
+    {
+      id: "contentType",
+      label: "Tipo",
+      value: list.filters.contentType ?? ALL,
+      defaultValue: ALL,
+      emptyText: types.data?.length === 0 ? "Nenhum tipo cadastrado" : undefined,
+      options: [
+        { value: ALL, label: "Todos os tipos" },
+        ...(types.data ?? []).map((type) => ({
+          value: type.id,
+          label: type.name,
+          icon: <ContentTypeChip type={type} />,
+        })),
+      ],
+      onChange: (value: string) =>
+        void list.setFilter("contentType", value === ALL ? undefined : value),
+    },
     ...(board
       ? []
       : [
@@ -382,28 +399,16 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
             <ListFilters
               groups={filterGroups}
               extraActive={
-                (list.filters.tag ? 1 : 0) +
                 (board && list.filters.editorial ? 1 : 0) +
                 (board && list.filters.publication ? 1 : 0)
               }
               onClear={() => {
-                void list.setFilter("tag", undefined);
                 if (board) {
                   void list.setFilter("editorial", undefined);
                   void list.setFilter("publication", undefined);
                 }
               }}
-            >
-              {board ? null : (
-                <TextField
-                  id="content-tag"
-                  label="Etiqueta"
-                  value={list.filters.tag ?? ""}
-                  onValueChange={(value) => void list.setFilter("tag", value)}
-                  maxLength={40}
-                />
-              )}
-            </ListFilters>
+            />
             <IconButton
               variant="outline"
               label={board ? "Alternar para lista" : "Alternar para quadro"}
