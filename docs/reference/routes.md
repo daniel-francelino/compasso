@@ -6,7 +6,7 @@
 
 | URL | Route file | Action | Notes |
 |---|---|---|---|
-| `/` and any published address (`/servicos`, `/casos/cafe-aurora`…) | `routes/(site)/index.tsx` and `routes/(site)/$.tsx` | none | Resolved by `resolvePublicPath` against published pages; 404/503 per [../spaces/public-site-delivery.md](../spaces/public-site-delivery.md) |
+| `/` and any published address (`/servicos`, `/casos/cafe-aurora`…) | `routes/(site)/index.tsx` and `routes/(site)/$.tsx` | none | `/` is the code landing page of section 18 of cms-site.md (temporary); other addresses are resolved by `resolvePublicPath` against published pages; 404/503 per [../spaces/public-site-delivery.md](../spaces/public-site-delivery.md) |
 | `/sitemap.xml` | `routes/sitemap[.]xml.ts` | none | From published pages |
 | `/robots.txt` | `routes/robots[.]txt.ts` | none | `Disallow: /` until something is published |
 

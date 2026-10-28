@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "lost-ui/styles.css";
+@import "lost-ui/effects.css";
 
 :root {
   --ink: #14245c;
@@ -80,6 +81,14 @@
     var(--orchid-light) 75%,
     var(--orchid) 100%
   );
+
+  --effect-from: var(--violet-bright);
+  --effect-to: var(--coral);
+  --rainbow-1: var(--violet);
+  --rainbow-2: var(--violet-bright);
+  --rainbow-3: var(--orchid);
+  --rainbow-4: var(--rose);
+  --rainbow-5: var(--coral);
 
   --radius: 0.75rem;
 }

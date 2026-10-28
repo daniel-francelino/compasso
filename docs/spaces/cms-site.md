@@ -11,7 +11,7 @@ Goals:
 1. The team **edits the site without touching code**: texts, images, services, portfolio, testimonials, contacts, SEO, navigation and section order.
 2. **Nothing goes live without an explicit action** ("Publicar"), with preview, history and rollback.
 3. **Client work only reaches the portfolio with explicit authorization** (consent note and date), and only through public derivatives of the files.
-4. The site **keeps no content in the code** and has a defined behavior when nothing is published ([public-site-delivery.md](public-site-delivery.md)).
+4. The site **keeps no content in the code** and has a defined behavior when nothing is published ([public-site-delivery.md](public-site-delivery.md)). One temporary exception exists: section 18.
 
 Out of scope (see section 14): online store, blog (optional later), newsletter, analytics, free visual layout editor, client accounts on the site.
 
@@ -295,3 +295,12 @@ Phase 5 (tasks P5-01 to P5-05, 2026-10-19): phases A to E of section 13 are buil
 
 **Not done.** Scheduled publication, second language, blog, JSON-LD for services and case studies (only `Organization` on the home page), per-page preview width selector, settings rollback, "Entra na próxima publicação", recipient email delivery of contact messages.
 2026-10-19: Aligned CMS settings save and contact-note save actions to the right; page-level save actions remain in the shared header. Validation performed: targeted ESLint, `check:docs`, Prettier and `git diff --check`. Full typecheck remains blocked by existing calendar and brand-logo type errors outside this change. **Not tested**: browser rendering.
+
+## 18. Temporary exception: landing page of Rayana Vasconcelos
+
+**Decision (2026-10-28):** first the site is built in code to see how it looks; afterwards it migrates to be managed by the CMS. Until then the home `/` renders a landing page ("Rayana Vasconcelos · Social Media", focus on social media management) whose copy and sections live in `src/components/site/landing/`, built with the `effects` of `lost-ui`.
+
+- Scope: only the route `(site)/index`. Every other address still goes through `resolvePublicPath` and the CMS.
+- The landing does not read the CMS, so the 503 / "Site em preparação" behavior does not apply to `/`.
+- The lint rule `noSiteContentInCode` is unchanged (the copy is not in `@/assets/site`, `@/data/site` or `@/lib/site/i18n`).
+- Exit criterion: each landing block becomes a section kind in the catalog (section 5.2) and the home is served from a published page again; then the landing folder and this section are removed.

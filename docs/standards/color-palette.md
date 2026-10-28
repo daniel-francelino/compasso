@@ -177,6 +177,10 @@ The reference image uses a gradient from peach through pink to lilac, with patch
 --gradient-hero: linear-gradient(135deg, var(--peach) 0%, var(--rose) 45%, var(--orchid-light) 75%, var(--orchid) 100%);
 ```
 
+### Effect tokens (public site landing)
+
+The `lost-ui` effects read `--effect-from` / `--effect-to` (beams, progress bar) and `--rainbow-1…5`. They are aliases, so no new hex value exists: `--effect-from: violet-bright`, `--effect-to: coral`, `--rainbow-1…5: violet, violet-bright, orchid, rose, coral`. Decorative only; text never uses them.
+
 Organic patches are section illustrations using `coral` and `violet-bright`. Text over the gradient is `ink`, always on a label of `orchid-light` (as in the image) or on the part of the gradient that keeps at least 7:1.
 
 ## 7. Tokens for `src/styles.css`
