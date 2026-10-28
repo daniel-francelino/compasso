@@ -22,15 +22,24 @@ export const makeDerivative = async (file: Blob, maxSide: number): Promise<Blob 
 
 export type VideoInfo = { width: number; height: number; durationMs: number; cover: Blob | null };
 
+const VIDEO_INSPECT_TIMEOUT_MS = 10_000;
+const MAX_DURATION_MS = 86_400_000;
+
+const durationOf = (seconds: number): number =>
+  Number.isFinite(seconds) ? Math.min(MAX_DURATION_MS, Math.round(seconds * 1000)) : 0;
+
 export const inspectVideo = (file: Blob, coverSide: number): Promise<VideoInfo | null> =>
   new Promise((resolve) => {
     const url = URL.createObjectURL(file);
     const video = document.createElement("video");
     video.preload = "metadata";
     video.muted = true;
+    video.playsInline = true;
     video.src = url;
 
+    const timer = setTimeout(() => finish(null), VIDEO_INSPECT_TIMEOUT_MS);
     const finish = (value: VideoInfo | null) => {
+      clearTimeout(timer);
       URL.revokeObjectURL(url);
       resolve(value);
     };
@@ -49,8 +58,7 @@ export const inspectVideo = (file: Blob, coverSide: number): Promise<VideoInfo |
       canvas.height = Math.max(1, Math.round(height * scale));
       canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
-        (cover) =>
-          finish({ width, height, durationMs: Math.round(video.duration * 1000) || 0, cover }),
+        (cover) => finish({ width, height, durationMs: durationOf(video.duration), cover }),
         "image/webp",
         0.82,
       );

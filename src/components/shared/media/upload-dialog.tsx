@@ -13,7 +13,11 @@ import { Progress } from "@/components/shared/ui/progress";
 import { type UploadItem, UploadStatus, useMediaUpload } from "@/hooks/shared/use-media-upload";
 import type { MediaScope } from "@/lib/shared/enums";
 import { formatBytes } from "@/lib/shared/format";
-import { MAX_FILES_PER_UPLOAD, acceptAttribute } from "@/lib/shared/media/limits";
+import {
+  ACCEPTED_FORMATS_LABEL,
+  MAX_FILES_PER_UPLOAD,
+  acceptAttribute,
+} from "@/lib/shared/media/limits";
 
 const statusLabel: Record<UploadStatus, string> = {
   [UploadStatus.Queued]: "Na fila",
@@ -110,8 +114,8 @@ export function UploadDialog({
             <FileUp className="size-5 text-muted-foreground" aria-hidden="true" /> {title}
           </DialogTitle>
           <DialogDescription>
-            Imagens (JPEG, PNG, WebP), vídeos MP4 e PDFs. Até {MAX_FILES_PER_UPLOAD} arquivos por
-            vez. Tudo começa privado.
+            Aceitamos {ACCEPTED_FORMATS_LABEL}. Até {MAX_FILES_PER_UPLOAD} arquivos por vez. Tudo
+            começa privado.
           </DialogDescription>
         </DialogHeader>
 

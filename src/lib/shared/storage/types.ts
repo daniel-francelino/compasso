@@ -22,11 +22,13 @@ export interface ServerStorage {
   removePublic(keys: string[]): Promise<StorageResult>;
 }
 
+export type BrowserUploadResult = { ok: true } | { ok: false; status: number };
+
 export interface BrowserStorage {
   upload(
     target: UploadTarget,
     body: Blob,
     contentType: string,
     onProgress?: (fraction: number) => void,
-  ): Promise<boolean>;
+  ): Promise<BrowserUploadResult>;
 }

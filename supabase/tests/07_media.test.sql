@@ -1,6 +1,6 @@
 begin;
 
-select plan(55);
+select plan(58);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -189,6 +189,12 @@ reset role;
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
 select throws_ok(format($$select public.media_collection_delete('%s')$$, current_setting('t.c3')), 'invalid_input', 'a collection with files is not deleted');
 select throws_ok(format($$select public.media_collection_move_items('%s', array['%s']::uuid[])$$, current_setting('t.c1'), gen_random_uuid()), 'invalid_input', 'unknown assets are refused');
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
+select is(public.media_request_upload('brand', current_setting('t.brand')::uuid, 'iphone.mov', 1000, 'video/quicktime', 'idem-key-0013') ->> 'kind', 'video', 'a QuickTime video is accepted');
+select is(public.media_request_upload('brand', current_setting('t.brand')::uuid, 'clip.webm', 1000, 'video/webm', 'idem-key-0014') ->> 'kind', 'video', 'a WebM video is accepted');
+select throws_ok($$select public.media_request_upload('brand', current_setting('t.brand')::uuid, 'clip.flv', 1000, 'video/x-flv', 'idem-key-0015')$$, 'upload_type_not_allowed', 'a video type outside the allowlist is refused');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');

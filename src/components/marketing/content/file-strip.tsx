@@ -37,7 +37,7 @@ import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { combinedRule } from "@/lib/shared/editorial/editorial";
 import { type ContentFormat, MediaScope } from "@/lib/shared/enums";
-import { MediaKind, kindOfMime } from "@/lib/shared/media/limits";
+import { MediaKind, kindOfMime, mimeOfFile } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { cn } from "@/lib/shared/utils";
 
@@ -332,12 +332,13 @@ export function FileStrip({
 
   const receive = (files: File[]) => {
     const wrongKind = files.filter((file) => {
-      const kind = kindOfMime(file.type);
+      const kind = kindOfMime(mimeOfFile(file));
       return kind !== null && !rule.kinds.includes(kind);
     });
     if (wrongKind.length > 0) {
+      const accepted = rule.kinds.map((kind) => kindLabels[kind]).join(" e ");
       toast.error(
-        `${wrongKind.map((file) => file.name).join(", ")}: tipo não aceito neste formato.`,
+        `${wrongKind.map((file) => file.name).join(", ")}: este formato de conteúdo aceita apenas ${accepted}.`,
       );
     }
     const candidates = files.filter((file) => !wrongKind.includes(file));

@@ -103,7 +103,7 @@ Performance note: presigned URLs change on every request, so the browser does no
 
 ## 9. Acceptance criteria
 
-- [ ] JPEG, PNG, WebP, MP4 and PDF can be uploaded within the limits; thumbnails and previews appear; the record downloads the original with the right name.
+- [ ] JPEG, PNG, WebP, videos (MP4, M4V, MOV, 3GP, 3G2, WebM, MKV, AVI) and PDF can be uploaded within the limits; thumbnails and previews appear; the record downloads the original with the right name.
 - [ ] A file above the declared size, or with fake content, is refused **without being downloaded in full** and the object is deleted.
 - [ ] Whoever lacks `media.view` (or the portal link for the revision) gets no URL; asking for an arbitrary key by ID returns nothing.
 - [ ] An expired URL stops working; the upload URL cannot be used to read or delete.

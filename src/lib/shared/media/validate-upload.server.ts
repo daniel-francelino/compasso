@@ -1,4 +1,4 @@
-import { inspectImage, inspectMp4 } from "@/lib/shared/media/image-info";
+import { inspectImage, inspectVideoFile } from "@/lib/shared/media/image-info";
 import { MAX_DERIVATIVE_BYTES, MAX_PIXELS, MediaKind, kindOfMime } from "@/lib/shared/media/limits";
 import { inspectPdf } from "@/lib/shared/media/pdf-info";
 import type { ServerStorage } from "@/lib/shared/storage/types";
@@ -22,11 +22,16 @@ export type UploadValidation =
       height: number | null;
       derivativeBytes: number;
     }
-  | { ok: false; code: "upload_size_mismatch" | "upload_content_mismatch" | "storage_unavailable" };
+  | { ok: false; code: UploadFailureCode };
 
-const failure = (
-  code: "upload_size_mismatch" | "upload_content_mismatch" | "storage_unavailable",
-) => ({ ok: false, code }) as const;
+type UploadFailureCode =
+  | "upload_size_mismatch"
+  | "upload_content_mismatch"
+  | "upload_video_invalid"
+  | "upload_not_received"
+  | "storage_unavailable";
+
+const failure = (code: UploadFailureCode) => ({ ok: false, code }) as const;
 
 const validateImage = (
   head: Uint8Array,
@@ -51,7 +56,9 @@ const validateOriginal = async (
   if (head === null) return null;
 
   if (kind === MediaKind.Image) return validateImage(head, version.mimeType);
-  if (kind === MediaKind.Video) return inspectMp4(head) ? { width: null, height: null } : null;
+  if (kind === MediaKind.Video) {
+    return inspectVideoFile(head, version.mimeType) ? { width: null, height: null } : null;
+  }
 
   const tailStart = Math.max(0, version.sizeBytes - TAIL_BYTES);
   const tail = await storage.readRange(version.storageKey, tailStart, version.sizeBytes - 1);
@@ -82,13 +89,19 @@ export const validateUploadedVersion = async (
   version: UploadedVersion,
 ): Promise<UploadValidation> => {
   const info = await storage.stat(version.storageKey);
-  if (info === null) return failure("upload_content_mismatch");
+  if (info === null) return failure("upload_not_received");
   if (info.size !== version.sizeBytes) return failure("upload_size_mismatch");
   const storedType = (info.contentType ?? "").split(";")[0]?.trim().toLowerCase();
   if (storedType !== version.mimeType) return failure("upload_content_mismatch");
 
   const original = await validateOriginal(storage, version);
-  if (original === null) return failure("upload_content_mismatch");
+  if (original === null) {
+    return failure(
+      kindOfMime(version.mimeType) === MediaKind.Video
+        ? "upload_video_invalid"
+        : "upload_content_mismatch",
+    );
+  }
 
   let total = 0;
   for (const key of [version.thumbKey, version.displayKey]) {

@@ -15,25 +15,13 @@ import {
   type UploadTray,
   UploadTrayContext,
 } from "@/hooks/shared/use-upload-tray";
-import { logError } from "@/lib/shared/logger";
-import { MediaKind, kindOfMime } from "@/lib/shared/media/limits";
+import { MediaKind, kindOfMime, mimeOfFile } from "@/lib/shared/media/limits";
 import { QueryKey } from "@/lib/shared/query-keys";
 
 type Job = { item: UploadItem; target: Target; onUploaded: EnqueueInput["onUploaded"] };
 
-const FAILED_MESSAGE = "Não foi possível enviar o arquivo.";
-
 const isActive = (task: TrayTask): boolean =>
   task.item.status === UploadStatus.Queued || task.item.status === UploadStatus.Uploading;
-
-const attempt = async (job: Job, onProgress: (fraction: number) => void) => {
-  try {
-    return await sendUpload(job.item, job.target, onProgress);
-  } catch (error) {
-    logError(error);
-    return { ok: false as const, message: FAILED_MESSAGE };
-  }
-};
 
 export function UploadTrayProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -59,7 +47,9 @@ export function UploadTrayProvider({ children }: { children: ReactNode }) {
       const job = jobs.current.get(id);
       if (job === undefined) return;
       patchItem(id, { status: UploadStatus.Uploading, message: null });
-      const outcome = await attempt(job, (fraction) => patch(id, { progress: fraction }));
+      const outcome = await sendUpload(job.item, job.target, (fraction) =>
+        patch(id, { progress: fraction }),
+      );
       if (!outcome.ok) {
         patchItem(id, { status: UploadStatus.Failed, message: outcome.message });
         return;
@@ -73,7 +63,7 @@ export function UploadTrayProvider({ children }: { children: ReactNode }) {
       job.onUploaded({
         versionId: outcome.versionId,
         name: job.item.file.name,
-        kind: kindOfMime(job.item.file.type) ?? MediaKind.Image,
+        kind: kindOfMime(mimeOfFile(job.item.file)) ?? MediaKind.Image,
       });
       void queryClient.invalidateQueries({ queryKey: QueryKey.Media.all() });
     },

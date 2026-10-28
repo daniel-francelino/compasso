@@ -163,6 +163,37 @@ describe("validateUploadedVersion", () => {
     expect(result).toEqual({ ok: false, code: "upload_content_mismatch" });
   });
 
+  it("accepts a QuickTime video and refuses a video whose content is not a video", async () => {
+    const mov = new Uint8Array([0, 0, 0, 24, ...ascii("ftypqt  "), 0, 0, 0, 0, ...ascii("qt  ")]);
+    const video = (bytes: Uint8Array, mimeType: string) => ({
+      storageKey: "vid",
+      thumbKey: null,
+      displayKey: null,
+      mimeType,
+      sizeBytes: bytes.length,
+    });
+    expect(
+      await validateUploadedVersion(
+        fakeStorage({ vid: mov }, undefined, "video/quicktime"),
+        video(mov, "video/quicktime"),
+      ),
+    ).toMatchObject({ ok: true });
+
+    const html = new Uint8Array(ascii("<html><body>not a video at all</body></html>"));
+    expect(
+      await validateUploadedVersion(
+        fakeStorage({ vid: html }, undefined, "video/mp4"),
+        video(html, "video/mp4"),
+      ),
+    ).toEqual({ ok: false, code: "upload_video_invalid" });
+  });
+
+  it("tells a missing object apart from a bad one", async () => {
+    const original = png(10, 10);
+    const result = await validateUploadedVersion(fakeStorage({}), imageVersion(original));
+    expect(result).toEqual({ ok: false, code: "upload_not_received" });
+  });
+
   it("reports an unavailable storage when the checksum cannot be computed", async () => {
     const original = png(10, 10);
     const result = await validateUploadedVersion(

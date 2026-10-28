@@ -96,6 +96,11 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `upload_type_not_allowed` | invalid | "Este tipo de arquivo não é aceito." | `media_request_upload` |
 | `upload_content_mismatch` | invalid | "O conteúdo do arquivo não corresponde ao tipo informado." | `confirmUpload` |
 | `upload_size_mismatch` | invalid | "O tamanho do arquivo enviado é diferente do esperado." | `confirmUpload` |
+| `upload_not_received` | invalid | "O arquivo não chegou ao armazenamento. Tente enviar de novo." | `confirmUpload` (object not found after the upload) |
+| `upload_video_invalid` | invalid | "Não conseguimos ler este vídeo. O arquivo pode estar corrompido ou o download pode ter sido interrompido. Baixe de novo e tente outra vez." | `confirmUpload` (container signature check of a video) |
+| `upload_network` | unavailable | "A conexão caiu durante o envio. Verifique a internet e tente de novo." | browser upload (`sendUpload`) |
+| `upload_link_expired` | unavailable | "O link de envio expirou. Tente enviar de novo." | browser upload (`sendUpload`) |
+| `upload_storage_refused` | unavailable | "O armazenamento recusou o arquivo. Tente de novo; se continuar, avise o suporte." | browser upload (`sendUpload`) |
 | `quota_exceeded` | invalid | "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite." | `media_request_upload` |
 | `media_version_immutable` | denied | "Esta versão do arquivo não pode ser alterada." | media version trigger |
 | `avatar_invalid` | invalid | "A foto de perfil precisa ser uma imagem sua, disponível." | `profile_set_avatar` |

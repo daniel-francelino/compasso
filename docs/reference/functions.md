@@ -163,8 +163,8 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 
 | SQL function | Server function / route | Act. | Audit | Errors |
 |---|---|---|---|---|
-| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null)` (a given `p_asset` creates a new version and needs `media.update`) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `storage_unavailable` |
-| `media_confirm_upload(p_version, p_checksum, p_width, p_height, p_duration, p_derivative_bytes default 0)` | `confirmUpload` (stat → range read → validates → calls the RPC) | `media.upload` | — | `upload_size_mismatch`, `upload_content_mismatch`, `media_not_available` |
+| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null)` (a given `p_asset` creates a new version and needs `media.update`; accepts the MIME types of [../spaces/media-library.md](../spaces/media-library.md) section 7) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `storage_unavailable` |
+| `media_confirm_upload(p_version, p_checksum, p_width, p_height, p_duration, p_derivative_bytes default 0)` | `confirmUpload` (stat → range read → validates → calls the RPC) | `media.upload` | — | `upload_size_mismatch`, `upload_content_mismatch`, `upload_video_invalid`, `upload_not_received`, `media_not_available` |
 | `media_update(p_asset jsonb)` | `updateMedia` | `media.update` | — | `conflict` |
 | `media_set_trashed(p_asset, p_trashed)` | `trashMedia` | `media.delete` | — | `media_in_use` (when archiving a used file is restricted) |
 | `media_delete_permanently(p_asset)` | `deleteMediaPermanently` | `media.delete` | `media.deleted_permanently` | `media_in_use` |

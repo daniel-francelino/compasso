@@ -8,7 +8,16 @@ export const MediaKind = {
 export type MediaKind = ValueOf<typeof MediaKind>;
 
 export const IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-export const VIDEO_MIME_TYPES = ["video/mp4"] as const;
+export const VIDEO_MIME_TYPES = [
+  "video/mp4",
+  "video/x-m4v",
+  "video/quicktime",
+  "video/3gpp",
+  "video/3gpp2",
+  "video/webm",
+  "video/x-matroska",
+  "video/x-msvideo",
+] as const;
 export const DOCUMENT_MIME_TYPES = ["application/pdf"] as const;
 
 export type ImageMime = (typeof IMAGE_MIME_TYPES)[number];
@@ -43,7 +52,45 @@ export const kindOfMime = (mime: string): MediaKind | null => {
 
 export const isMediaMime = (mime: string): mime is MediaMime => kindOfMime(mime) !== null;
 
-export const acceptAttribute = MEDIA_MIME_TYPES.join(",");
+const MIME_BY_EXTENSION: Record<string, MediaMime> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  mp4: "video/mp4",
+  m4v: "video/x-m4v",
+  mov: "video/quicktime",
+  "3gp": "video/3gpp",
+  "3g2": "video/3gpp2",
+  webm: "video/webm",
+  mkv: "video/x-matroska",
+  avi: "video/x-msvideo",
+  pdf: "application/pdf",
+};
+
+export const ACCEPTED_FORMATS_LABEL =
+  "imagens JPEG, PNG e WebP, vídeos MP4, MOV, M4V, 3GP, WebM, MKV e AVI, e PDFs";
+
+export const extensionOf = (filename: string): string => {
+  const dot = filename.lastIndexOf(".");
+  return dot < 0 ? "" : filename.slice(dot + 1).toLowerCase();
+};
+
+export const mimeOfFile = (file: { name: string; type: string }): string => {
+  const declared = file.type.trim().toLowerCase();
+  if (isMediaMime(declared)) return declared;
+  return MIME_BY_EXTENSION[extensionOf(file.name)] ?? declared;
+};
+
+const extensionsOf = (kinds: readonly MediaKind[]): string[] =>
+  Object.entries(MIME_BY_EXTENSION)
+    .filter(([, mime]) => {
+      const kind = kindOfMime(mime);
+      return kind !== null && kinds.includes(kind);
+    })
+    .map(([extension]) => `.${extension}`);
+
+const ALL_KINDS = [MediaKind.Image, MediaKind.Video, MediaKind.Document] as const;
 
 const mimeTypesOf: Record<MediaKind, readonly string[]> = {
   [MediaKind.Image]: IMAGE_MIME_TYPES,
@@ -52,4 +99,6 @@ const mimeTypesOf: Record<MediaKind, readonly string[]> = {
 };
 
 export const acceptFor = (kinds: readonly MediaKind[]): string =>
-  kinds.flatMap((kind) => mimeTypesOf[kind]).join(",");
+  [...kinds.flatMap((kind) => mimeTypesOf[kind]), ...extensionsOf(kinds)].join(",");
+
+export const acceptAttribute = acceptFor(ALL_KINDS);

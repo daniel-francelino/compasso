@@ -669,7 +669,7 @@ Browser                  Server function                  R2                 Sup
  │                        marks available / failed ───────────────────────────▶ │
 ```
 
-- Configurable initial limits: image up to 25 MiB, video up to 100 MiB in the MVP, PDF up to 50 MiB. Formats: JPEG, PNG, WebP, MP4, PDF.
+- Configurable initial limits: image up to 25 MiB, video up to 100 MiB in the MVP, PDF up to 50 MiB. Formats: JPEG, PNG, WebP, PDF and videos (MP4, M4V, MOV, 3GP, 3G2, WebM, MKV, AVI; list in [spaces/media-library.md](spaces/media-library.md) section 7).
 - A presigned `PUT` does not limit size: all compensation is done on the server (measure before reading, refuse without downloading in full, delete the object if validation fails).
 - Video: generate the cover image in the browser (canvas) and send it as the display copy. No FFmpeg on Vercel. Multipart upload for larger videos is for phase 2.
 - Never-confirmed sessions and objects: daily cleanup by Vercel Cron (server route protected by `CRON_SECRET`) that deletes `pending` or `failed` records older than 24 hours and their objects; it also reconciles objects with no record using a 48-hour margin.

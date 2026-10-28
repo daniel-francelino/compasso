@@ -1,16 +1,28 @@
 import { useCallback, useRef, useState } from "react";
+import { dbErrorMessage } from "@/lib/shared/auth/errors";
 import type { MediaScope } from "@/lib/shared/enums";
+import { formatBytes } from "@/lib/shared/format";
+import { logError } from "@/lib/shared/logger";
 import {
+  ACCEPTED_FORMATS_LABEL,
   DEFAULT_LIMITS_MB,
   DISPLAY_SIDE,
   MAX_FILES_PER_UPLOAD,
   MediaKind,
   THUMB_SIDE,
+  extensionOf,
   kindOfMime,
+  mimeOfFile,
 } from "@/lib/shared/media/limits";
-import { inspectVideo, makeDerivative } from "@/lib/shared/media/resize";
-import { abortUpload, confirmUpload, requestUpload } from "@/lib/shared/media/upload.functions";
+import { type VideoInfo, inspectVideo, makeDerivative } from "@/lib/shared/media/resize";
+import {
+  type UploadPlan,
+  abortUpload,
+  confirmUpload,
+  requestUpload,
+} from "@/lib/shared/media/upload.functions";
 import { browserStorage } from "@/lib/shared/storage/browser-storage";
+import type { BrowserUploadResult } from "@/lib/shared/storage/types";
 
 export const UploadStatus = {
   Queued: "queued",
@@ -37,12 +49,27 @@ export type Target = {
 
 const MB = 1024 * 1024;
 
+const kindNames: Record<MediaKind, string> = {
+  [MediaKind.Image]: "imagens",
+  [MediaKind.Video]: "vídeos",
+  [MediaKind.Document]: "PDFs",
+};
+
+const unsupportedMessage = (file: File): string => {
+  const extension = extensionOf(file.name);
+  const named = extension === "" ? "" : ` (.${extension})`;
+  return `Formato não aceito${named}. Aceitamos ${ACCEPTED_FORMATS_LABEL}.`;
+};
+
 export const rejectionFor = (file: File): string | null => {
-  const kind = kindOfMime(file.type);
-  if (kind === null) return "Este tipo de arquivo não é aceito.";
-  if (file.size <= 0) return "O arquivo está vazio.";
-  return file.size > DEFAULT_LIMITS_MB[kind] * MB
-    ? `O arquivo passa de ${DEFAULT_LIMITS_MB[kind]} MB.`
+  const kind = kindOfMime(mimeOfFile(file));
+  if (kind === null) return unsupportedMessage(file);
+  if (file.size <= 0) {
+    return "O arquivo está vazio (0 bytes). Se veio do WhatsApp ou de outro app, baixe de novo e tente outra vez.";
+  }
+  const limit = DEFAULT_LIMITS_MB[kind];
+  return file.size > limit * MB
+    ? `O arquivo tem ${formatBytes(file.size)} e o limite para ${kindNames[kind]} é ${limit} MB.`
     : null;
 };
 
@@ -57,43 +84,67 @@ export const newItem = (file: File): UploadItem => ({
 
 type Outcome = { ok: true; assetId: string; versionId: string } | { ok: false; message: string };
 
-export const sendUpload = async (
-  item: UploadItem,
-  target: Target,
+type Prepared = { thumb: Blob | null; display: Blob | null; video: VideoInfo | null };
+
+const prepare = async (file: File, kind: MediaKind | null): Promise<Prepared> => {
+  if (kind === MediaKind.Video) {
+    const video = await inspectVideo(file, THUMB_SIDE);
+    return { thumb: video?.cover ?? null, display: null, video };
+  }
+  if (kind !== MediaKind.Image) return { thumb: null, display: null, video: null };
+  const [thumb, display] = await Promise.all([
+    makeDerivative(file, THUMB_SIDE),
+    makeDerivative(file, DISPLAY_SIDE),
+  ]);
+  return { thumb, display, video: null };
+};
+
+const failureMessageOf = (status: number): string => {
+  if (status === 0) return dbErrorMessage({ message: "upload_network" });
+  if (status === 401 || status === 403) return dbErrorMessage({ message: "upload_link_expired" });
+  return dbErrorMessage({ message: "upload_storage_refused" });
+};
+
+const firstFailedStatus = (results: BrowserUploadResult[]): number | null => {
+  for (const result of results) {
+    if (!result.ok) return result.status;
+  }
+  return null;
+};
+
+const abandon = async (versionId: string) => {
+  try {
+    await abortUpload({ data: { versionId } });
+  } catch (error) {
+    logError(error);
+  }
+};
+
+const transfer = async (
+  planned: UploadPlan,
+  file: File,
+  mime: string,
+  prepared: Prepared,
   onProgress?: (fraction: number) => void,
 ): Promise<Outcome> => {
-  const { file } = item;
-  const kind = kindOfMime(file.type);
-  const video = kind === MediaKind.Video ? await inspectVideo(file, THUMB_SIDE) : null;
-  const [thumb, display] =
-    kind === MediaKind.Image
-      ? await Promise.all([makeDerivative(file, THUMB_SIDE), makeDerivative(file, DISPLAY_SIDE)])
-      : [video?.cover ?? null, null];
-
-  const planned = await requestUpload({
-    data: {
-      scope: target.scope,
-      ...(target.brandId ? { brandId: target.brandId } : {}),
-      ...(target.assetId ? { assetId: target.assetId } : {}),
-      filename: file.name,
-      size: file.size,
-      mime: file.type,
-      idempotencyKey: item.id,
-    },
-  });
-  if (!planned.ok) return { ok: false, message: planned.message };
-
   const storage = browserStorage();
-  const uploads = await Promise.all([
-    storage.upload(planned.original, file, file.type, onProgress),
-    planned.thumb && thumb ? storage.upload(planned.thumb, thumb, "image/webp") : true,
-    planned.display && display ? storage.upload(planned.display, display, "image/webp") : true,
+  const skipped: BrowserUploadResult = { ok: true };
+  const results = await Promise.all([
+    storage.upload(planned.original, file, mime, onProgress),
+    planned.thumb && prepared.thumb
+      ? storage.upload(planned.thumb, prepared.thumb, "image/webp")
+      : skipped,
+    planned.display && prepared.display
+      ? storage.upload(planned.display, prepared.display, "image/webp")
+      : skipped,
   ]);
-  if (uploads.some((done) => !done)) {
-    await abortUpload({ data: { versionId: planned.versionId } });
-    return { ok: false, message: "Não foi possível enviar o arquivo." };
+  const failedStatus = firstFailedStatus(results);
+  if (failedStatus !== null) {
+    await abandon(planned.versionId);
+    return { ok: false, message: failureMessageOf(failedStatus) };
   }
 
+  const { video } = prepared;
   const confirmed = await confirmUpload({
     data: {
       versionId: planned.versionId,
@@ -103,6 +154,37 @@ export const sendUpload = async (
   return confirmed.ok
     ? { ok: true, assetId: confirmed.assetId, versionId: confirmed.versionId }
     : { ok: false, message: confirmed.message };
+};
+
+export const sendUpload = async (
+  item: UploadItem,
+  target: Target,
+  onProgress?: (fraction: number) => void,
+): Promise<Outcome> => {
+  const { file } = item;
+  const mime = mimeOfFile(file);
+  let versionId: string | null = null;
+  try {
+    const prepared = await prepare(file, kindOfMime(mime));
+    const planned = await requestUpload({
+      data: {
+        scope: target.scope,
+        ...(target.brandId ? { brandId: target.brandId } : {}),
+        ...(target.assetId ? { assetId: target.assetId } : {}),
+        filename: file.name,
+        size: file.size,
+        mime,
+        idempotencyKey: item.id,
+      },
+    });
+    if (!planned.ok) return { ok: false, message: planned.message };
+    versionId = planned.versionId;
+    return await transfer(planned, file, mime, prepared, onProgress);
+  } catch (error) {
+    logError(error);
+    if (versionId !== null) await abandon(versionId);
+    return { ok: false, message: dbErrorMessage({ message: "unknown" }) };
+  }
 };
 
 export const useMediaUpload = (target: Target, onFinished: (items: UploadItem[]) => void) => {

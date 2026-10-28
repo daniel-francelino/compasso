@@ -41,6 +41,27 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
 
+function VideoPreview({ url }: { url: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <EmptyState
+        title="Este navegador não consegue reproduzir o vídeo"
+        description="O arquivo foi salvo. Vídeos gravados no iPhone em HEVC e alguns formatos (MOV, MKV, AVI) não abrem em todos os navegadores. Use “Baixar original” para assistir."
+      />
+    );
+  }
+  return (
+    <video
+      src={url}
+      controls
+      preload="metadata"
+      className="max-h-[32rem] w-full rounded-md"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function Preview({ detail }: { detail: MediaDetail }) {
   if (detail.previewUrl === null) {
     return (
@@ -60,14 +81,7 @@ function Preview({ detail }: { detail: MediaDetail }) {
     );
   }
   if (detail.asset.kind === MediaKind.Video) {
-    return (
-      <video
-        src={detail.previewUrl}
-        controls
-        preload="metadata"
-        className="max-h-[32rem] w-full rounded-md"
-      />
-    );
+    return <VideoPreview url={detail.previewUrl} />;
   }
   return (
     <iframe

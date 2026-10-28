@@ -1,5 +1,5 @@
 import { FileText, Film, ImageOff, Share2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { StatusBadge } from "@/components/shared/admin/status-badge";
 import { Checkbox } from "@/components/shared/ui/checkbox";
 import { MediaScope } from "@/lib/shared/enums";
@@ -15,8 +15,17 @@ const scopeSuffix: Record<MediaScope, string> = {
 };
 
 function Thumb({ item }: { item: MediaRow }) {
-  if (item.thumbUrl !== null) {
-    return <img src={item.thumbUrl} alt="" loading="lazy" className="size-full object-cover" />;
+  const [broken, setBroken] = useState(false);
+  if (item.thumbUrl !== null && !broken) {
+    return (
+      <img
+        src={item.thumbUrl}
+        alt=""
+        loading="lazy"
+        className="size-full object-cover"
+        onError={() => setBroken(true)}
+      />
+    );
   }
   const Icon =
     item.kind === MediaKind.Video ? Film : item.kind === MediaKind.Document ? FileText : ImageOff;

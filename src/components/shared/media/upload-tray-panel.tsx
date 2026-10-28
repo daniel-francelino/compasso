@@ -16,7 +16,7 @@ import { Progress } from "@/components/shared/ui/progress";
 import { type UploadItem, UploadStatus } from "@/hooks/shared/use-media-upload";
 import type { TrayTask } from "@/hooks/shared/use-upload-tray";
 import { formatBytes } from "@/lib/shared/format";
-import { MediaKind, kindOfMime } from "@/lib/shared/media/limits";
+import { MediaKind, kindOfMime, mimeOfFile } from "@/lib/shared/media/limits";
 import { cn } from "@/lib/shared/utils";
 
 const kindIcons = {
@@ -61,7 +61,7 @@ function TaskRow({
   onRemove: () => void;
 }) {
   const { item } = task;
-  const Icon = kindIcons[kindOfMime(item.file.type) ?? MediaKind.Document];
+  const Icon = kindIcons[kindOfMime(mimeOfFile(item.file)) ?? MediaKind.Document];
   const uploading = item.status === UploadStatus.Uploading;
   const queued = item.status === UploadStatus.Queued;
   const failed = item.status === UploadStatus.Failed;

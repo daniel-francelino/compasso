@@ -79,5 +79,45 @@ export const inspectImage = (bytes: Uint8Array): ImageInfo | null => {
   return info;
 };
 
-export const inspectMp4 = (bytes: Uint8Array): boolean =>
-  bytes.length >= 12 && ascii(bytes, 4, 4) === "ftyp";
+const ISO_SKIPPABLE = new Set(["free", "skip", "wide", "junk", "pnot", "uuid"]);
+const ISO_STARTING = new Set(["ftyp", "moov", "mdat"]);
+const ISO_BOXES_READ = 8;
+
+const isoBoxSize = (b: Uint8Array, offset: number): number => {
+  const size = u32be(b, offset);
+  if (size !== 1) return size;
+  return u32be(b, offset + 8) === 0 ? u32be(b, offset + 12) : Number.MAX_SAFE_INTEGER;
+};
+
+const isoVideo = (b: Uint8Array): boolean => {
+  let offset = 0;
+  for (let read = 0; read < ISO_BOXES_READ && offset + 8 <= b.length; read += 1) {
+    const type = ascii(b, offset + 4, 4);
+    if (ISO_STARTING.has(type)) return true;
+    if (!ISO_SKIPPABLE.has(type)) return false;
+    const size = isoBoxSize(b, offset);
+    if (size < 8) return false;
+    offset += size;
+  }
+  return false;
+};
+
+const ebmlVideo = (b: Uint8Array): boolean =>
+  b.length >= 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3;
+
+const aviVideo = (b: Uint8Array): boolean =>
+  b.length >= 12 && ascii(b, 0, 4) === "RIFF" && ascii(b, 8, 4) === "AVI ";
+
+const VIDEO_SIGNATURES: Record<string, (b: Uint8Array) => boolean> = {
+  "video/mp4": isoVideo,
+  "video/x-m4v": isoVideo,
+  "video/quicktime": isoVideo,
+  "video/3gpp": isoVideo,
+  "video/3gpp2": isoVideo,
+  "video/webm": ebmlVideo,
+  "video/x-matroska": ebmlVideo,
+  "video/x-msvideo": aviVideo,
+};
+
+export const inspectVideoFile = (bytes: Uint8Array, mime: string): boolean =>
+  VIDEO_SIGNATURES[mime]?.(bytes) ?? false;

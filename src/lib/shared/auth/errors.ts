@@ -195,6 +195,27 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "O tamanho do arquivo enviado é diferente do esperado.",
   },
+  upload_not_received: {
+    category: ErrorCode.Invalid,
+    message: "O arquivo não chegou ao armazenamento. Tente enviar de novo.",
+  },
+  upload_video_invalid: {
+    category: ErrorCode.Invalid,
+    message:
+      "Não conseguimos ler este vídeo. O arquivo pode estar corrompido ou o download pode ter sido interrompido. Baixe de novo e tente outra vez.",
+  },
+  upload_network: {
+    category: ErrorCode.Unavailable,
+    message: "A conexão caiu durante o envio. Verifique a internet e tente de novo.",
+  },
+  upload_link_expired: {
+    category: ErrorCode.Unavailable,
+    message: "O link de envio expirou. Tente enviar de novo.",
+  },
+  upload_storage_refused: {
+    category: ErrorCode.Unavailable,
+    message: "O armazenamento recusou o arquivo. Tente de novo; se continuar, avise o suporte.",
+  },
   quota_exceeded: {
     category: ErrorCode.Invalid,
     message: "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite.",
