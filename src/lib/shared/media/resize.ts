@@ -44,8 +44,7 @@ export const inspectVideo = (file: Blob, coverSide: number): Promise<VideoInfo |
       resolve(value);
     };
 
-    video.onerror = () => finish(null);
-    video.onloadeddata = () => {
+    const captureCover = () => {
       const width = video.videoWidth;
       const height = video.videoHeight;
       if (width <= 0 || height <= 0) {
@@ -56,11 +55,21 @@ export const inspectVideo = (file: Blob, coverSide: number): Promise<VideoInfo |
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(width * scale));
       canvas.height = Math.max(1, Math.round(height * scale));
-      canvas.getContext("2d")?.drawImage(video, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (cover) => finish({ width, height, durationMs: durationOf(video.duration), cover }),
-        "image/webp",
-        0.82,
-      );
+      const context = canvas.getContext("2d");
+      context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const blank = context?.getImageData(0, 0, 1, 1).data[3] === 0;
+      const info = { width, height, durationMs: durationOf(video.duration) };
+      if (blank) {
+        finish({ ...info, cover: null });
+        return;
+      }
+      canvas.toBlob((cover) => finish({ ...info, cover }), "image/webp", 0.82);
     };
+
+    video.onerror = () => finish(null);
+    video.onloadedmetadata = () => {
+      const seconds = Number.isFinite(video.duration) ? Math.min(1, video.duration / 10) : 0.1;
+      video.currentTime = Math.max(0.05, seconds);
+    };
+    video.onseeked = captureCover;
   });

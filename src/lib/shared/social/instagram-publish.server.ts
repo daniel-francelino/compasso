@@ -65,7 +65,7 @@ export const checkRequest = (request: PublishRequest): RequestCheck => {
   }
   if (media.length === 0 || media.some(tooBig)) return refuse(PublishErrorCode.MediaNotReady);
   if (format === ContentFormat.Image) {
-    return media.length === 1 && media.every(isImage)
+    return media.length === 1 && media.every((item) => isImage(item) || isVideo(item))
       ? { ok: true }
       : refuse(PublishErrorCode.MediaNotReady);
   }
@@ -136,6 +136,13 @@ export const startPublication = async (
   }
   if (request.format === ContentFormat.Story) {
     return createContainer(token, accountId, { media_type: "STORIES", ...mediaParams(first) });
+  }
+  if (isVideo(first)) {
+    return createContainer(token, accountId, {
+      media_type: "REELS",
+      video_url: first.url,
+      caption: request.caption,
+    });
   }
   return createContainer(token, accountId, { image_url: first.url, caption: request.caption });
 };

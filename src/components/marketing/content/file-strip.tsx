@@ -41,6 +41,9 @@ import { MediaKind, kindOfMime, mimeOfFile } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { cn } from "@/lib/shared/utils";
 
+const VIDEO_ADVICE =
+  "Para usar vídeo, mude o formato para Post, Reel, Story ou Carrossel no passo “Planejamento”.";
+
 const kindLabels: Record<MediaKind, string> = {
   [MediaKind.Image]: "imagens",
   [MediaKind.Video]: "vídeos",
@@ -337,8 +340,9 @@ export function FileStrip({
     });
     if (wrongKind.length > 0) {
       const accepted = rule.kinds.map((kind) => kindLabels[kind]).join(" e ");
+      const sentVideo = wrongKind.some((file) => kindOfMime(mimeOfFile(file)) === MediaKind.Video);
       toast.error(
-        `${wrongKind.map((file) => file.name).join(", ")}: este formato de conteúdo aceita apenas ${accepted}.`,
+        `${wrongKind.map((file) => file.name).join(", ")}: este formato de conteúdo aceita apenas ${accepted}.${sentVideo ? ` ${VIDEO_ADVICE}` : ""}`,
       );
     }
     const candidates = files.filter((file) => !wrongKind.includes(file));
@@ -362,6 +366,8 @@ export function FileStrip({
   }`;
 
   const total = items.length + pending.length;
+  const excludesVideo = rule.kinds.length > 0 && !rule.kinds.includes(MediaKind.Video);
+  const counter = `${items.length}/${rule.max} ${rule.max === 1 ? "arquivo" : "arquivos"}`;
 
   const grid = (openPicker: () => void) => (
     <DragDropProvider onDragEnd={handleDragEnd}>
@@ -434,7 +440,11 @@ export function FileStrip({
         ) : null}
         <FieldMessage
           error={error}
-          hint={`${items.length}/${rule.max} ${rule.max === 1 ? "arquivo" : "arquivos"}`}
+          hint={
+            excludesVideo
+              ? `${counter} · Vídeos não entram neste formato. ${VIDEO_ADVICE}`
+              : counter
+          }
         />
         <MediaPicker
           open={picking}

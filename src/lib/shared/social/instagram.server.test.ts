@@ -84,6 +84,18 @@ describe("checkRequest", () => {
     );
   });
 
+  it("accepts one MP4 video in a post", () => {
+    expect(checkRequest({ format: ContentFormat.Image, caption: "oi", media: [video] }).ok).toBe(
+      true,
+    );
+  });
+
+  it("refuses two videos in a post", () => {
+    expect(
+      checkRequest({ format: ContentFormat.Image, caption: "", media: [video, video] }).ok,
+    ).toBe(false);
+  });
+
   it("refuses an image that is not a JPEG", () => {
     const webp = { ...image, mimeType: "image/webp" };
     expect(checkRequest({ format: ContentFormat.Image, caption: "", media: [webp] })).toEqual({

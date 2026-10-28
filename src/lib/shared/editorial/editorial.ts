@@ -182,7 +182,7 @@ export const platformFormats: Record<Platform, readonly ContentFormat[]> = {
 export type FormatRule = { min: number; max: number; kinds: readonly MediaKind[] };
 
 export const formatRules: Record<ContentFormat, FormatRule> = {
-  [ContentFormat.Image]: { min: 1, max: 10, kinds: [MediaKind.Image] },
+  [ContentFormat.Image]: { min: 1, max: 10, kinds: [MediaKind.Image, MediaKind.Video] },
   [ContentFormat.Carousel]: { min: 2, max: 20, kinds: [MediaKind.Image, MediaKind.Video] },
   [ContentFormat.Video]: { min: 1, max: 1, kinds: [MediaKind.Video] },
   [ContentFormat.Text]: { min: 0, max: 4, kinds: [MediaKind.Image] },
