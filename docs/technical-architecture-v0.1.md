@@ -189,6 +189,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Rich text | Tiptap (minimal extensions) | Store JSON, never HTML |
 | Charts | Recharts 3.10.1, MIT license, actively maintained (added 2026-10-26 for the metrics screen, [modules/metrics.md](modules/metrics.md)); the kit has no chart component and drawing the axes, tooltips and keyboard navigation by hand would repeat well-tested work; colors only from the `chart-*` tokens | Used only by `components/shared/metrics`, so only the metrics routes load it |
 | Dates | `date-fns` v4 and `@date-fns/tz` 1.5 (MIT, maintained; `@date-fns/tz` was already installed by the date picker and is now a direct dependency) | Instants in UTC; IANA time zone per brand; all date work in `lib/shared/dates.ts`, display in `format.ts`; the Date API is refused by ESLint elsewhere |
+| Emoji picker | `emoji-picker-react` 5 (MIT, maintained, React >= 16.8) | Used only by `EmojiPickerField` (`shared/admin`); native emoji (no image CDN), so no extra origin is needed |
 | Virtualization | `@tanstack/react-virtual` | Large library grids |
 
 ### 4.2 Backend and data

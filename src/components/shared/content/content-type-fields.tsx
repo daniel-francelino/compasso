@@ -1,7 +1,8 @@
 import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
+import { EmojiPickerField } from "@/components/shared/admin/emoji-picker-field";
 import { FieldGroup } from "@/components/shared/admin/field-group";
 import { TextField } from "@/components/shared/admin/form-fields";
-import { CONTENT_TYPE_EMOJI_MAX, CONTENT_TYPE_NAME_MAX } from "@/lib/shared/content-types/schemas";
+import { CONTENT_TYPE_NAME_MAX } from "@/lib/shared/content-types/schemas";
 import type { ContentTypeDraft } from "@/lib/shared/content-types/draft";
 import { ContentTypeColor } from "@/lib/shared/enums";
 import { contentTypeColorLabels } from "@/lib/shared/labels";
@@ -27,13 +28,11 @@ export function ContentTypeFields({
         onValueChange={(name) => onChange({ ...draft, name })}
         error={errors["name"]}
       />
-      <TextField
+      <EmojiPickerField
         id="content-type-emoji"
         label="Emoji"
         value={draft.emoji}
-        maxLength={CONTENT_TYPE_EMOJI_MAX}
-        placeholder="Opcional"
-        hint="Aparece antes do nome. Deixe em branco para usar só a cor."
+        hint="Opcional. Aparece antes do nome; sem emoji, vale só a cor."
         onValueChange={(emoji) => onChange({ ...draft, emoji })}
         error={errors["emoji"]}
       />
