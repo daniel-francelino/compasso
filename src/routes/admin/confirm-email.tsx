@@ -1,5 +1,7 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { AuthShell } from "@/components/shared/admin/auth-shell";
+import { MailCheck } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { AuthMessagePage } from "lost-ui/templates/auth/auth-message-page";
+import { AuthAside, AuthLogo, AuthTextLink } from "@/components/shared/admin/auth-brand";
 import { AppRoute } from "@/lib/shared/routes";
 
 export const Route = createFileRoute("/admin/confirm-email")({
@@ -8,16 +10,13 @@ export const Route = createFileRoute("/admin/confirm-email")({
 
 function ConfirmEmailPage() {
   return (
-    <AuthShell
+    <AuthMessagePage
+      logo={<AuthLogo />}
+      aside={<AuthAside />}
+      icon={<MailCheck />}
       title="Verifique seu e-mail"
       description="Enviamos uma mensagem com um link. Abra-o neste mesmo navegador para continuar."
-      footer={
-        <Link to={AppRoute.Login} className="text-primary underline-offset-4 hover:underline">
-          Voltar para o login
-        </Link>
-      }
-    >
-      <span />
-    </AuthShell>
+      footer={<AuthTextLink href={AppRoute.Login}>Voltar para o login</AuthTextLink>}
+    />
   );
 }

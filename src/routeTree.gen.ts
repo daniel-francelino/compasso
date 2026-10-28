@@ -1725,7 +1725,8 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppcmsSiteTestimonialsRoute: AdminAppcmsSiteTestimonialsRoute,
   AdminAppsharedLibraryAssetIdRoute: AdminAppsharedLibraryAssetIdRoute,
   AdminAppsharedSettingsAuditRoute: AdminAppsharedSettingsAuditRoute,
-  AdminAppsharedSettingsContentTypesRoute: AdminAppsharedSettingsContentTypesRoute,
+  AdminAppsharedSettingsContentTypesRoute:
+    AdminAppsharedSettingsContentTypesRoute,
   AdminAppsharedSettingsNotificationsRoute:
     AdminAppsharedSettingsNotificationsRoute,
   AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,

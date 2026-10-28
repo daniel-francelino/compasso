@@ -1,6 +1,8 @@
-import { Link, createFileRoute, redirect } from "@tanstack/react-router";
+import { Link2Off } from "lucide-react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { AuthMessagePage } from "lost-ui/templates/auth/auth-message-page";
 import { z } from "zod";
-import { AuthShell } from "@/components/shared/admin/auth-shell";
+import { AuthAside, AuthLogo, AuthTextLink } from "@/components/shared/admin/auth-brand";
 import { exchangeAuthCode } from "@/lib/shared/auth/recovery.functions";
 import { safeRedirect } from "@/lib/shared/auth/redirect";
 import { AppRoute } from "@/lib/shared/routes";
@@ -22,19 +24,13 @@ export const Route = createFileRoute("/admin/callback")({
 
 function CallbackPage() {
   return (
-    <AuthShell
+    <AuthMessagePage
+      logo={<AuthLogo />}
+      aside={<AuthAside />}
+      icon={<Link2Off />}
       title="Link inválido"
       description="Este link não vale mais, ou foi aberto em outro navegador. Peça um novo."
-      footer={
-        <Link
-          to={AppRoute.RecoverPassword}
-          className="text-primary underline-offset-4 hover:underline"
-        >
-          Pedir novo link
-        </Link>
-      }
-    >
-      <span />
-    </AuthShell>
+      footer={<AuthTextLink href={AppRoute.RecoverPassword}>Pedir novo link</AuthTextLink>}
+    />
   );
 }

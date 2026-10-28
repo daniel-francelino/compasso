@@ -1,6 +1,7 @@
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { LostI18nProvider } from "lost-ui/i18n";
 import { UnsavedChangesProvider } from "@/components/shared/admin/unsaved-changes-provider";
 import { TooltipProvider } from "@/components/shared/ui/tooltip";
 import appCss from "@/styles.css?url";
@@ -95,7 +96,9 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <UnsavedChangesProvider>
-          <Outlet />
+          <LostI18nProvider language="pt-BR">
+            <Outlet />
+          </LostI18nProvider>
         </UnsavedChangesProvider>
       </TooltipProvider>
     </QueryClientProvider>

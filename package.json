@@ -63,6 +63,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "emoji-picker-react": "^5.1.4",
+    "lost-ui": "npm:@danielsoaresf/lost-ui@^0.1.0",
     "lucide-react": "^0.575.0",
     "motion": "^14.6.0",
     "react": "^19.3.1",

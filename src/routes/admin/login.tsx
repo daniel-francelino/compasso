@@ -1,15 +1,14 @@
-import { LogIn } from "lucide-react";
-import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { LoginPage } from "lost-ui/templates/auth/login-page";
 import { z } from "zod";
-import { AuthShell, Field, FormError, PasswordField } from "@/components/shared/admin/auth-shell";
-import { Button } from "@/components/shared/ui/button";
-import { useFormSubmit } from "@/hooks/shared/use-form-submit";
+import { AuthAside, AuthLogo } from "@/components/shared/admin/auth-brand";
+import { AuthImage } from "@/components/shared/admin/auth-images";
+import { renderAuthLink } from "@/components/shared/admin/render-auth-link";
 import { signIn } from "@/lib/shared/auth/login.functions";
 import { safeRedirect } from "@/lib/shared/auth/redirect";
-import { loginSchema } from "@/lib/shared/auth/schemas";
 import { getAuthState } from "@/lib/shared/auth/session.functions";
 import { AppRoute } from "@/lib/shared/routes";
+import { failureMessage } from "@/lib/shared/server-utils";
 
 export const Route = createFileRoute("/admin/login")({
   validateSearch: z.object({ redirect: z.string().optional().catch(undefined) }),
@@ -17,68 +16,28 @@ export const Route = createFileRoute("/admin/login")({
     const auth = await getAuthState();
     if (auth.user !== null) throw redirect({ to: AppRoute.Admin });
   },
-  component: LoginPage,
+  component: LoginRoute,
 });
 
-function LoginPage() {
+function LoginRoute() {
   const router = useRouter();
   const search = Route.useSearch();
-  const { formRef, errors, error, busy, submit } = useFormSubmit();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   return (
-    <AuthShell
+    <LoginPage
+      logo={<AuthLogo />}
+      aside={<AuthAside image={AuthImage.Social} />}
       title="Entrar"
       description="Use o e-mail do seu convite para acessar a Aura Creative."
-      footer={
-        <Link
-          to={AppRoute.RecoverPassword}
-          className="text-primary underline-offset-4 hover:underline"
-        >
-          Esqueci minha senha
-        </Link>
-      }
-    >
-      <form
-        ref={formRef}
-        noValidate
-        className="space-y-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void submit(
-            loginSchema,
-            { email, password },
-            (data) => signIn({ data }),
-            () => router.history.push(safeRedirect(search.redirect)),
-          );
-        }}
-      >
-        <Field
-          id="email"
-          label="E-mail"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          error={errors["email"]}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-        <PasswordField
-          id="password"
-          label="Senha"
-          autoComplete="current-password"
-          required
-          value={password}
-          error={errors["password"]}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-        <FormError message={error} />
-        <Button type="submit" className="h-11 w-full md:h-10" disabled={busy}>
-          <LogIn aria-hidden="true" />
-          {busy ? "Entrando…" : "Entrar"}
-        </Button>
-      </form>
-    </AuthShell>
+      identifier="email"
+      identifierLabel="E-mail"
+      forgotPasswordHref={AppRoute.RecoverPassword}
+      renderLink={renderAuthLink}
+      onSubmit={async ({ identifier, password }) => {
+        const result = await signIn({ data: { email: identifier, password } });
+        if (result.ok) router.history.push(safeRedirect(search.redirect));
+        return failureMessage(result);
+      }}
+    />
   );
 }

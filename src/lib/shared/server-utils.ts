@@ -30,6 +30,9 @@ export const fail = (error: DatabaseError, fallback?: string): Failure => ({
   message: dbErrorMessage(error, fallback),
 });
 
+export const failureMessage = (result: Result): string | undefined =>
+  result.ok ? undefined : result.message;
+
 export const denied: Failure = fail({ message: "denied" });
 
 export const invalid = (message: string, fields?: Record<string, string>): Failure =>

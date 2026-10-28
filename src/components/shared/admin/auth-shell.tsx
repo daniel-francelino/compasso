@@ -3,31 +3,6 @@ import { useState, type ComponentProps, type ReactNode } from "react";
 import { InfoTip } from "@/components/shared/admin/info-tip";
 import { Input } from "@/components/shared/ui/input";
 import { Label } from "@/components/shared/ui/label";
-import { SectionCard } from "@/components/shared/admin/section-card";
-
-export function AuthShell({
-  title,
-  description,
-  children,
-  footer,
-}: {
-  title: string;
-  description?: string | undefined;
-  children: ReactNode;
-  footer?: ReactNode | undefined;
-}) {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-10">
-      <img src="/aura-creative-logo.png" alt="Aura Creative" className="mb-6 h-auto w-56" />
-      <SectionCard padding="lg" as="div" className="w-full max-w-md sm:p-8">
-        <h1 className="heading-section text-foreground">{title}</h1>
-        {description ? <p className="mt-2 text-sm text-muted-foreground">{description}</p> : null}
-        <div className="mt-6">{children}</div>
-      </SectionCard>
-      {footer ? <div className="mt-5 text-sm text-muted-foreground">{footer}</div> : null}
-    </main>
-  );
-}
 
 type FieldExtras = {
   id: string;
