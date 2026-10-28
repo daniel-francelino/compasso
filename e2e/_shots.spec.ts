@@ -14,7 +14,7 @@ for (const [name, path] of [
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(path);
     await page.waitForLoadState("load");
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2500);
     await page.screenshot({ path: `${out}/${name}-desktop.png` });
     await page.setViewportSize({ width: 390, height: 800 });
     await page.screenshot({ path: `${out}/${name}-mobile.png` });
@@ -24,7 +24,7 @@ for (const [name, path] of [
 test("login validation", async ({ page }) => {
   await page.goto("/admin/login");
   await page.waitForLoadState("load");
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2500);
   await page.getByRole("button", { name: "Entrar" }).click();
   await page.screenshot({ path: `${out}/login-errors.png` });
 });
