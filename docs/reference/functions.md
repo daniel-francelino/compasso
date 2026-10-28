@@ -89,9 +89,9 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | SQL function | Server function | Act. | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
 | `content_item_save(p_item jsonb)` | `saveContentItem` | `content.create` / `content.update` | `content.created`, `content.updated`, `content_channel.added`, `content_channel.removed`, `calendar_note.converted` (with `source_note`) | — | `conflict`, `plan_locked` (publication date and rows after the plan is approved), `requires_new_revision`, `channel_archived`, `channel_brand_mismatch`, `media_not_available`, `invalid_input`, `transition_not_allowed` |
-| `content_type_save(p_type jsonb)` | `saveContentType` | `settings.manage` | `content_type.saved` | — | `conflict`, `content_type_name_taken`, `invalid_input` |
+| `content_type_save(p_type jsonb)` | `saveContentType` | `settings.manage` | `content_type.saved` | — | `content_type_name_taken`, `invalid_input`, `not_found` |
 | `content_type_set_archived(p_type uuid, p_archived boolean)` | `archiveContentType` | `settings.manage` | `content_type.archived` | — | `not_found` |
-| (typed query) | `listContentTypes` (the catalog, with the count of contents per type) | `content.view` (`settings.manage` for the archived ones) | — | — | — |
+| (typed query) | `listContentTypes` (active types) / `listContentTypeCatalog` (all types with the count of contents) | `content.view` / `settings.manage` | — | — | — |
 | `content_item_save` (new item) | `duplicateContentItem` | `content.create` | `content.created`, `content_channel.added` | — | `invalid_input`, `media_not_available`, `channel_archived`, `brand_archived` |
 | `content_item_cancel(p_item, p_reason)` | `cancelContentItem` | `content.cancel` | `content.cancelled` | — | `reason_required` |
 | `content_item_delete(p_item)` | `deleteContentItem` | `content.delete` | `content.deleted` | — | `content_has_history` |
