@@ -10,8 +10,8 @@ import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import type { StageState } from "@/lib/marketing/content/stage-state";
 import type { BrandOption } from "@/lib/shared/brands/brand-options.functions";
+import type { ContentTypeRow } from "@/lib/shared/content-types/content-types.functions";
 import { StoredKey, writeStored } from "@/lib/shared/stored-keys";
-import { cn } from "@/lib/shared/utils";
 
 export function PlanningStep({
   draft,
@@ -27,6 +27,8 @@ export function PlanningStep({
   settingsDisabled,
   saving,
   errors,
+  typeOptions,
+  onPublishDateChange,
   onToggleChannel,
 }: {
   draft: ContentDraft;
@@ -42,6 +44,8 @@ export function PlanningStep({
   settingsDisabled: boolean;
   saving: boolean;
   errors: Record<string, string>;
+  typeOptions: ContentTypeRow[];
+  onPublishDateChange: (day: string | null) => void;
   onToggleChannel: (channelId: string) => void;
 }) {
   const { values, set } = draft;
@@ -75,7 +79,7 @@ export function PlanningStep({
     </SectionCard>
   );
   const channelsCard = (
-    <SectionCard title="1. Selecione os canais" icon={Radio}>
+    <SectionCard title="Selecione os canais" icon={Radio}>
       <ChannelPicker
         brandId={values.brandId}
         channels={channels}
@@ -95,27 +99,29 @@ export function PlanningStep({
     </SectionCard>
   );
   return (
-    <div className="space-y-6">
-      {identity}
-      <div className={cn("grid items-start gap-6", state.planRequired && "xl:grid-cols-2")}>
-        <div className="space-y-6">{channelsCard}</div>
-        {state.planRequired ? (
-          <SectionCard
-            title="2. Planejamento"
-            icon={ClipboardList}
-            tip={{
-              label: "Sobre o planejamento",
-              content:
-                "Escreva o tema, a mensagem e a direção do texto para o cliente aprovar a ideia. Depois da aprovação, canais, formatos e datas ficam travados enquanto as artes são produzidas.",
-            }}
-          >
-            <PlanSection
-              draft={draft}
-              disabled={!editable || saving || state.planLocked}
-              errors={errors}
-            />
-          </SectionCard>
-        ) : null}
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      <SectionCard
+        title="Briefing"
+        icon={ClipboardList}
+        tip={{
+          label: "Sobre o briefing",
+          content: state.planRequired
+            ? "Reúna a ideia do conteúdo. O cliente aprova o planejamento por aqui. Depois da aprovação, a data, os canais e os formatos ficam travados enquanto as artes são produzidas."
+            : "Reúna a ideia do conteúdo para quem vai produzir. Depois da aprovação, a data, os canais e os formatos ficam travados.",
+        }}
+      >
+        <PlanSection
+          draft={draft}
+          disabled={!editable || saving || state.planLocked}
+          typesDisabled={settingsDisabled}
+          typeOptions={typeOptions}
+          onPublishDateChange={onPublishDateChange}
+          errors={errors}
+        />
+      </SectionCard>
+      <div className="space-y-6">
+        {identity}
+        {channelsCard}
       </div>
     </div>
   );

@@ -286,6 +286,18 @@ export const ContentObjective = {
 } as const;
 export type ContentObjective = ValueOf<typeof ContentObjective>;
 
+export const ContentTypeColor = {
+  Violet: "violet",
+  Orchid: "orchid",
+  Rose: "rose",
+  Peach: "peach",
+  Coral: "coral",
+  Sage: "sage",
+  Cactus: "cactus",
+  InkSoft: "ink_soft",
+} as const;
+export type ContentTypeColor = ValueOf<typeof ContentTypeColor>;
+
 export const ApprovalRequestStatus = {
   Pending: "pending",
   Approved: "approved",

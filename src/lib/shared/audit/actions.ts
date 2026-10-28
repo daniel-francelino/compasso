@@ -117,6 +117,10 @@ export const AuditAction = {
   Settings: {
     PolicyChanged: "settings.policy_changed",
   },
+  ContentType: {
+    Saved: "content_type.saved",
+    Archived: "content_type.archived",
+  },
   Organization: {
     Updated: "organization.updated",
   },

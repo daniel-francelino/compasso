@@ -19,6 +19,7 @@
 | `publish_attempts` | instagram-publishing | yes | `content.view` + `can_access_brand` (read); written only by service functions |
 | `channel_metric_daily`, `channel_audience_snapshot`, `channel_media_index`, `content_channel_metrics`, `metric_marks`, `metric_reports` | metrics | yes | `metrics.view` + `can_access_brand` (read); external users read only through `portal_metrics_*` |
 | `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
+| `content_types`, `content_item_types` | content | yes | `content.view` (read; the catalog is per organization) and `content.view` + `can_access_brand` through the item (links); written only by `content_type_save`, `content_type_set_archived` (`settings.manage`) and `content_item_save`; **no policy for external roles** |
 | `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
 | `approval_requests`, `approval_decisions` | approvals | yes | `approvals.view` + `can_access_brand`; external only via `portal_*` |
 | `media_assets`, `media_versions`, `media_upload_sessions`, `media_collections`, `media_collection_items`, `media_usages` | media-library | scope `brand` or `site` | `media.view` + brand link (or `site.view` for site scope) |
@@ -270,6 +271,7 @@ create table content_items (
   assignee_id uuid references profiles(id),
   tags text[] not null default '{}',
   production_due_date date,
+  publish_date date,
   caption jsonb,
   call_to_action text,
   working_media jsonb not null default '[]',
@@ -321,6 +323,31 @@ create table content_channels (
 create index on content_channels (brand_id, planned_at);
 create index on content_channels (channel_id);
 create index on content_channels (content_item_id);
+
+create table content_types (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null,
+  name text not null check (char_length(name) between 1 and 40),
+  color text not null default 'violet' check (color in
+    ('violet','orchid','rose','peach','coral','sage','cactus','ink_soft')),
+  emoji text check (emoji is null or char_length(emoji) between 1 and 8),
+  archived_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index on content_types (organization_id, lower(name));
+
+create table content_item_types (
+  content_item_id uuid not null,
+  brand_id uuid not null,
+  content_type_id uuid not null references content_types(id),
+  created_at timestamptz not null default now(),
+  primary key (content_item_id, content_type_id),
+  foreign key (content_item_id, brand_id) references content_items(id, brand_id) on delete cascade
+);
+create index on content_item_types (content_type_id);
+create index on content_item_types (brand_id);
+create index on content_items (brand_id, publish_date);
 
 create table content_revisions (
   id uuid primary key default gen_random_uuid(),

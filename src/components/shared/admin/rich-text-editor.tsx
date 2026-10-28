@@ -20,6 +20,7 @@ export function RichTextEditor({
   placeholder,
   error,
   disabled = false,
+  tall = false,
 }: {
   id: string;
   label: string;
@@ -28,6 +29,7 @@ export function RichTextEditor({
   placeholder?: string;
   error?: string | undefined;
   disabled?: boolean;
+  tall?: boolean;
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -52,8 +54,10 @@ export function RichTextEditor({
         "aria-multiline": "true",
         ...(placeholder === undefined ? {} : { "aria-placeholder": placeholder }),
         "aria-label": label,
-        class:
-          "min-h-28 max-h-72 overflow-y-auto px-3 py-2 text-sm focus-visible:outline-none [&_h2]:text-base [&_h2]:font-semibold [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_ul]:list-disc [&_ul]:pl-5",
+        class: cn(
+          "overflow-y-auto px-3 py-2 text-sm focus-visible:outline-none [&_h2]:text-base [&_h2]:font-semibold [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_ul]:list-disc [&_ul]:pl-5",
+          tall ? "min-h-64 max-h-128" : "min-h-28 max-h-72",
+        ),
       },
     },
     onUpdate: ({ editor: current }) => {

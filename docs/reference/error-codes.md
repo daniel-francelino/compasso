@@ -86,6 +86,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `local_time_ambiguous` | invalid | "Este horário acontece duas vezes nesse dia. Escolha qual." | date conversion in TypeScript (`resolveLocalTime`) |
 | `brand_archived` | invalid | "Esta marca está arquivada e não aceita novos conteúdos." | `content_item_save`, `calendar_note_save` |
 | `record_immutable` | denied | "Este registro não pode ser alterado." | revision, decision, comment and request triggers |
+| `content_type_name_taken` | invalid | "Já existe um tipo de conteúdo com este nome." | `content_type_save` |
 | `content_has_history` | in_use | "Este conteúdo já tem versões ou comentários. Cancele em vez de excluir." | `content_item_delete` |
 
 ### Media

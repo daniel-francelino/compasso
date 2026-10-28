@@ -35,11 +35,7 @@ import {
   type Platform,
 } from "@/lib/shared/enums";
 import { formatDateOnly, formatDateTime } from "@/lib/shared/format";
-import {
-  approvalOutcomeLabels,
-  approvalStageLabels,
-  contentObjectiveLabels,
-} from "@/lib/shared/labels";
+import { approvalOutcomeLabels, approvalStageLabels } from "@/lib/shared/labels";
 import { kindOfMime } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
@@ -98,12 +94,6 @@ function StageNotice({ approval }: { approval: PortalApproval }) {
           ? "Você está aprovando o planejamento: canais, formatos, datas e direção do texto. As artes vêm depois."
           : "Este é o planejamento enviado pela equipe. As artes vêm depois da aprovação."}
       </p>
-      {approval.objectiveKind ? (
-        <p className="text-sm">
-          <span className="font-medium">Objetivo:</span>{" "}
-          {contentObjectiveLabels[approval.objectiveKind]}
-        </p>
-      ) : null}
       {approval.planSummary ? (
         <div className="text-sm">
           <RichTextView doc={approval.planSummary} />

@@ -51,6 +51,7 @@ import { Route as AdminAppsharedLibraryIndexRouteImport } from './routes/admin/_
 import { Route as AdminAppsharedLibraryAssetIdRouteImport } from './routes/admin/_app/(shared)/library/$assetId'
 import { Route as AdminAppsharedSettingsIndexRouteImport } from './routes/admin/_app/(shared)/settings/index'
 import { Route as AdminAppsharedSettingsAuditRouteImport } from './routes/admin/_app/(shared)/settings/audit'
+import { Route as AdminAppsharedSettingsContentTypesRouteImport } from './routes/admin/_app/(shared)/settings/content-types'
 import { Route as AdminAppsharedSettingsNotificationsRouteImport } from './routes/admin/_app/(shared)/settings/notifications'
 import { Route as AdminAppsharedSettingsPoliciesRouteImport } from './routes/admin/_app/(shared)/settings/policies'
 import { Route as AdminAppsharedSettingsRolesRouteImport } from './routes/admin/_app/(shared)/settings/roles'
@@ -308,6 +309,12 @@ const AdminAppsharedSettingsAuditRoute =
   AdminAppsharedSettingsAuditRouteImport.update({
     id: '/(shared)/settings/audit',
     path: '/settings/audit',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppsharedSettingsContentTypesRoute =
+  AdminAppsharedSettingsContentTypesRouteImport.update({
+    id: '/(shared)/settings/content-types',
+    path: '/settings/content-types',
     getParentRoute: () => AdminAppRoute,
   } as any)
 const AdminAppsharedSettingsNotificationsRoute =
@@ -574,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/admin/site/testimonials': typeof AdminAppcmsSiteTestimonialsRoute
   '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
+  '/admin/settings/content-types': typeof AdminAppsharedSettingsContentTypesRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
@@ -653,6 +661,7 @@ export interface FileRoutesByTo {
   '/admin/site/testimonials': typeof AdminAppcmsSiteTestimonialsRoute
   '/admin/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/settings/audit': typeof AdminAppsharedSettingsAuditRoute
+  '/admin/settings/content-types': typeof AdminAppsharedSettingsContentTypesRoute
   '/admin/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
   '/admin/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/settings/roles': typeof AdminAppsharedSettingsRolesRoute
@@ -734,6 +743,7 @@ export interface FileRoutesById {
   '/admin/_app/(cms)/site/testimonials': typeof AdminAppcmsSiteTestimonialsRoute
   '/admin/_app/(shared)/library/$assetId': typeof AdminAppsharedLibraryAssetIdRoute
   '/admin/_app/(shared)/settings/audit': typeof AdminAppsharedSettingsAuditRoute
+  '/admin/_app/(shared)/settings/content-types': typeof AdminAppsharedSettingsContentTypesRoute
   '/admin/_app/(shared)/settings/notifications': typeof AdminAppsharedSettingsNotificationsRoute
   '/admin/_app/(shared)/settings/policies': typeof AdminAppsharedSettingsPoliciesRoute
   '/admin/_app/(shared)/settings/roles': typeof AdminAppsharedSettingsRolesRoute
@@ -817,6 +827,7 @@ export interface FileRouteTypes {
     | '/admin/site/testimonials'
     | '/admin/library/$assetId'
     | '/admin/settings/audit'
+    | '/admin/settings/content-types'
     | '/admin/settings/notifications'
     | '/admin/settings/policies'
     | '/admin/settings/roles'
@@ -896,6 +907,7 @@ export interface FileRouteTypes {
     | '/admin/site/testimonials'
     | '/admin/library/$assetId'
     | '/admin/settings/audit'
+    | '/admin/settings/content-types'
     | '/admin/settings/notifications'
     | '/admin/settings/policies'
     | '/admin/settings/roles'
@@ -976,6 +988,7 @@ export interface FileRouteTypes {
     | '/admin/_app/(cms)/site/testimonials'
     | '/admin/_app/(shared)/library/$assetId'
     | '/admin/_app/(shared)/settings/audit'
+    | '/admin/_app/(shared)/settings/content-types'
     | '/admin/_app/(shared)/settings/notifications'
     | '/admin/_app/(shared)/settings/policies'
     | '/admin/_app/(shared)/settings/roles'
@@ -1337,6 +1350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppsharedSettingsAuditRouteImport
       parentRoute: typeof AdminAppRoute
     }
+    '/admin/_app/(shared)/settings/content-types': {
+      id: '/admin/_app/(shared)/settings/content-types'
+      path: '/settings/content-types'
+      fullPath: '/admin/settings/content-types'
+      preLoaderRoute: typeof AdminAppsharedSettingsContentTypesRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
     '/admin/_app/(shared)/settings/notifications': {
       id: '/admin/_app/(shared)/settings/notifications'
       path: '/settings/notifications'
@@ -1661,6 +1681,7 @@ interface AdminAppRouteChildren {
   AdminAppcmsSiteTestimonialsRoute: typeof AdminAppcmsSiteTestimonialsRoute
   AdminAppsharedLibraryAssetIdRoute: typeof AdminAppsharedLibraryAssetIdRoute
   AdminAppsharedSettingsAuditRoute: typeof AdminAppsharedSettingsAuditRoute
+  AdminAppsharedSettingsContentTypesRoute: typeof AdminAppsharedSettingsContentTypesRoute
   AdminAppsharedSettingsNotificationsRoute: typeof AdminAppsharedSettingsNotificationsRoute
   AdminAppsharedSettingsPoliciesRoute: typeof AdminAppsharedSettingsPoliciesRoute
   AdminAppsharedSettingsRolesRoute: typeof AdminAppsharedSettingsRolesRoute
@@ -1704,6 +1725,7 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
   AdminAppcmsSiteTestimonialsRoute: AdminAppcmsSiteTestimonialsRoute,
   AdminAppsharedLibraryAssetIdRoute: AdminAppsharedLibraryAssetIdRoute,
   AdminAppsharedSettingsAuditRoute: AdminAppsharedSettingsAuditRoute,
+  AdminAppsharedSettingsContentTypesRoute: AdminAppsharedSettingsContentTypesRoute,
   AdminAppsharedSettingsNotificationsRoute:
     AdminAppsharedSettingsNotificationsRoute,
   AdminAppsharedSettingsPoliciesRoute: AdminAppsharedSettingsPoliciesRoute,

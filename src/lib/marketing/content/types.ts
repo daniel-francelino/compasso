@@ -4,12 +4,11 @@ import type {
   ApprovalStage,
   CommentVisibility,
   ContentFormat,
-  ContentObjective,
   EditorialStatus,
   Platform,
   PublicationStatus,
 } from "@/lib/shared/enums";
-import type { BriefingFields } from "@/lib/marketing/content/briefing-fields";
+import type { ContentTypeRow } from "@/lib/shared/content-types/content-types.functions";
 import type { MediaKind } from "@/lib/shared/media/limits";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
 
@@ -93,15 +92,11 @@ export type ContentDetail = {
   brandName: string;
   brandTimezone: string;
   title: string;
-  objectiveKind: ContentObjective | null;
-  objective: string | null;
-  briefing: RichDoc | null;
-  briefingFields: BriefingFields;
   internalNotes: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
-  tags: string[];
-  productionDueDate: string | null;
+  publishDate: string | null;
+  types: ContentTypeRow[];
   cancelled: boolean;
   editorialStatus: EditorialStatus;
   planRequired: boolean;

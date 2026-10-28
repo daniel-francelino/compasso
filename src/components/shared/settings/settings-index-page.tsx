@@ -4,6 +4,7 @@ import {
   ScrollText,
   ShieldCheck,
   SlidersHorizontal,
+  Tags,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ type Entry = {
     | "/admin/settings/users"
     | "/admin/settings/roles"
     | "/admin/settings/policies"
+    | "/admin/settings/content-types"
     | "/admin/settings/audit"
     | "/admin/settings/notifications";
   action: ActionKey;
@@ -47,6 +49,13 @@ const entries: Entry[] = [
     description: "Prazos, limites de arquivos, retenção e segurança.",
     icon: SlidersHorizontal,
     to: AppRoute.Policies,
+    action: Action.Settings.Manage,
+  },
+  {
+    title: "Tipos de conteúdo",
+    description: "Os tipos que a equipe escolhe em cada conteúdo, com cor ou emoji.",
+    icon: Tags,
+    to: AppRoute.ContentTypes,
     action: Action.Settings.Manage,
   },
   {

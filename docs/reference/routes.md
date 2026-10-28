@@ -43,6 +43,7 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/settings/users` | `users.view` | authentication |
 | `/admin/settings/roles` | `roles.manage` | roles-and-actions |
 | `/admin/settings/policies` | `settings.manage` | organization-settings |
+| `/admin/settings/content-types` | `settings.manage` | organization-settings |
 | `/admin/settings/notifications` | `notifications.configure` | notifications |
 | `/admin/settings/audit` | `audit.view` | audit |
 

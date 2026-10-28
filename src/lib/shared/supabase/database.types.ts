@@ -1100,6 +1100,83 @@ export type Database = {
           },
         ]
       }
+      content_item_types: {
+        Row: {
+          brand_id: string
+          content_item_id: string
+          content_type_id: string
+          created_at: string
+        }
+        Insert: {
+          brand_id: string
+          content_item_id: string
+          content_type_id: string
+          created_at?: string
+        }
+        Update: {
+          brand_id?: string
+          content_item_id?: string
+          content_type_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_item_types_content_item_id_brand_id_fkey"
+            columns: ["content_item_id", "brand_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id", "brand_id"]
+          },
+          {
+            foreignKeyName: "content_item_types_content_type_id_fkey"
+            columns: ["content_type_id"]
+            isOneToOne: false
+            referencedRelation: "content_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_types: {
+        Row: {
+          archived_at: string | null
+          color: string
+          created_at: string
+          emoji: string | null
+          id: string
+          name: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          color?: string
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_types_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_items: {
         Row: {
           approval_due_date: string | null
@@ -1127,6 +1204,7 @@ export type Database = {
           plan_required: boolean
           plan_summary: Json | null
           production_due_date: string | null
+          publish_date: string | null
           tags: string[]
           title: string
           updated_at: string
@@ -1159,6 +1237,7 @@ export type Database = {
           plan_required: boolean
           plan_summary?: Json | null
           production_due_date?: string | null
+          publish_date?: string | null
           tags?: string[]
           title: string
           updated_at?: string
@@ -1191,6 +1270,7 @@ export type Database = {
           plan_required?: boolean
           plan_summary?: Json | null
           production_due_date?: string | null
+          publish_date?: string | null
           tags?: string[]
           title?: string
           updated_at?: string
@@ -3132,6 +3212,11 @@ export type Database = {
       content_normalize_media: { Args: { p_media: Json | null}; Returns: Json }
       content_plan_signature: { Args: { p_item: string | null}; Returns: Json }
       content_publish_info: { Args: { p_item: string | null}; Returns: Json }
+      content_type_save: { Args: { p_type: Json | null}; Returns: Json }
+      content_type_set_archived: {
+        Args: { p_archived: boolean | null, p_type: string | null}
+        Returns: Json
+      }
       current_organization_id: { Args: never; Returns: string }
       dashboard_attention: { Args: { p_brands?: string[] | null}; Returns: Json }
       dashboard_metrics_report_due: {

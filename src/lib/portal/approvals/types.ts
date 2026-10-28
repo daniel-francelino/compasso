@@ -1,10 +1,5 @@
 import type { RichDoc } from "@/lib/shared/rich-text/types";
-import type {
-  ApprovalOutcome,
-  ApprovalRequestStatus,
-  ApprovalStage,
-  ContentObjective,
-} from "@/lib/shared/enums";
+import type { ApprovalOutcome, ApprovalRequestStatus, ApprovalStage } from "@/lib/shared/enums";
 
 export type PortalBrand = {
   id: string;
@@ -50,7 +45,6 @@ export type PortalRequest = {
   stage: ApprovalStage;
   status: ApprovalRequestStatus;
   title: string;
-  objectiveKind: ContentObjective | null;
   planSummary: RichDoc | null;
   channels: PortalChannel[];
   media: PortalMedia[];
@@ -87,7 +81,6 @@ export type PortalApproval = {
   isCurrent: boolean;
   currentRequestId: string | null;
   planSummary: RichDoc | null;
-  objectiveKind: ContentObjective | null;
   canDecide: boolean;
   media: PortalMedia[];
   decision: {

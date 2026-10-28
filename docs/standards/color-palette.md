@@ -138,6 +138,23 @@ Thresholds: AA is 4.5 for normal text; AAA is 7. UI components need 3 or more. T
 
 Channel circles (`PlatformMark`) use the `platform-*` tokens, the recognisable color of each network, only as the fill behind an `ivory` icon. TikTok and X use `ink`, Threads `ink-soft`, Email `violet`, Blog `cactus` and Other `line-strong`. They are never used for text.
 
+### Content type chips
+
+The chips of the content types (`ContentTypeChip`) use a palette token at 30% over the surface, a border of the same token at 50% and `ink` text, with no new token. The color is chosen from the closed list `ContentTypeColor`. Ratio of `ink` on the tinted background, computed with the formula of this section (`surface` / `ivory` / `cream`):
+
+| Color | `ink` on the chip |
+|---|---|
+| `violet` | 8.57 / 8.08 / 7.77 |
+| `orchid` | 12.05 / 11.36 / 10.96 |
+| `rose` | 12.84 / 12.22 / 11.72 |
+| `peach` | 13.42 / 12.78 / 12.35 |
+| `coral` | 11.69 / 11.08 / 10.70 |
+| `sage` | 13.56 / 12.81 / 12.37 |
+| `cactus` | 8.81 / 8.30 / 7.97 |
+| `ink_soft` | 8.38 / 7.83 / 7.51 |
+
+The color is never the only way to tell a type: the name is always written, and the emoji, when there is one, comes before it.
+
 ### Usage rules derived from the table
 
 - `coral`, `orchid` and `violet-bright` are **fill and ornament** colors. Text on `coral` and `orchid` is `ink`. Never use these three as text color on a light background.

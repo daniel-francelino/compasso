@@ -7,11 +7,12 @@ import {
   type ApprovalRequestStatus,
   ApprovalStage,
   type ContentFormat,
-  type ContentObjective,
+  type ContentTypeColor,
   EditorialStatus,
   type Platform,
   PublicationStatus,
 } from "@/lib/shared/enums";
+import type { ContentTypeRow } from "@/lib/shared/content-types/content-types.functions";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { personNames } from "@/lib/shared/people.server";
 import { richDocFromStored } from "@/lib/shared/rich-text/types";
@@ -54,8 +55,8 @@ export type ContentItemRow = {
   brandName: string;
   assigneeId: string | null;
   assigneeName: string | null;
-  productionDueDate: string | null;
-  tags: string[];
+  publishDate: string | null;
+  types: ContentTypeRow[];
   cancelled: boolean;
   editorialStatus: EditorialStatus;
   updatedAt: string;
@@ -136,6 +137,35 @@ const toSummary = (row: ChannelQueryRow): ChannelSummary => ({
   plannedTimezone: row.planned_timezone,
 });
 
+const TYPES_SELECT = "content_item_types(content_types(id, name, color, emoji, archived_at))";
+
+type TypeLinks = {
+  content_types: {
+    id: string;
+    name: string;
+    color: string;
+    emoji: string | null;
+    archived_at: string | null;
+  } | null;
+}[];
+
+const toTypes = (links: TypeLinks): ContentTypeRow[] =>
+  links
+    .flatMap((link) =>
+      link.content_types === null
+        ? []
+        : [
+            {
+              id: link.content_types.id,
+              name: link.content_types.name,
+              color: link.content_types.color as ContentTypeColor,
+              emoji: link.content_types.emoji,
+              archived: link.content_types.archived_at !== null,
+            },
+          ],
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
+
 const activeRows = (rows: ChannelQueryRow[]): ChannelQueryRow[] =>
   [...rows]
     .filter((row) => row.publication_status !== PublicationStatus.Cancelled)
@@ -176,6 +206,26 @@ const matchingItemIds = async (
   return { ok: true, ids: [...new Set(data.map((row) => row.content_item_id))] };
 };
 
+const itemIdsOfType = async (
+  supabase: Caller["supabase"],
+  typeId: string,
+): Promise<Result<{ ids: string[] }>> => {
+  const { data, error } = await supabase
+    .from("content_item_types")
+    .select("content_item_id")
+    .eq("content_type_id", typeId)
+    .limit(ID_FILTER_LIMIT);
+  if (error) return fail(error);
+  return { ok: true, ids: data.map((row) => row.content_item_id) };
+};
+
+const intersectIds = (left: string[] | null, right: string[] | null): string[] | null => {
+  if (left === null) return right;
+  if (right === null) return left;
+  const allowed = new Set(right);
+  return left.filter((id) => allowed.has(id));
+};
+
 export const listContentItems = createServerFn({ method: "GET" })
   .validator(listContentSchema)
   .handler(async ({ data }): Promise<Result<Page<ContentItemRow>>> => {
@@ -186,7 +236,10 @@ export const listContentItems = createServerFn({ method: "GET" })
 
     const matched = await matchingItemIds(caller.supabase, data);
     if (!matched.ok) return matched;
-    const itemIds = matched.ids;
+    const typed =
+      data.typeId === undefined ? null : await itemIdsOfType(caller.supabase, data.typeId);
+    if (typed !== null && !typed.ok) return typed;
+    const itemIds = intersectIds(matched.ids, typed === null ? null : typed.ids);
     if (itemIds !== null && itemIds.length === 0) {
       return { ok: true, ...pageOf([], 0, { page: data.page, pageSize: PAGE_SIZE }) };
     }
@@ -194,7 +247,7 @@ export const listContentItems = createServerFn({ method: "GET" })
     let query = caller.supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, assignee_id, production_due_date, tags, cancelled_at, updated_at, editorial_status, working_media, version, brands(name), content_channels(${CHANNEL_SELECT})`,
+        `id, title, brand_id, assignee_id, publish_date, cancelled_at, updated_at, editorial_status, working_media, version, brands(name), ${TYPES_SELECT}, content_channels(${CHANNEL_SELECT})`,
         { count: "exact" },
       );
     query =
@@ -206,15 +259,15 @@ export const listContentItems = createServerFn({ method: "GET" })
     if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
     if (data.ownerId !== undefined) query = query.eq("assignee_id", data.ownerId);
     if (search !== "") query = query.ilike("title", `%${search}%`);
-    if (data.tag !== undefined && data.tag !== "") query = query.contains("tags", [data.tag]);
 
     const ascending = data.dir !== SortDirection.Desc;
+    const sort = data.sort ?? ContentSort.Date;
     query =
-      data.sort === ContentSort.Title
+      sort === ContentSort.Title
         ? query.order("title", { ascending })
-        : data.sort === ContentSort.Updated
+        : sort === ContentSort.Updated
           ? query.order("updated_at", { ascending: data.dir === SortDirection.Asc })
-          : query.order("production_due_date", { ascending, nullsFirst: false });
+          : query.order("publish_date", { ascending, nullsFirst: false }).order("title");
 
     const { data: rows, count, error } = await query.range(from, to);
     if (error) return fail(error);
@@ -230,8 +283,8 @@ export const listContentItems = createServerFn({ method: "GET" })
       brandName: row.brands?.name ?? "",
       assigneeId: row.assignee_id,
       assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
-      productionDueDate: row.production_due_date,
-      tags: row.tags,
+      publishDate: row.publish_date,
+      types: toTypes(row.content_item_types),
       cancelled: row.cancelled_at !== null,
       editorialStatus: row.editorial_status as EditorialStatus,
       updatedAt: row.updated_at,
@@ -275,7 +328,7 @@ export const getContentItem = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, objective, objective_kind, briefing, briefing_audience, briefing_key_message, briefing_creative_direction, briefing_constraints, internal_notes, assignee_id, production_due_date, tags, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_required, plan_summary, plan_media, plan_approved_revision_id, current_revision_id, approved_revision_id, brands(name, timezone), content_channels(${CHANNEL_SELECT})`,
+        `id, title, brand_id, internal_notes, assignee_id, publish_date, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_required, plan_summary, plan_media, plan_approved_revision_id, current_revision_id, approved_revision_id, brands(name, timezone), ${TYPES_SELECT}, content_channels(${CHANNEL_SELECT})`,
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -373,20 +426,11 @@ export const getContentItem = createServerFn({ method: "GET" })
         brandName: row.brands?.name ?? "",
         brandTimezone: row.brands?.timezone ?? "America/Sao_Paulo",
         title: row.title,
-        objectiveKind: row.objective_kind as ContentObjective | null,
-        objective: row.objective,
-        briefing: richDocFromStored(row.briefing),
-        briefingFields: {
-          audience: row.briefing_audience ?? "",
-          keyMessage: row.briefing_key_message ?? "",
-          creativeDirection: row.briefing_creative_direction ?? "",
-          constraints: row.briefing_constraints ?? "",
-        },
         internalNotes: row.internal_notes,
         assigneeId: row.assignee_id,
         assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
-        tags: row.tags,
-        productionDueDate: row.production_due_date,
+        publishDate: row.publish_date,
+        types: toTypes(row.content_item_types),
         cancelled: row.cancelled_at !== null,
         editorialStatus: row.editorial_status as EditorialStatus,
         planRequired: row.plan_required,
@@ -421,17 +465,10 @@ export const saveContentItem = createServerFn({ method: "POST" })
         ...(data.id === undefined ? {} : { id: data.id }),
         brand_id: data.brandId,
         title: data.title,
-        objective: data.objective ?? null,
-        objective_kind: data.objectiveKind ?? null,
-        briefing: data.briefing ?? null,
-        briefing_audience: data.briefingFields?.audience ?? null,
-        briefing_key_message: data.briefingFields?.keyMessage ?? null,
-        briefing_creative_direction: data.briefingFields?.creativeDirection ?? null,
-        briefing_constraints: data.briefingFields?.constraints ?? null,
         internal_notes: data.internalNotes ?? null,
         assignee_id: data.assigneeId ?? null,
-        tags: data.tags,
-        production_due_date: data.productionDueDate ?? null,
+        type_ids: data.typeIds,
+        publish_date: data.publishDate ?? null,
         caption: { text: data.caption },
         call_to_action: data.callToAction ?? null,
         working_media: data.media.map((item) => ({
@@ -462,7 +499,7 @@ export const saveContentItem = createServerFn({ method: "POST" })
 
 const COPY_PREFIX = "Cópia de ";
 const COPY_SELECT =
-  "title, brand_id, objective, objective_kind, briefing, briefing_audience, briefing_key_message, briefing_creative_direction, briefing_constraints, internal_notes, assignee_id, tags, caption, call_to_action, working_media, plan_summary, plan_media, content_channels(channel_id, format, caption, position, publication_status, channels(archived_at))";
+  "title, brand_id, internal_notes, assignee_id, caption, call_to_action, working_media, plan_summary, plan_media, content_item_types(content_type_id, content_types(archived_at)), content_channels(channel_id, format, caption, position, publication_status, channels(archived_at))";
 
 export const duplicateContentItem = createServerFn({ method: "POST" })
   .validator(idSchema)
@@ -490,16 +527,11 @@ export const duplicateContentItem = createServerFn({ method: "POST" })
       p_item: {
         brand_id: row.brand_id,
         title: `${COPY_PREFIX}${row.title}`.slice(0, 140),
-        objective: row.objective,
-        objective_kind: row.objective_kind,
-        briefing: row.briefing,
-        briefing_audience: row.briefing_audience,
-        briefing_key_message: row.briefing_key_message,
-        briefing_creative_direction: row.briefing_creative_direction,
-        briefing_constraints: row.briefing_constraints,
         internal_notes: row.internal_notes,
         assignee_id: row.assignee_id,
-        tags: row.tags,
+        type_ids: row.content_item_types
+          .filter((link) => link.content_types?.archived_at === null)
+          .map((link) => link.content_type_id),
         caption: { text: captionText(row.caption) },
         call_to_action: row.call_to_action,
         working_media: working.success ? working.data : [],

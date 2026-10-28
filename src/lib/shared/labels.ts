@@ -12,7 +12,7 @@ import {
   CommentVisibility,
   ContactMessageStatus,
   ContentFormat,
-  ContentObjective,
+  ContentTypeColor,
   DashboardReason,
   EditorialStatus,
   InvitationStatus,
@@ -167,14 +167,15 @@ export const calendarNoteRepeatLabels: Record<CalendarNoteRepeat, string> = {
   [CalendarNoteRepeat.Yearly]: "Todo ano",
 };
 
-export const contentObjectiveLabels: Record<ContentObjective, string> = {
-  [ContentObjective.Awareness]: "Reconhecimento da marca",
-  [ContentObjective.Engagement]: "Engajamento",
-  [ContentObjective.Traffic]: "Tráfego para o site",
-  [ContentObjective.Leads]: "Geração de contatos",
-  [ContentObjective.Sales]: "Vendas",
-  [ContentObjective.Community]: "Comunidade",
-  [ContentObjective.Other]: "Outro",
+export const contentTypeColorLabels: Record<ContentTypeColor, string> = {
+  [ContentTypeColor.Violet]: "Violeta",
+  [ContentTypeColor.Orchid]: "Orquídea",
+  [ContentTypeColor.Rose]: "Rosa",
+  [ContentTypeColor.Peach]: "Pêssego",
+  [ContentTypeColor.Coral]: "Coral",
+  [ContentTypeColor.Sage]: "Sálvia",
+  [ContentTypeColor.Cactus]: "Cacto",
+  [ContentTypeColor.InkSoft]: "Azul-marinho",
 };
 
 export const calendarAlertLabels: Record<CalendarAlert, string> = {

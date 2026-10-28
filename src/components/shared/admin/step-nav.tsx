@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { Check } from "lucide-react";
+import { Check, CircleAlert } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
 import { cn } from "@/lib/shared/utils";
 
@@ -10,11 +10,13 @@ export function StepNav<K extends string>({
   active,
   onChange,
   label,
+  invalid,
 }: {
   steps: readonly StepItem<K>[];
   active: K;
   onChange: (key: K) => void;
   label: string;
+  invalid?: ReadonlySet<K> | undefined;
 }) {
   const activeIndex = steps.findIndex((step) => step.key === active);
   return (
@@ -59,6 +61,12 @@ export function StepNav<K extends string>({
                   <span className="sr-only">{`Etapa ${index + 1}: `}</span>
                   {step.label}
                 </span>
+                {invalid?.has(step.key) ? (
+                  <span className="relative flex items-center gap-1 text-danger">
+                    <CircleAlert className="size-4" aria-hidden="true" />
+                    <span className="sr-only">com campo para corrigir</span>
+                  </span>
+                ) : null}
               </button>
               {index < steps.length - 1 ? (
                 <span

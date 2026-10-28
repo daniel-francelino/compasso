@@ -5,7 +5,9 @@ import type { Failure } from "@/lib/shared/server-utils";
 
 type Outcome = { ok: true } | Failure;
 
-export const useFormSubmit = () => {
+type Options = { onInvalid?: (fields: Record<string, string>) => void };
+
+export const useFormSubmit = (options: Options = {}) => {
   const formRef = useRef<HTMLFormElement>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -15,6 +17,7 @@ export const useFormSubmit = () => {
     setError(failure.message);
     if (failure.fields === undefined) return;
     setErrors(failure.fields);
+    options.onInvalid?.(failure.fields);
     focusFirstInvalid(formRef.current);
   }
 
@@ -30,7 +33,9 @@ export const useFormSubmit = () => {
 
     const parsed = schema.safeParse(values);
     if (!parsed.success) {
-      setErrors(zodFieldErrors(parsed.error));
+      const fields = zodFieldErrors(parsed.error);
+      setErrors(fields);
+      options.onInvalid?.(fields);
       focusFirstInvalid(formRef.current);
       return;
     }

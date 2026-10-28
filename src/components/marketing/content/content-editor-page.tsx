@@ -36,7 +36,6 @@ function ExistingContent({ itemId }: { itemId: string }) {
       content={existing.data}
       seed={draftOf(existing.data)}
       sourceNote={undefined}
-      defaultDay={undefined}
     />
   );
 }
@@ -67,16 +66,16 @@ function NewContent({
   const seed = emptyDraft(note.data?.brandId ?? brandId ?? rememberedBrand);
   if (note.data) {
     seed.title = note.data.title;
-    seed.briefing = richDocFromPlain(note.data.description ?? "");
+    seed.planSummary = richDocFromPlain(note.data.description ?? "");
   }
   const noteDay = note.data?.kind === CalendarNoteKind.Date ? note.data.noteDate : undefined;
+  seed.publishDate = day ?? noteDay ?? null;
   return (
     <ContentEditor
       key={`new-${sourceNoteId ?? ""}`}
       content={undefined}
       seed={seed}
       sourceNote={note.data?.id}
-      defaultDay={day ?? noteDay}
       onSaved={onSaved}
     />
   );

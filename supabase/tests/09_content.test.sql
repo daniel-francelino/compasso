@@ -1,6 +1,6 @@
 begin;
 
-select plan(180);
+select plan(176);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -89,19 +89,15 @@ select set_config('t.mediaPending', pg_temp.upload('00000000-0000-0000-0000-0000
 select set_config('t.mediaB', pg_temp.upload('00000000-0000-0000-0000-0000000000b2', current_setting('t.brandB')::uuid, 'd.jpg', 'idem-content-04', true)::text, true);
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select set_config('t.item', public.content_item_save(format('{"brand_id":"%s","title":"Lançamento de outono","tags":["Outono"," outono ","Campanha"]}', current_setting('t.brand'))::jsonb) ->> 'id', true);
-select is((select array_agg(t order by t collate "C") from public.content_items i, unnest(i.tags) t where i.id = current_setting('t.item')::uuid), array['Campanha', 'Outono', 'outono'], 'tags are trimmed and deduplicated');
+select set_config('t.item', public.content_item_save(format('{"brand_id":"%s","title":"Lançamento de outono","publish_date":"2026-11-03"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
+select is((select publish_date::text from public.content_items where id = current_setting('t.item')::uuid), '2026-11-03', 'the publication date is saved');
 select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'draft', 'a content starts as a draft');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"x"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'a title below two characters is refused');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Com responsavel","assignee_id":"00000000-0000-0000-0000-0000000000b2"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'an assignee who is not linked to the brand is refused');
-select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Objetivo estranho","objective_kind":"fame"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'an objective outside the closed list is refused');
+select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Tipo estranho","type_ids":["00000000-0000-0000-0000-00000000ffff"]}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'a type that is not in the catalog is refused');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Outra marca"}'::jsonb)$$, current_setting('t.brandB')), 'not_found', 'a content cannot be created on a brand the person is not linked to');
-select is((pg_temp.save(current_setting('t.item')::uuid, '"title":"Lançamento de outono","objective":"Vender","objective_kind":"sales"') ->> 'version')::int, 2, 'editing a content increments its version');
+select is((pg_temp.save(current_setting('t.item')::uuid, '"title":"Lançamento de outono","publish_date":"2026-11-03"') ->> 'version')::int, 2, 'editing a content increments its version');
 select throws_ok(format($$select public.content_item_save('{"id":"%s","brand_id":"%s","title":"Outro titulo","expected_version":1}'::jsonb)$$, current_setting('t.item'), current_setting('t.brand')), 'conflict', 'a stale content version conflicts');
-select lives_ok(format($$select pg_temp.save('%s', '"title":"Lançamento de outono","briefing_audience":"  Clientes do bairro  ","briefing_key_message":"Chocolate quente"')$$, current_setting('t.item')), 'the guided briefing fields are saved');
-select is((select briefing_audience from public.content_items where id = current_setting('t.item')::uuid), 'Clientes do bairro', 'a guided briefing field is trimmed');
-select is((select briefing_constraints from public.content_items where id = current_setting('t.item')::uuid), null, 'a guided briefing field left out is stored as null');
-select throws_ok(format($$select pg_temp.save('%s', '"title":"Lançamento de outono","briefing_constraints":"%s"')$$, current_setting('t.item'), repeat('a', 2001)), 'invalid_input', 'a guided briefing field above 2000 characters is refused');
 
 select set_config('t.saved', pg_temp.save(current_setting('t.item')::uuid, format('"title":"Lançamento de outono","caption":{"text":"Chegou o outono"},"working_media":[{"media_version_id":"%s","alt_text":"Xicara"},{"media_version_id":"%s"}],"channels":[{"channel_id":"%s","format":"carousel"}]', current_setting('t.media1'), current_setting('t.media2'), current_setting('t.channel')))::text, true);
 select set_config('t.row1', current_setting('t.saved')::jsonb -> 'channels' -> 0 ->> 'id', true);

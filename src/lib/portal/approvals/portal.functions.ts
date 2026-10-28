@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import type { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
-import type { ContentObjective } from "@/lib/shared/enums";
 import { EXTERNAL_URL_SECONDS } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { richDocFromStored } from "@/lib/shared/rich-text/types";
@@ -73,7 +72,6 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
     hasThumb: item.has_thumb,
     hasDisplay: item.has_display,
   })),
-  objectiveKind: (row.objective_kind ?? null) as ContentObjective | null,
   planSummary: richDocFromStored(row.plan_summary),
   brandTimezone: row.brand_timezone,
   revisionNo: row.revision_no,
@@ -206,7 +204,6 @@ export const getPortalApproval = createServerFn({ method: "GET" })
         isCurrent: parsed.is_current,
         currentRequestId: parsed.current_request_id,
         planSummary: richDocFromStored(parsed.plan_summary),
-        objectiveKind: (parsed.objective_kind ?? null) as ContentObjective | null,
         canDecide: parsed.can_decide,
         media: parsed.media.map((item) => ({
           versionId: item.version_id,

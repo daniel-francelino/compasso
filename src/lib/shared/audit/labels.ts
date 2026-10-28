@@ -85,6 +85,8 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Site.CaseStudyWithdrawn]: "Autorização de case retirada",
   [AuditAction.Site.SettingsChanged]: "Configurações do site alteradas",
   [AuditAction.Settings.PolicyChanged]: "Política alterada",
+  [AuditAction.ContentType.Saved]: "Tipo de conteúdo salvo",
+  [AuditAction.ContentType.Archived]: "Tipo de conteúdo arquivado ou reativado",
   [AuditAction.Organization.Updated]: "Dados da organização alterados",
   [AuditAction.Audit.Exported]: "Auditoria exportada",
 };

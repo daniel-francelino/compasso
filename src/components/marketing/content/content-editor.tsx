@@ -1,10 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { RotateCcw, Save, UserCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ALL_TAB } from "@/components/marketing/content/caption-section";
-import { BriefingStep } from "@/components/marketing/content/briefing-step";
 import { ActivitySection } from "@/components/marketing/content/activity-section";
 import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
@@ -45,7 +44,13 @@ import {
   duplicateContentItem,
   saveContentItem,
 } from "@/lib/marketing/content/content.functions";
-import { EditorStep, editorSteps } from "@/lib/marketing/content/editor-steps";
+import {
+  EditorStep,
+  editorSteps,
+  stepToShow,
+  stepsWithErrors,
+} from "@/lib/marketing/content/editor-steps";
+import { followPublishDate, plannedOnDay } from "@/lib/marketing/content/publish-date";
 import { saveContentSchema } from "@/lib/marketing/content/schemas";
 import { stageStateOf } from "@/lib/marketing/content/stage-state";
 import type { ContentDetail } from "@/lib/marketing/content/types";
@@ -60,45 +65,52 @@ import { Action } from "@/lib/shared/auth/actions";
 import { ErrorCode } from "@/lib/shared/auth/errors";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { resolveLocalTime } from "@/lib/shared/calendar/reschedule";
 import { platformFormats } from "@/lib/shared/editorial/editorial";
 import { ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
+import { listContentTypes } from "@/lib/shared/content-types/content-types.functions";
+import { focusFirstInvalid } from "@/lib/shared/forms";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { AppRoute } from "@/lib/shared/routes";
 import { cn } from "@/lib/shared/utils";
-import { toIso } from "@/lib/shared/dates";
 
-const DEFAULT_HOUR = "09:00";
 const FALLBACK_ZONE = "America/Sao_Paulo";
-
-const defaultPlanned = (day: string | undefined, zone: string): string | null => {
-  if (day === undefined) return null;
-  const resolved = resolveLocalTime(`${day}T${DEFAULT_HOUR}`, zone);
-  return resolved.ok ? toIso(resolved.instant) : null;
-};
+const STEP_FOCUS_DELAY_MS = 350;
 
 export function ContentEditor({
   content,
   seed,
   sourceNote,
-  defaultDay,
   onSaved,
 }: {
   content: ContentDetail | undefined;
   seed: DraftValues;
   sourceNote: string | undefined;
-  defaultDay: string | undefined;
   onSaved?: (() => void) | undefined;
 }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { run, busy: acting } = useServerAction();
-  const { formRef, errors, error, busy: saving, submit } = useFormSubmit();
   const draft = useContentDraft(seed);
   const { values } = draft;
+  const [step, setStep] = useState<EditorStep>(EditorStep.Planning);
+  const focusPending = useRef(false);
+  const {
+    formRef,
+    errors,
+    error,
+    busy: saving,
+    submit,
+  } = useFormSubmit({
+    onInvalid: (fields) => {
+      const target = stepToShow(fields, values.rows.length > 0, step);
+      if (target === null) return;
+      focusPending.current = true;
+      setStep(target);
+    },
+  });
   const [conflict, setConflict] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [publishing, setPublishing] = useState<DraftRow | null>(null);
@@ -108,7 +120,6 @@ export function ContentEditor({
   const [cancelling, setCancelling] = useState(false);
   const [confirmingPublish, setConfirmingPublish] = useState(false);
   const [tab, setTab] = useState(ALL_TAB);
-  const [step, setStep] = useState<EditorStep>(EditorStep.Planning);
 
   const isNew = content === undefined;
   const editorialStatus = content?.editorialStatus ?? EditorialStatus.Draft;
@@ -138,6 +149,24 @@ export function ContentEditor({
     enabled: values.brandId !== "",
   });
   const channels = channelsQuery.data ?? [];
+  const typesQuery = useQuery({
+    queryKey: QueryKey.Content.types(),
+    queryFn: async () => unwrapResult(await listContentTypes()).types,
+    enabled: can(auth, Action.Content.View),
+  });
+  const typeOptions = [
+    ...(typesQuery.data ?? []),
+    ...(content?.types ?? []).filter(
+      (type) => type.archived && !(typesQuery.data ?? []).some((active) => active.id === type.id),
+    ),
+  ];
+
+  useEffect(() => {
+    if (!focusPending.current) return;
+    focusPending.current = false;
+    const timer = setTimeout(() => focusFirstInvalid(formRef.current), STEP_FOCUS_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [step, formRef]);
 
   const selected = new Set(values.rows.map((row) => row.channelId));
   const locked = new Set(values.rows.filter((row) => row.published).map((row) => row.channelId));
@@ -159,7 +188,7 @@ export function ContentEditor({
     const channel = channels.find((candidate) => candidate.id === channelId);
     const format = channel ? platformFormats[channel.platform][0] : undefined;
     if (channel === undefined || format === undefined) return;
-    const plannedAt = defaultPlanned(defaultDay, zone);
+    const plannedAt = plannedOnDay(values.publishDate, zone);
     apply("rows", [
       ...values.rows,
       {
@@ -174,6 +203,11 @@ export function ContentEditor({
         version: undefined,
       },
     ]);
+  }
+
+  function changePublishDate(day: string | null) {
+    draft.set("rows", followPublishDate(values.rows, values.publishDate, day, zone));
+    draft.set("publishDate", day);
   }
 
   useAutoSelectChannel({
@@ -196,14 +230,10 @@ export function ContentEditor({
     ...(content === undefined ? {} : { id: content.id }),
     brandId: values.brandId,
     title: values.title,
-    objectiveKind: values.objectiveKind,
-    objective: values.objective,
-    briefing: values.briefing,
-    briefingFields: values.briefingFields,
     internalNotes: values.internalNotes,
     assigneeId: values.assigneeId,
-    tags: values.tags,
-    productionDueDate: values.productionDueDate,
+    typeIds: values.typeIds,
+    publishDate: values.publishDate,
     planSummary: values.planSummary,
     planMedia: values.planFiles.map((file) => ({
       mediaVersionId: file.mediaVersionId,
@@ -399,7 +429,13 @@ export function ContentEditor({
         </Alert>
       ) : null}
       {content ? <ContentBanners content={content} /> : null}
-      <StepNav label="Etapas do conteúdo" steps={editorSteps} active={step} onChange={setStep} />
+      <StepNav
+        label="Etapas do conteúdo"
+        steps={editorSteps}
+        active={step}
+        onChange={setStep}
+        invalid={stepsWithErrors(errors, values.rows.length > 0)}
+      />
       <div
         className={cn("grid items-start gap-6", hasSide && "xl:grid-cols-[minmax(0,1fr)_24rem]")}
       >
@@ -419,15 +455,9 @@ export function ContentEditor({
               settingsDisabled={settingsDisabled}
               saving={saving}
               errors={errors}
+              typeOptions={typeOptions}
+              onPublishDateChange={changePublishDate}
               onToggleChannel={toggleChannel}
-            />
-          ) : null}
-          {step === EditorStep.Briefing ? (
-            <BriefingStep
-              draft={draft}
-              disabled={settingsDisabled}
-              objectiveLocked={state.planLocked}
-              errors={errors}
             />
           ) : null}
           {step === EditorStep.Content ? (

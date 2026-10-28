@@ -4,7 +4,7 @@ import { formatIcons } from "@/components/shared/content/format-icons";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { formatInZone } from "@/lib/shared/format";
-import { contentFormatLabels, contentObjectiveLabels, platformLabels } from "@/lib/shared/labels";
+import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 
 const DEFAULT_ZONE = "America/Sao_Paulo";
 
@@ -16,12 +16,6 @@ function FormatIcon({ format }: { format: ContentFormat }) {
 export function PlanRequestSummary({ request }: { request: PortalRequest }) {
   return (
     <div className="space-y-3">
-      {request.objectiveKind ? (
-        <p className="text-sm">
-          <span className="font-medium">Objetivo:</span>{" "}
-          {contentObjectiveLabels[request.objectiveKind]}
-        </p>
-      ) : null}
       {request.planSummary ? (
         <div className="text-sm">
           <RichTextView doc={request.planSummary} />

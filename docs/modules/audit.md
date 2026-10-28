@@ -121,6 +121,8 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `site.case_study_withdrawn` | `site_page` | `site_case_study_withdraw` |
 | `site.settings_changed` | `site` | `site_settings_save`, `site_redirect_save`, `site_redirect_delete` |
 | `settings.policy_changed` | `organization_setting` | `organization_setting_save` |
+| `content_type.saved` | `content_type` | `content_type_save` |
+| `content_type.archived` | `content_type` | `content_type_set_archived` |
 | `organization.updated` | `organization` | `organization_save` |
 | `audit.exported` | `audit_event` | `exportAudit` (server function) |
 

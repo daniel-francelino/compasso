@@ -67,6 +67,8 @@ export const QueryKey = {
     approvers: (brandId: string) => ["content", "approvers", brandId] as const,
     assignees: (brandId: string) => ["content", "assignees", brandId] as const,
     publishInfo: (itemId: string) => ["content", "publish-info", itemId] as const,
+    types: () => ["content", "types"] as const,
+    typeCatalog: () => ["content", "type-catalog"] as const,
   },
   Approvals: {
     all: () => ["approvals"] as const,

@@ -16,6 +16,7 @@ Included: organization profile, defaults, users, invitations, roles, operational
 | `/admin/settings/users` | Users and invitations | `users.view` (manage: `users.manage`; invite: `invitations.create`) |
 | `/admin/settings/roles` | Roles and the permission matrix | `roles.manage` |
 | `/admin/settings/policies` | Operational policies | `settings.manage` |
+| `/admin/settings/content-types` | Catalog of content types ("Tipos de conteúdo"): list with the colored chip, the emoji and the number of contents; "Novo tipo", edit (name, color from the closed list `ContentTypeColor`, optional emoji) and "Arquivar"/"Reativar". An archived type stays on the contents that have it and is no longer offered. Names are unique per organization ignoring case (`content_type_name_taken`) | `settings.manage` |
 | `/admin/settings/notifications` | Default notification rules (global) | `notifications.configure` |
 | `/admin/settings/audit` | Audit trail ([audit.md](audit.md)) | `audit.view` |
 

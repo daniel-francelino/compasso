@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
-import { type BriefingFields, emptyBriefingFields } from "@/lib/marketing/content/briefing-fields";
 import type { ContentDetail, FileItem } from "@/lib/marketing/content/types";
-import type { ContentFormat, ContentObjective } from "@/lib/shared/enums";
+import type { ContentFormat } from "@/lib/shared/enums";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
 
 export type DraftRow = {
@@ -19,14 +18,10 @@ export type DraftRow = {
 export type DraftValues = {
   brandId: string;
   title: string;
-  objectiveKind: ContentObjective | null;
-  objective: string;
-  briefing: RichDoc | null;
-  briefingFields: BriefingFields;
   internalNotes: string;
   assigneeId: string | null;
-  tags: string[];
-  productionDueDate: string | null;
+  typeIds: string[];
+  publishDate: string | null;
   planSummary: RichDoc | null;
   planFiles: FileItem[];
   caption: string;
@@ -38,14 +33,10 @@ export type DraftValues = {
 export const emptyDraft = (brandId: string): DraftValues => ({
   brandId,
   title: "",
-  objectiveKind: null,
-  objective: "",
-  briefing: null,
-  briefingFields: emptyBriefingFields,
   internalNotes: "",
   assigneeId: null,
-  tags: [],
-  productionDueDate: null,
+  typeIds: [],
+  publishDate: null,
   planSummary: null,
   planFiles: [],
   caption: "",
@@ -57,14 +48,10 @@ export const emptyDraft = (brandId: string): DraftValues => ({
 export const draftOf = (content: ContentDetail): DraftValues => ({
   brandId: content.brandId,
   title: content.title,
-  objectiveKind: content.objectiveKind,
-  objective: content.objective ?? "",
-  briefing: content.briefing,
-  briefingFields: content.briefingFields,
   internalNotes: content.internalNotes ?? "",
   assigneeId: content.assigneeId,
-  tags: content.tags,
-  productionDueDate: content.productionDueDate,
+  typeIds: content.types.map((type) => type.id),
+  publishDate: content.publishDate,
   planSummary: content.planSummary,
   planFiles: content.planMedia.map((file) => ({
     mediaVersionId: file.mediaVersionId,

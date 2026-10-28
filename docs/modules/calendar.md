@@ -21,6 +21,8 @@ Included: month, week and list views, filters, items without a date, drag to res
 | Idea | `calendar_notes` (`kind = idea`) | A local date | All-day item with a light bulb; greyed and linked when it became a content |
 | Date | `calendar_notes` (`kind = date`) | A local date | All-day item with a calendar mark; repeats weekly, monthly or yearly when asked |
 
+The **publication date** of a content (`content_items.publish_date`) creates **no entry of its own**: the calendar keeps one entry per channel row, so a content whose rows are on the same day as its publication date is never shown twice, and a row moved to another day appears only on that day.
+
 Channel rows without a planned date do **not** appear on the grid; they stay in the side list **"Sem data"**.
 
 ## Time zones

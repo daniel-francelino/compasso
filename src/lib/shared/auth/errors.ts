@@ -314,6 +314,10 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "Escreva um comentário para pedir alterações.",
   },
+  content_type_name_taken: {
+    category: ErrorCode.Invalid,
+    message: "Já existe um tipo de conteúdo com este nome.",
+  },
   channel_brand_mismatch: {
     category: ErrorCode.Invalid,
     message: "O canal pertence a outra marca.",

@@ -3,16 +3,14 @@ import {
   ApprovalStage,
   CommentVisibility,
   ContentFormat,
-  ContentObjective,
   EditorialStatus,
 } from "@/lib/shared/enums";
-import { BRIEFING_FIELD_MAX } from "@/lib/marketing/content/briefing-fields";
 import { listRequestSchema } from "@/lib/shared/list-search";
 import { richDocSchema } from "@/lib/shared/rich-text/types";
 
 export const ContentStatusFilter = { Active: "active", Cancelled: "cancelled" } as const;
 
-export const ContentSort = { Deadline: "deadline", Updated: "updated", Title: "title" } as const;
+export const ContentSort = { Date: "date", Updated: "updated", Title: "title" } as const;
 
 export const MAX_CONTENT_CHANNELS = 20;
 
@@ -29,7 +27,7 @@ export const listContentSchema = listRequestSchema.extend({
   ownerId: z.string().uuid().optional(),
   editorial: z.nativeEnum(EditorialStatus).optional(),
   publication: z.string().max(30).optional(),
-  tag: z.string().trim().max(40).optional(),
+  typeId: z.string().uuid().optional(),
 });
 
 export const boardSchema = z.object({
@@ -57,15 +55,6 @@ export const channelRowSchema = z.object({
 
 export type ChannelRowInput = z.infer<typeof channelRowSchema>;
 
-const briefingFieldSchema = z.string().trim().max(BRIEFING_FIELD_MAX, "O texto é longo demais.");
-
-const briefingFieldsSchema = z.object({
-  audience: briefingFieldSchema,
-  keyMessage: briefingFieldSchema,
-  creativeDirection: briefingFieldSchema,
-  constraints: briefingFieldSchema,
-});
-
 export const saveContentSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -75,14 +64,10 @@ export const saveContentSchema = z
       .trim()
       .min(2, "O título precisa ter ao menos 2 letras.")
       .max(140, "O título é longo demais."),
-    objectiveKind: z.nativeEnum(ContentObjective).nullable().optional(),
-    objective: z.string().trim().max(2000, "O objetivo é longo demais.").optional(),
-    briefing: richDocSchema.nullable().optional(),
-    briefingFields: briefingFieldsSchema.optional(),
     internalNotes: z.string().trim().max(4000, "As notas são longas demais.").optional(),
     assigneeId: z.string().uuid().nullable().optional(),
-    tags: z.array(z.string().trim().min(1).max(40)).max(20),
-    productionDueDate: dateOnly.nullable().optional(),
+    typeIds: z.array(z.string().uuid()).max(20, "No máximo 20 tipos."),
+    publishDate: dateOnly.nullable().optional(),
     planSummary: richDocSchema.nullable().optional(),
     planMedia: z.array(mediaRefSchema).max(10, "No máximo 10 arquivos no planejamento."),
     caption: z.string().max(5000, "A legenda é longa demais.").default(""),
