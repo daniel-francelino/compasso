@@ -1,8 +1,10 @@
 export const LandingAnchor = {
+  Audience: "para-quem",
   Services: "servicos",
   Process: "processo",
   Workspace: "metodo",
   About: "sobre",
+  Faq: "duvidas",
   Contact: "contato",
 } as const;
 
@@ -10,13 +12,20 @@ export const navItems = [
   { label: "Serviços", anchor: LandingAnchor.Services },
   { label: "Processo", anchor: LandingAnchor.Process },
   { label: "Sobre", anchor: LandingAnchor.About },
+  { label: "Dúvidas", anchor: LandingAnchor.Faq },
 ] as const;
 
 export const hero = {
   eyebrow: "Marketing • Social Media • Comunicação",
   titleStart: "Estratégia e criatividade para marcas",
   titleAccessible: "Estratégia e criatividade para marcas com personalidade.",
-  text: "Gestão de redes sociais, criação de conteúdo e comunicação para marcas e pequenos negócios, com planejamento, sensibilidade visual e histórias reais.",
+  text: "Planejo, crio e acompanho o conteúdo da sua marca para você ter um perfil coerente, constante e com resultados que dá para medir.",
+  cta: "Quero conversar sobre minha marca",
+  proof: [
+    "Formada em Gestão de Marketing",
+    "Projetos pontuais ou mensais",
+    "Você aprova antes de publicar",
+  ],
 };
 
 export const heroWords = [
@@ -51,6 +60,28 @@ export const platforms = [
 ] as const;
 
 export const heroPhoto = { src: "/landing/rayana.webp", alt: "Rayana Vasconcelos" };
+
+export const audience = {
+  eyebrow: "Para quem é",
+  title: "Postar sem estratégia cansa e não traz resultado.",
+  text: "Se alguma dessas situações é familiar, seu perfil pode trabalhar mais por você.",
+  pains: [
+    {
+      title: "Você posta, mas não sabe se funciona",
+      text: "Falta leitura de resultados para decidir o que manter e o que mudar.",
+    },
+    {
+      title: "Falta tempo para manter a constância",
+      text: "Planejar, criar e publicar todo mês vira mais uma tarefa pendente.",
+    },
+    {
+      title: "Seu perfil não tem uma voz clara",
+      text: "Cada publicação parece de uma marca diferente.",
+    },
+  ],
+  solution:
+    "Eu cuido do planejamento, da criação e da análise, e você acompanha e aprova cada etapa.",
+};
 
 export const services = [
   {
@@ -164,6 +195,37 @@ export const about = {
     { title: "Aprendizado contínuo", text: "Cada projeto ensina e melhora o próximo." },
   ],
 };
+
+export const faq = {
+  eyebrow: "Dúvidas",
+  title: "Antes de conversar",
+  items: [
+    {
+      question: "Para quem você trabalha?",
+      answer:
+        "Para marcas e pequenos negócios que querem uma presença digital coerente com a sua identidade.",
+    },
+    {
+      question: "Posso contratar só um serviço?",
+      answer: "Sim. Cada serviço pode ser contratado de forma pontual ou mensal.",
+    },
+    {
+      question: "O que acontece depois da primeira conversa?",
+      answer:
+        "Preparo uma proposta com entregas, prazos e investimento. Aprovada a proposta, organizamos temas, formatos e calendário.",
+    },
+    {
+      question: "Eu preciso aprovar os conteúdos?",
+      answer: "Sim. Você valida cada conteúdo antes de ir ao ar e pode pedir ajustes.",
+    },
+    {
+      question: "Como acompanho os resultados?",
+      answer: "Analiso os resultados e conversamos sobre os próximos passos para ajustar a rota.",
+    },
+  ],
+};
+
+export const ctaLabel = "Quero uma proposta para minha marca";
 
 export const contact = {
   title: "Vamos criar algo juntos?",

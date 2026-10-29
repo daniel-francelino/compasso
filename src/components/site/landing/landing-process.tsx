@@ -7,6 +7,7 @@ import {
   FileText,
   type LucideIcon,
 } from "lucide-react";
+import { LandingCtaLink } from "@/components/site/landing/landing-cta-link";
 import { LandingAnchor, processSteps } from "@/components/site/landing/landing-content";
 import { LandingSectionTitle } from "@/components/site/landing/landing-section-title";
 
@@ -50,6 +51,9 @@ export function LandingProcess() {
             </li>
           ))}
         </ol>
+        <div className="mt-12 flex justify-center">
+          <LandingCtaLink />
+        </div>
       </div>
     </section>
   );

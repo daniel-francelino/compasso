@@ -3,7 +3,7 @@ import { BlurFade } from "lost-ui/effects/blur-fade";
 import { ShimmerButton } from "lost-ui/effects/shimmer-button";
 import { TextAnimate } from "lost-ui/effects/text-animate";
 import { WordRotate } from "lost-ui/effects/word-rotate";
-import { ArrowDown, Sparkles } from "lucide-react";
+import { ArrowDown, Check, Sparkles } from "lucide-react";
 import { hero, heroWords } from "@/components/site/landing/landing-content";
 import { LandingHeroPhoto } from "@/components/site/landing/landing-hero-photo";
 import { Ribbon, Sparkle } from "@/components/site/landing/landing-ornaments";
@@ -57,7 +57,7 @@ export function LandingHero() {
               className="text-base font-medium"
               onClick={() => scrollToAnchor("contato")}
             >
-              Vamos conversar
+              {hero.cta}
             </ShimmerButton>
             <a
               href="#servicos"
@@ -66,6 +66,16 @@ export function LandingHero() {
               Ver o que eu faço
               <ArrowDown aria-hidden="true" className="size-4" />
             </a>
+          </BlurFade>
+          <BlurFade delay={0.7}>
+            <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-soft">
+              {hero.proof.map((item) => (
+                <li key={item} className="inline-flex items-center gap-2">
+                  <Check aria-hidden="true" className="size-4 text-violet-deep" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </BlurFade>
         </div>
         <BlurFade delay={0.35} direction="left" offset={24}>

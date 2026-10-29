@@ -1,6 +1,8 @@
 import { MotionConfig } from "motion/react";
 import { Suspense, lazy } from "react";
+import { LandingAudience } from "@/components/site/landing/landing-audience";
 import { LandingFooter } from "@/components/site/landing/landing-footer";
+import { LandingFaq } from "@/components/site/landing/landing-faq";
 import { LandingHeader } from "@/components/site/landing/landing-header";
 import { LandingHero } from "@/components/site/landing/landing-hero";
 import { LandingPlatforms } from "@/components/site/landing/landing-platforms";
@@ -33,11 +35,13 @@ export function LandingPage() {
         <main id="conteudo">
           <LandingHero />
           <LandingPlatforms />
+          <LandingAudience />
           <LandingServices />
           <LandingProcess />
           <Suspense fallback={null}>
             <LandingWorkspace />
             <LandingAbout />
+            <LandingFaq />
             <LandingContact />
           </Suspense>
         </main>

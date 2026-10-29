@@ -1,6 +1,7 @@
 import { BlurFade } from "lost-ui/effects/blur-fade";
 import { MagicCard } from "lost-ui/effects/magic-card";
 import { Camera, Clapperboard, MessagesSquare, Share2, type LucideIcon } from "lucide-react";
+import { LandingCtaLink } from "@/components/site/landing/landing-cta-link";
 import { LandingAnchor, services } from "@/components/site/landing/landing-content";
 import { Ribbon, Sparkle } from "@/components/site/landing/landing-ornaments";
 import { LandingSectionTitle } from "@/components/site/landing/landing-section-title";
@@ -54,6 +55,9 @@ export function LandingServices() {
             );
           })}
         </ul>
+        <div className="mt-12 flex justify-center">
+          <LandingCtaLink />
+        </div>
       </div>
     </section>
   );
