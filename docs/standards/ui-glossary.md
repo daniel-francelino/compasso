@@ -113,6 +113,7 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Snooze | "Adiar" |
 | Mark as read | "Marcar como lida" |
 | Sign in / out | "Entrar" / "Sair" |
+| Send a contact message (public site) | "Enviar mensagem" |
 
 ## 3. Message patterns
 

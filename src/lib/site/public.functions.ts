@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { contactMessageSchema } from "@/lib/site/contact-schemas";
 import {
   turnstileConfigured,
   turnstileSiteKey,
@@ -69,22 +70,17 @@ export const getPublicSite = createServerFn({ method: "GET" })
     };
   });
 
-const contactSchema = z.object({
-  name: z.string().trim().min(1, "Informe seu nome.").max(120),
-  email: z.string().trim().max(200),
-  phone: z.string().trim().max(40),
-  message: z.string().trim().min(1, "Escreva a mensagem.").max(4000),
-  consent: z.boolean(),
-  website: z.string().max(200),
-  turnstileToken: z.string().max(4096),
-  slug: z.string().max(200),
-});
-
 const clientIp = (): string =>
   (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
 
+export const getContactConfig = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ turnstileSiteKey: string | null }> => ({
+    turnstileSiteKey: turnstileSiteKey(),
+  }),
+);
+
 export const submitContactMessage = createServerFn({ method: "POST" })
-  .validator(contactSchema)
+  .validator(contactMessageSchema)
   .handler(async ({ data }): Promise<Result> => {
     if (data.website !== "") return { ok: true };
     if (!turnstileConfigured()) return fail({ message: "contact_unavailable" });

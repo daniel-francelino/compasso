@@ -223,3 +223,19 @@ export const contact = {
   instagram: { label: "@rayanavasconceloss", href: "https://instagram.com/rayanavasconceloss" },
   email: { label: "rayana.vass@gmail.com", href: "mailto:rayana.vass@gmail.com" },
 };
+
+export const contactForm = {
+  source: "home",
+  consent: "Concordo que meus dados sejam usados para responder a esta mensagem.",
+  submit: "Enviar mensagem",
+  success: "Recebi sua mensagem. Vou responder pelo contato que você informou.",
+  unavailable: "O envio de mensagens está indisponível agora. Tente de novo mais tarde.",
+  direct: "Prefere falar direto?",
+};
+
+export const footer = {
+  tagline: "Estratégia e criatividade para marcas e pequenos negócios com personalidade.",
+  navTitle: "Navegue",
+  contactTitle: "Fale comigo",
+  legal: "Rayana Vasconcelos. Marketing, social media e comunicação.",
+};

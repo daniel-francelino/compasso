@@ -204,6 +204,7 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `site_rollback(p_page, p_revision)` | `rollbackSitePage` | `site.publish` | `site.rolled_back` | `site.published` | `not_found`, `media_not_published`, `case_study_not_authorized` |
 | `site_redirect_save(p_redirect jsonb)` / `site_redirect_delete(p_redirect)` | `saveRedirect`, `deleteRedirect` | `site.settings` | `site.settings_changed` | — | `redirect_invalid` |
 | `site_contact_submit(p_site, p_payload jsonb)` (granted to `anon`) | `submitContactMessage` (rate limit + Turnstile + honeypot) | none (public) | — | `site.contact_message` | `contact_consent_required`, `rate_limited`, `invalid_input` |
+| (no SQL; reads the environment) | `getContactConfig` (returns only the public Turnstile site key for the landing form; section 18.1 of [../spaces/cms-site.md](../spaces/cms-site.md)) | none (public) | — | — | — |
 | `site_contact_update(p_message, p_status, p_note)` | `updateContactMessage` | `site.view` | — | — | `not_found` |
 | `site_published_page(p_slug)` (granted to `anon`) | `getPublicPage` | public | — | — | — |
 | `site_published_settings()` (granted to `anon`) | `getPublicSettings` | public | — | — | — |

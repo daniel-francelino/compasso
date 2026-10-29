@@ -112,6 +112,7 @@ export const QueryKey = {
     settings: () => ["site", "settings"] as const,
     redirects: () => ["site", "redirects"] as const,
     messages: (filters: Filters) => ["site", "messages", filters] as const,
+    contactConfig: () => ["site", "contact-config"] as const,
     authorization: (id: string) => ["site", "authorization", id] as const,
   },
   Dashboard: {
