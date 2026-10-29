@@ -1,3 +1,4 @@
+import { CatchBoundary } from "@tanstack/react-router";
 import { MotionConfig } from "motion/react";
 import { Suspense, lazy } from "react";
 import { LandingAudience } from "@/components/site/landing/landing-audience";
@@ -35,11 +36,13 @@ export function LandingPage() {
           <LandingServices />
           <LandingProcess />
           <LandingMethod />
-          <Suspense fallback={null}>
-            <LandingAbout />
-            <LandingFaq />
-            <LandingContact />
-          </Suspense>
+          <CatchBoundary getResetKey={() => "landing-lazy"} errorComponent={() => null}>
+            <Suspense fallback={null}>
+              <LandingAbout />
+              <LandingFaq />
+              <LandingContact />
+            </Suspense>
+          </CatchBoundary>
         </main>
         <LandingFooter />
       </div>

@@ -16,6 +16,16 @@ declare global {
 
 const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
+const loadScript = (): HTMLScriptElement => {
+  const existing = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`);
+  if (existing !== null) return existing;
+  const script = document.createElement("script");
+  script.src = SCRIPT_SRC;
+  script.async = true;
+  document.head.appendChild(script);
+  return script;
+};
+
 export function TurnstileBox({
   siteKey,
   onToken,
@@ -36,16 +46,11 @@ export function TurnstileBox({
         "expired-callback": () => onToken(""),
       });
     };
-    if (window.turnstile === undefined) {
-      const script = document.createElement("script");
-      script.src = SCRIPT_SRC;
-      script.async = true;
-      script.addEventListener("load", mount);
-      document.head.appendChild(script);
-    } else {
-      mount();
-    }
+    const script = loadScript();
+    if (window.turnstile === undefined) script.addEventListener("load", mount);
+    else mount();
     return () => {
+      script.removeEventListener("load", mount);
       if (widget !== null) window.turnstile?.remove(widget);
     };
   }, [siteKey, onToken]);

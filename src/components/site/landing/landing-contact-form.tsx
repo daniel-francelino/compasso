@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { CatchBoundary } from "@tanstack/react-router";
 import { Send } from "lucide-react";
 import { useState } from "react";
 import { FieldMessage, TextAreaField, TextField } from "@/components/shared/admin/form-fields";
@@ -14,11 +15,20 @@ import { getContactConfig, submitContactMessage } from "@/lib/site/public.functi
 
 const emptyValues = { name: "", email: "", phone: "", message: "", website: "" };
 
-export function LandingContactForm() {
+function ContactUnavailable() {
+  return (
+    <p role="alert" className="rounded-lg border border-line bg-ivory p-5 text-ink-soft">
+      {contactForm.unavailable}
+    </p>
+  );
+}
+
+function ContactFormBody() {
   const config = useQuery({
     queryKey: QueryKey.Site.contactConfig(),
     queryFn: () => getContactConfig(),
     staleTime: Infinity,
+    retry: false,
   });
   const [values, setValues] = useState(emptyValues);
   const [consent, setConsent] = useState(false);
@@ -37,13 +47,7 @@ export function LandingContactForm() {
       </p>
     );
   }
-  if (config.data?.turnstileSiteKey === null) {
-    return (
-      <p role="alert" className="rounded-lg border border-line bg-ivory p-5 text-ink-soft">
-        {contactForm.unavailable}
-      </p>
-    );
-  }
+  if (config.isError || config.data?.turnstileSiteKey === null) return <ContactUnavailable />;
 
   async function send(data: ContactMessageInput) {
     const outcome = await submitContactMessage({ data });
@@ -153,5 +157,13 @@ export function LandingContactForm() {
         {contactForm.submit}
       </Button>
     </form>
+  );
+}
+
+export function LandingContactForm() {
+  return (
+    <CatchBoundary getResetKey={() => "contact-form"} errorComponent={ContactUnavailable}>
+      <ContactFormBody />
+    </CatchBoundary>
   );
 }

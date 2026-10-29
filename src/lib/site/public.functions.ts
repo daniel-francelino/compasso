@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { contactMessageSchema } from "@/lib/site/contact-schemas";
+import { type ContactMessageInput, contactMessageSchema } from "@/lib/site/contact-schemas";
 import {
   turnstileConfigured,
   turnstileSiteKey,
@@ -74,10 +74,36 @@ const clientIp = (): string =>
   (getRequestHeader("x-forwarded-for") ?? "").split(",")[0]?.trim() ?? "";
 
 export const getContactConfig = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ turnstileSiteKey: string | null }> => ({
-    turnstileSiteKey: turnstileSiteKey(),
-  }),
+  async (): Promise<{ turnstileSiteKey: string | null }> => {
+    try {
+      return { turnstileSiteKey: turnstileSiteKey() };
+    } catch (error) {
+      logError("site: reading the contact configuration failed", error);
+      return { turnstileSiteKey: null };
+    }
+  },
 );
+
+const saveContactMessage = async (data: ContactMessageInput): Promise<Result> => {
+  const settings = await readPublicSettings();
+  if (settings.kind !== "settings") return fail({ message: "contact_unavailable" });
+  const { error } = await anonClient().rpc("site_contact_submit", {
+    p_site: settings.settings.site_id,
+    p_payload: {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      message: data.message,
+      consent: data.consent,
+      source_slug: cleanSlug(data.slug),
+    },
+  });
+  if (error) {
+    logError("site: saving a contact message failed", error.code);
+    return fail(error);
+  }
+  return { ok: true };
+};
 
 export const submitContactMessage = createServerFn({ method: "POST" })
   .validator(contactMessageSchema)
@@ -89,23 +115,10 @@ export const submitContactMessage = createServerFn({ method: "POST" })
     const check = await verifyTurnstile(data.turnstileToken, ip);
     if (check === "unavailable") return fail({ message: "contact_unavailable" });
     if (check === "failed") return fail({ message: "captcha_failed" });
-
-    const settings = await readPublicSettings();
-    if (settings.kind !== "settings") return fail({ message: "contact_unavailable" });
-    const { error } = await anonClient().rpc("site_contact_submit", {
-      p_site: settings.settings.site_id,
-      p_payload: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        message: data.message,
-        consent: data.consent,
-        source_slug: cleanSlug(data.slug),
-      },
-    });
-    if (error) {
-      logError("site: saving a contact message failed", error.code);
-      return fail(error);
+    try {
+      return await saveContactMessage(data);
+    } catch (error) {
+      logError("site: a contact message could not be handled", error);
+      return fail({ message: "contact_unavailable" });
     }
-    return { ok: true };
   });
