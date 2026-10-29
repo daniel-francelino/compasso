@@ -14,7 +14,6 @@ import { PlanningStep } from "@/components/marketing/content/planning-step";
 import { PublishDialog } from "@/components/marketing/content/publish-dialog";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
 import { FormError } from "@/components/shared/admin/auth-shell";
-import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { FormActions } from "@/components/shared/admin/form-actions";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -48,6 +47,7 @@ import {
 import {
   EditorStep,
   editorSteps,
+  initialStep,
   stepToShow,
   stepsWithErrors,
 } from "@/lib/marketing/content/editor-steps";
@@ -96,7 +96,7 @@ export function ContentEditor({
   const { run, busy: acting } = useServerAction();
   const draft = useContentDraft(seed);
   const { values } = draft;
-  const [step, setStep] = useState<EditorStep>(EditorStep.Planning);
+  const [step, setStep] = useState<EditorStep>(() => initialStep(seed));
   const focusPending = useRef(false);
   const {
     formRef,
@@ -297,9 +297,18 @@ export function ContentEditor({
     const channel = channels.find((candidate) => candidate.id === row.channelId);
     return channel ? `${platformLabels[channel.platform]} · ${channel.profileName}` : "o canal";
   };
-  const brandName = content?.brandName ?? brand.data?.name ?? "";
   const settingsDisabled = !canWrite || cancelled || saving;
   const hasSide = step === EditorStep.Content;
+  const stepBar = (
+    <StepNav
+      label="Etapas do conteúdo"
+      steps={editorSteps}
+      active={step}
+      onChange={setStep}
+      invalid={stepsWithErrors(errors, values.rows.length > 0)}
+      className="justify-start py-0"
+    />
+  );
   const actionsBar = (
     <ContentActions
       status={editorialStatus}
@@ -335,30 +344,16 @@ export function ContentEditor({
       }}
     >
       {onSaved ? (
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="heading-page text-foreground">
-              {isNew ? "Novo conteúdo" : values.title || "Conteúdo"}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Escreva uma vez e escolha onde vai sair. Cada canal só muda o que for diferente.
-            </p>
-          </div>
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="sr-only">{isNew ? "Novo conteúdo" : values.title || "Conteúdo"}</h1>
+          {stepBar}
           {actionsBar}
         </header>
       ) : (
         <PageHeader
-          leading={
-            brandName === "" ? undefined : (
-              <BrandAvatar name={brandName} logoUrl={brand.data?.logoUrl ?? null} size="lg" />
-            )
-          }
+          compact
           title={isNew ? "Novo conteúdo" : values.title || "Conteúdo"}
-          description={
-            isNew
-              ? "Escreva uma vez e escolha onde vai sair. Cada canal só muda o que for diferente."
-              : (content?.brandName ?? "")
-          }
+          middle={stepBar}
           breadcrumbs={[
             { label: "Conteúdos", to: AppRoute.Content },
             { label: isNew ? "Novo conteúdo" : values.title || "Conteúdo" },
@@ -392,13 +387,6 @@ export function ContentEditor({
         </Alert>
       ) : null}
       {content ? <ContentBanners content={content} /> : null}
-      <StepNav
-        label="Etapas do conteúdo"
-        steps={editorSteps}
-        active={step}
-        onChange={setStep}
-        invalid={stepsWithErrors(errors, values.rows.length > 0)}
-      />
       <div
         className={cn("grid items-start gap-6", hasSide && "xl:grid-cols-[minmax(0,1fr)_24rem]")}
       >

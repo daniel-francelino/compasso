@@ -35,3 +35,14 @@ export const stepToShow = (
   if (invalid.size === 0 || invalid.has(current)) return null;
   return editorSteps.find((step) => invalid.has(step.key))?.key ?? null;
 };
+
+export const initialStep = (values: {
+  caption: string;
+  files: readonly unknown[];
+  rows: readonly { caption: string }[];
+}): EditorStep =>
+  values.caption.trim() !== "" ||
+  values.files.length > 0 ||
+  values.rows.some((row) => row.caption.trim() !== "")
+    ? EditorStep.Content
+    : EditorStep.Planning;

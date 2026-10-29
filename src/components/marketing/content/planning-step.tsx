@@ -1,4 +1,4 @@
-import { Building2, Radio, UserRound } from "lucide-react";
+import { Building2, Layers, Radio, UserRound } from "lucide-react";
 import { ChannelPicker } from "@/components/marketing/content/channel-picker";
 import { ContentAssigneeField } from "@/components/marketing/content/content-assignee-field";
 import { ContentTitleField } from "@/components/marketing/content/content-title-field";
@@ -56,50 +56,52 @@ export function PlanningStep({
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <ContentTitleField draft={draft} disabled={settingsDisabled} error={errors["title"]} />
-      <div className="space-y-0.5 border-y border-border py-2">
-        {isNew ? (
-          <PropertyRow icon={Building2} label="Marca">
-            <BrandSelect
-              id="content-brand"
-              label="Marca"
-              hideLabel
-              triggerClassName={propertyControlClass}
-              required
-              value={values.brandId}
-              onValueChange={(value) => {
-                set("brandId", value);
-                writeStored(StoredKey.CalendarBrand, value);
-                set("rows", []);
-                set("assigneeId", null);
-              }}
-              placeholder="Escolha a marca"
-              brands={brands}
-              error={errors["brandId"]}
+      <div className="space-y-2 border-y border-border py-3">
+        <div className="grid gap-x-4 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(12.5rem,1fr))]">
+          {isNew ? (
+            <PropertyRow stacked icon={Building2} label="Marca">
+              <BrandSelect
+                id="content-brand"
+                label="Marca"
+                hideLabel
+                triggerClassName={propertyControlClass}
+                required
+                value={values.brandId}
+                onValueChange={(value) => {
+                  set("brandId", value);
+                  writeStored(StoredKey.CalendarBrand, value);
+                  set("rows", []);
+                  set("assigneeId", null);
+                }}
+                placeholder="Escolha a marca"
+                brands={brands}
+                error={errors["brandId"]}
+              />
+            </PropertyRow>
+          ) : null}
+          <PropertyRow stacked icon={UserRound} label="Responsável">
+            <ContentAssigneeField
+              draft={draft}
+              assignees={assignees}
+              disabled={settingsDisabled}
+              error={errors["assigneeId"]}
             />
           </PropertyRow>
-        ) : null}
-        <PropertyRow icon={UserRound} label="Responsável">
-          <ContentAssigneeField
+          <PlanTypesRow
             draft={draft}
-            assignees={assignees}
             disabled={settingsDisabled}
-            error={errors["assigneeId"]}
+            typeOptions={typeOptions}
+            error={errors["typeIds"]}
           />
-        </PropertyRow>
-        <PlanTypesRow
-          draft={draft}
-          disabled={settingsDisabled}
-          typeOptions={typeOptions}
-          error={errors["typeIds"]}
-        />
-        <PlanDateRow
-          draft={draft}
-          disabled={planDisabled}
-          onPublishDateChange={onPublishDateChange}
-          error={errors["publishDate"]}
-        />
+          <PlanDateRow
+            draft={draft}
+            disabled={planDisabled}
+            onPublishDateChange={onPublishDateChange}
+            error={errors["publishDate"]}
+          />
+        </div>
         <PropertyRow icon={Radio} label="Canais">
-          <div className="space-y-4 py-1">
+          <div className="py-1">
             <ChannelPicker
               brandId={values.brandId}
               channels={channels}
@@ -110,14 +112,20 @@ export function PlanningStep({
               onToggle={onToggleChannel}
               error={errors["channels"]}
             />
-            <PlanningFormats
-              draft={draft}
-              channels={channels}
-              disabled={!editable || state.planLocked}
-              errors={errors}
-            />
           </div>
         </PropertyRow>
+        {values.rows.length > 0 ? (
+          <PropertyRow icon={Layers} label="Formatos">
+            <div className="py-1">
+              <PlanningFormats
+                draft={draft}
+                channels={channels}
+                disabled={!editable || state.planLocked}
+                errors={errors}
+              />
+            </div>
+          </PropertyRow>
+        ) : null}
       </div>
       <PlanBody draft={draft} disabled={planDisabled} tip={bodyTip} errors={errors} />
     </div>

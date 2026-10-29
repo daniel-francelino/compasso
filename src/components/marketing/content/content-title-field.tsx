@@ -27,7 +27,7 @@ export function ContentTitleField({
         aria-invalid={error ? true : undefined}
         aria-required
         onChange={(event) => draft.set("title", event.target.value)}
-        className="h-auto border-0 bg-transparent px-0 py-1 font-display text-4xl font-semibold shadow-none focus-visible:ring-0 md:text-4xl"
+        className="h-auto border-0 bg-transparent px-0 py-1 font-display text-5xl font-bold shadow-none placeholder:text-muted-foreground/40 focus-visible:ring-0 md:text-5xl"
       />
       <FieldMessage error={error} />
     </div>

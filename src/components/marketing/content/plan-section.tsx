@@ -32,6 +32,7 @@ export function PlanTypesRow({
   const canCreate = can(auth, Action.Content.ManageTypes) && !disabled;
   return (
     <PropertyRow
+      stacked
       icon={Shapes}
       label="Tipo de conteúdo"
       tip={{
@@ -97,6 +98,7 @@ export function PlanDateRow({
 }) {
   return (
     <PropertyRow
+      stacked
       icon={CalendarDays}
       label="Data de publicação"
       tip={{

@@ -11,17 +11,22 @@ export function StepNav<K extends string>({
   onChange,
   label,
   invalid,
+  className,
 }: {
   steps: readonly StepItem<K>[];
   active: K;
   onChange: (key: K) => void;
   label: string;
   invalid?: ReadonlySet<K> | undefined;
+  className?: string;
 }) {
   const activeIndex = steps.findIndex((step) => step.key === active);
   return (
     <MotionConfig reducedMotion="user">
-      <nav aria-label={label} className="flex items-center justify-center overflow-x-auto py-2">
+      <nav
+        aria-label={label}
+        className={cn("flex items-center justify-center overflow-x-auto py-2", className)}
+      >
         {steps.map((step, index) => {
           const current = index === activeIndex;
           const done = index < activeIndex;

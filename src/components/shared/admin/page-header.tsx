@@ -23,12 +23,16 @@ export function PageHeader({
   breadcrumbs,
   actions,
   leading,
+  compact = false,
+  middle,
 }: {
   title: string;
   description?: string | undefined;
   breadcrumbs?: Crumb[] | undefined;
   actions?: ReactNode;
   leading?: ReactNode;
+  compact?: boolean;
+  middle?: ReactNode;
 }) {
   const setItems = useContext(SetBreadcrumbsContext);
   const stableItems = useMemo((): Crumb[] => {
@@ -41,6 +45,20 @@ export function PageHeader({
     setItems?.(stableItems);
     return () => setItems?.([]);
   }, [setItems, stableItems]);
+
+  if (compact) {
+    return (
+      <header>
+        <h1 className="sr-only">{title}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">{middle}</div>
+          {actions ? (
+            <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{actions}</div>
+          ) : null}
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header>

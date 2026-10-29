@@ -37,7 +37,7 @@ export function PlanningFormats({
   if (channelIds.length === 0) return null;
 
   return (
-    <div className="space-y-4 border-t border-border pt-4" aria-label="Formatos por canal">
+    <div className="space-y-4" aria-label="Formatos por canal">
       {channelIds.map((channelId) => {
         const channel = channels.find((candidate) => candidate.id === channelId);
         if (channel === undefined) return null;
