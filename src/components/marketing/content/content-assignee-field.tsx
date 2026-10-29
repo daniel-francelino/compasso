@@ -1,5 +1,6 @@
 import { SelectField } from "@/components/shared/admin/form-fields";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import { propertyControlClass } from "@/components/shared/admin/property-row";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 
@@ -22,6 +23,8 @@ export function ContentAssigneeField({
     <SelectField
       id="content-assignee"
       label="Responsável"
+      hideLabel
+      triggerClassName={propertyControlClass}
       value={values.assigneeId ?? NONE}
       disabled={disabled || values.brandId === ""}
       emptyText={assignees.length === 0 ? "Nenhuma pessoa disponível" : undefined}

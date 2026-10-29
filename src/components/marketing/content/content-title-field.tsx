@@ -1,4 +1,6 @@
-import { TextField } from "@/components/shared/admin/form-fields";
+import { FieldMessage } from "@/components/shared/admin/form-fields";
+import { Input } from "@/components/shared/ui/input";
+import { Label } from "@/components/shared/ui/label";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 
 export function ContentTitleField({
@@ -11,17 +13,26 @@ export function ContentTitleField({
   error: string | undefined;
 }) {
   return (
-    <TextField
-      id="content-title"
-      label="Nome do conteúdo"
-      required
-      value={draft.values.title}
-      disabled={disabled}
-      onValueChange={(value) => draft.set("title", value)}
-      maxLength={140}
-      placeholder="Como a equipe vai reconhecer este conteúdo?"
-      error={error}
-      hint="O cliente só vê este título se ele fizer parte do que for enviado."
-    />
+    <div className="space-y-1">
+      <Label htmlFor="content-title" className="sr-only">
+        Nome do conteúdo
+      </Label>
+      <Input
+        id="content-title"
+        name="content-title"
+        value={draft.values.title}
+        disabled={disabled}
+        maxLength={140}
+        placeholder="Dê um nome ao conteúdo"
+        aria-invalid={error ? true : undefined}
+        aria-required
+        onChange={(event) => draft.set("title", event.target.value)}
+        className="h-auto border-0 bg-transparent px-0 py-1 font-display text-4xl font-semibold shadow-none focus-visible:ring-0 md:text-4xl"
+      />
+      <FieldMessage
+        error={error}
+        hint="O cliente só vê este título se ele fizer parte do que for enviado."
+      />
+    </div>
   );
 }

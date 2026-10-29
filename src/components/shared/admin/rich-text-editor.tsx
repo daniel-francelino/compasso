@@ -21,6 +21,7 @@ export function RichTextEditor({
   error,
   disabled = false,
   tall = false,
+  hideLabel = false,
 }: {
   id: string;
   label: string;
@@ -30,6 +31,7 @@ export function RichTextEditor({
   error?: string | undefined;
   disabled?: boolean;
   tall?: boolean;
+  hideLabel?: boolean;
 }) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -79,7 +81,9 @@ export function RichTextEditor({
 
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <FieldLabel htmlFor={id} hidden={hideLabel}>
+        {label}
+      </FieldLabel>
       <div
         className={cn(
           "rounded-md border border-input bg-background focus-within:ring-1 focus-within:ring-ring",

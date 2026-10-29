@@ -22,7 +22,11 @@ export function DatePickerField({
   disabled = false,
   clearable = false,
   required = false,
+  hideLabel = false,
+  triggerClassName,
 }: {
+  hideLabel?: boolean;
+  triggerClassName?: string;
   id: string;
   label: string;
   value: string;
@@ -43,7 +47,7 @@ export function DatePickerField({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-1.5">
-        <Label htmlFor={id}>
+        <Label htmlFor={id} className={hideLabel ? "sr-only" : undefined}>
           {label}
           {required ? (
             <span aria-hidden="true" className="ml-1 text-destructive">
@@ -51,7 +55,7 @@ export function DatePickerField({
             </span>
           ) : null}
         </Label>
-        {tip ? <InfoTip label={tip.label}>{tip.content}</InfoTip> : null}
+        {tip && !hideLabel ? <InfoTip label={tip.label}>{tip.content}</InfoTip> : null}
       </div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -66,6 +70,7 @@ export function DatePickerField({
             className={cn(
               "h-10 w-full justify-start gap-2 rounded-md border-input bg-background px-3 text-left text-sm font-normal shadow-sm hover:bg-background pointer-coarse:h-11",
               selected ? "text-foreground" : "text-muted-foreground",
+              triggerClassName,
             )}
           >
             <CalendarDays className="size-4" aria-hidden="true" />

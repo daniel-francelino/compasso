@@ -17,13 +17,22 @@ export function FieldLabel({
   htmlFor,
   required,
   tip,
+  hidden = false,
   children,
 }: {
   htmlFor: string;
   required?: boolean | undefined;
   tip?: { label: string; content: ReactNode } | undefined;
+  hidden?: boolean;
   children: ReactNode;
 }) {
+  if (hidden) {
+    return (
+      <Label htmlFor={htmlFor} className="sr-only">
+        {children}
+      </Label>
+    );
+  }
   return (
     <div className="flex items-center gap-1.5">
       <Label htmlFor={htmlFor}>
@@ -233,9 +242,11 @@ export function SelectField({
   disabled,
   triggerClassName,
   emptyText,
+  hideLabel = false,
 }: {
   id: string;
   label: string;
+  hideLabel?: boolean;
   required?: boolean;
   tip?: { label: string; content: ReactNode } | undefined;
   value: string;
@@ -249,7 +260,7 @@ export function SelectField({
 }) {
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id} required={required} tip={tip}>
+      <FieldLabel htmlFor={id} required={required} tip={tip} hidden={hideLabel}>
         {label}
       </FieldLabel>
       <Select

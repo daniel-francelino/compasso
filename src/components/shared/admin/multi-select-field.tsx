@@ -5,6 +5,7 @@ import { Button } from "@/components/shared/ui/button";
 import { Checkbox } from "@/components/shared/ui/checkbox";
 import { Input } from "@/components/shared/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
+import { cn } from "@/lib/shared/utils";
 
 export type MultiSelectOption = { value: string; label: string; display?: ReactNode };
 
@@ -27,9 +28,13 @@ export function MultiSelectField({
   error,
   disabled = false,
   trailing,
+  hideLabel = false,
+  triggerClassName,
 }: {
   id: string;
   label: string;
+  hideLabel?: boolean;
+  triggerClassName?: string;
   tip?: { label: string; content: ReactNode } | undefined;
   options: MultiSelectOption[];
   value: string[];
@@ -54,7 +59,7 @@ export function MultiSelectField({
 
   return (
     <div className="space-y-1.5">
-      <FieldLabel htmlFor={id} tip={tip}>
+      <FieldLabel htmlFor={id} tip={tip} hidden={hideLabel}>
         {label}
       </FieldLabel>
       <div className="flex items-start gap-2">
@@ -73,7 +78,10 @@ export function MultiSelectField({
               aria-haspopup="listbox"
               aria-expanded={open}
               aria-invalid={error ? true : undefined}
-              className="flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+              className={cn(
+                "flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+                triggerClassName,
+              )}
             >
               <span className="flex min-w-0 flex-wrap items-center gap-1.5">
                 {selected.length === 0 ? (

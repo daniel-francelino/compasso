@@ -14,6 +14,8 @@ export function BrandSelect({
   error,
   disabled,
   placeholder,
+  hideLabel,
+  triggerClassName,
 }: {
   id: string;
   label?: string;
@@ -26,6 +28,8 @@ export function BrandSelect({
   error?: string | undefined;
   disabled?: boolean;
   placeholder?: string;
+  hideLabel?: boolean;
+  triggerClassName?: string;
 }) {
   return (
     <SelectField
@@ -39,6 +43,8 @@ export function BrandSelect({
       {...(error === undefined ? {} : { error })}
       {...(disabled === undefined ? {} : { disabled })}
       {...(placeholder === undefined ? {} : { placeholder })}
+      {...(hideLabel === undefined ? {} : { hideLabel })}
+      {...(triggerClassName === undefined ? {} : { triggerClassName })}
     />
   );
 }
