@@ -20,7 +20,7 @@ export function LandingHeroPhoto({ children }: { children: ReactNode }) {
         fetchPriority="high"
         decoding="async"
         onError={() => setMissing(true)}
-        className="max-h-[34rem] w-auto rounded-[2.5rem] border-8 border-surface object-cover shadow-sm"
+        className="max-h-136 w-auto rounded-[2.5rem] border-8 border-surface object-cover shadow-sm"
       />
       <div className="mt-4 w-72 max-w-full lg:absolute lg:-bottom-6 lg:-left-16 lg:mt-0">
         {children}
