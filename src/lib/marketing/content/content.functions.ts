@@ -37,6 +37,7 @@ import {
   listContentSchema,
   saveContentSchema,
 } from "@/lib/marketing/content/schemas";
+import { planMediaOf } from "@/lib/marketing/content/plan-images";
 import { REVISION_SELECT, loadMedia, toRevision } from "@/lib/marketing/content/revisions.server";
 import type {
   ChannelRowDetail,
@@ -476,9 +477,9 @@ export const saveContentItem = createServerFn({ method: "POST" })
           alt_text: item.altText ?? null,
         })),
         plan_summary: data.planSummary ?? null,
-        plan_media: data.planMedia.map((item) => ({
+        plan_media: planMediaOf(data.planSummary ?? null).map((item) => ({
           media_version_id: item.mediaVersionId,
-          alt_text: item.altText ?? null,
+          alt_text: item.altText,
         })),
         channels: data.channels.map((channel) => ({
           ...(channel.id === undefined ? {} : { id: channel.id }),

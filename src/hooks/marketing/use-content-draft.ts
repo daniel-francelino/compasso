@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { withPlanImages } from "@/lib/marketing/content/plan-images";
 import type { ContentDetail, FileItem } from "@/lib/marketing/content/types";
 import type { ContentFormat } from "@/lib/shared/enums";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
@@ -23,7 +24,6 @@ export type DraftValues = {
   typeIds: string[];
   publishDate: string | null;
   planSummary: RichDoc | null;
-  planFiles: FileItem[];
   caption: string;
   callToAction: string;
   files: FileItem[];
@@ -38,7 +38,6 @@ export const emptyDraft = (brandId: string): DraftValues => ({
   typeIds: [],
   publishDate: null,
   planSummary: null,
-  planFiles: [],
   caption: "",
   callToAction: "",
   files: [],
@@ -52,13 +51,7 @@ export const draftOf = (content: ContentDetail): DraftValues => ({
   assigneeId: content.assigneeId,
   typeIds: content.types.map((type) => type.id),
   publishDate: content.publishDate,
-  planSummary: content.planSummary,
-  planFiles: content.planMedia.map((file) => ({
-    mediaVersionId: file.mediaVersionId,
-    altText: file.altText ?? "",
-    name: file.name,
-    kind: file.kind,
-  })),
+  planSummary: withPlanImages(content.planSummary, content.planMedia),
   caption: content.caption,
   callToAction: content.callToAction ?? "",
   files: content.media.map((file) => ({

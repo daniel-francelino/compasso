@@ -23,16 +23,13 @@ export function ContentTitleField({
         value={draft.values.title}
         disabled={disabled}
         maxLength={140}
-        placeholder="Dê um nome ao conteúdo"
+        placeholder="Novo conteúdo"
         aria-invalid={error ? true : undefined}
         aria-required
         onChange={(event) => draft.set("title", event.target.value)}
         className="h-auto border-0 bg-transparent px-0 py-1 font-display text-4xl font-semibold shadow-none focus-visible:ring-0 md:text-4xl"
       />
-      <FieldMessage
-        error={error}
-        hint="O cliente só vê este título se ele fizer parte do que for enviado."
-      />
+      <FieldMessage error={error} />
     </div>
   );
 }

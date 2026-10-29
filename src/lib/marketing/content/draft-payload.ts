@@ -17,10 +17,6 @@ export const draftPayload = (
   typeIds: values.typeIds,
   publishDate: values.publishDate,
   planSummary: values.planSummary,
-  planMedia: values.planFiles.map((file) => ({
-    mediaVersionId: file.mediaVersionId,
-    altText: file.altText,
-  })),
   caption: values.caption,
   callToAction: values.callToAction,
   media: values.files.map((file) => ({

@@ -186,7 +186,7 @@ The `memoria-print` project (TanStack Start + Supabase + R2) is the reference fo
 | Tables | `DataTable` from the `shared/admin` kit | Pagination, search and filters on the server |
 | Calendar | FullCalendar (`dayGrid`, `timeGrid`, `list`, `interaction`; MIT modules) | Alternative: port `month-grid` and `time-grid` from Memoria Print. Decide in a spike at the start of phase 4 |
 | Drag and drop | `@dnd-kit` | Content board by status |
-| Rich text | Tiptap (minimal extensions) | Store JSON, never HTML |
+| Rich text | Tiptap (minimal extensions); the planning text uses the `lost-ui` block editor (`lost-ui` ^0.2.0 plus its Tiptap peers) | Store JSON, never HTML; the editor output is normalised to a closed set before it is kept (content.md, O19) |
 | Charts | Recharts 3.10.1, MIT license, actively maintained (added 2026-10-26 for the metrics screen, [modules/metrics.md](modules/metrics.md)); the kit has no chart component and drawing the axes, tooltips and keyboard navigation by hand would repeat well-tested work; colors only from the `chart-*` tokens | Used only by `components/shared/metrics`, so only the metrics routes load it |
 | Dates | `date-fns` v4 and `@date-fns/tz` 1.5 (MIT, maintained; `@date-fns/tz` was already installed by the date picker and is now a direct dependency) | Instants in UTC; IANA time zone per brand; all date work in `lib/shared/dates.ts`, display in `format.ts`; the Date API is refused by ESLint elsewhere |
 | Emoji picker | `emoji-picker-react` 5 (MIT, maintained, React >= 16.8) | Used only by `EmojiPickerField` (`shared/admin`); native emoji (no image CDN), so no extra origin is needed |

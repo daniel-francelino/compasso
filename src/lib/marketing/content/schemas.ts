@@ -69,7 +69,6 @@ export const saveContentSchema = z
     typeIds: z.array(z.string().uuid()).max(20, "No máximo 20 tipos."),
     publishDate: dateOnly.nullable().optional(),
     planSummary: richDocSchema.nullable().optional(),
-    planMedia: z.array(mediaRefSchema).max(10, "No máximo 10 arquivos no planejamento."),
     caption: z.string().max(5000, "A legenda é longa demais.").default(""),
     callToAction: z.string().trim().max(300, "A chamada para ação é longa demais.").optional(),
     media: z.array(mediaRefSchema).max(20, "No máximo 20 arquivos."),

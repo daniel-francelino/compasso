@@ -44,7 +44,11 @@ describe("rich text", () => {
     };
     expect(richDocSchema.safeParse(link).success).toBe(false);
     expect(
-      richDocSchema.safeParse({ type: RichNodeType.Doc, content: [{ type: "image" }] }).success,
+      richDocSchema.safeParse({ type: RichNodeType.Doc, content: [{ type: "iframe" }] }).success,
+    ).toBe(false);
+    expect(
+      richDocSchema.safeParse({ type: RichNodeType.Doc, content: [{ type: RichNodeType.Image }] })
+        .success,
     ).toBe(false);
   });
 

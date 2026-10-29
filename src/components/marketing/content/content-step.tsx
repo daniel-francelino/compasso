@@ -47,7 +47,7 @@ export function ContentStep({
   const fileProblem = mediaProblem(formats, values.files.length);
   return (
     <>
-      <SectionCard title="3. Texto do post" icon={Type}>
+      <SectionCard title="Texto do post" icon={Type}>
         <CaptionSection
           draft={draft}
           channels={channels}
@@ -57,7 +57,7 @@ export function ContentStep({
           errors={errors}
         />
       </SectionCard>
-      <SectionCard title="4. Artes e mídias" icon={FileImage}>
+      <SectionCard title="Artes e mídias" icon={FileImage}>
         <FileStrip
           items={values.files}
           onChange={(items) => set("files", items)}
@@ -67,7 +67,7 @@ export function ContentStep({
           error={errors["media"] ?? (values.files.length > 0 ? fileProblem : null) ?? undefined}
         />
       </SectionCard>
-      <SectionCard title="5. Programação das publicações" icon={Calendar}>
+      <SectionCard title="Programação das publicações" icon={Calendar}>
         <ChannelRowsSection
           draft={draft}
           channels={channels}

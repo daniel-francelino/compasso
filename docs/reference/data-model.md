@@ -277,7 +277,7 @@ create table content_items (
   working_media jsonb not null default '[]',
   plan_required boolean not null,
   plan_summary text check (plan_summary is null or char_length(plan_summary) <= 4000),
-  plan_media jsonb not null default '[]',
+  plan_media jsonb not null default '[]',  -- derived from the image nodes of plan_summary (content.md, O19)
   plan_approved_revision_id uuid,
   editorial_status text not null default 'draft' check (editorial_status in
     ('draft','planning','awaiting_plan_approval','plan_changes_requested','plan_approved',

@@ -84,7 +84,13 @@ function StateNotice({ approval }: { approval: PortalApproval }) {
   return null;
 }
 
-function StageNotice({ approval }: { approval: PortalApproval }) {
+function StageNotice({
+  approval,
+  urls,
+}: {
+  approval: PortalApproval;
+  urls: Record<string, string> | undefined;
+}) {
   const { request } = approval;
   if (request.stage !== ApprovalStage.Plan) return null;
   return (
@@ -96,7 +102,7 @@ function StageNotice({ approval }: { approval: PortalApproval }) {
       </p>
       {approval.planSummary ? (
         <div className="text-sm">
-          <RichTextView doc={approval.planSummary} />
+          <RichTextView doc={approval.planSummary} images={urls} />
         </div>
       ) : null}
     </SectionCard>
@@ -268,7 +274,7 @@ export function PortalApprovalPage({
         ) : null}
       </div>
       <StateNotice approval={approval} />
-      <StageNotice approval={approval} />
+      <StageNotice approval={approval} urls={urls.data} />
       {error ? (
         <Alert variant="destructive" role="alert">
           <AlertTitle>Não foi possível registrar</AlertTitle>

@@ -87,7 +87,7 @@ export function PublishAutomationSection({
   );
   if (query.isPending && hasInstagram) {
     return (
-      <SectionCard title="6. Publicação automática" icon={Send}>
+      <SectionCard title="Publicação automática" icon={Send}>
         <Skeleton className="h-20 w-full" />
       </SectionCard>
     );
@@ -101,7 +101,7 @@ export function PublishAutomationSection({
   if (entries.length === 0) return null;
 
   return (
-    <SectionCard title="6. Publicação automática" icon={Send}>
+    <SectionCard title="Publicação automática" icon={Send}>
       <ul className="space-y-3">
         {entries.map(({ info, row, channel }) => {
           const plannedLabel = row.plannedAt
