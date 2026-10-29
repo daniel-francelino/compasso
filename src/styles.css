@@ -249,7 +249,7 @@
   }
 
   .card-offset {
-    @apply rounded-2xl border border-line bg-orchid-light;
+    @apply rounded-lg border border-line bg-orchid-light;
     box-shadow: 0.375rem 0.375rem 0 var(--violet-bright);
   }
 }

@@ -63,7 +63,7 @@ Heading utilities (no size tokens scattered around): `heading-page`, `heading-se
 ### 3.3 Spacing, radii, shadows
 
 - **Spacing:** Tailwind default scale. Between blocks of a back office page `space-y-6`; inside a form `space-y-5`; inside a field `space-y-1.5`. Back office content width: max **72 rem** by default; brand detail pages and calendar screens may use all available width; the content editor is capped at **80 rem** (`max-w-7xl`) and centered. Forms and dialogs `max-w-md`–`max-w-4xl`. Public site sections: `px-6 py-24 lg:py-32`, container `mx-auto max-w-6xl`.
-- **Radii** (`--radius: 0.75rem`): `rounded-md` for buttons, fields and badges of the back office; `rounded-xl` for cards; `rounded-2xl` for panels and empty states; `rounded-full` for pills and avatars.
+- **Radii** (`--radius: 0.75rem`): `rounded-md` for buttons, fields and badges of the back office; `rounded-xl` for cards; `rounded-2xl` for panels and empty states; `rounded-full` for pills and avatars. Public landing page: every card uses `rounded-lg` (including `card-offset`), icon chips `rounded-md`.
 - **Shadows:** the Tailwind scale only (`shadow-sm`, `shadow`, `shadow-md`, `shadow-lg`). On the public site, warm shadows may use brand tokens with opacity.
 
 ### 3.4 Motion

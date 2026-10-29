@@ -19,7 +19,7 @@ export function LandingServices() {
       id={LandingAnchor.Services}
       className="relative scroll-mt-20 overflow-clip bg-[image:var(--image-landing)] bg-cover bg-center px-6 py-24"
     >
-      <Ribbon className="-right-16 top-8 w-48 rotate-6 opacity-80 max-sm:hidden" />
+      <Ribbon className="-right-16 -top-12 w-48 rotate-6 opacity-80 max-sm:hidden" />
       <Sparkle className="right-[8%] top-12 size-10" />
       <Sparkle className="bottom-10 left-[6%] size-12 [animation-delay:800ms]" />
       <div className="relative mx-auto max-w-5xl">
@@ -41,7 +41,7 @@ export function LandingServices() {
                     className="card-offset h-full"
                   >
                     <div className="space-y-3 p-6">
-                      <span className="flex size-11 items-center justify-center rounded-xl bg-orchid-light text-violet-deep">
+                      <span className="flex size-11 items-center justify-center rounded-md bg-orchid-light text-violet-deep">
                         <Icon aria-hidden="true" className="size-5" />
                       </span>
                       <h3 className="font-display text-2xl font-semibold text-ink">

@@ -9,11 +9,11 @@ export function LandingContact() {
       id={LandingAnchor.Contact}
       className="relative scroll-mt-20 overflow-clip bg-[image:var(--image-landing)] bg-cover bg-center px-6 py-24"
     >
-      <Ribbon className="-left-12 bottom-6 w-44 -rotate-12 opacity-80 max-sm:hidden" />
+      <Ribbon className="-bottom-24 -left-16 w-44 -rotate-12 opacity-80 max-sm:hidden" />
       <Sparkle className="left-[8%] top-16 size-10" />
       <Sparkle className="bottom-16 right-[8%] size-12 [animation-delay:700ms]" />
       <BlurFade inView>
-        <div className="mx-auto max-w-2xl space-y-6 rounded-3xl border border-line bg-surface p-8 text-center sm:p-12">
+        <div className="mx-auto max-w-2xl space-y-6 rounded-lg border border-line bg-surface p-8 text-center sm:p-12">
           <h2 className="font-display text-4xl font-bold text-ink sm:text-5xl">{contact.title}</h2>
           <p className="font-display text-2xl text-violet-deep">{contact.text}</p>
           <p className="text-ink-soft">{contact.detail}</p>

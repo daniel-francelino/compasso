@@ -13,7 +13,7 @@ export function LandingFaq() {
           {faq.items.map((item, index) => (
             <li key={item.question}>
               <BlurFade inView delay={index * 0.06}>
-                <details className="group rounded-2xl border border-line bg-surface px-5 py-4">
+                <details className="group rounded-lg border border-line bg-surface px-5 py-4">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold text-ink">
                     {item.question}
                     <ChevronDown

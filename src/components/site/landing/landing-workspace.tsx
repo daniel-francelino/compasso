@@ -25,7 +25,7 @@ export function LandingWorkspace() {
           text="Tudo organizado em páginas simples. Você acompanha cada etapa sem precisar pedir."
         />
         <BlurFade inView delay={0.1} className="mt-14">
-          <div className="relative overflow-hidden rounded-3xl border border-line bg-surface shadow-sm">
+          <div className="relative overflow-hidden rounded-lg border border-line bg-surface shadow-sm">
             <MountOnView>
               <BorderBeam
                 size={220}

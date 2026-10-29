@@ -10,7 +10,7 @@ export function LandingHeroPhoto() {
   }, []);
   if (missing) return null;
   return (
-    <div className="relative mx-auto w-fit">
+    <div className="relative mx-auto w-full max-w-md lg:ml-auto lg:mr-0 lg:max-w-lg">
       <img
         ref={imageRef}
         src={heroPhoto.src}
@@ -20,7 +20,7 @@ export function LandingHeroPhoto() {
         fetchPriority="high"
         decoding="async"
         onError={() => setMissing(true)}
-        className="max-h-136 w-auto object-contain"
+        className="block h-auto w-full"
       />
     </div>
   );

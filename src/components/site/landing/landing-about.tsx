@@ -11,7 +11,7 @@ const principleIcons = [Compass, Heart, GraduationCap];
 function PrincipleIcon({ index }: { index: number }) {
   const Icon = principleIcons[index] ?? Compass;
   return (
-    <span className="flex size-10 items-center justify-center rounded-xl bg-ivory/10 text-orchid">
+    <span className="flex size-10 items-center justify-center rounded-md bg-ivory/10 text-orchid">
       <Icon aria-hidden="true" className="size-5" />
     </span>
   );
@@ -41,7 +41,7 @@ export function LandingAbout() {
         {about.principles.map((item, index) => (
           <li key={item.title}>
             <BlurFade inView delay={index * 0.1} className="h-full">
-              <div className="h-full rounded-2xl border border-ivory/20 p-6">
+              <div className="h-full rounded-lg border border-ivory/20 p-6">
                 <PrincipleIcon index={index} />
                 <h3 className="mt-3 font-display text-2xl font-semibold">{item.title}</h3>
                 <p className="mt-2 text-orchid-light">{item.text}</p>

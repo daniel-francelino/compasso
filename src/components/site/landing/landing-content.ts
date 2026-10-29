@@ -2,7 +2,7 @@ export const LandingAnchor = {
   Audience: "para-quem",
   Services: "servicos",
   Process: "processo",
-  Workspace: "metodo",
+  Method: "metodo",
   About: "sobre",
   Faq: "duvidas",
   Contact: "contato",
@@ -67,18 +67,21 @@ export const audience = {
   text: "Se alguma dessas situações é familiar, seu perfil pode trabalhar mais por você.",
   pains: [
     {
+      key: "results",
       title: "Você posta, mas não sabe se funciona",
       text: "Falta leitura de resultados para decidir o que manter e o que mudar.",
     },
     {
+      key: "time",
       title: "Falta tempo para manter a constância",
       text: "Planejar, criar e publicar todo mês vira mais uma tarefa pendente.",
     },
     {
+      key: "voice",
       title: "Seu perfil não tem uma voz clara",
       text: "Cada publicação parece de uma marca diferente.",
     },
-  ],
+  ] as const,
   solution:
     "Eu cuido do planejamento, da criação e da análise, e você acompanha e aprova cada etapa.",
 };
@@ -134,58 +137,43 @@ export const processSteps = [
   },
 ] as const;
 
-export const workspaceSteps = [
-  {
-    key: "plan",
-    label: "Planejar",
-    page: "Pauta do mês",
-    rows: [
-      { name: "Status", value: "Em planejamento" },
-      { name: "Canais", value: "Instagram, TikTok" },
-      { name: "Objetivo", value: "Gerar conversas" },
-    ],
-    todos: ["Definir pilares do mês", "Mapear datas e lançamentos", "Montar a lista de pautas"],
-  },
-  {
-    key: "produce",
-    label: "Produzir",
-    page: "Roteiros e artes",
-    rows: [
-      { name: "Status", value: "Em produção" },
-      { name: "Formato", value: "Reels e carrossel" },
-      { name: "Prazo", value: "Sexta" },
-    ],
-    todos: ["Escrever roteiros", "Criar artes e capas", "Revisar legendas e hashtags"],
-  },
-  {
-    key: "approve",
-    label: "Validar",
-    page: "Revisão com você",
-    rows: [
-      { name: "Status", value: "Aguardando validação" },
-      { name: "Responsável", value: "Você" },
-      { name: "Prazo", value: "48 horas" },
-    ],
-    todos: ["Receber os conteúdos", "Pedir ajustes, se houver", "Aprovar para publicar"],
-  },
-  {
-    key: "publish",
-    label: "Publicar",
-    page: "Agenda de publicação",
-    rows: [
-      { name: "Status", value: "Agendado" },
-      { name: "Horário", value: "Melhor janela do público" },
-      { name: "Depois", value: "Análise de resultados" },
-    ],
-    todos: ["Agendar nos canais", "Acompanhar os primeiros comentários", "Registrar os resultados"],
-  },
-] as const;
-
-export const slashCommands = ["Pauta", "Reels", "Carrossel", "Story", "Legenda"];
+export const method = {
+  title: "Do plano ao post",
+  text: "Cada ciclo segue quatro etapas simples, e você acompanha todas.",
+  steps: [
+    {
+      key: "plan",
+      label: "Planejar",
+      text: "Defino pilares, datas e pautas do mês.",
+      todos: ["Definir pilares do mês", "Mapear datas e lançamentos", "Montar a lista de pautas"],
+    },
+    {
+      key: "produce",
+      label: "Produzir",
+      text: "Escrevo os roteiros e crio as artes.",
+      todos: ["Escrever roteiros", "Criar artes e capas", "Revisar legendas e hashtags"],
+    },
+    {
+      key: "approve",
+      label: "Validar",
+      text: "Você revisa e aprova antes de publicar.",
+      todos: ["Receber os conteúdos", "Pedir ajustes, se houver", "Aprovar para publicar"],
+    },
+    {
+      key: "publish",
+      label: "Publicar",
+      text: "Agendo, acompanho e registro os resultados.",
+      todos: ["Agendar nos canais", "Acompanhar os primeiros comentários", "Registrar os resultados"],
+    },
+  ],
+} as const;
 
 export const about = {
   title: "Prazer, sou a Rayana.",
-  text: "Sou formada em Gestão de Marketing e atuo com gestão de redes sociais, criação de conteúdo e comunicação para marcas e pequenos negócios. Meu trabalho combina planejamento, sensibilidade visual e histórias reais para construir uma presença digital coerente com cada negócio.",
+  paragraphs: [
+    "Sou formada em Gestão de Marketing e atuo com gestão de redes sociais, criação de conteúdo e comunicação para marcas e pequenos negócios.",
+    "Meu trabalho combina planejamento, sensibilidade visual e histórias reais para construir uma presença digital coerente com cada negócio.",
+  ],
   principles: [
     { title: "Branding e Posicionamento", text: "Uma marca com voz própria e direção clara." },
     {
