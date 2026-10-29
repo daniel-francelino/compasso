@@ -1,6 +1,27 @@
 import { BlurFade } from "lost-ui/effects/blur-fade";
+import {
+  CalendarDays,
+  ChartLine,
+  MessageCircle,
+  PenTool,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
 import { LandingAnchor, processSteps } from "@/components/site/landing/landing-content";
 import { LandingSectionTitle } from "@/components/site/landing/landing-section-title";
+
+const stepIcons: Record<string, LucideIcon> = {
+  "01": MessageCircle,
+  "02": FileText,
+  "03": CalendarDays,
+  "04": PenTool,
+  "05": ChartLine,
+};
+
+function StepIcon({ number }: { number: string }) {
+  const Icon = stepIcons[number] ?? MessageCircle;
+  return <Icon aria-hidden="true" className="size-5" />;
+}
 
 export function LandingProcess() {
   return (
@@ -15,7 +36,10 @@ export function LandingProcess() {
           {processSteps.map((step, index) => (
             <li key={step.number}>
               <BlurFade inView delay={index * 0.08}>
-                <div className="grid items-center gap-x-6 gap-y-1 rounded-2xl border border-line bg-surface px-5 py-4 sm:grid-cols-[3rem_14rem_1fr]">
+                <div className="grid items-center gap-x-6 gap-y-1 rounded-2xl border border-line bg-surface px-5 py-4 sm:grid-cols-[2.75rem_3rem_14rem_1fr]">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-orchid-light text-violet-deep">
+                    <StepIcon number={step.number} />
+                  </span>
                   <span className="font-display text-2xl font-bold text-violet-deep">
                     {step.number}
                   </span>

@@ -2,7 +2,7 @@ import { BlurFade } from "lost-ui/effects/blur-fade";
 import { MagicCard } from "lost-ui/effects/magic-card";
 import { Camera, Clapperboard, MessagesSquare, Share2, type LucideIcon } from "lucide-react";
 import { LandingAnchor, services } from "@/components/site/landing/landing-content";
-import { Sparkle } from "@/components/site/landing/landing-ornaments";
+import { Ribbon, Sparkle } from "@/components/site/landing/landing-ornaments";
 import { LandingSectionTitle } from "@/components/site/landing/landing-section-title";
 
 const serviceIcons: Record<(typeof services)[number]["key"], LucideIcon> = {
@@ -16,8 +16,9 @@ export function LandingServices() {
   return (
     <section
       id={LandingAnchor.Services}
-      className="relative scroll-mt-20 overflow-clip bg-[image:var(--gradient-hero)] px-6 py-24"
+      className="relative scroll-mt-20 overflow-clip bg-[image:var(--image-landing)] bg-cover bg-center px-6 py-24"
     >
+      <Ribbon className="-right-16 top-8 w-48 rotate-6 opacity-80 max-sm:hidden" />
       <Sparkle className="right-[8%] top-12 size-10" />
       <Sparkle className="bottom-10 left-[6%] size-12 [animation-delay:800ms]" />
       <div className="relative mx-auto max-w-5xl">

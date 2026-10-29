@@ -74,6 +74,8 @@
   --chart-grid: var(--line);
   --chart-fill: var(--orchid-light);
 
+  --image-landing: url("/landing/bg-sections.webp");
+
   --gradient-hero: linear-gradient(
     135deg,
     var(--peach) 0%,
@@ -174,6 +176,7 @@
 
   html {
     font-size: 100%;
+    scroll-behavior: smooth;
   }
 
   @media (pointer: coarse) {

@@ -1,14 +1,15 @@
 import { BlurFade } from "lost-ui/effects/blur-fade";
 import { Instagram, Mail } from "lucide-react";
-import { Sparkle } from "@/components/site/landing/landing-ornaments";
+import { Ribbon, Sparkle } from "@/components/site/landing/landing-ornaments";
 import { contact, LandingAnchor } from "@/components/site/landing/landing-content";
 
 export function LandingContact() {
   return (
     <section
       id={LandingAnchor.Contact}
-      className="relative scroll-mt-20 overflow-clip bg-[image:var(--gradient-hero)] px-6 py-24"
+      className="relative scroll-mt-20 overflow-clip bg-[image:var(--image-landing)] bg-cover bg-center px-6 py-24"
     >
+      <Ribbon className="-left-12 bottom-6 w-44 -rotate-12 opacity-80 max-sm:hidden" />
       <Sparkle className="left-[8%] top-16 size-10" />
       <Sparkle className="bottom-16 right-[8%] size-12 [animation-delay:700ms]" />
       <BlurFade inView>

@@ -174,8 +174,11 @@ The first palette used a peach sidebar, a pink page and a plum input border: thr
 The reference image uses a gradient from peach through pink to lilac, with patches in violet and coral. It exists only as a **decorative token of the public site**, always built from the tokens above; the back office and the portal use flat colors.
 
 ```css
+--image-landing: url("/landing/bg-sections.webp");
 --gradient-hero: linear-gradient(135deg, var(--peach) 0%, var(--rose) 45%, var(--orchid-light) 75%, var(--orchid) 100%);
 ```
+
+`--image-landing` is the raster version of the same gradient, supplied by the client for the landing sections (hero, services, contact); text on it sits on `surface` cards or in `ink`, over the light and pink areas.
 
 ### Effect tokens (public site landing)
 

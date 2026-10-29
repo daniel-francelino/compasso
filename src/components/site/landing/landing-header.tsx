@@ -1,3 +1,4 @@
+import { MessageCircle } from "lucide-react";
 import { ScrollProgress } from "lost-ui/effects/scroll-progress";
 import { navItems } from "@/components/site/landing/landing-content";
 
@@ -27,8 +28,9 @@ export function LandingHeader() {
           </ul>
           <a
             href="#contato"
-            className="rounded-full bg-violet px-4 py-2 text-sm whitespace-nowrap font-medium text-ivory hover:bg-violet-deep"
+            className="inline-flex items-center gap-2 rounded-full bg-violet px-4 py-2 text-sm whitespace-nowrap font-medium text-ivory hover:bg-violet-deep"
           >
+            <MessageCircle aria-hidden="true" className="size-4" />
             Vamos conversar
           </a>
         </nav>

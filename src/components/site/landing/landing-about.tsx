@@ -1,9 +1,21 @@
+import { Compass, GraduationCap, Heart } from "lucide-react";
 import { BlurFade } from "lost-ui/effects/blur-fade";
 import { HyperText } from "lost-ui/effects/hyper-text";
 import { Meteors } from "lost-ui/effects/meteors";
 import { TextReveal } from "lost-ui/effects/text-reveal";
 import { about, LandingAnchor } from "@/components/site/landing/landing-content";
 import { MountOnView } from "@/components/site/landing/mount-on-view";
+
+const principleIcons = [Compass, Heart, GraduationCap];
+
+function PrincipleIcon({ index }: { index: number }) {
+  const Icon = principleIcons[index] ?? Compass;
+  return (
+    <span className="flex size-10 items-center justify-center rounded-xl bg-ivory/10 text-orchid">
+      <Icon aria-hidden="true" className="size-5" />
+    </span>
+  );
+}
 
 export function LandingAbout() {
   return (
@@ -30,7 +42,8 @@ export function LandingAbout() {
           <li key={item.title}>
             <BlurFade inView delay={index * 0.1} className="h-full">
               <div className="h-full rounded-2xl border border-ivory/20 p-6">
-                <h3 className="font-display text-2xl font-semibold">{item.title}</h3>
+                <PrincipleIcon index={index} />
+                <h3 className="mt-3 font-display text-2xl font-semibold">{item.title}</h3>
                 <p className="mt-2 text-orchid-light">{item.text}</p>
               </div>
             </BlurFade>

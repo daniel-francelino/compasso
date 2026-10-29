@@ -26,16 +26,29 @@ export const heroWords = [
   "que crescem.",
 ];
 
+export const PlatformKey = {
+  Instagram: "instagram",
+  TikTok: "tiktok",
+  LinkedIn: "linkedin",
+  YouTube: "youtube",
+  Pinterest: "pinterest",
+  Facebook: "facebook",
+  Threads: "threads",
+  WhatsApp: "whatsapp",
+} as const;
+
+export type PlatformKey = (typeof PlatformKey)[keyof typeof PlatformKey];
+
 export const platforms = [
-  "Instagram",
-  "TikTok",
-  "LinkedIn",
-  "YouTube",
-  "Pinterest",
-  "Facebook",
-  "Threads",
-  "WhatsApp Business",
-];
+  { key: PlatformKey.Instagram, name: "Instagram" },
+  { key: PlatformKey.TikTok, name: "TikTok" },
+  { key: PlatformKey.LinkedIn, name: "LinkedIn" },
+  { key: PlatformKey.YouTube, name: "YouTube" },
+  { key: PlatformKey.Pinterest, name: "Pinterest" },
+  { key: PlatformKey.Facebook, name: "Facebook" },
+  { key: PlatformKey.Threads, name: "Threads" },
+  { key: PlatformKey.WhatsApp, name: "WhatsApp Business" },
+] as const;
 
 export const heroPhoto = { src: "/landing/rayana.webp", alt: "Rayana Vasconcelos" };
 

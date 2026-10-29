@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { cn } from "@/lib/shared/utils";
 
 export function Sparkle({ className }: { className?: string }) {
@@ -16,24 +15,17 @@ export function Sparkle({ className }: { className?: string }) {
   );
 }
 
-export function Blob({ className }: { className?: string }) {
-  const gradientId = useId();
+export function Ribbon({ className, eager }: { className?: string; eager?: boolean }) {
   return (
-    <svg
+    <img
+      src="/landing/ribbon.webp"
+      alt=""
       aria-hidden="true"
-      viewBox="0 0 200 200"
-      className={cn("pointer-events-none absolute", className)}
-    >
-      <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" style={{ stopColor: "var(--coral)" }} />
-          <stop offset="100%" style={{ stopColor: "var(--violet-bright)" }} />
-        </linearGradient>
-      </defs>
-      <path
-        d="M44 20c27-24 76-12 104 6s44 56 28 92-60 70-104 62S2 128 8 86c3-27 9-48 36-66Z"
-        fill={`url(#${gradientId})`}
-      />
-    </svg>
+      width={420}
+      height={470}
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
+      className={cn("pointer-events-none absolute select-none", className)}
+    />
   );
 }

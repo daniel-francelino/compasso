@@ -15,12 +15,12 @@ export function LandingHeroPhoto({ children }: { children: ReactNode }) {
         ref={imageRef}
         src={heroPhoto.src}
         alt={heroPhoto.alt}
-        width={640}
-        height={800}
+        width={760}
+        height={773}
         fetchPriority="high"
         decoding="async"
         onError={() => setMissing(true)}
-        className="max-h-136 w-auto rounded-[2.5rem] border-8 border-surface object-cover shadow-sm"
+        className="max-h-136 w-auto object-contain"
       />
       <div className="mt-4 w-72 max-w-full lg:absolute lg:-bottom-6 lg:-left-16 lg:mt-0">
         {children}

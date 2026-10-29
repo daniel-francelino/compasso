@@ -4,10 +4,10 @@ import { BlurFade } from "lost-ui/effects/blur-fade";
 import { ShimmerButton } from "lost-ui/effects/shimmer-button";
 import { TextAnimate } from "lost-ui/effects/text-animate";
 import { WordRotate } from "lost-ui/effects/word-rotate";
-import { CalendarCheck, CircleCheck, Clock, FileBarChart, Sparkles } from "lucide-react";
+import { ArrowDown, CalendarCheck, CircleCheck, Clock, FileBarChart, Sparkles } from "lucide-react";
 import { hero, heroFeed, heroWords } from "@/components/site/landing/landing-content";
 import { LandingHeroPhoto } from "@/components/site/landing/landing-hero-photo";
-import { Blob, Sparkle } from "@/components/site/landing/landing-ornaments";
+import { Ribbon, Sparkle } from "@/components/site/landing/landing-ornaments";
 import { scrollToAnchor } from "@/components/site/landing/scroll-to-anchor";
 import { cn } from "@/lib/shared/utils";
 
@@ -27,13 +27,13 @@ const feedTones = {
 
 export function LandingHero() {
   return (
-    <section className="relative isolate overflow-hidden bg-[image:var(--gradient-hero)]">
+    <section className="relative isolate overflow-hidden bg-[image:var(--image-landing)] bg-cover bg-center">
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[radial-gradient(color-mix(in_oklab,var(--violet)_22%,transparent)_1px,transparent_1px)] bg-size-[18px_18px] mask-[radial-gradient(560px_circle_at_center,var(--ink),transparent)]"
       />
-      <Blob className="-right-28 -top-28 -z-10 w-80 opacity-90" />
-      <Blob className="-bottom-32 -left-28 -z-10 w-72 rotate-90 opacity-90" />
+      <Ribbon eager className="-right-16 -top-20 -z-10 w-72 rotate-12 opacity-90" />
+      <Ribbon className="-bottom-24 -left-20 -z-10 w-60 -rotate-[100deg] opacity-80" />
       <Sparkle className="left-[6%] top-[22%] -z-10 size-10" />
       <Sparkle className="right-[48%] top-[10%] -z-10 size-8 [animation-delay:600ms]" />
       <Sparkle className="bottom-[12%] left-[30%] -z-10 size-12 [animation-delay:1200ms]" />
@@ -77,9 +77,10 @@ export function LandingHero() {
             </ShimmerButton>
             <a
               href="#servicos"
-              className="rounded-full px-4 py-3 text-base font-medium text-ink underline-offset-4 hover:underline"
+              className="inline-flex items-center gap-2 rounded-full px-4 py-3 text-base font-medium text-ink underline-offset-4 hover:underline"
             >
               Ver o que eu faço
+              <ArrowDown aria-hidden="true" className="size-4" />
             </a>
           </BlurFade>
         </div>
