@@ -30,7 +30,7 @@ export function LandingProcess() {
         <LandingSectionTitle
           eyebrow="Processo"
           title="Como funciona o trabalho?"
-          text="Um processo claro, colaborativo e ajustado à realidade do cliente."
+          text="Um processo claro, feito em parceria e ajustado à realidade do seu negócio."
         />
         <ol className="mt-14 space-y-3">
           {processSteps.map((step, index) => (

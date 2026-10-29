@@ -52,42 +52,55 @@ export const platforms = [
 
 export const heroPhoto = { src: "/landing/rayana.webp", alt: "Rayana Vasconcelos" };
 
-export const heroFeed = [
-  { title: "Pauta do mês aprovada", detail: "Temas, formatos e calendário", tone: "approved" },
-  { title: "Reels agendado", detail: "Quinta, 18:30 · Instagram", tone: "planned" },
-  { title: "Carrossel em validação", detail: "Aguardando seu ok", tone: "review" },
-  { title: "Análise de resultados", detail: "Próximos passos definidos", tone: "done" },
-] as const;
-
 export const services = [
   {
     key: "social",
     title: "Gestão de Redes Sociais",
-    text: "Planejamento, calendário editorial, publicações e análise de resultados.",
+    text: "Planejo, publico e acompanho seu perfil com calendário editorial e leitura dos resultados.",
   },
   {
     key: "content",
     title: "Criação de Conteúdo",
-    text: "Posts, carrosséis, legendas, roteiros, Reels e edição.",
+    text: "Posts, carrosséis, legendas, roteiros e Reels pensados para a voz da sua marca.",
   },
   {
     key: "capture",
-    title: "Captação de conteúdo",
-    text: "Fotos e vídeos de produtos, ambientes, processos e bastidores.",
+    title: "Captação de Conteúdo",
+    text: "Fotos e vídeos de produtos, ambientes e bastidores, com o olhar da sua marca.",
   },
   {
     key: "consulting",
     title: "Consultoria de Comunicação",
-    text: "Análise de perfil, tom de voz, posicionamento e direcionamento.",
+    text: "Análise do perfil, tom de voz e posicionamento para você saber para onde ir.",
   },
 ] as const;
 
 export const processSteps = [
-  { number: "01", title: "Conversa inicial", text: "Entender marca, público e objetivos." },
-  { number: "02", title: "Proposta", text: "Definimos prazos, entregas e investimento." },
-  { number: "03", title: "Planejamento", text: "Organizamos temas, formatos e calendário." },
-  { number: "04", title: "Criação e conteúdo", text: "Produzimos e validamos conteúdos." },
-  { number: "05", title: "Acompanhamento", text: "Analisamos resultados e próximos passos." },
+  {
+    number: "01",
+    title: "Conversa inicial",
+    text: "Conheço sua marca, seu público e o que você quer alcançar.",
+  },
+  {
+    number: "02",
+    title: "Proposta",
+    text: "Combinamos prazos, entregas e investimento, tudo às claras.",
+  },
+  {
+    number: "03",
+    title: "Planejamento",
+    text: "Defino temas, formatos e calendário editorial do mês.",
+  },
+  {
+    number: "04",
+    title: "Criação e aprovação",
+    text: "Crio os conteúdos e você aprova antes de ir ao ar.",
+  },
+  {
+    number: "05",
+    title: "Acompanhamento",
+    text: "Analiso os resultados e ajustamos a rota juntas.",
+  },
 ] as const;
 
 export const workspaceSteps = [
@@ -154,9 +167,9 @@ export const about = {
 
 export const contact = {
   title: "Vamos criar algo juntos?",
-  text: "Cada marca tem sua história, vamos encontrar a melhor forma de contá-la.",
+  text: "Toda marca tem uma história. Vamos descobrir a melhor forma de contar a sua.",
   detail:
-    "Atendo projetos pontuais e contratos mensais de comunicação e conteúdo. Após uma conversa inicial, preparo uma proposta com entregas, prazos e investimentos adequados às necessidades do seu negócio.",
+    "Trabalho com projetos pontuais e com acompanhamento mensal. Depois de uma conversa inicial, preparo uma proposta sob medida, com entregas, prazos e investimento claros para o seu negócio.",
   instagram: { label: "@rayanavasconceloss", href: "https://instagram.com/rayanavasconceloss" },
   email: { label: "rayana.vass@gmail.com", href: "mailto:rayana.vass@gmail.com" },
 };

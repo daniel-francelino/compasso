@@ -1,29 +1,13 @@
 import { AnimatedGradientText } from "lost-ui/effects/animated-gradient-text";
-import { AnimatedList } from "lost-ui/effects/animated-list";
 import { BlurFade } from "lost-ui/effects/blur-fade";
 import { ShimmerButton } from "lost-ui/effects/shimmer-button";
 import { TextAnimate } from "lost-ui/effects/text-animate";
 import { WordRotate } from "lost-ui/effects/word-rotate";
-import { ArrowDown, CalendarCheck, CircleCheck, Clock, FileBarChart, Sparkles } from "lucide-react";
-import { hero, heroFeed, heroWords } from "@/components/site/landing/landing-content";
+import { ArrowDown, Sparkles } from "lucide-react";
+import { hero, heroWords } from "@/components/site/landing/landing-content";
 import { LandingHeroPhoto } from "@/components/site/landing/landing-hero-photo";
 import { Ribbon, Sparkle } from "@/components/site/landing/landing-ornaments";
 import { scrollToAnchor } from "@/components/site/landing/scroll-to-anchor";
-import { cn } from "@/lib/shared/utils";
-
-const feedIcons = {
-  approved: CircleCheck,
-  planned: CalendarCheck,
-  review: Clock,
-  done: FileBarChart,
-} as const;
-
-const feedTones = {
-  approved: "bg-sage text-cactus",
-  planned: "bg-orchid-light text-violet-deep",
-  review: "bg-peach text-warning",
-  done: "bg-rose text-ink",
-} as const;
 
 export function LandingHero() {
   return (
@@ -85,43 +69,7 @@ export function LandingHero() {
           </BlurFade>
         </div>
         <BlurFade delay={0.35} direction="left" offset={24}>
-          <LandingHeroPhoto>
-            <div
-              role="img"
-              aria-label="Exemplo ilustrativo de avisos de um fluxo de redes sociais: pauta aprovada, reels agendado, carrossel em revisão e relatório pronto"
-              className="w-full max-w-sm rounded-3xl border border-line bg-surface p-5 shadow-sm"
-            >
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-soft">
-                Fluxo da semana · exemplo
-              </p>
-              <AnimatedList delay={1600} className="gap-3">
-                {heroFeed.map((item) => {
-                  const Icon = feedIcons[item.tone];
-                  return (
-                    <div
-                      key={item.title}
-                      className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3"
-                    >
-                      <span
-                        className={cn(
-                          "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                          feedTones[item.tone],
-                        )}
-                      >
-                        <Icon aria-hidden="true" className="size-5" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-ink">
-                          {item.title}
-                        </span>
-                        <span className="block truncate text-xs text-ink-soft">{item.detail}</span>
-                      </span>
-                    </div>
-                  );
-                })}
-              </AnimatedList>
-            </div>
-          </LandingHeroPhoto>
+          <LandingHeroPhoto />
         </BlurFade>
       </div>
     </section>
