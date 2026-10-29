@@ -163,7 +163,7 @@ export const method = {
       key: "publish",
       label: "Publicar",
       text: "Agendo, acompanho e registro os resultados.",
-      todos: ["Agendar nos canais", "Acompanhar os primeiros comentários", "Registrar os resultados"],
+      todos: ["Agendar nos canais", "Acompanhar os comentários", "Registrar os resultados"],
     },
   ],
 } as const;

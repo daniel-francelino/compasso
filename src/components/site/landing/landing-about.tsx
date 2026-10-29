@@ -2,8 +2,7 @@ import { Compass, GraduationCap, Heart } from "lucide-react";
 import { BlurFade } from "lost-ui/effects/blur-fade";
 import { HyperText } from "lost-ui/effects/hyper-text";
 import { Meteors } from "lost-ui/effects/meteors";
-import { TextReveal } from "lost-ui/effects/text-reveal";
-import { about, LandingAnchor } from "@/components/site/landing/landing-content";
+import { about, heroPhoto, LandingAnchor } from "@/components/site/landing/landing-content";
 import { MountOnView } from "@/components/site/landing/mount-on-view";
 
 const principleIcons = [Compass, Heart, GraduationCap];
@@ -26,18 +25,35 @@ export function LandingAbout() {
       <MountOnView>
         <Meteors number={8} className="bg-orchid" />
       </MountOnView>
-      <div className="relative mx-auto max-w-4xl px-6 pt-24 text-center">
-        <HyperText
-          as="p"
-          startOnView
-          className="text-sm font-semibold uppercase tracking-wide text-orchid"
-        >
-          SOBRE MIM
-        </HyperText>
-        <h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">{about.title}</h2>
+      <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-6 pt-24 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16">
+        <div className="space-y-6">
+          <HyperText
+            as="p"
+            startOnView
+            className="text-sm font-semibold uppercase tracking-wide text-orchid"
+          >
+            SOBRE MIM
+          </HyperText>
+          <h2 className="font-display text-4xl font-bold sm:text-5xl">{about.title}</h2>
+          <div className="max-w-xl space-y-4 text-lg text-orchid-light">
+            {about.paragraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-sm overflow-hidden rounded-lg bg-ivory/10 lg:max-w-none">
+          <img
+            src={heroPhoto.src}
+            alt={heroPhoto.alt}
+            width={760}
+            height={773}
+            loading="lazy"
+            decoding="async"
+            className="block h-auto w-full"
+          />
+        </div>
       </div>
-      <TextReveal className="text-ivory">{about.text}</TextReveal>
-      <ul className="relative mx-auto grid max-w-5xl gap-5 px-6 pb-24 md:grid-cols-3">
+      <ul className="relative mx-auto grid max-w-6xl gap-5 px-6 py-16 md:grid-cols-3">
         {about.principles.map((item, index) => (
           <li key={item.title}>
             <BlurFade inView delay={index * 0.1} className="h-full">

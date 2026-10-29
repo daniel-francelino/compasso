@@ -12,7 +12,11 @@ export function LandingAudience() {
   return (
     <section id={LandingAnchor.Audience} className="scroll-mt-20 bg-ivory px-6 py-24">
       <div className="mx-auto max-w-5xl">
-        <LandingSectionTitle eyebrow={audience.eyebrow} title={audience.title} text={audience.text} />
+        <LandingSectionTitle
+          eyebrow={audience.eyebrow}
+          title={audience.title}
+          text={audience.text}
+        />
         <ul className="mt-14 grid gap-5 md:grid-cols-3">
           {audience.pains.map((pain) => {
             const Icon = painIcons[pain.key];

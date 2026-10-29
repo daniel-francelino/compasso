@@ -5,15 +5,11 @@ import { LandingFooter } from "@/components/site/landing/landing-footer";
 import { LandingFaq } from "@/components/site/landing/landing-faq";
 import { LandingHeader } from "@/components/site/landing/landing-header";
 import { LandingHero } from "@/components/site/landing/landing-hero";
+import { LandingMethod } from "@/components/site/landing/landing-method";
 import { LandingPlatforms } from "@/components/site/landing/landing-platforms";
 import { LandingProcess } from "@/components/site/landing/landing-process";
 import { LandingServices } from "@/components/site/landing/landing-services";
 
-const LandingWorkspace = lazy(() =>
-  import("@/components/site/landing/landing-workspace").then((m) => ({
-    default: m.LandingWorkspace,
-  })),
-);
 const LandingAbout = lazy(() =>
   import("@/components/site/landing/landing-about").then((m) => ({ default: m.LandingAbout })),
 );
@@ -38,8 +34,8 @@ export function LandingPage() {
           <LandingAudience />
           <LandingServices />
           <LandingProcess />
+          <LandingMethod />
           <Suspense fallback={null}>
-            <LandingWorkspace />
             <LandingAbout />
             <LandingFaq />
             <LandingContact />
