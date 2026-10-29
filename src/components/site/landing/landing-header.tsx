@@ -29,6 +29,13 @@ export function LandingHeader() {
             ))}
           </ul>
           <div className="flex items-center gap-2">
+            <a
+              href="#contato"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-violet px-3 text-sm sm:px-4 whitespace-nowrap font-medium text-ivory hover:bg-violet-deep"
+            >
+              <MessageCircle aria-hidden="true" className="size-4" />
+              <span className="max-sm:sr-only">Vamos conversar</span>
+            </a>
             <Link
               to="/admin/login"
               aria-label="Entrar"
@@ -37,13 +44,6 @@ export function LandingHeader() {
               <LogIn aria-hidden="true" className="size-4" />
               <span className="max-sm:sr-only">Entrar</span>
             </Link>
-            <a
-              href="#contato"
-              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-violet px-3 text-sm sm:px-4 whitespace-nowrap font-medium text-ivory hover:bg-violet-deep"
-            >
-              <MessageCircle aria-hidden="true" className="size-4" />
-              <span className="max-sm:sr-only">Vamos conversar</span>
-            </a>
           </div>
         </nav>
       </header>
