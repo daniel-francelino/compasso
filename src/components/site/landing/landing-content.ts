@@ -61,6 +61,11 @@ export const platforms = [
 
 export const heroPhoto = { src: "/landing/rayana.webp", alt: "Rayana Vasconcelos" };
 
+export const aboutPhoto = {
+  src: "/landing/sobre.webp",
+  alt: "Rayana trabalhando no notebook, com post-its amarelos e um caderno ao lado",
+};
+
 export const audience = {
   eyebrow: "Para quem é",
   title: "Postar sem estratégia cansa e não traz resultado.",

@@ -2,7 +2,7 @@ import { Compass, GraduationCap, Heart } from "lucide-react";
 import { BlurFade } from "lost-ui/effects/blur-fade";
 import { HyperText } from "lost-ui/effects/hyper-text";
 import { Meteors } from "lost-ui/effects/meteors";
-import { about, heroPhoto, LandingAnchor } from "@/components/site/landing/landing-content";
+import { about, aboutPhoto, LandingAnchor } from "@/components/site/landing/landing-content";
 import { MountOnView } from "@/components/site/landing/mount-on-view";
 
 const principleIcons = [Compass, Heart, GraduationCap];
@@ -41,15 +41,15 @@ export function LandingAbout() {
             ))}
           </div>
         </div>
-        <div className="mx-auto w-full max-w-sm overflow-hidden rounded-lg bg-ivory/10 lg:max-w-none">
+        <div className="mx-auto w-full max-w-sm overflow-hidden rounded-lg lg:max-w-none">
           <img
-            src={heroPhoto.src}
-            alt={heroPhoto.alt}
-            width={760}
-            height={773}
+            src={aboutPhoto.src}
+            alt={aboutPhoto.alt}
+            width={960}
+            height={1475}
             loading="lazy"
             decoding="async"
-            className="block h-auto w-full"
+            className="block aspect-[4/5] w-full object-cover object-[center_30%]"
           />
         </div>
       </div>
@@ -57,7 +57,7 @@ export function LandingAbout() {
         {about.principles.map((item, index) => (
           <li key={item.title}>
             <BlurFade inView delay={index * 0.1} className="h-full">
-              <div className="h-full rounded-lg border border-ivory/20 p-6">
+              <div className="h-full rounded-lg border border-ivory/20 p-6 transition-transform duration-200 motion-safe:hover:scale-105">
                 <PrincipleIcon index={index} />
                 <h3 className="mt-3 font-display text-2xl font-semibold">{item.title}</h3>
                 <p className="mt-2 text-orchid-light">{item.text}</p>

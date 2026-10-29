@@ -19,7 +19,7 @@ export function LandingServices() {
       id={LandingAnchor.Services}
       className="relative scroll-mt-20 overflow-clip bg-[image:var(--image-landing)] bg-cover bg-center px-6 py-24"
     >
-      <Ribbon className="-right-16 -top-12 w-48 rotate-6 opacity-80 max-sm:hidden" />
+      <Ribbon className="-left-32 -top-28 w-80 -rotate-12 -scale-x-100 opacity-90 max-sm:hidden" />
       <Sparkle className="right-[8%] top-12 size-10" />
       <Sparkle className="bottom-10 left-[6%] size-12 [animation-delay:800ms]" />
       <div className="relative mx-auto max-w-5xl">

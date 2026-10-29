@@ -37,7 +37,7 @@ export function LandingProcess() {
           {processSteps.map((step, index) => (
             <li key={step.number}>
               <BlurFade inView delay={index * 0.08}>
-                <div className="grid items-center gap-x-6 gap-y-1 rounded-lg border border-line bg-surface px-5 py-4 sm:grid-cols-[2.75rem_3rem_14rem_1fr]">
+                <div className="grid items-center gap-x-6 gap-y-1 rounded-lg border border-line bg-surface px-5 py-4 transition-transform duration-200 motion-safe:hover:scale-[1.02] sm:grid-cols-[2.75rem_3rem_14rem_1fr]">
                   <span className="flex size-11 items-center justify-center rounded-md bg-orchid-light text-violet-deep">
                     <StepIcon number={step.number} />
                   </span>

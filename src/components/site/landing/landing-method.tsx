@@ -21,7 +21,7 @@ export function LandingMethod() {
             return (
               <li key={step.key}>
                 <BlurFade inView delay={index * 0.08} className="h-full">
-                  <div className="flex h-full flex-col gap-4 rounded-lg border border-line bg-surface p-6">
+                  <div className="flex h-full flex-col gap-4 rounded-lg border border-line bg-surface p-6 transition-transform duration-200 motion-safe:hover:scale-105">
                     <div className="flex items-center justify-between">
                       <span className="flex size-11 items-center justify-center rounded-md bg-orchid-light text-violet-deep">
                         <Icon aria-hidden="true" className="size-5" />

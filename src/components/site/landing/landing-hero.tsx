@@ -17,7 +17,6 @@ export function LandingHero() {
         className="absolute inset-0 -z-10 bg-[radial-gradient(color-mix(in_oklab,var(--violet)_22%,transparent)_1px,transparent_1px)] bg-size-[18px_18px] mask-[radial-gradient(560px_circle_at_center,var(--ink),transparent)]"
       />
       <Ribbon className="-right-32 -top-28 -z-10 w-80 rotate-12 opacity-90" />
-      <Ribbon className="-bottom-52 -left-36 -z-10 w-60 -rotate-[100deg] opacity-80" />
       <Sparkle className="left-[6%] top-[22%] -z-10 size-10" />
       <Sparkle className="right-[48%] top-[10%] -z-10 size-8 [animation-delay:600ms]" />
       <Sparkle className="bottom-[12%] left-[30%] -z-10 size-12 [animation-delay:1200ms]" />

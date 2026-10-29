@@ -10,7 +10,7 @@ export function LandingContact() {
       id={LandingAnchor.Contact}
       className="relative scroll-mt-20 overflow-clip bg-[image:var(--image-landing)] bg-cover bg-center px-6 py-24"
     >
-      <Ribbon className="-bottom-24 -left-16 w-44 -rotate-12 opacity-80 max-sm:hidden" />
+      <Ribbon className="-right-32 -top-28 w-80 rotate-12 opacity-90 max-sm:hidden" />
       <Sparkle className="left-[8%] top-16 size-10" />
       <Sparkle className="bottom-16 right-[8%] size-12 [animation-delay:700ms]" />
       <BlurFade inView>
