@@ -10,7 +10,7 @@ export const contactMessageSchema = z
     message: z.string().trim().min(1, "Escreva a mensagem.").max(4000),
     consent: z.boolean(),
     website: z.string().max(200),
-    turnstileToken: z.string().min(1, "Confirme que você não é um robô.").max(4096),
+    turnstileToken: z.string().max(4096),
     slug: z.string().max(200),
   })
   .superRefine((value, context) => {

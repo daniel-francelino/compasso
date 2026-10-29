@@ -230,6 +230,7 @@ export const contactForm = {
   submit: "Enviar mensagem",
   success: "Recebi sua mensagem. Vou responder pelo contato que você informou.",
   unavailable: "O envio de mensagens está indisponível agora. Tente de novo mais tarde.",
+  captcha: "Confirme que você não é um robô.",
   direct: "Prefere falar direto?",
 };
 

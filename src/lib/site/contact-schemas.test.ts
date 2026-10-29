@@ -44,12 +44,6 @@ describe("contactMessageSchema", () => {
     );
   });
 
-  it("requires the anti-bot token", () => {
-    expect(messagesFor({ ...valid, turnstileToken: "" })).toContain(
-      "Confirme que você não é um robô.",
-    );
-  });
-
   it("rejects an over-long message", () => {
     expect(messagesFor({ ...valid, message: "a".repeat(4001) }).length).toBeGreaterThan(0);
   });

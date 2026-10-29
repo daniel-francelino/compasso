@@ -35,7 +35,8 @@ function ContactFormBody() {
   const [token, setToken] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [sent, setSent] = useState(false);
-  const { formRef, errors, error, busy, submit } = useFormSubmit();
+  const { formRef, errors, error, busy, submit, setError } = useFormSubmit();
+  const siteKey = config.data?.turnstileSiteKey ?? null;
 
   const set = (key: keyof typeof emptyValues) => (value: string) =>
     setValues((previous) => ({ ...previous, [key]: value }));
@@ -47,7 +48,6 @@ function ContactFormBody() {
       </p>
     );
   }
-  if (config.isError || config.data?.turnstileSiteKey === null) return <ContactUnavailable />;
 
   async function send(data: ContactMessageInput) {
     const outcome = await submitContactMessage({ data });
@@ -58,6 +58,10 @@ function ContactFormBody() {
   }
 
   async function onSubmit() {
+    if (siteKey !== null && token === "") {
+      setError(contactForm.captcha);
+      return;
+    }
     await submit(
       contactMessageSchema,
       { ...values, consent, turnstileToken: token, slug: contactForm.source },
@@ -141,9 +145,9 @@ function ContactFormBody() {
         </div>
         <FieldMessage error={errors["consent"]} />
       </div>
-      {config.data?.turnstileSiteKey ? (
+      {siteKey !== null ? (
         <div className="space-y-1.5">
-          <TurnstileBox key={attempt} siteKey={config.data.turnstileSiteKey} onToken={setToken} />
+          <TurnstileBox key={attempt} siteKey={siteKey} onToken={setToken} />
           <FieldMessage error={errors["turnstileToken"]} />
         </div>
       ) : null}
@@ -152,7 +156,13 @@ function ContactFormBody() {
           {error}
         </p>
       )}
-      <Button type="submit" size="lg" loading={busy} className="w-full sm:w-auto">
+      <Button
+        type="submit"
+        size="lg"
+        loading={busy}
+        disabled={config.isPending}
+        className="w-full sm:w-auto"
+      >
         <Send aria-hidden="true" />
         {contactForm.submit}
       </Button>

@@ -94,6 +94,14 @@ export const getContactConfig = createServerFn({ method: "GET" }).handler(
   },
 );
 
+const antiBotFailure = async (token: string, ip: string): Promise<Result | null> => {
+  if (!turnstileConfigured()) return null;
+  const check = await verifyTurnstile(token, ip);
+  if (check === "unavailable") return fail({ message: "contact_unavailable" });
+  if (check === "failed") return fail({ message: "captcha_failed" });
+  return null;
+};
+
 const saveContactMessage = async (data: ContactMessageInput): Promise<Result> => {
   const settings = await readPublicSettings();
   if (settings.kind !== "settings") return fail({ message: "contact_unavailable" });
@@ -119,12 +127,10 @@ export const submitContactMessage = createServerFn({ method: "POST" })
   .validator(contactMessageSchema)
   .handler(async ({ data }): Promise<Result> => {
     if (data.website !== "") return { ok: true };
-    if (!turnstileConfigured()) return fail({ message: "contact_unavailable" });
     const ip = clientIp();
     if (!withinRateLimit(ip === "" ? "unknown" : ip)) return fail({ message: "rate_limited" });
-    const check = await verifyTurnstile(data.turnstileToken, ip);
-    if (check === "unavailable") return fail({ message: "contact_unavailable" });
-    if (check === "failed") return fail({ message: "captcha_failed" });
+    const blocked = await antiBotFailure(data.turnstileToken, ip);
+    if (blocked !== null) return blocked;
     try {
       return await saveContactMessage(data);
     } catch (error) {

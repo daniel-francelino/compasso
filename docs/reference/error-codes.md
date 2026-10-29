@@ -130,7 +130,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `schedule_pending` | invalid | "Já existe uma publicação agendada." | reserved for scheduled publication (not raised yet) |
 | `case_study_not_authorized` | invalid | "Este case não tem autorização para ser publicado." | `publish_site_page` |
 | `redirect_invalid` | invalid | "Redirecionamento inválido (ciclo, endereço reservado ou destino inválido)." | `site_redirect_save` |
-| `contact_unavailable` | unavailable | "O envio de mensagens está indisponível agora. Tente de novo mais tarde." | `submitContactMessage` (anti-bot not configured or provider down) |
+| `contact_unavailable` | unavailable | "O envio de mensagens está indisponível agora. Tente de novo mais tarde." | `submitContactMessage` (the check provider is down, the site settings are not published, or the database is unreachable) |
 | `captcha_failed` | invalid | "Não foi possível confirmar que você não é um robô. Tente de novo." | `submitContactMessage` (Turnstile) |
 | `contact_consent_required` | invalid | "É preciso aceitar o consentimento para enviar a mensagem." | `site_contact_submit` |
 
