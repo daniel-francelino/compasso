@@ -207,7 +207,6 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `site_contact_update(p_message, p_status, p_note)` | `updateContactMessage` | `site.view` | — | — | `not_found` |
 | `site_published_page(p_slug)` (granted to `anon`) | `getPublicPage` | public | — | — | — |
 | `site_published_settings()` (granted to `anon`) | `getPublicSettings` | public | — | — | — |
-| none (server only) | `getContactConfig` (returns the public Turnstile site key for the landing page of cms-site.md section 18; temporary) | public | — | — | — |
 | `site_published_sitemap()` (granted to `anon`) | `getPublicSitemap` | public | — | — | — |
 | `site_draft_snapshot(p_page)` | `getDraftSnapshot` (preview and publish) | `site.view` | — | — | `not_found` |
 | `site_pages_overview()` | `listSitePages` | `site.view` | — | — | — |

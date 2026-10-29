@@ -5,7 +5,7 @@ export function LandingHeader() {
   return (
     <>
       <ScrollProgress />
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface">
         <nav
           aria-label="Principal"
           className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3"

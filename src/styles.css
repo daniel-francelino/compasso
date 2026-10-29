@@ -244,6 +244,11 @@
   .heading-card {
     @apply font-display text-xl font-semibold text-foreground;
   }
+
+  .card-offset {
+    @apply rounded-2xl border border-line bg-orchid-light;
+    box-shadow: 0.375rem 0.375rem 0 var(--violet-bright);
+  }
 }
 
 @media print {

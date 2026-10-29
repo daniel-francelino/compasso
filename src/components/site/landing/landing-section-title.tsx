@@ -16,7 +16,7 @@ export function LandingSectionTitle({
         <p className="text-sm font-semibold uppercase tracking-wide text-violet-deep">{eyebrow}</p>
       </BlurFade>
       <h2 className="font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-        <TextAnimate animation="blurInUp" by="word" as="span" startOnView once>
+        <TextAnimate animation="slideUp" by="word" as="span" startOnView once>
           {title}
         </TextAnimate>
       </h2>

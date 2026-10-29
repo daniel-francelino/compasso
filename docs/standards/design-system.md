@@ -58,7 +58,7 @@ The full table (brand colors, warm neutrals, state colors, editorial status map,
 | Body and interface | **DM Sans** (or Inter) | `font-sans` (default) | All running text, 16 px minimum for body |
 | Headings | **Cormorant Garamond**, weight 600–700, 20 px or larger | `font-display` | Page `h1`, card and section titles, public site headlines |
 
-Heading utilities (no size tokens scattered around): `heading-page`, `heading-section`, `heading-card`. Scale in the back office: page title `heading-page` (`text-3xl`), card title `heading-card` (`text-xl`), body `text-sm` (tables, forms) or `text-base` (touch), auxiliary `text-xs` / `text-sm text-muted-foreground`. On touch devices (`pointer: coarse`) the base rises to about 106 % and everything in `rem` follows: do not use `px` for text.
+Heading utilities (no size tokens scattered around): `heading-page`, `heading-section`, `heading-card`. Public site only: `card-offset` (lilac card with a hard `violet-bright` offset shadow, from the presentation of the landing page). Scale in the back office: page title `heading-page` (`text-3xl`), card title `heading-card` (`text-xl`), body `text-sm` (tables, forms) or `text-base` (touch), auxiliary `text-xs` / `text-sm text-muted-foreground`. On touch devices (`pointer: coarse`) the base rises to about 106 % and everything in `rem` follows: do not use `px` for text.
 
 ### 3.3 Spacing, radii, shadows
 

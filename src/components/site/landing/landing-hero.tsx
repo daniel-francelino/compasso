@@ -1,12 +1,13 @@
 import { AnimatedGradientText } from "lost-ui/effects/animated-gradient-text";
 import { AnimatedList } from "lost-ui/effects/animated-list";
 import { BlurFade } from "lost-ui/effects/blur-fade";
-import { DotPattern } from "lost-ui/effects/dot-pattern";
 import { ShimmerButton } from "lost-ui/effects/shimmer-button";
 import { TextAnimate } from "lost-ui/effects/text-animate";
 import { WordRotate } from "lost-ui/effects/word-rotate";
 import { CalendarCheck, CircleCheck, Clock, FileBarChart, Sparkles } from "lucide-react";
-import { heroFeed, heroWords } from "@/components/site/landing/landing-content";
+import { hero, heroFeed, heroWords } from "@/components/site/landing/landing-content";
+import { LandingHeroPhoto } from "@/components/site/landing/landing-hero-photo";
+import { Blob, Sparkle } from "@/components/site/landing/landing-ornaments";
 import { scrollToAnchor } from "@/components/site/landing/scroll-to-anchor";
 import { cn } from "@/lib/shared/utils";
 
@@ -27,20 +28,25 @@ const feedTones = {
 export function LandingHero() {
   return (
     <section className="relative isolate overflow-hidden bg-[image:var(--gradient-hero)]">
-      <DotPattern
-        glow
-        className="-z-10 fill-violet/20 [mask-image:radial-gradient(520px_circle_at_center,var(--ink),transparent)]"
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-[radial-gradient(color-mix(in_oklab,var(--violet)_22%,transparent)_1px,transparent_1px)] bg-size-[18px_18px] mask-[radial-gradient(560px_circle_at_center,var(--ink),transparent)]"
       />
+      <Blob className="-right-28 -top-28 -z-10 w-80 opacity-90" />
+      <Blob className="-bottom-32 -left-28 -z-10 w-72 rotate-90 opacity-90" />
+      <Sparkle className="left-[6%] top-[22%] -z-10 size-10" />
+      <Sparkle className="right-[48%] top-[10%] -z-10 size-8 [animation-delay:600ms]" />
+      <Sparkle className="bottom-[12%] left-[30%] -z-10 size-12 [animation-delay:1200ms]" />
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-28">
         <div className="space-y-7">
           <BlurFade delay={0.05}>
             <AnimatedGradientText
               colorFrom="var(--violet)"
               colorTo="var(--coral-dark)"
-              className="inline-flex items-center rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-medium"
+              className="inline-flex items-center rounded-full bg-orchid-light px-4 py-1.5 text-sm font-medium"
             >
               <Sparkles aria-hidden="true" className="mr-2 size-4 text-violet" />
-              Social media · Gestão de redes sociais
+              {hero.eyebrow}
             </AnimatedGradientText>
           </BlurFade>
           <div
@@ -48,22 +54,16 @@ export function LandingHero() {
             aria-level={1}
             className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-ink sm:text-6xl"
           >
-            <span className="sr-only">Sua marca aparece nas redes sociais.</span>
+            <span className="sr-only">{hero.titleAccessible}</span>
             <span aria-hidden="true" className="block">
               <TextAnimate animation="blurInUp" by="word" as="span" className="block">
-                Sua marca
+                {hero.titleStart}
               </TextAnimate>
-              <WordRotate words={heroWords} className="block text-violet-deep" duration={2400} />
-              <TextAnimate animation="blurInUp" by="word" as="span" delay={0.3} className="block">
-                nas redes sociais.
-              </TextAnimate>
+              <WordRotate words={heroWords} className="block text-violet-deep" duration={2600} />
             </span>
           </div>
           <BlurFade delay={0.4}>
-            <p className="max-w-xl text-lg text-ink-soft">
-              Eu cuido do planejamento, da criação, da publicação e dos resultados do seu conteúdo,
-              para você ter presença constante sem perder tempo com as redes.
-            </p>
+            <p className="max-w-xl text-lg text-ink-soft">{hero.text}</p>
           </BlurFade>
           <BlurFade delay={0.55} className="flex flex-wrap items-center gap-4">
             <ShimmerButton
@@ -73,7 +73,7 @@ export function LandingHero() {
               className="text-base font-medium"
               onClick={() => scrollToAnchor("contato")}
             >
-              Quero conversar
+              Vamos conversar
             </ShimmerButton>
             <a
               href="#servicos"
@@ -84,41 +84,43 @@ export function LandingHero() {
           </BlurFade>
         </div>
         <BlurFade delay={0.35} direction="left" offset={24}>
-          <div
-            role="img"
-            aria-label="Exemplo ilustrativo de avisos de um fluxo de redes sociais: pauta aprovada, reels agendado, carrossel em revisão e relatório pronto"
-            className="rounded-3xl border border-line bg-surface/85 p-5 shadow-sm backdrop-blur"
-          >
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-soft">
-              Fluxo da semana · exemplo
-            </p>
-            <AnimatedList delay={1600} className="gap-3">
-              {heroFeed.map((item) => {
-                const Icon = feedIcons[item.tone];
-                return (
-                  <div
-                    key={item.title}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3"
-                  >
-                    <span
-                      className={cn(
-                        "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                        feedTones[item.tone],
-                      )}
+          <LandingHeroPhoto>
+            <div
+              role="img"
+              aria-label="Exemplo ilustrativo de avisos de um fluxo de redes sociais: pauta aprovada, reels agendado, carrossel em revisão e relatório pronto"
+              className="w-full max-w-sm rounded-3xl border border-line bg-surface p-5 shadow-sm"
+            >
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-soft">
+                Fluxo da semana · exemplo
+              </p>
+              <AnimatedList delay={1600} className="gap-3">
+                {heroFeed.map((item) => {
+                  const Icon = feedIcons[item.tone];
+                  return (
+                    <div
+                      key={item.title}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3"
                     >
-                      <Icon aria-hidden="true" className="size-5" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold text-ink">
-                        {item.title}
+                      <span
+                        className={cn(
+                          "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                          feedTones[item.tone],
+                        )}
+                      >
+                        <Icon aria-hidden="true" className="size-5" />
                       </span>
-                      <span className="block truncate text-xs text-ink-soft">{item.detail}</span>
-                    </span>
-                  </div>
-                );
-              })}
-            </AnimatedList>
-          </div>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-ink">
+                          {item.title}
+                        </span>
+                        <span className="block truncate text-xs text-ink-soft">{item.detail}</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </AnimatedList>
+            </div>
+          </LandingHeroPhoto>
         </BlurFade>
       </div>
     </section>

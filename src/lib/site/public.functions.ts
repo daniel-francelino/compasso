@@ -69,12 +69,6 @@ export const getPublicSite = createServerFn({ method: "GET" })
     };
   });
 
-export const getContactConfig = createServerFn({ method: "GET" }).handler(
-  async (): Promise<{ turnstileSiteKey: string | null }> => ({
-    turnstileSiteKey: turnstileSiteKey(),
-  }),
-);
-
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Informe seu nome.").max(120),
   email: z.string().trim().max(200),

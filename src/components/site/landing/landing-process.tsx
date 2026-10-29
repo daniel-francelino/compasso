@@ -1,27 +1,32 @@
 import { BlurFade } from "lost-ui/effects/blur-fade";
-import { AnimatedSpan, Terminal, TerminalTypingAnimation } from "lost-ui/effects/terminal";
-import { LandingAnchor, terminalLines } from "@/components/site/landing/landing-content";
+import { LandingAnchor, processSteps } from "@/components/site/landing/landing-content";
 import { LandingSectionTitle } from "@/components/site/landing/landing-section-title";
 
 export function LandingProcess() {
-  const [command, ...steps] = terminalLines;
   return (
-    <section id={LandingAnchor.Process} className="mx-auto max-w-4xl scroll-mt-20 px-6 py-24">
-      <LandingSectionTitle
-        eyebrow="Processo"
-        title="Do briefing à agenda cheia, sem improviso"
-        text="Um fluxo repetível, mês após mês, que você consegue acompanhar."
-      />
-      <BlurFade inView delay={0.1} className="mt-14">
-        <Terminal startOnView className="max-w-none">
-          <TerminalTypingAnimation>{`> ${command ?? ""}`}</TerminalTypingAnimation>
-          {steps.map((line) => (
-            <AnimatedSpan key={line} className="text-success">
-              <span>{`✔ ${line}`}</span>
-            </AnimatedSpan>
+    <section id={LandingAnchor.Process} className="scroll-mt-20 bg-orchid-light px-6 py-24">
+      <div className="mx-auto max-w-4xl">
+        <LandingSectionTitle
+          eyebrow="Processo"
+          title="Como funciona o trabalho?"
+          text="Um processo claro, colaborativo e ajustado à realidade do cliente."
+        />
+        <ol className="mt-14 space-y-3">
+          {processSteps.map((step, index) => (
+            <li key={step.number}>
+              <BlurFade inView delay={index * 0.08}>
+                <div className="grid items-center gap-x-6 gap-y-1 rounded-2xl border border-line bg-surface px-5 py-4 sm:grid-cols-[3rem_14rem_1fr]">
+                  <span className="font-display text-2xl font-bold text-violet-deep">
+                    {step.number}
+                  </span>
+                  <h3 className="text-lg font-semibold text-ink">{step.title}</h3>
+                  <p className="text-ink-soft">{step.text}</p>
+                </div>
+              </BlurFade>
+            </li>
           ))}
-        </Terminal>
-      </BlurFade>
+        </ol>
+      </div>
     </section>
   );
 }

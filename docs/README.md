@@ -17,7 +17,7 @@ Start with the [product document](product-documentation-v0.1.md) (what we are bu
 | `foundations/` | What sits under everything: accounts, permissions and alerts | [Authentication](foundations/authentication.md), [Roles and actions](foundations/roles-and-actions.md), [Notifications](foundations/notifications.md) |
 | `spaces/` | The spaces and cross-cutting services | [R2 storage](spaces/r2-storage.md), [Media Library](spaces/media-library.md), [Site and CMS](spaces/cms-site.md), [CMS model](spaces/cms-dynamic-architecture.md), [Public site delivery](spaces/public-site-delivery.md) |
 | `modules/` | Functional specifications of each module | [Index](modules/README.md), [Clients](modules/clients.md), [Brands](modules/brands.md), [Channels](modules/channels.md), [Content](modules/content.md), [Instagram publishing](modules/instagram-publishing.md), [Metrics and reports](modules/metrics.md), [Approvals](modules/approvals.md), [Calendar](modules/calendar.md), [Dashboard](modules/dashboard.md), [Client Portal](modules/portal.md), [Organization and settings](modules/organization-settings.md), [Audit](modules/audit.md) |
-| `audits/` | Findings and correction plans, with the status of each | [Video upload in the media library](audits/media-video-upload.md) |
+| `audits/` | Findings and correction plans, with the status of each | [Video upload in the media library](audits/media-video-upload.md), [Landing page performance](audits/landing-performance.md) |
 | `history/` | Early planning and old diagnostics; they do not necessarily describe the current state | Created when needed |
 
 ## Working with Claude Code

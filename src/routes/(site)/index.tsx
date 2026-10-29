@@ -1,14 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { SiteRenderContext } from "@/components/shared/site/site-context";
 import { LandingPage } from "@/components/site/landing/landing-page";
-import { getContactConfig, submitContactMessage } from "@/lib/site/public.functions";
 
-const title = "Rayana Vasconcelos · Social media e gestão de redes sociais";
+const title = "Rayana Vasconcelos · Marketing, social media e comunicação";
 const description =
-  "Estratégia, criação, publicação e relatórios para as redes sociais da sua marca. Fale com a Rayana Vasconcelos.";
+  "Estratégia e criatividade para marcas com personalidade: gestão de redes sociais, criação de conteúdo e consultoria de comunicação com Rayana Vasconcelos.";
 
 export const Route = createFileRoute("/(site)/")({
-  loader: () => getContactConfig(),
+  headers: () => ({ "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" }),
   head: () => ({
     meta: [
       { title },
@@ -18,22 +16,5 @@ export const Route = createFileRoute("/(site)/")({
       { property: "og:type", content: "website" },
     ],
   }),
-  component: HomeRoute,
+  component: LandingPage,
 });
-
-function HomeRoute() {
-  const { turnstileSiteKey } = Route.useLoaderData();
-  const ctx: SiteRenderContext = {
-    media: {},
-    caseStudies: [],
-    siteId: null,
-    pageSlug: "",
-    turnstileSiteKey,
-    preview: false,
-    submitContact: async (payload) => {
-      const outcome = await submitContactMessage({ data: { ...payload, slug: "" } });
-      return outcome.ok ? { ok: true } : { ok: false, message: outcome.message };
-    },
-  };
-  return <LandingPage ctx={ctx} />;
-}

@@ -1,19 +1,30 @@
 export const LandingAnchor = {
   Services: "servicos",
-  Workspace: "metodo",
   Process: "processo",
+  Workspace: "metodo",
   About: "sobre",
   Contact: "contato",
 } as const;
 
 export const navItems = [
   { label: "Serviços", anchor: LandingAnchor.Services },
-  { label: "Método", anchor: LandingAnchor.Workspace },
   { label: "Processo", anchor: LandingAnchor.Process },
   { label: "Sobre", anchor: LandingAnchor.About },
 ] as const;
 
-export const heroWords = ["aparece", "engaja", "conversa", "cresce"];
+export const hero = {
+  eyebrow: "Marketing • Social Media • Comunicação",
+  titleStart: "Estratégia e criatividade para marcas",
+  titleAccessible: "Estratégia e criatividade para marcas com personalidade.",
+  text: "Gestão de redes sociais, criação de conteúdo e comunicação para marcas e pequenos negócios, com planejamento, sensibilidade visual e histórias reais.",
+};
+
+export const heroWords = [
+  "com personalidade.",
+  "que se destacam.",
+  "que conversam.",
+  "que crescem.",
+];
 
 export const platforms = [
   "Instagram",
@@ -26,44 +37,44 @@ export const platforms = [
   "WhatsApp Business",
 ];
 
+export const heroPhoto = { src: "/landing/rayana.webp", alt: "Rayana Vasconcelos" };
+
 export const heroFeed = [
-  { title: "Pauta de março aprovada", detail: "12 ideias · 3 formatos", tone: "approved" },
+  { title: "Pauta do mês aprovada", detail: "Temas, formatos e calendário", tone: "approved" },
   { title: "Reels agendado", detail: "Quinta, 18:30 · Instagram", tone: "planned" },
-  { title: "Carrossel em revisão", detail: "Aguardando seu ok", tone: "review" },
-  { title: "Relatório do mês pronto", detail: "Alcance, salvamentos e cliques", tone: "done" },
+  { title: "Carrossel em validação", detail: "Aguardando seu ok", tone: "review" },
+  { title: "Análise de resultados", detail: "Próximos passos definidos", tone: "done" },
 ] as const;
 
 export const services = [
   {
-    key: "strategy",
-    title: "Estratégia de conteúdo",
-    text: "Posicionamento, pilares editoriais e tom de voz para a sua marca falar de forma única.",
+    key: "social",
+    title: "Gestão de Redes Sociais",
+    text: "Planejamento, calendário editorial, publicações e análise de resultados.",
   },
   {
-    key: "calendar",
-    title: "Calendário editorial",
-    text: "Pauta mensal organizada por objetivo, formato e canal, sempre com antecedência.",
+    key: "content",
+    title: "Criação de Conteúdo",
+    text: "Posts, carrosséis, legendas, roteiros, Reels e edição.",
   },
   {
-    key: "creation",
-    title: "Criação de posts e reels",
-    text: "Roteiros, legendas e direção de arte alinhados à identidade visual da marca.",
+    key: "capture",
+    title: "Captação de conteúdo",
+    text: "Fotos e vídeos de produtos, ambientes, processos e bastidores.",
   },
   {
-    key: "community",
-    title: "Gestão de comunidade",
-    text: "Resposta a comentários e mensagens com a voz da marca, no tempo certo.",
+    key: "consulting",
+    title: "Consultoria de Comunicação",
+    text: "Análise de perfil, tom de voz, posicionamento e direcionamento.",
   },
-  {
-    key: "publishing",
-    title: "Publicação e agendamento",
-    text: "Tudo no ar nos melhores horários, sem você precisar lembrar de postar.",
-  },
-  {
-    key: "reports",
-    title: "Relatórios e ajustes",
-    text: "Números que importam, leitura simples e próximos passos claros todo mês.",
-  },
+] as const;
+
+export const processSteps = [
+  { number: "01", title: "Conversa inicial", text: "Entender marca, público e objetivos." },
+  { number: "02", title: "Proposta", text: "Definimos prazos, entregas e investimento." },
+  { number: "03", title: "Planejamento", text: "Organizamos temas, formatos e calendário." },
+  { number: "04", title: "Criação e conteúdo", text: "Produzimos e validamos conteúdos." },
+  { number: "05", title: "Acompanhamento", text: "Analisamos resultados e próximos passos." },
 ] as const;
 
 export const workspaceSteps = [
@@ -91,14 +102,14 @@ export const workspaceSteps = [
   },
   {
     key: "approve",
-    label: "Aprovar",
+    label: "Validar",
     page: "Revisão com você",
     rows: [
-      { name: "Status", value: "Aguardando aprovação" },
+      { name: "Status", value: "Aguardando validação" },
       { name: "Responsável", value: "Você" },
       { name: "Prazo", value: "48 horas" },
     ],
-    todos: ["Receber o link de aprovação", "Pedir ajustes, se houver", "Aprovar com um clique"],
+    todos: ["Receber os conteúdos", "Pedir ajustes, se houver", "Aprovar para publicar"],
   },
   {
     key: "publish",
@@ -107,7 +118,7 @@ export const workspaceSteps = [
     rows: [
       { name: "Status", value: "Agendado" },
       { name: "Horário", value: "Melhor janela do público" },
-      { name: "Depois", value: "Relatório do mês" },
+      { name: "Depois", value: "Análise de resultados" },
     ],
     todos: ["Agendar nos canais", "Acompanhar os primeiros comentários", "Registrar os resultados"],
   },
@@ -115,28 +126,24 @@ export const workspaceSteps = [
 
 export const slashCommands = ["Pauta", "Reels", "Carrossel", "Story", "Legenda"];
 
-export const terminalLines = [
-  "aura planejar --mes proximo",
-  "Lendo objetivos e pilares da marca",
-  "12 pautas sugeridas em 3 formatos",
-  "Calendário editorial montado",
-  "Enviado para sua aprovação",
-];
+export const about = {
+  title: "Prazer, sou a Rayana.",
+  text: "Sou formada em Gestão de Marketing e atuo com gestão de redes sociais, criação de conteúdo e comunicação para marcas e pequenos negócios. Meu trabalho combina planejamento, sensibilidade visual e histórias reais para construir uma presença digital coerente com cada negócio.",
+  principles: [
+    { title: "Branding e Posicionamento", text: "Uma marca com voz própria e direção clara." },
+    {
+      title: "Relação entre marcas e pessoas",
+      text: "Conteúdo que aproxima e conversa com o público.",
+    },
+    { title: "Aprendizado contínuo", text: "Cada projeto ensina e melhora o próximo." },
+  ],
+};
 
-export const aboutText =
-  "Sou Rayana Vasconcelos, social media. Cuido das redes de marcas que querem presença com estratégia, e não apenas posts soltos: planejamento, criação, publicação e leitura de resultados em um só fluxo.";
-
-export const principles = [
-  { title: "Estratégia antes do post", text: "Cada conteúdo nasce de um objetivo." },
-  { title: "Constância sem correria", text: "Pauta pronta com antecedência." },
-  { title: "Transparência", text: "Você vê, aprova e acompanha tudo." },
-] as const;
-
-export const contactCopy = {
-  title: "Vamos organizar as redes da sua marca?",
-  intro:
-    "Conte um pouco sobre o seu negócio e o que você espera das redes sociais. A resposta chega por e-mail ou telefone.",
-  consentText:
-    "Concordo em ser contatada(o) por Rayana Vasconcelos sobre este pedido, e que meus dados sejam usados apenas para isso.",
-  successMessage: "Mensagem enviada. Em breve a Rayana entra em contato.",
+export const contact = {
+  title: "Vamos criar algo juntos?",
+  text: "Cada marca tem sua história, vamos encontrar a melhor forma de contá-la.",
+  detail:
+    "Atendo projetos pontuais e contratos mensais de comunicação e conteúdo. Após uma conversa inicial, preparo uma proposta com entregas, prazos e investimentos adequados às necessidades do seu negócio.",
+  instagram: { label: "@rayanavasconceloss", href: "https://instagram.com/rayanavasconceloss" },
+  email: { label: "rayana.vass@gmail.com", href: "mailto:rayana.vass@gmail.com" },
 };

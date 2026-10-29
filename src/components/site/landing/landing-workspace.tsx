@@ -9,6 +9,7 @@ import {
   slashCommands,
   workspaceSteps,
 } from "@/components/site/landing/landing-content";
+import { MountOnView } from "@/components/site/landing/mount-on-view";
 import { LandingSectionTitle } from "@/components/site/landing/landing-section-title";
 import { cn } from "@/lib/shared/utils";
 
@@ -20,17 +21,19 @@ export function LandingWorkspace() {
       <div className="mx-auto max-w-6xl">
         <LandingSectionTitle
           eyebrow="Método"
-          title="Um espaço de trabalho claro, do plano ao post"
+          title="Tudo organizado, do plano ao post"
           text="Tudo organizado em páginas simples. Você acompanha cada etapa sem precisar pedir."
         />
         <BlurFade inView delay={0.1} className="mt-14">
           <div className="relative overflow-hidden rounded-3xl border border-line bg-surface shadow-sm">
-            <BorderBeam
-              size={220}
-              duration={9}
-              colorFrom="var(--violet-bright)"
-              colorTo="var(--coral)"
-            />
+            <MountOnView>
+              <BorderBeam
+                size={220}
+                duration={9}
+                colorFrom="var(--violet-bright)"
+                colorTo="var(--coral)"
+              />
+            </MountOnView>
             <div className="grid md:grid-cols-[14rem_1fr]">
               <div
                 role="tablist"
