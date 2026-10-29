@@ -9,6 +9,7 @@ export const siteStatusMiddleware = createMiddleware({ type: "request" }).server
     const headers = new Headers(result.response.headers);
     headers.set("x-robots-tag", "noindex");
     if (code === 503) headers.set("retry-after", "120");
+    headers.set("cache-control", "no-store");
     return {
       ...result,
       response: new Response(result.response.body, { status: code, headers }),

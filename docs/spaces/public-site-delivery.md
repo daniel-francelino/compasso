@@ -36,6 +36,8 @@ These rules are enforced by lint (`no-restricted-imports`: the `site` space cann
 | `robots.txt` without a version | `Disallow: /` until something is published, so an empty site is not indexed |
 | A redirect configured for the address | 301/302 to the destination |
 
+Build assets and file-like paths (`/assets/...`, anything ending in an extension) are never CMS pages: they answer 404 with `Cache-Control: no-store`, not the 503 page, so a missing file during a deploy is not cached as a failure.
+
 A new deploy starts with no memory: it is the only case where a read error shows 503, and it is visible in the logs and monitoring.
 
 ### 3.1 Cache and errors

@@ -8,6 +8,7 @@ import {
   verifyTurnstile,
   withinRateLimit,
 } from "@/lib/site/contact.server";
+import { isStaticAssetPath } from "@/lib/site/static-path";
 import { readPublicPage, readPublicSettings } from "@/lib/site/public-reader.server";
 import { markResponseStatus } from "@/lib/site/response-status.server";
 import type {
@@ -47,7 +48,16 @@ export const getPublicSite = createServerFn({ method: "GET" })
   .validator(slugSchema)
   .handler(async ({ data }): Promise<PublicSiteResult> => {
     const slug = cleanSlug(data.slug);
-    const [page, settings] = await Promise.all([readPublicPage(slug), readPublicSettings()]);
+    if (isStaticAssetPath(slug)) {
+      markResponseStatus(404);
+      return { state: PublicSiteState.NotFound, settings: null };
+    }
+    const reads = await Promise.all([readPublicPage(slug), readPublicSettings()]).catch((error) => {
+      logError("site: reading the published site failed", error);
+      return null;
+    });
+    if (reads === null) return preparing();
+    const [page, settings] = reads;
     if (page.kind === "error") return preparing();
     const published = settings.kind === "settings" ? settings.settings : null;
     const answer = page.answer;
