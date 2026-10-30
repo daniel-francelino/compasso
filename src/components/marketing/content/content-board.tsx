@@ -1,6 +1,14 @@
+import {
+  DragDropProvider,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  useDraggable,
+  useDroppable,
+} from "@dnd-kit/react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { ArrowRightLeft, CalendarClock, TriangleAlert, RotateCw } from "lucide-react";
+import { CalendarClock, GripVertical, RotateCw, TriangleAlert } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/admin/empty-state";
 import { InfoTip } from "@/components/shared/admin/info-tip";
@@ -9,14 +17,6 @@ import { SectionCard } from "@/components/shared/admin/section-card";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { Button } from "@/components/shared/ui/button";
 import { Badge } from "@/components/shared/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/shared/ui/dropdown-menu";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import {
@@ -34,6 +34,7 @@ import { formatInZone } from "@/lib/shared/format";
 import { contentFormatLabels, editorialStatusLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { cn } from "@/lib/shared/utils";
 
 type BoardFilters = { search: string; brandId?: string; channelId?: string; ownerId?: string };
 
@@ -56,32 +57,20 @@ const nextPlanned = (card: BoardCard): { at: string; timeZone: string } | null =
     : null;
 };
 
-function Card({
-  card,
-  onMove,
-  busy,
-}: {
-  card: BoardCard;
-  onMove: (to: EditorialStatus) => void;
-  busy: boolean;
-}) {
-  const auth = useAuth();
-  const targets = DirectMoves[card.editorialStatus];
-  const movable = can(auth, Action.Content.Update) && targets.length > 0;
+const canMoveTo = (card: BoardCard | null, to: EditorialStatus): boolean =>
+  card !== null && DirectMoves[card.editorialStatus].includes(to);
+
+function CardBody({ card, onOpen }: { card: BoardCard; onOpen?: (id: string) => void }) {
   const planned = nextPlanned(card);
   return (
-    <SectionCard
-      as="li"
-      padding="xs"
-      className="space-y-3 shadow-sm transition-shadow hover:shadow-md"
-    >
-      <Link
-        to="/admin/marketing/content/$itemId"
-        params={{ itemId: card.id }}
-        className="block font-medium leading-snug text-primary underline-offset-4 hover:underline"
+    <div className="space-y-3">
+      <button
+        type="button"
+        onClick={onOpen ? () => onOpen(card.id) : undefined}
+        className="block w-full text-left font-medium leading-snug text-primary underline-offset-4 hover:underline"
       >
         {card.title}
-      </Link>
+      </button>
       <div className="flex flex-wrap items-center gap-1.5">
         <ChannelLogos channels={card.channels} />
         {[...new Set(card.channels.map((channel) => channel.format))].map((format) => (
@@ -103,51 +92,65 @@ function Card({
           "Sem data prevista"
         )}
       </p>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={busy || !movable}
-            aria-label={`Mover ${card.title} para outro estado`}
-          >
-            <ArrowRightLeft aria-hidden="true" />
-            Mover para…
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Estados permitidos</DropdownMenuLabel>
-          {targets.map((target) => (
-            <DropdownMenuItem key={target} onSelect={() => onMove(target)}>
-              {editorialStatusLabels[target]}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel className="max-w-56 whitespace-normal text-xs font-normal text-muted-foreground">
-            Aprovar, pedir alterações, enviar à aprovação e cancelar são feitos dentro do conteúdo.
-          </DropdownMenuLabel>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </SectionCard>
+    </div>
+  );
+}
+
+function DraggableCard({
+  card,
+  disabled,
+  onOpen,
+}: {
+  card: BoardCard;
+  disabled: boolean;
+  onOpen: (id: string) => void;
+}) {
+  const { ref, isDragSource } = useDraggable({ id: card.id, disabled });
+  return (
+    <li ref={ref} aria-roledescription="item arrastável">
+      <SectionCard
+        padding="xs"
+        className={cn(
+          "relative shadow-sm transition-shadow hover:shadow-md",
+          !disabled && "cursor-grab touch-manipulation active:cursor-grabbing",
+          isDragSource && "opacity-40",
+        )}
+      >
+        {disabled ? null : (
+          <GripVertical
+            className="absolute right-1.5 top-2 size-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+        )}
+        <CardBody card={card} onOpen={onOpen} />
+      </SectionCard>
+    </li>
   );
 }
 
 function Column({
   column,
-  onMove,
-  busy,
+  dragging,
+  movable,
+  onOpen,
 }: {
   column: BoardColumn;
-  onMove: (card: BoardCard, to: EditorialStatus) => void;
-  busy: boolean;
+  dragging: BoardCard | null;
+  movable: boolean;
+  onOpen: (id: string) => void;
 }) {
+  const { ref, isDropTarget } = useDroppable({ id: column.status });
+  const accepting = canMoveTo(dragging, column.status);
   return (
     <SectionCard
       as="section"
       aria-labelledby={`board-${column.status}`}
       padding="xs"
-      className="flex max-h-[calc(100dvh-18rem)] min-h-64 w-[min(84vw,19rem)] shrink-0 snap-start flex-col gap-3 bg-muted/70"
+      className={cn(
+        "flex max-h-[calc(100dvh-18rem)] min-h-64 w-[min(84vw,19rem)] shrink-0 snap-start flex-col gap-3 bg-muted/70 transition-shadow",
+        accepting && "ring-2 ring-primary/30",
+        accepting && isDropTarget && "ring-primary bg-primary/5",
+      )}
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id={`board-${column.status}`} className="min-w-0">
@@ -157,17 +160,24 @@ function Column({
           {column.total}
         </Badge>
       </div>
-      {column.cards.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border bg-card/60 px-3 py-4 text-center text-xs text-muted-foreground">
-          {REFUSED[column.status] ?? "Nada por aqui."}
-        </p>
-      ) : (
-        <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
-          {column.cards.map((card) => (
-            <Card key={card.id} card={card} busy={busy} onMove={(to) => onMove(card, to)} />
-          ))}
-        </ul>
-      )}
+      <div ref={ref} className="flex min-h-0 flex-1 flex-col">
+        {column.cards.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border bg-card/60 px-3 py-4 text-center text-xs text-muted-foreground">
+            {REFUSED[column.status] ?? "Nada por aqui."}
+          </p>
+        ) : (
+          <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
+            {column.cards.map((card) => (
+              <DraggableCard
+                key={card.id}
+                card={card}
+                disabled={!movable || DirectMoves[card.editorialStatus].length === 0}
+                onOpen={onOpen}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
       {column.total > column.cards.length ? (
         <p className="border-t border-border/70 pt-2 text-xs text-muted-foreground">
           Mostrando {column.cards.length} de {column.total}. Use a lista com o filtro de estado para
@@ -178,13 +188,24 @@ function Column({
   );
 }
 
-export function ContentBoard({ filters }: { filters: BoardFilters }) {
-  const { run, busy } = useServerAction();
+export function ContentBoard({
+  filters,
+  onOpen,
+}: {
+  filters: BoardFilters;
+  onOpen: (id: string) => void;
+}) {
+  const auth = useAuth();
+  const { run } = useServerAction();
+  const [dragging, setDragging] = useState<BoardCard | null>(null);
   const query = useQuery({
     queryKey: QueryKey.Content.board(filters),
     queryFn: async () => unwrapResult(await listBoard({ data: filters })).columns,
     placeholderData: keepPreviousData,
   });
+
+  const cards = (query.data ?? []).flatMap((column) => column.cards);
+  const cardById = (id: unknown) => cards.find((card) => card.id === String(id)) ?? null;
 
   async function move(card: BoardCard, to: EditorialStatus) {
     const result = await run(
@@ -192,6 +213,28 @@ export function ContentBoard({ filters }: { filters: BoardFilters }) {
       { invalidate: [QueryKey.Content.all(), QueryKey.Dashboard.all()] },
     );
     if (result.ok) toast.success(`Movido para “${editorialStatusLabels[to]}”.`);
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setDragging(cardById(event.operation.source?.id));
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const card = cardById(event.operation.source?.id);
+    const target = (query.data ?? []).find(
+      (column) => column.status === event.operation.target?.id,
+    );
+    setDragging(null);
+    if (event.canceled || card === null || target === undefined) return;
+    if (target.status === card.editorialStatus) return;
+    if (!canMoveTo(card, target.status)) {
+      toast.error(
+        REFUSED[target.status] ??
+          `Não é possível mover para “${editorialStatusLabels[target.status]}” a partir deste estado.`,
+      );
+      return;
+    }
+    void move(card, target.status);
   }
 
   if (query.isPending) {
@@ -224,19 +267,29 @@ export function ContentBoard({ filters }: { filters: BoardFilters }) {
     );
   }
   return (
-    <div
-      className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3"
-      role="group"
-      aria-label="Quadro de conteúdos"
-    >
-      {query.data.map((column) => (
-        <Column
-          key={column.status}
-          column={column}
-          busy={busy}
-          onMove={(card, to) => void move(card, to)}
-        />
-      ))}
-    </div>
+    <DragDropProvider onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3"
+        role="group"
+        aria-label="Quadro de conteúdos"
+      >
+        {query.data.map((column) => (
+          <Column
+            key={column.status}
+            column={column}
+            dragging={dragging}
+            movable={can(auth, Action.Content.Update)}
+            onOpen={onOpen}
+          />
+        ))}
+      </div>
+      <DragOverlay>
+        {dragging ? (
+          <SectionCard padding="xs" className="w-[17rem] rotate-2 cursor-grabbing shadow-lg">
+            <CardBody card={dragging} />
+          </SectionCard>
+        ) : null}
+      </DragOverlay>
+    </DragDropProvider>
   );
 }

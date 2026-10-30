@@ -30,4 +30,4 @@ The content editor uses the library block editor (`RichTextEditor`, `lost-ui/edi
 
 ## 4. Open decisions
 
-- Who publishes the library version: the app is pinned to `^0.2.0`; a change needs a new published version and a version bump in `package.json` of this application.
+- Who publishes the library version: the app is pinned to `^0.2.2`; a change needs a new published version and a version bump in `package.json` of this application.

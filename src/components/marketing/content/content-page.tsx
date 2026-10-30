@@ -414,6 +414,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       />
       {board ? (
         <ContentBoard
+          onOpen={(itemId) => setModal({ kind: "item", itemId })}
           filters={{
             search: list.debouncedSearch,
             ...(brandId ? { brandId } : {}),

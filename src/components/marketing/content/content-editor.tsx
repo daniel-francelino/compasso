@@ -347,11 +347,7 @@ export function ContentEditor({
             onClick={modal.onToggleExpand}
           />
           <div className="flex justify-center overflow-x-auto">{stepBar}</div>
-          <div className="flex items-center gap-1.5">
-            {content ? <EditorialStatusBadge status={editorialStatus} /> : null}
-            {actionsBar}
-            <IconButton label="Fechar" icon={X} onClick={modal.onClose} />
-          </div>
+          <IconButton label="Fechar" icon={X} onClick={modal.onClose} />
         </header>
       ) : onSaved ? (
         <header className="flex flex-wrap items-center justify-between gap-3">
@@ -376,7 +372,13 @@ export function ContentEditor({
           }
         />
       )}
-      <div className={cn("space-y-6", modal && "flex-1 px-4 py-6 sm:px-6")}>
+      <div className={cn("space-y-6", modal && "relative flex-1 px-4 pb-6 pt-16 sm:px-6")}>
+        {modal ? (
+          <div className="absolute right-4 top-3 z-10 flex items-center gap-1.5 sm:right-6">
+            {content ? <EditorialStatusBadge status={editorialStatus} /> : null}
+            {actionsBar}
+          </div>
+        ) : null}
         {error ? (
           <Alert variant="destructive" role="alert">
             <AlertTitle>Não foi possível salvar</AlertTitle>

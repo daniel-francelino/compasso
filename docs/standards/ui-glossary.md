@@ -88,7 +88,7 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Approve | "Aprovar" |
 | Request changes | "Pedir alterações" |
 | Reopen | "Reabrir" |
-| Move between statuses | "Mover para…" (menu), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
+| Move between statuses | drag the card on the board (no menu since 2026-10-30), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
 | Add a publication to a channel | "Adicionar publicação" |
 | Publication schedule (editor card) | "Programação das publicações"; date field "Selecionar data", time field "Selecionar hora" with its own label "Hora" |
 | Convert a note | "Converter em conteúdo" |

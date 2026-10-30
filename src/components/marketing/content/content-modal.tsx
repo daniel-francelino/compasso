@@ -1,5 +1,4 @@
 import { useContext, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { ContentEditorPage } from "@/components/marketing/content/content-editor-page";
 import {
   Dialog,
@@ -9,7 +8,6 @@ import {
   DialogTitle,
 } from "@/components/shared/ui/dialog";
 import { GuardContext } from "@/hooks/shared/use-unsaved-changes";
-import { QueryKey } from "@/lib/shared/query-keys";
 import { cn } from "@/lib/shared/utils";
 
 export type ContentModalTarget =
@@ -24,13 +22,11 @@ export function ContentModal({
   onClose: () => void;
 }) {
   const guard = useContext(GuardContext);
-  const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const isItem = target?.kind === "item";
 
   function close() {
     setExpanded(false);
-    void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() });
     onClose();
   }
 
