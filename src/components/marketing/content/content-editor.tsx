@@ -1,11 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { RotateCcw, Save, UserCheck } from "lucide-react";
+import { Maximize2, Minimize2, RotateCcw, Save, UserCheck, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ALL_TAB } from "@/components/marketing/content/caption-section";
 import { ActivitySection } from "@/components/marketing/content/activity-section";
 import { ContentActions } from "@/components/marketing/content/content-actions";
+import { ContentModalFooter } from "@/components/marketing/content/content-modal-footer";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
 import { ContentStep } from "@/components/marketing/content/content-step";
 import { EditorPreview } from "@/components/marketing/content/editor-preview";
@@ -21,6 +22,7 @@ import { StepNav } from "@/components/shared/admin/step-nav";
 import { StepPanel } from "@/components/shared/admin/step-panel";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
 import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
+import { IconButton } from "@/components/shared/admin/icon-button";
 import { Button } from "@/components/shared/ui/button";
 import {
   type DraftRow,
@@ -77,16 +79,24 @@ import { cn } from "@/lib/shared/utils";
 const FALLBACK_ZONE = "America/Sao_Paulo";
 const STEP_FOCUS_DELAY_MS = 350;
 
+export type ContentModalChrome = {
+  expanded: boolean;
+  onToggleExpand: () => void;
+  onClose: () => void;
+};
+
 export function ContentEditor({
   content,
   seed,
   sourceNote,
   onSaved,
+  modal,
 }: {
   content: ContentDetail | undefined;
   seed: DraftValues;
   sourceNote: string | undefined;
   onSaved?: (() => void) | undefined;
+  modal?: ContentModalChrome | undefined;
 }) {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -311,6 +321,7 @@ export function ContentEditor({
       onReopen={() => setReopening(true)}
       onCancel={() => setCancelling(true)}
       onDuplicate={() => void duplicate()}
+      hideSave={modal !== undefined}
     />
   );
 
@@ -318,14 +329,31 @@ export function ContentEditor({
     <form
       ref={formRef}
       noValidate
-      className="mx-auto w-full max-w-7xl space-y-6"
+      className={cn(
+        modal ? "flex min-h-full flex-1 flex-col" : "mx-auto w-full max-w-7xl space-y-6",
+      )}
       onSubmit={(event) => {
         event.preventDefault();
         if (event.target !== event.currentTarget) return;
         void save(false);
       }}
     >
-      {onSaved ? (
+      {modal ? (
+        <header className="sticky top-0 z-20 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border bg-background px-4 py-2 sm:px-6">
+          <h1 className="sr-only">{isNew ? "Novo conteúdo" : values.title || "Conteúdo"}</h1>
+          <IconButton
+            label={modal.expanded ? "Voltar ao tamanho menor" : "Abrir em tela cheia"}
+            icon={modal.expanded ? Minimize2 : Maximize2}
+            onClick={modal.onToggleExpand}
+          />
+          <div className="flex justify-center overflow-x-auto">{stepBar}</div>
+          <div className="flex items-center gap-1.5">
+            {content ? <EditorialStatusBadge status={editorialStatus} /> : null}
+            {actionsBar}
+            <IconButton label="Fechar" icon={X} onClick={modal.onClose} />
+          </div>
+        </header>
+      ) : onSaved ? (
         <header className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="sr-only">{isNew ? "Novo conteúdo" : values.title || "Conteúdo"}</h1>
           {stepBar}
@@ -348,195 +376,216 @@ export function ContentEditor({
           }
         />
       )}
-      {error ? (
-        <Alert variant="destructive" role="alert">
-          <AlertTitle>Não foi possível salvar</AlertTitle>
-          <AlertDescription>
-            {error}
-            {conflict ? (
-              <FormActions className="mt-2">
-                <Button type="button" size="sm" onClick={() => void save(true)} disabled={saving}>
-                  <Save aria-hidden="true" />
-                  Manter meu texto e salvar por cima
-                </Button>
-                <Button type="button" size="sm" variant="outline" onClick={reload}>
-                  <RotateCcw aria-hidden="true" />
-                  Descartar e recarregar
-                </Button>
-              </FormActions>
-            ) : null}
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      {content ? <ContentBanners content={content} /> : null}
-      <div
-        className={cn("grid items-start gap-6", hasSide && "xl:grid-cols-[minmax(0,1fr)_24rem]")}
-      >
-        <StepPanel steps={editorSteps} active={step} onChange={setStep}>
-          {step === EditorStep.Planning ? (
-            <PlanningStep
-              draft={draft}
-              isNew={isNew}
-              brands={brands.data}
-              channels={channels}
-              channelsLoading={channelsQuery.isLoading}
-              selected={selected}
-              locked={locked}
-              assignees={assignees.data ?? []}
-              editable={editable}
-              settingsDisabled={settingsDisabled}
-              saving={saving}
-              errors={errors}
-              typeOptions={typeOptions}
-              onPublishDateChange={changePublishDate}
-              onToggleChannel={toggleChannel}
-            />
-          ) : null}
-          {step === EditorStep.Content ? (
-            <ContentStep
-              draft={draft}
-              channels={channels}
-              zone={zone}
-              tab={tab}
-              onTab={setTab}
-              editable={editable}
-              saving={saving}
-              canPublish={canPublish}
-              canCancelRow={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
-              itemId={content?.id}
-              canAutomate={canAutomate}
-              errors={errors}
-              onPublishRow={setPublishing}
-              onCancelRow={setCancellingRow}
-            />
-          ) : null}
-          <FormError message={error} />
-        </StepPanel>
-        {hasSide ? (
-          <div className="space-y-6 xl:sticky xl:top-4">
-            {step === EditorStep.Content ? (
-              <EditorPreview
+      <div className={cn("space-y-6", modal && "flex-1 px-4 py-6 sm:px-6")}>
+        {error ? (
+          <Alert variant="destructive" role="alert">
+            <AlertTitle>Não foi possível salvar</AlertTitle>
+            <AlertDescription>
+              {error}
+              {conflict ? (
+                <FormActions className="mt-2">
+                  <Button type="button" size="sm" onClick={() => void save(true)} disabled={saving}>
+                    <Save aria-hidden="true" />
+                    Manter meu texto e salvar por cima
+                  </Button>
+                  <Button type="button" size="sm" variant="outline" onClick={reload}>
+                    <RotateCcw aria-hidden="true" />
+                    Descartar e recarregar
+                  </Button>
+                </FormActions>
+              ) : null}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {content ? <ContentBanners content={content} /> : null}
+        <div
+          className={cn("grid items-start gap-6", hasSide && "xl:grid-cols-[minmax(0,1fr)_24rem]")}
+        >
+          <StepPanel
+            steps={editorSteps}
+            active={step}
+            onChange={setStep}
+            hideNav={modal !== undefined}
+          >
+            {step === EditorStep.Planning ? (
+              <PlanningStep
                 draft={draft}
+                isNew={isNew}
+                brands={brands.data}
                 channels={channels}
-                tab={tab}
-                brandLogoUrl={brand.data?.logoUrl ?? null}
+                channelsLoading={channelsQuery.isLoading}
+                selected={selected}
+                locked={locked}
+                assignees={assignees.data ?? []}
+                editable={editable}
+                settingsDisabled={settingsDisabled}
+                saving={saving}
+                errors={errors}
+                typeOptions={typeOptions}
+                onPublishDateChange={changePublishDate}
+                onToggleChannel={toggleChannel}
               />
             ) : null}
-          </div>
+            {step === EditorStep.Content ? (
+              <ContentStep
+                draft={draft}
+                channels={channels}
+                zone={zone}
+                tab={tab}
+                onTab={setTab}
+                editable={editable}
+                saving={saving}
+                canPublish={canPublish}
+                canCancelRow={canCancel && editorialStatus !== EditorialStatus.AwaitingApproval}
+                itemId={content?.id}
+                canAutomate={canAutomate}
+                errors={errors}
+                onPublishRow={setPublishing}
+                onCancelRow={setCancellingRow}
+              />
+            ) : null}
+            <FormError message={error} />
+          </StepPanel>
+          {hasSide ? (
+            <div className="space-y-6 xl:sticky xl:top-4">
+              {step === EditorStep.Content ? (
+                <EditorPreview
+                  draft={draft}
+                  channels={channels}
+                  tab={tab}
+                  brandLogoUrl={brand.data?.logoUrl ?? null}
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+        {content ? <ActivitySection itemId={content.id} requests={content.requests} /> : null}
+        {submitting && content ? (
+          <SubmitDialog
+            content={content}
+            dirty={draft.dirty}
+            open
+            onOpenChange={(next) => !next && setSubmitting(false)}
+            onSubmitted={() =>
+              void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() })
+            }
+          />
         ) : null}
+        {publishing && content ? (
+          <PublishDialog
+            channelRowId={publishing.id ?? ""}
+            channelLabel={labelOf(publishing)}
+            brandId={content.brandId}
+            brandTimezone={content.brandTimezone}
+            open
+            onOpenChange={(next) => !next && setPublishing(null)}
+            onPublished={() =>
+              void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() })
+            }
+          />
+        ) : null}
+        <ConfirmDialog
+          open={confirmingPublish}
+          onOpenChange={setConfirmingPublish}
+          title="Marcar como publicado"
+          description="Depois de marcar como publicado, os originais e os arquivos do planejamento são apagados. Ficam só as prévias. Vídeos continuam guardados por enquanto. Não dá para desfazer."
+          confirmLabel="Marcar como publicado"
+          busy={acting}
+          onConfirm={async () => {
+            if (content === undefined) return false;
+            const result = await run(
+              () => publishContent({ data: { id: content.id, expectedVersion: content.version } }),
+              { invalidate: refresh, success: "Conteúdo marcado como publicado." },
+            );
+            return result.ok;
+          }}
+        />
+        <ReasonDialog
+          open={approving}
+          onOpenChange={setApproving}
+          title="Aprovar no lugar do cliente"
+          description="Você está registrando a aprovação do cliente. Isto fica no histórico com o seu nome. Se houver um pedido aberto, ele será encerrado e o cliente será avisado."
+          confirmLabel="Aprovar"
+          icon={UserCheck}
+          optional
+          onSubmit={async (reason) => {
+            if (content === undefined) return null;
+            const result = await run(
+              () =>
+                approveOnBehalf({
+                  data: {
+                    id: content.id,
+                    expectedVersion: content.version,
+                    ...(reason === "" ? {} : { reason }),
+                  },
+                }),
+              { invalidate: refresh, success: "Aprovação registrada." },
+            );
+            return result.ok ? null : result.message;
+          }}
+        />
+        <ReasonDialog
+          open={reopening}
+          onOpenChange={setReopening}
+          title="Reabrir para produção"
+          description="Ele volta para produção e o pedido pendente ao cliente é substituído. Uma nova versão precisará de nova aprovação. O motivo fica registrado."
+          confirmLabel="Reabrir"
+          icon={RotateCcw}
+          onSubmit={async (reason) => {
+            if (content === undefined) return null;
+            const result = await run(() => reopenContent({ data: { id: content.id, reason } }), {
+              invalidate: refresh,
+              success: "Conteúdo reaberto.",
+            });
+            return result.ok ? null : result.message;
+          }}
+        />
+        <ReasonDialog
+          open={cancelling}
+          onOpenChange={setCancelling}
+          title="Cancelar conteúdo"
+          description="Os canais ainda não publicados e o pedido pendente ao cliente também são cancelados. O histórico é mantido."
+          confirmLabel="Cancelar conteúdo"
+          onSubmit={async (reason) => {
+            if (content === undefined) return null;
+            const result = await run(
+              () => cancelContentItem({ data: { id: content.id, reason } }),
+              {
+                invalidate: refresh,
+                success: "Conteúdo cancelado.",
+              },
+            );
+            return result.ok ? null : result.message;
+          }}
+        />
+        <ReasonDialog
+          open={cancellingRow !== null}
+          onOpenChange={(next) => !next && setCancellingRow(null)}
+          title={`Cancelar ${cancellingRow ? labelOf(cancellingRow) : "o canal"}`}
+          description="Só este canal deixa de ser publicado. Os outros continuam. O histórico é mantido."
+          confirmLabel="Cancelar canal"
+          onSubmit={async (reason) => {
+            if (cancellingRow?.id === undefined) return null;
+            const id = cancellingRow.id;
+            const result = await run(() => cancelContentChannel({ data: { id, reason } }), {
+              invalidate: refresh,
+              success: "Canal cancelado.",
+            });
+            return result.ok ? null : result.message;
+          }}
+        />
       </div>
-      {content ? <ActivitySection itemId={content.id} requests={content.requests} /> : null}
-      {submitting && content ? (
-        <SubmitDialog
-          content={content}
+      {modal ? (
+        <ContentModalFooter
+          step={step}
+          onStep={setStep}
+          onClose={modal.onClose}
+          isNew={isNew}
+          editable={editable}
           dirty={draft.dirty}
-          open
-          onOpenChange={(next) => !next && setSubmitting(false)}
-          onSubmitted={() =>
-            void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() })
-          }
+          saving={saving}
         />
       ) : null}
-      {publishing && content ? (
-        <PublishDialog
-          channelRowId={publishing.id ?? ""}
-          channelLabel={labelOf(publishing)}
-          brandId={content.brandId}
-          brandTimezone={content.brandTimezone}
-          open
-          onOpenChange={(next) => !next && setPublishing(null)}
-          onPublished={() =>
-            void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() })
-          }
-        />
-      ) : null}
-      <ConfirmDialog
-        open={confirmingPublish}
-        onOpenChange={setConfirmingPublish}
-        title="Marcar como publicado"
-        description="Depois de marcar como publicado, os originais e os arquivos do planejamento são apagados. Ficam só as prévias. Vídeos continuam guardados por enquanto. Não dá para desfazer."
-        confirmLabel="Marcar como publicado"
-        busy={acting}
-        onConfirm={async () => {
-          if (content === undefined) return false;
-          const result = await run(
-            () => publishContent({ data: { id: content.id, expectedVersion: content.version } }),
-            { invalidate: refresh, success: "Conteúdo marcado como publicado." },
-          );
-          return result.ok;
-        }}
-      />
-      <ReasonDialog
-        open={approving}
-        onOpenChange={setApproving}
-        title="Aprovar no lugar do cliente"
-        description="Você está registrando a aprovação do cliente. Isto fica no histórico com o seu nome. Se houver um pedido aberto, ele será encerrado e o cliente será avisado."
-        confirmLabel="Aprovar"
-        icon={UserCheck}
-        optional
-        onSubmit={async (reason) => {
-          if (content === undefined) return null;
-          const result = await run(
-            () =>
-              approveOnBehalf({
-                data: {
-                  id: content.id,
-                  expectedVersion: content.version,
-                  ...(reason === "" ? {} : { reason }),
-                },
-              }),
-            { invalidate: refresh, success: "Aprovação registrada." },
-          );
-          return result.ok ? null : result.message;
-        }}
-      />
-      <ReasonDialog
-        open={reopening}
-        onOpenChange={setReopening}
-        title="Reabrir para produção"
-        description="Ele volta para produção e o pedido pendente ao cliente é substituído. Uma nova versão precisará de nova aprovação. O motivo fica registrado."
-        confirmLabel="Reabrir"
-        icon={RotateCcw}
-        onSubmit={async (reason) => {
-          if (content === undefined) return null;
-          const result = await run(() => reopenContent({ data: { id: content.id, reason } }), {
-            invalidate: refresh,
-            success: "Conteúdo reaberto.",
-          });
-          return result.ok ? null : result.message;
-        }}
-      />
-      <ReasonDialog
-        open={cancelling}
-        onOpenChange={setCancelling}
-        title="Cancelar conteúdo"
-        description="Os canais ainda não publicados e o pedido pendente ao cliente também são cancelados. O histórico é mantido."
-        confirmLabel="Cancelar conteúdo"
-        onSubmit={async (reason) => {
-          if (content === undefined) return null;
-          const result = await run(() => cancelContentItem({ data: { id: content.id, reason } }), {
-            invalidate: refresh,
-            success: "Conteúdo cancelado.",
-          });
-          return result.ok ? null : result.message;
-        }}
-      />
-      <ReasonDialog
-        open={cancellingRow !== null}
-        onOpenChange={(next) => !next && setCancellingRow(null)}
-        title={`Cancelar ${cancellingRow ? labelOf(cancellingRow) : "o canal"}`}
-        description="Só este canal deixa de ser publicado. Os outros continuam. O histórico é mantido."
-        confirmLabel="Cancelar canal"
-        onSubmit={async (reason) => {
-          if (cancellingRow?.id === undefined) return null;
-          const id = cancellingRow.id;
-          const result = await run(() => cancelContentChannel({ data: { id, reason } }), {
-            invalidate: refresh,
-            success: "Canal cancelado.",
-          });
-          return result.ok ? null : result.message;
-        }}
-      />
     </form>
   );
 }

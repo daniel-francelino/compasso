@@ -16,11 +16,13 @@ export function StepPanel<K extends string>({
   steps,
   active,
   onChange,
+  hideNav = false,
   children,
 }: {
   steps: readonly StepItem<K>[];
   active: K;
   onChange: (key: K) => void;
+  hideNav?: boolean;
   children: ReactNode;
 }) {
   const index = steps.findIndex((step) => step.key === active);
@@ -49,27 +51,29 @@ export function StepPanel<K extends string>({
             {children}
           </motion.div>
         </AnimatePresence>
-        <div className="flex items-center justify-between gap-3">
-          {previous ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onChange(previous.key)}
-            >
-              <ChevronLeft aria-hidden="true" />
-              {previous.label}
-            </Button>
-          ) : (
-            <span />
-          )}
-          {next ? (
-            <Button type="button" variant="outline" size="sm" onClick={() => onChange(next.key)}>
-              {next.label}
-              <ChevronRight aria-hidden="true" />
-            </Button>
-          ) : null}
-        </div>
+        {hideNav ? null : (
+          <div className="flex items-center justify-between gap-3">
+            {previous ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onChange(previous.key)}
+              >
+                <ChevronLeft aria-hidden="true" />
+                {previous.label}
+              </Button>
+            ) : (
+              <span />
+            )}
+            {next ? (
+              <Button type="button" variant="outline" size="sm" onClick={() => onChange(next.key)}>
+                {next.label}
+                <ChevronRight aria-hidden="true" />
+              </Button>
+            ) : null}
+          </div>
+        )}
       </div>
     </MotionConfig>
   );

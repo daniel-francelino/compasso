@@ -1,10 +1,9 @@
-import { Globe, Maximize2, Minimize2, RotateCw } from "lucide-react";
+import { Globe, RotateCw } from "lucide-react";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import { useContext, useEffect, useMemo, useState } from "react";
-import { IconButton } from "@/components/shared/admin/icon-button";
+import { useEffect, useMemo, useState } from "react";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -16,16 +15,12 @@ import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { toGridItem } from "@/components/shared/calendar/entry-items";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/shared/ui/dialog";
 import { DayAddMenu } from "@/components/marketing/calendar/day-add-menu";
 import { EntryDetails } from "@/components/marketing/calendar/entry-details";
-import { ContentEditorPage } from "@/components/marketing/content/content-editor-page";
+import {
+  type ContentModalTarget,
+  ContentModal,
+} from "@/components/marketing/content/content-modal";
 import { EventDialog } from "@/components/marketing/calendar/event-dialog";
 import { type NoteDialogTarget, NoteDialog } from "@/components/marketing/calendar/note-dialog";
 import {
@@ -43,7 +38,6 @@ import { useServerAction } from "@/hooks/shared/use-server-action";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { GuardContext } from "@/hooks/shared/use-unsaved-changes";
 import { calendarAlerts } from "@/lib/shared/calendar/alerts";
 import { entryKey, isMovable } from "@/lib/shared/calendar/entries";
 import { rangeTitle } from "@/lib/shared/calendar/range";
@@ -66,7 +60,6 @@ import {
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { StoredKey, writeStored } from "@/lib/shared/stored-keys";
-import { cn } from "@/lib/shared/utils";
 import {
   browserTimeZone,
   instantToLocalInput,
@@ -132,7 +125,6 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const canManage = can(auth, Action.Calendar.Manage) && can(auth, Action.Content.Update);
   const canNote = can(auth, Action.Calendar.Manage);
   const canCreate = can(auth, Action.Content.Create);
-  const unsavedGuard = useContext(GuardContext);
 
   const brand = useBrand(brandId ?? "", brandId !== undefined);
   const [browserZone, setBrowserZone] = useState("UTC");
@@ -143,25 +135,16 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const [target, setTarget] = useState<RescheduleTarget | null>(null);
   const [noteTarget, setNoteTarget] = useState<NoteDialogTarget | null>(null);
   const [archiving, setArchiving] = useState<CalendarEntry | null>(null);
-  const [scheduledDay, setScheduledDay] = useState<string | null>(null);
-  const [openItemId, setOpenItemId] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [modal, setModal] = useState<ContentModalTarget | null>(null);
 
   useEffect(() => {
     if (brandId === undefined) setBrowserZone(browserTimeZone());
   }, [brandId]);
 
-  async function requestCloseScheduler() {
-    if (unsavedGuard?.hasUnsaved && !(await unsavedGuard.confirmDiscard())) return;
-    setScheduledDay(null);
-    setOpenItemId(null);
-    setExpanded(false);
-  }
-
   function selectEntry(key: string) {
     const entry = entries.find((candidate) => entryKey(candidate) === key);
     if (entry?.itemId) {
-      setOpenItemId(entry.itemId);
+      setModal({ kind: "item", itemId: entry.itemId });
       return;
     }
     setSelectedKey(key);
@@ -308,7 +291,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
       day={day}
       canSchedule={canCreate}
       canNote={canNote}
-      onSchedule={setScheduledDay}
+      onSchedule={(day) => setModal({ kind: "new", day, brandId })}
       onNote={(kind, chosen) => setNoteTarget({ kind, day: chosen, brandId, note: undefined })}
     />
   );
@@ -522,47 +505,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           onOpenChange={(open) => !open && setTarget(null)}
         />
       ) : null}
-      <Dialog
-        open={scheduledDay !== null || openItemId !== null}
-        onOpenChange={(open) => !open && void requestCloseScheduler()}
-      >
-        <DialogContent
-          className={cn(
-            "!overflow-y-auto !p-4 sm:!p-6",
-            expanded
-              ? "!fixed !inset-0 !left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-full !max-w-none !translate-x-0 !translate-y-0 !rounded-none"
-              : "!h-[88dvh] !max-h-[88dvh] !w-[calc(100%-2rem)] !max-w-5xl",
-          )}
-        >
-          <div className="absolute left-3 top-3 z-10">
-            <IconButton
-              label={expanded ? "Voltar ao tamanho menor" : "Abrir em tela cheia"}
-              icon={expanded ? Minimize2 : Maximize2}
-              onClick={() => setExpanded(!expanded)}
-            />
-          </div>
-          <DialogHeader className="sr-only">
-            <DialogTitle>{openItemId === null ? "Agendar conteúdo" : "Conteúdo"}</DialogTitle>
-            <DialogDescription>
-              {openItemId === null
-                ? "Crie o conteúdo sem sair do calendário."
-                : "Veja e edite o conteúdo sem sair do calendário."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="pt-8">
-            {openItemId !== null ? (
-              <ContentEditorPage itemId={openItemId} onSaved={() => undefined} />
-            ) : null}
-            {scheduledDay !== null ? (
-              <ContentEditorPage
-                brandId={brandId}
-                day={scheduledDay}
-                onSaved={() => setScheduledDay(null)}
-              />
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ContentModal target={modal} onClose={() => setModal(null)} />
     </div>
   );
 }

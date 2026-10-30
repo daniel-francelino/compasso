@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Ban,
   Columns3,
@@ -29,6 +29,10 @@ import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { Button } from "@/components/shared/ui/button";
+import {
+  type ContentModalTarget,
+  ContentModal,
+} from "@/components/marketing/content/content-modal";
 import { ContentBoard } from "@/components/marketing/content/content-board";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
@@ -101,6 +105,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const list = useListState<string>(ContentStatusFilter.Active, DEFAULT_SORT);
+  const [modal, setModal] = useState<ContentModalTarget | null>(null);
   const [cancelling, setCancelling] = useState<ContentItemRow | null>(null);
   const [deleting, setDeleting] = useState<ContentItemRow | null>(null);
   const { run, busy } = useServerAction();
@@ -185,13 +190,13 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       label: "Conteúdo",
       sortable: true,
       cell: (row) => (
-        <Link
-          to="/admin/marketing/content/$itemId"
-          params={{ itemId: row.id }}
-          className="font-medium text-primary underline-offset-4 hover:underline"
+        <button
+          type="button"
+          onClick={() => setModal({ kind: "item", itemId: row.id })}
+          className="text-left font-medium text-primary underline-offset-4 hover:underline"
         >
           {row.title}
-        </Link>
+        </button>
       ),
     },
     { id: "format", label: "Formato", cell: (row) => <FormatCells formats={formatsOf(row)} /> },
@@ -229,11 +234,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
             id: "edit",
             label: "Editar",
             icon: Pencil,
-            onSelect: (item: ContentItemRow) =>
-              void navigate({
-                to: "/admin/marketing/content/$itemId",
-                params: { itemId: item.id },
-              }),
+            onSelect: (item: ContentItemRow) => setModal({ kind: "item", itemId: item.id }),
           },
         ]
       : []),
@@ -372,12 +373,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         actions={
           can(auth, Action.Content.Create) ? (
             <Button
-              onClick={() =>
-                void navigate({
-                  to: "/admin/marketing/content/new",
-                  search: fixedBrandId ? { brand: fixedBrandId } : {},
-                })
-              }
+              onClick={() => setModal({ kind: "new", day: undefined, brandId: fixedBrandId })}
             >
               <Plus aria-hidden="true" />
               Novo conteúdo
@@ -489,6 +485,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           return result.ok;
         }}
       />
+      <ContentModal target={modal} onClose={() => setModal(null)} />
     </div>
   );
 }

@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ContentEditor } from "@/components/marketing/content/content-editor";
+import {
+  type ContentModalChrome,
+  ContentEditor,
+} from "@/components/marketing/content/content-editor";
 import { ContentEditorSkeleton } from "@/components/marketing/content/content-editor-skeleton";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { draftOf, emptyDraft } from "@/hooks/marketing/use-content-draft";
@@ -17,9 +20,11 @@ import { z } from "zod";
 function ExistingContent({
   itemId,
   onSaved,
+  modal,
 }: {
   itemId: string;
   onSaved?: (() => void) | undefined;
+  modal?: ContentModalChrome | undefined;
 }) {
   const existing = useQuery({
     queryKey: QueryKey.Content.item(itemId),
@@ -43,6 +48,7 @@ function ExistingContent({
       seed={draftOf(existing.data)}
       sourceNote={undefined}
       onSaved={onSaved}
+      modal={modal}
     />
   );
 }
@@ -52,11 +58,13 @@ function NewContent({
   sourceNoteId,
   day,
   onSaved,
+  modal,
 }: {
   brandId: string | undefined;
   sourceNoteId: string | undefined;
   day: string | undefined;
   onSaved?: (() => void) | undefined;
+  modal?: ContentModalChrome | undefined;
 }) {
   const note = useQuery({
     queryKey: QueryKey.Calendar.note(sourceNoteId ?? ""),
@@ -84,6 +92,7 @@ function NewContent({
       seed={seed}
       sourceNote={note.data?.id}
       onSaved={onSaved}
+      modal={modal}
     />
   );
 }
@@ -94,13 +103,24 @@ export function ContentEditorPage({
   sourceNoteId,
   day,
   onSaved,
+  modal,
 }: {
   itemId?: string | undefined;
   brandId?: string | undefined;
   sourceNoteId?: string | undefined;
   day?: string | undefined;
   onSaved?: (() => void) | undefined;
+  modal?: ContentModalChrome | undefined;
 }) {
-  if (itemId !== undefined) return <ExistingContent itemId={itemId} onSaved={onSaved} />;
-  return <NewContent brandId={brandId} sourceNoteId={sourceNoteId} day={day} onSaved={onSaved} />;
+  if (itemId !== undefined)
+    return <ExistingContent itemId={itemId} onSaved={onSaved} modal={modal} />;
+  return (
+    <NewContent
+      brandId={brandId}
+      sourceNoteId={sourceNoteId}
+      day={day}
+      onSaved={onSaved}
+      modal={modal}
+    />
+  );
 }

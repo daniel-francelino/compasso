@@ -52,6 +52,26 @@ const movesOf = (status: EditorialStatus, artApproved: boolean): readonly Editor
   return DirectMoves[status];
 };
 
+export function ContentSaveButton({
+  isNew,
+  editable,
+  dirty,
+  saving,
+}: {
+  isNew: boolean;
+  editable: boolean;
+  dirty: boolean;
+  saving: boolean;
+}) {
+  if (!editable) return null;
+  return (
+    <Button type="submit" size="sm" loading={saving} disabled={saving || (!isNew && !dirty)}>
+      <Save aria-hidden="true" />
+      Salvar conteúdo
+    </Button>
+  );
+}
+
 export function ContentActions({
   status,
   artApproved,
@@ -71,6 +91,7 @@ export function ContentActions({
   onCancel,
   onDuplicate,
   onPublish,
+  hideSave = false,
 }: {
   status: EditorialStatus;
   artApproved: boolean;
@@ -90,6 +111,7 @@ export function ContentActions({
   onDuplicate: () => void;
   onPublish: () => void;
   canMarkPublished: boolean;
+  hideSave?: boolean;
 }) {
   const auth = useAuth();
   const moves =
@@ -148,12 +170,9 @@ export function ContentActions({
           {submitLabel(status)}
         </Button>
       ) : null}
-      {editable ? (
-        <Button type="submit" size="sm" loading={saving} disabled={saving || (!isNew && !dirty)}>
-          <Save aria-hidden="true" />
-          {isNew ? "Criar conteúdo" : "Salvar"}
-        </Button>
-      ) : null}
+      {hideSave ? null : (
+        <ContentSaveButton isNew={isNew} editable={editable} dirty={dirty} saving={saving} />
+      )}
       {hasMenu ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
