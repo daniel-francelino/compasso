@@ -160,6 +160,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const [noteTarget, setNoteTarget] = useState<NoteDialogTarget | null>(null);
   const [archiving, setArchiving] = useState<CalendarEntry | null>(null);
   const [scheduledDay, setScheduledDay] = useState<string | null>(null);
+  const [openItemId, setOpenItemId] = useState<string | null>(null);
 
   useEffect(() => {
     setUndatedOpen(readStored(StoredKey.CalendarUndatedOpen, z.boolean(), true));
@@ -178,6 +179,16 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   async function requestCloseScheduler() {
     if (unsavedGuard && !(await unsavedGuard.confirmDiscard())) return;
     setScheduledDay(null);
+    setOpenItemId(null);
+  }
+
+  function selectEntry(key: string) {
+    const entry = entries.find((candidate) => entryKey(candidate) === key);
+    if (entry?.itemId) {
+      setOpenItemId(entry.itemId);
+      return;
+    }
+    setSelectedKey(key);
   }
 
   const brands = useBrandOptions(fixedBrandId === undefined);
@@ -482,13 +493,13 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                 today={todayInZone(activeZone)}
                 month={state.view === CalendarView.Month ? state.anchor.slice(0, 7) : null}
                 compact={state.view === CalendarView.Month}
-                onSelect={setSelectedKey}
+                onSelect={selectEntry}
                 onOpenDay={(day) => void state.openDay(day)}
                 onDropKey={canManage ? startDrop : undefined}
                 renderDayAction={addMenu}
               />
             ) : (
-              <CalendarList items={items} onSelect={setSelectedKey} />
+              <CalendarList items={items} onSelect={selectEntry} />
             )}
           </div>
           {undatedOpen ? (
@@ -567,14 +578,21 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         />
       ) : null}
       <Dialog
-        open={scheduledDay !== null}
+        open={scheduledDay !== null || openItemId !== null}
         onOpenChange={(open) => !open && void requestCloseScheduler()}
       >
         <DialogContent className="!fixed !inset-0 !left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-full !max-w-none !translate-x-0 !translate-y-0 !overflow-y-auto !rounded-none !p-4 sm:!p-6">
           <DialogHeader className="sr-only">
-            <DialogTitle>Agendar conteúdo</DialogTitle>
-            <DialogDescription>Crie o conteúdo sem sair do calendário.</DialogDescription>
+            <DialogTitle>{openItemId === null ? "Agendar conteúdo" : "Conteúdo"}</DialogTitle>
+            <DialogDescription>
+              {openItemId === null
+                ? "Crie o conteúdo sem sair do calendário."
+                : "Veja e edite o conteúdo sem sair do calendário."}
+            </DialogDescription>
           </DialogHeader>
+          {openItemId !== null ? (
+            <ContentEditorPage itemId={openItemId} onSaved={() => undefined} />
+          ) : null}
           {scheduledDay !== null ? (
             <ContentEditorPage
               brandId={brandId}

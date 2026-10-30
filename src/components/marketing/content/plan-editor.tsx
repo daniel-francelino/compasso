@@ -1,24 +1,21 @@
-import type { Editor } from "@tiptap/core";
-import { Bold, Italic } from "lucide-react";
-import { EditorBlock, RichTextEditor } from "lost-ui/editor";
-import { useMemo, useRef } from "react";
+import {
+  type EditorAllow,
+  type EditorBubbleTool,
+  type EditorImageAttrs,
+  EditorBlock,
+  RichTextEditor,
+} from "lost-ui/editor";
+import { useMemo } from "react";
 import { toast } from "sonner";
-import { IconButton } from "@/components/shared/admin/icon-button";
-import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import { newItem, rejectionFor, sendUpload } from "@/hooks/shared/use-media-upload";
-import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
 import { MediaScope } from "@/lib/shared/enums";
 import { MediaKind, kindOfMime, mimeOfFile } from "@/lib/shared/media/limits";
 import { signMediaUrls } from "@/lib/shared/media/media.functions";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { unwrapResult } from "@/lib/shared/result-client";
-import {
-  type ImageRegistry,
-  fromEditorJson,
-  toEditorJson,
-} from "@/lib/shared/rich-text/editor-doc";
-import { RICH_TEXT_MAX_IMAGES, richDocImages } from "@/lib/shared/rich-text/types";
+import { fromEditorJson, missingImageSrc, toEditorJson } from "@/lib/shared/rich-text/editor-doc";
+import { RICH_TEXT_MAX_IMAGES } from "@/lib/shared/rich-text/types";
 
 const PLAN_BLOCKS = [
   EditorBlock.Paragraph,
@@ -29,86 +26,34 @@ const PLAN_BLOCKS = [
   EditorBlock.Image,
 ];
 
+const PLAN_ALLOW: EditorAllow = {
+  nodes: ["heading", "bulletList", "orderedList", "image"],
+  marks: ["bold", "italic"],
+};
+
+const REFERENCE_ATTRIBUTES = ["mediaVersionId"];
+
+const BUBBLE_TOOLS: EditorBubbleTool[] = ["bold", "italic"];
+
+const BUBBLE_MENU = { tools: BUBBLE_TOOLS };
+
 const PLACEHOLDER =
   "Organize aqui as informações do jeito que preferir: o tema, a mensagem, a direção do texto e o que mais ajudar quem vai produzir. Digite “/” para títulos, listas e imagens de referência.";
-
-function BubbleTools({ editor }: { editor: Editor }) {
-  return (
-    <div className="flex items-center gap-0.5 rounded-md border border-border bg-popover p-0.5 shadow-md">
-      <IconButton
-        label="Negrito"
-        icon={Bold}
-        onClick={() => editor.chain().focus().toggleBold().run()}
-      />
-      <IconButton
-        label="Itálico"
-        icon={Italic}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-      />
-    </div>
-  );
-}
 
 const failureText = (error: unknown): string =>
   error instanceof Error ? error.message : "Não foi possível enviar a imagem. Tente de novo.";
 
-function PlanEditorBody({
-  draft,
-  brandId,
-  disabled,
-  urls,
-}: {
-  draft: ContentDraft;
-  brandId: string;
-  disabled: boolean;
-  urls: Record<string, string> | undefined;
-}) {
-  const registry = useRef<ImageRegistry>(new Map());
-  const initial = useMemo(
-    () => toEditorJson(draft.values.planSummary, (id) => urls?.[id], registry.current),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the editor reads its first value once; later changes come from the editor itself
-    [],
-  );
-  const imageCount = richDocImages(draft.values.planSummary).length;
-
-  async function uploadImage(file: File): Promise<string> {
-    if (brandId === "") throw new Error("Escolha a marca antes de enviar imagens.");
-    if (imageCount >= RICH_TEXT_MAX_IMAGES) {
-      throw new Error(`No máximo ${RICH_TEXT_MAX_IMAGES} imagens no planejamento.`);
-    }
-    if (kindOfMime(mimeOfFile(file)) !== MediaKind.Image) {
-      throw new Error("No planejamento só é possível enviar imagens.");
-    }
-    const rejected = rejectionFor(file);
-    if (rejected !== null) throw new Error(rejected);
-    const outcome = await sendUpload(newItem(file), { scope: MediaScope.Brand, brandId });
-    if (!outcome.ok) throw new Error(outcome.message);
+async function resolveImageSrc(attrs: EditorImageAttrs): Promise<string> {
+  const id = typeof attrs["mediaVersionId"] === "string" ? attrs["mediaVersionId"] : "";
+  if (id === "") return missingImageSrc(id);
+  try {
     const signed = unwrapResult(
-      await signMediaUrls({
-        data: { versionIds: [outcome.versionId], variant: MediaVariant.Display },
-      }),
+      await signMediaUrls({ data: { versionIds: [id], variant: MediaVariant.Display } }),
     ).urls;
-    const url = signed[outcome.versionId];
-    if (url === undefined) throw new Error("Não foi possível mostrar a imagem agora.");
-    registry.current.set(url, outcome.versionId);
-    return url;
+    return signed[id] ?? missingImageSrc(id);
+  } catch {
+    return missingImageSrc(id);
   }
-
-  return (
-    <RichTextEditor<"json">
-      format="json"
-      defaultValue={initial}
-      onValueChange={(json) => draft.set("planSummary", fromEditorJson(json, registry.current))}
-      editable={!disabled}
-      surface="plain"
-      minHeight="18rem"
-      placeholder={PLACEHOLDER}
-      blocks={PLAN_BLOCKS}
-      renderBubbleMenu={(editor) => <BubbleTools editor={editor} />}
-      onUploadImage={uploadImage}
-      onUploadError={(error) => toast.error(failureText(error))}
-    />
-  );
 }
 
 export function PlanEditor({
@@ -122,18 +67,44 @@ export function PlanEditor({
   disabled: boolean;
   error: string | undefined;
 }) {
-  const firstIds = useRef(
-    richDocImages(draft.values.planSummary).map((image) => image.mediaVersionId),
+  const initial = useMemo(
+    () => toEditorJson(draft.values.planSummary),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the editor reads its first value once; later changes come from the editor itself
+    [],
   );
-  const signed = useSignedUrls(firstIds.current, MediaVariant.Display);
-  const ready = firstIds.current.length === 0 || !signed.isPending;
+
+  async function uploadImage(file: File) {
+    if (brandId === "") throw new Error("Escolha a marca antes de enviar imagens.");
+    if (kindOfMime(mimeOfFile(file)) !== MediaKind.Image) {
+      throw new Error("No planejamento só é possível enviar imagens.");
+    }
+    const rejected = rejectionFor(file);
+    if (rejected !== null) throw new Error(rejected);
+    const outcome = await sendUpload(newItem(file), { scope: MediaScope.Brand, brandId });
+    if (!outcome.ok) throw new Error(outcome.message);
+    return { src: outcome.versionId, attrs: { mediaVersionId: outcome.versionId } };
+  }
+
   return (
     <div className="space-y-1.5">
-      {ready ? (
-        <PlanEditorBody draft={draft} brandId={brandId} disabled={disabled} urls={signed.data} />
-      ) : (
-        <Skeleton className="h-72 w-full" />
-      )}
+      <RichTextEditor<"json">
+        format="json"
+        defaultValue={initial}
+        onValueChange={(json) => draft.set("planSummary", fromEditorJson(json))}
+        editable={!disabled}
+        surface="plain"
+        minHeight="18rem"
+        placeholder={PLACEHOLDER}
+        blocks={PLAN_BLOCKS}
+        allow={PLAN_ALLOW}
+        bubbleMenu={BUBBLE_MENU}
+        referenceAttributes={REFERENCE_ATTRIBUTES}
+        resolveImageSrc={resolveImageSrc}
+        onUploadImage={uploadImage}
+        onUploadError={(uploadError) => toast.error(failureText(uploadError))}
+        maxImages={RICH_TEXT_MAX_IMAGES}
+        onMaxImages={(max) => toast.error(`No máximo ${max} imagens no planejamento.`)}
+      />
       {error ? (
         <p role="alert" className="text-xs text-destructive">
           {error}

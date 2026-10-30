@@ -7,8 +7,6 @@ import {
   isRichDocEmpty,
 } from "@/lib/shared/rich-text/types";
 
-export type ImageRegistry = Map<string, string>;
-
 const EDITOR_NODE = {
   Doc: "doc",
   Paragraph: "paragraph",
@@ -25,7 +23,7 @@ const EDITOR_NODE = {
   HorizontalRule: "horizontalRule",
 } as const;
 
-const missingImageSrc = (mediaVersionId: string): string =>
+export const missingImageSrc = (mediaVersionId: string): string =>
   `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='120'%3E%3Crect width='320' height='120' fill='%23ebe1fa'/%3E%3C/svg%3E#${mediaVersionId}`;
 
 const marksOf = (node: JSONContent): { type: RichMarkType }[] => {
@@ -38,13 +36,13 @@ const marksOf = (node: JSONContent): { type: RichMarkType }[] => {
 
 const clampHeading = (level: unknown): number => (typeof level === "number" && level >= 3 ? 3 : 2);
 
-const normalizeList = (type: RichNodeType, node: JSONContent, registry: ImageRegistry) => ({
+const normalizeList = (type: RichNodeType, node: JSONContent) => ({
   type,
-  content: (node.content ?? []).flatMap((child) => normalizeItem(child, registry)),
+  content: (node.content ?? []).flatMap((child) => normalizeItem(child)),
 });
 
-const normalizeItem = (node: JSONContent, registry: ImageRegistry): RichNode[] => {
-  const blocks = normalizeNodes(node.content ?? [], registry);
+const normalizeItem = (node: JSONContent): RichNode[] => {
+  const blocks = normalizeNodes(node.content ?? []);
   return [{ type: RichNodeType.ListItem, content: blocks }];
 };
 
@@ -60,10 +58,9 @@ const normalizeText = (node: JSONContent): RichNode[] => {
   ];
 };
 
-const normalizeImage = (node: JSONContent, registry: ImageRegistry): RichNode[] => {
-  const src = typeof node.attrs?.["src"] === "string" ? node.attrs["src"] : "";
-  const mediaVersionId = registry.get(src);
-  if (mediaVersionId === undefined) return [];
+const normalizeImage = (node: JSONContent): RichNode[] => {
+  const mediaVersionId = node.attrs?.["mediaVersionId"];
+  if (typeof mediaVersionId !== "string" || mediaVersionId === "") return [];
   const alt = typeof node.attrs?.["alt"] === "string" ? node.attrs["alt"].slice(0, 100) : "";
   return [
     {
@@ -76,18 +73,18 @@ const normalizeImage = (node: JSONContent, registry: ImageRegistry): RichNode[] 
 const plainOf = (node: JSONContent): string =>
   node.text ?? (node.content ?? []).map(plainOf).join("");
 
-const normalizeNode = (node: JSONContent, registry: ImageRegistry): RichNode[] => {
+const normalizeNode = (node: JSONContent): RichNode[] => {
   switch (node.type) {
     case EDITOR_NODE.Text:
       return normalizeText(node);
     case EDITOR_NODE.HardBreak:
       return [{ type: RichNodeType.HardBreak }];
     case EDITOR_NODE.Paragraph: {
-      const content = normalizeNodes(node.content ?? [], registry);
+      const content = normalizeNodes(node.content ?? []);
       return [{ type: RichNodeType.Paragraph, ...(content.length > 0 ? { content } : {}) }];
     }
     case EDITOR_NODE.Heading: {
-      const content = normalizeNodes(node.content ?? [], registry);
+      const content = normalizeNodes(node.content ?? []);
       return [
         {
           type: RichNodeType.Heading,
@@ -98,14 +95,14 @@ const normalizeNode = (node: JSONContent, registry: ImageRegistry): RichNode[] =
     }
     case EDITOR_NODE.BulletList:
     case EDITOR_NODE.TaskList:
-      return [normalizeList(RichNodeType.BulletList, node, registry)];
+      return [normalizeList(RichNodeType.BulletList, node)];
     case EDITOR_NODE.OrderedList:
-      return [normalizeList(RichNodeType.OrderedList, node, registry)];
+      return [normalizeList(RichNodeType.OrderedList, node)];
     case EDITOR_NODE.ListItem:
     case EDITOR_NODE.TaskItem:
-      return normalizeItem(node, registry);
+      return normalizeItem(node);
     case EDITOR_NODE.Image:
-      return normalizeImage(node, registry);
+      return normalizeImage(node);
     case EDITOR_NODE.CodeBlock: {
       const text = plainOf(node);
       return text === ""
@@ -115,26 +112,21 @@ const normalizeNode = (node: JSONContent, registry: ImageRegistry): RichNode[] =
     case EDITOR_NODE.HorizontalRule:
       return [];
     default:
-      return normalizeNodes(node.content ?? [], registry);
+      return normalizeNodes(node.content ?? []);
   }
 };
 
-const normalizeNodes = (nodes: JSONContent[], registry: ImageRegistry): RichNode[] =>
-  nodes.flatMap((node) => normalizeNode(node, registry));
+const normalizeNodes = (nodes: JSONContent[]): RichNode[] => nodes.flatMap(normalizeNode);
 
-export const fromEditorJson = (json: JSONContent, registry: ImageRegistry): RichDoc | null => {
+export const fromEditorJson = (json: JSONContent): RichDoc | null => {
   const doc: RichDoc = {
     type: RichNodeType.Doc,
-    content: normalizeNodes(json.content ?? [], registry),
+    content: normalizeNodes(json.content ?? []),
   };
   return isRichDocEmpty(doc) ? null : doc;
 };
 
-const toEditorNode = (
-  node: RichNode,
-  urlOf: (mediaVersionId: string) => string | undefined,
-  registry: ImageRegistry,
-): JSONContent => {
+const toEditorNode = (node: RichNode): JSONContent => {
   if (node.type === RichNodeType.Text) {
     return {
       type: EDITOR_NODE.Text,
@@ -146,24 +138,21 @@ const toEditorNode = (
   }
   if (node.type === RichNodeType.Image) {
     const id = node.attrs?.mediaVersionId ?? "";
-    const src = urlOf(id) ?? missingImageSrc(id);
-    registry.set(src, id);
-    return { type: EDITOR_NODE.Image, attrs: { src, alt: node.attrs?.alt ?? "" } };
+    return {
+      type: EDITOR_NODE.Image,
+      attrs: { src: id, mediaVersionId: id, alt: node.attrs?.alt ?? "" },
+    };
   }
   const attrs =
     node.type === RichNodeType.Heading ? { attrs: { level: node.attrs?.level ?? 2 } } : {};
-  const content = node.content?.map((child) => toEditorNode(child, urlOf, registry));
+  const content = node.content?.map(toEditorNode);
   return { type: node.type, ...attrs, ...(content === undefined ? {} : { content }) };
 };
 
-export const toEditorJson = (
-  doc: RichDoc | null,
-  urlOf: (mediaVersionId: string) => string | undefined,
-  registry: ImageRegistry,
-): JSONContent => ({
+export const toEditorJson = (doc: RichDoc | null): JSONContent => ({
   type: EDITOR_NODE.Doc,
   content:
     doc === null || (doc.content ?? []).length === 0
       ? [{ type: EDITOR_NODE.Paragraph }]
-      : (doc.content ?? []).map((node) => toEditorNode(node, urlOf, registry)),
+      : (doc.content ?? []).map(toEditorNode),
 });

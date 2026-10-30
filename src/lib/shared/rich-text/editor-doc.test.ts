@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  type ImageRegistry,
-  fromEditorJson,
-  toEditorJson,
-} from "@/lib/shared/rich-text/editor-doc";
+import { fromEditorJson, toEditorJson } from "@/lib/shared/rich-text/editor-doc";
 import {
   RICH_TEXT_MAX_IMAGES,
   RichNodeType,
@@ -23,7 +19,6 @@ const imageDoc = (ids: string[]): RichDoc => ({
 
 describe("editor bridge", () => {
   it("turns a stored doc into editor JSON and back without losing the image reference", () => {
-    const registry: ImageRegistry = new Map();
     const doc: RichDoc = {
       type: RichNodeType.Doc,
       content: [
@@ -31,89 +26,72 @@ describe("editor bridge", () => {
         { type: RichNodeType.Image, attrs: { mediaVersionId: ID_A, alt: "Referência" } },
       ],
     };
-    const editor = toEditorJson(doc, (id) => `https://signed.test/${id}?x=1`, registry);
-    expect(editor.content?.[1]?.attrs?.["src"]).toBe(`https://signed.test/${ID_A}?x=1`);
-    expect(fromEditorJson(editor, registry)).toEqual(doc);
+    const editor = toEditorJson(doc);
+    expect(editor.content?.[1]?.attrs?.["mediaVersionId"]).toBe(ID_A);
+    expect(fromEditorJson(editor)).toEqual(doc);
   });
 
-  it("keeps an image whose file is no longer available instead of dropping it", () => {
-    const registry: ImageRegistry = new Map();
-    const editor = toEditorJson(imageDoc([ID_A]), () => undefined, registry);
-    expect(richDocImages(fromEditorJson(editor, registry))).toEqual([
-      { mediaVersionId: ID_A, alt: undefined },
-    ]);
-  });
-
-  it("drops an image the registry does not know", () => {
-    const doc = fromEditorJson(
-      {
-        type: "doc",
-        content: [
-          { type: "paragraph", content: [{ type: "text", text: "Oi" }] },
-          { type: "image", attrs: { src: "https://elsewhere.test/a.png" } },
-        ],
-      },
-      new Map(),
-    );
+  it("drops an image that carries no media reference", () => {
+    const doc = fromEditorJson({
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Oi" }] },
+        { type: "image", attrs: { src: "https://elsewhere.test/a.png" } },
+      ],
+    });
     expect(richDocImages(doc)).toEqual([]);
     expect(doc?.content).toHaveLength(1);
   });
 
   it("keeps only bold and italic and clamps headings", () => {
-    const doc = fromEditorJson(
-      {
-        type: "doc",
-        content: [
-          { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "A" }] },
-          { type: "heading", attrs: { level: 5 }, content: [{ type: "text", text: "B" }] },
-          {
-            type: "paragraph",
-            content: [
-              {
-                type: "text",
-                text: "C",
-                marks: [
-                  { type: "bold" },
-                  { type: "underline" },
-                  { type: "link" },
-                  { type: "italic" },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-      new Map(),
-    );
+    const doc = fromEditorJson({
+      type: "doc",
+      content: [
+        { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "A" }] },
+        { type: "heading", attrs: { level: 5 }, content: [{ type: "text", text: "B" }] },
+        {
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "C",
+              marks: [
+                { type: "bold" },
+                { type: "underline" },
+                { type: "link" },
+                { type: "italic" },
+              ],
+            },
+          ],
+        },
+      ],
+    });
     expect(doc?.content?.[0]?.attrs?.level).toBe(2);
     expect(doc?.content?.[1]?.attrs?.level).toBe(3);
     expect(doc?.content?.[2]?.content?.[0]?.marks).toEqual([{ type: "bold" }, { type: "italic" }]);
   });
 
   it("unwraps blocks outside the closed set", () => {
-    const doc = fromEditorJson(
-      {
-        type: "doc",
-        content: [
-          {
-            type: "blockquote",
-            content: [{ type: "paragraph", content: [{ type: "text", text: "Citação" }] }],
-          },
-          { type: "codeBlock", content: [{ type: "text", text: "let a = 1" }] },
-          { type: "horizontalRule" },
-          {
-            type: "taskList",
-            content: [
-              {
-                type: "taskItem",
-                content: [{ type: "paragraph", content: [{ type: "text", text: "Tarefa" }] }],
-              },
-            ],
-          },
-        ],
-      },
-      new Map(),
-    );
+    const doc = fromEditorJson({
+      type: "doc",
+      content: [
+        {
+          type: "blockquote",
+          content: [{ type: "paragraph", content: [{ type: "text", text: "Citação" }] }],
+        },
+        { type: "codeBlock", content: [{ type: "text", text: "let a = 1" }] },
+        { type: "horizontalRule" },
+        {
+          type: "taskList",
+          content: [
+            {
+              type: "taskItem",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "Tarefa" }] }],
+            },
+          ],
+        },
+      ],
+    });
     const types = (doc?.content ?? []).map((node) => node.type);
     expect(types).toEqual(["paragraph", "paragraph", "bulletList"]);
     expect(richDocSchema.safeParse(doc).success).toBe(true);

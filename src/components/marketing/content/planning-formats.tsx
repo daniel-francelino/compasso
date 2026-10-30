@@ -75,7 +75,7 @@ export function PlanningFormats({
               </h3>
               <p className="text-xs text-muted-foreground">{channel.profileName}</p>
             </div>
-            <ul className="flex flex-wrap gap-3" aria-label="Formatos disponíveis">
+            <ul className="-ml-2.5 flex flex-wrap gap-3" aria-label="Formatos disponíveis">
               {platformFormats[channel.platform].map((format) => {
                 const Icon = formatIcons[format];
                 const isSelected = selectedFormats.has(format);

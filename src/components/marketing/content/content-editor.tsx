@@ -238,8 +238,8 @@ export function ContentEditor({
         draft.markSaved();
         toast.success("Conteúdo salvo.");
         void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() });
+        if (onSaved) void queryClient.invalidateQueries({ queryKey: QueryKey.Calendar.all() });
         if (isNew && onSaved) {
-          void queryClient.invalidateQueries({ queryKey: QueryKey.Calendar.all() });
           onSaved();
           return;
         }

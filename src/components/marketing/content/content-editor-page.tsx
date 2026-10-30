@@ -14,7 +14,13 @@ import { AppRoute } from "@/lib/shared/routes";
 import { StoredKey, readStored } from "@/lib/shared/stored-keys";
 import { z } from "zod";
 
-function ExistingContent({ itemId }: { itemId: string }) {
+function ExistingContent({
+  itemId,
+  onSaved,
+}: {
+  itemId: string;
+  onSaved?: (() => void) | undefined;
+}) {
   const existing = useQuery({
     queryKey: QueryKey.Content.item(itemId),
     queryFn: async () => unwrapResult(await getContentItem({ data: { id: itemId } })).item,
@@ -36,6 +42,7 @@ function ExistingContent({ itemId }: { itemId: string }) {
       content={existing.data}
       seed={draftOf(existing.data)}
       sourceNote={undefined}
+      onSaved={onSaved}
     />
   );
 }
@@ -94,6 +101,6 @@ export function ContentEditorPage({
   day?: string | undefined;
   onSaved?: (() => void) | undefined;
 }) {
-  if (itemId !== undefined) return <ExistingContent itemId={itemId} />;
+  if (itemId !== undefined) return <ExistingContent itemId={itemId} onSaved={onSaved} />;
   return <NewContent brandId={brandId} sourceNoteId={sourceNoteId} day={day} onSaved={onSaved} />;
 }
