@@ -3044,7 +3044,7 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: { p_token_hash: string | null}; Returns: Json }
       approve_on_behalf: {
-        Args: {          p_expected_version: number | null,          p_item: string | null,          p_reason: string | null}
+        Args: { p_expected_version: number | null, p_item: string | null, p_reason: string | null}
         Returns: Json
       }
       approver_is_valid: {
@@ -3212,6 +3212,10 @@ export type Database = {
       content_normalize_media: { Args: { p_media: Json | null}; Returns: Json }
       content_plan_signature: { Args: { p_item: string | null}; Returns: Json }
       content_publish_info: { Args: { p_item: string | null}; Returns: Json }
+      content_submit_stage: {
+        Args: { p_item: Database["public"]["Tables"]["content_items"]["Row"] | null}
+        Returns: string
+      }
       content_type_save: { Args: { p_type: Json | null}; Returns: Json }
       content_type_set_archived: {
         Args: { p_archived: boolean | null, p_type: string | null}

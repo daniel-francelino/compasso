@@ -6,7 +6,6 @@ import { renderAuthLink } from "@/components/shared/admin/render-auth-link";
 import {
   type AdminSpace,
   availableSpaces,
-  adminSpaces,
   visibleGroups,
 } from "@/components/shared/admin/nav-config";
 import { useBreadcrumbItems } from "@/components/shared/admin/breadcrumb-context";
@@ -82,9 +81,6 @@ export function AdminBackoffice({
             alt="Aura Creative"
             className="h-auto w-32 px-2 pt-1"
           />
-          <p className="truncate px-2 text-xs text-sidebar-foreground">
-            {adminSpaces.find((entry) => entry.key === space)?.title}
-          </p>
         </div>
       }
       {...(user ? { user } : {})}

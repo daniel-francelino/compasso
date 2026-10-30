@@ -71,9 +71,8 @@ export function PlanningFormats({
           >
             <div>
               <h3 className="text-sm font-medium text-foreground">
-                Formato · {platformLabels[channel.platform]}
+                {platformLabels[channel.platform]}
               </h3>
-              <p className="text-xs text-muted-foreground">{channel.profileName}</p>
             </div>
             <ul className="-ml-2.5 flex flex-wrap gap-3" aria-label="Formatos disponíveis">
               {platformFormats[channel.platform].map((format) => {

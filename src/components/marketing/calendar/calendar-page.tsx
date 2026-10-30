@@ -152,7 +152,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   }, [brandId]);
 
   async function requestCloseScheduler() {
-    if (unsavedGuard && !(await unsavedGuard.confirmDiscard())) return;
+    if (unsavedGuard?.hasUnsaved && !(await unsavedGuard.confirmDiscard())) return;
     setScheduledDay(null);
     setOpenItemId(null);
     setExpanded(false);
