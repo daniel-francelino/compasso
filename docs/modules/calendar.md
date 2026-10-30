@@ -6,7 +6,7 @@
 
 Show **what is planned, when and in which state**, for one brand or for all the authorized brands, and let the team move dates safely. Each entry is a **channel row of a content** (one channel, one format, one occurrence), shown with the **channel logo** and a status mark (published or scheduled). Production and approval **deadlines** are shown apart from the publication date. The team can also keep **ideas** and **dates** on the calendar and convert them into contents.
 
-Admin calendar screens use all available content width for the calendar grid and its undated-content panel.
+Admin calendar screens use all available content width for the calendar grid.
 
 Included: month, week and list views, filters, items without a date, drag to reschedule with confirmation, time zones and daylight saving, shareable URLs, portal calendar. Not included in the MVP: tasks and other free-form events (only ideas and dates exist), external calendar sync (Google/ICS export is a later option), resource planning. Automatic publishing exists only for connected Instagram channels ([instagram-publishing.md](instagram-publishing.md)); the calendar shows the mode and status of such rows.
 
@@ -23,7 +23,7 @@ Included: month, week and list views, filters, items without a date, drag to res
 
 The **publication date** of a content (`content_items.publish_date`) creates **no entry of its own**: the calendar keeps one entry per channel row, so a content whose rows are on the same day as its publication date is never shown twice, and a row moved to another day appears only on that day.
 
-Channel rows without a planned date do **not** appear on the grid; they stay in the side list **"Sem data"**.
+Channel rows without a planned date do **not** appear on the grid and have no list in the calendar (decided 2026-10-30: the "Sem data" panel was removed); they are planned in the content editor.
 
 ## Time zones
 
@@ -35,10 +35,11 @@ Channel rows without a planned date do **not** appear on the grid; they stay in 
 
 ## Views and navigation
 
-- **Month**, **Week** and **List**; today button; previous/next; a title with the range. Default: Week in Marketing Management, List on mobile. The last selected view is saved in local storage (`StoredKey.CalendarView`); a `view` in the URL takes precedence and refreshes that saved preference.
+- **Month** and **Week** (the **List** view was removed on 2026-10-30; on mobile the week is shown); today button; previous/next; a title with the range. Default: Week. The last selected view is saved in local storage (`StoredKey.CalendarView`); a `view` in the URL wins. While another range loads, a calendar skeleton replaces the grid.
 - **Filters:** brand, client, channel, owner, editorial status, publication status and "somente prazos". Ideas and dates are always shown when they match the visible range; notes are hidden whenever a channel, owner, editorial or publication filter is on. The icon button with tooltip "Filtros" and the "Sem data" panel toggle sit beside the view selector. Filters and the visible range live in the **URL** so links can be shared and the position restored when returning from a detail.
-- **Side list "Sem data":** content without date, filtered the same way; drag a card onto the grid to plan it. The panel can be hidden with an icon button (tooltip "Ocultar/Mostrar conteúdos sem data"), so the grid takes the whole width; the choice is remembered in the browser (`StoredKey.CalendarUndatedOpen`, open by default).
+
 - **Legend:** the marks "Publicados" (check) and "Agendados" (clock), status colors from `statusStyles` with icon and text, deadline and note markers explained.
+- **Opening a content (decision O22, 2026-10-30):** selecting an entry that belongs to a content (a publication or a deadline) opens the same full-screen content editor modal used to add and edit, on that content, Notion style, instead of the small details dialog; closing uses the unsaved-changes confirmation and saving refreshes the calendar. Ideas, dates and events keep the details dialog.
 - **Adding from a day:** every day cell of the grid has an **"Adicionar"** button (visible on hover and focus) with three options: "Agendar conteúdo" (opens the full-screen content editor modal with that day, without leaving the calendar), "Adicionar data" and "Adicionar ideia" (a dialog with date, repetition, title and description). The options appear only with `content.create` and `calendar.manage`.
 - **Remembered brand:** when a person chooses a brand in the global calendar filter or in a calendar creation form (content, idea, date or event), save it in local storage (`StoredKey.CalendarBrand`). A later calendar creation form with a brand selector starts with that brand; a brand-specific calendar and editing an existing note keep their own brand. Selecting "Todas as marcas" does not clear the remembered brand.
 - **Entry preview:** click opens a dialog with title, brand, channel, format and the channel caption, plus status, time with zone and quick actions (open content, reschedule); content details load only when the dialog opens. For an idea or a date, show description, repetition and the actions "Converter em conteúdo", "Editar" and "Arquivar" (a converted note links to its content instead).
@@ -48,7 +49,7 @@ Channel rows without a planned date do **not** appear on the grid; they stay in 
 
 1. Drag an entry to another day/time, or use "Alterar data…".
 2. A confirmation dialog shows old and new date/time **with the zone** and the effects:
-   - content `draft` / `in_production` / `internal_review`: just changes the date of that channel row;
+   - content `planning` / `in_production` / `changes_requested`: just changes the date of that channel row;
    - content `awaiting_approval` or `approved`: warns that **a new version and a new approval are required**; confirming calls `reschedule_channel`, which creates the new version of the whole content (the previous pending request is superseded);
    - channel row already `published_manually`: refused (the publication record is a fact; correct it with a note);
    - date in the past: allowed only with an explicit warning.
@@ -102,7 +103,7 @@ External users see a calendar restricted to the **brands they are linked to** an
 - An idea or a date added from a day cell appears on that day (and on its repetitions) and can be converted into a content once.
 - Dragging an approved entry asks for confirmation, creates a new version and returns the content to awaiting approval.
 - The portal calendar shows only shared contents of linked brands, one entry per channel.
-- Items without a date stay in "Sem data" and can be planned by drag or by dialog.
+- Items without a date are not shown in the calendar.
 - Filters and range are restored from the URL; keyboard users can do everything without dragging.
 - No calendar action triggers publishing or calls to social networks.
 
@@ -111,7 +112,7 @@ External users see a calendar restricted to the **brands they are linked to** an
 1. **Own calendar, no library** (spike P4-01, 2026-10-18). FullCalendar was not adopted: it brings its own styles and time-zone plugin, which would have to be fitted to the tokens of [../standards/color-palette.md](../standards/color-palette.md), and the project needs only month, week and list views with day-level drag. The Memoria Print calendar was not ported (it is not part of this repository). The grid is a plain CSS grid in `shared/calendar` that reuses the kit, the status styles and the time-zone helpers of `format.ts`. Cost: no hourly lanes and no multi-day events, which the MVP does not need. If hourly lanes are wanted later, adopting a library becomes a new decision (CODE-12).
 2. **Drag moves the day, not the time.** Dragging an entry to another day keeps its local time of day and always opens the confirmation dialog, where the time can be changed ("Alterar data…" is the keyboard alternative). Hour-level dragging is not offered.
 3. **The approval deadline is read-only on the calendar.** It belongs to the approval request, which is immutable after sending (`approval_requests_guard`); changing it means sending a new version. Only the production deadline moves (`reschedule_production_deadline`, which does not create a revision).
-4. **Rescheduling a channel row.** With the two-stage approval, once the plan is approved the date belongs to the approved plan and the call fails with `plan_locked` (the team reopens the plan, see [content.md](content.md#two-stage-approval-decided-2026-10-20)). For a content that does not require a plan, one that is awaiting approval or approved creates the new version straight away, copied from the current one with the new date of that channel; the pending request is superseded and every approver of the brand is asked again; with nobody able to approve the call fails with `approver_required`. A content in any earlier state just changes the date of the row.
+4. **Rescheduling a channel row.** Since 2026-10-30 (O23) there is no plan lock: the date of a channel row can be changed in any status; `awaiting_approval` and `approved` contents need a new version and a new approval (rule above).
 5. **A date in the past is accepted by the server**; the dialog warns first (`date_in_past` is a UI warning, never raised by SQL).
 6. **The conflict alerts use fixed limits** (3 publications per channel per day, 30 minutes between two of the same channel) kept in `lib/shared/calendar/alerts.ts`; they are not yet a setting of `policies.calendar`.
 7. **The week starts on Monday.** `policies.calendar.weekStartsOnMonday` is stored but the calendar does not read it yet, because `organization_settings` is readable only with `settings.manage`.
@@ -233,3 +234,7 @@ Phase 5 (calendar screen layout, 2026-10-19).
 2026-10-20 (events shared with the client, tasks E-01 to E-05): migration `20261020110000_calendar_events.sql` (the `event` kind, the new `calendar_notes` columns and their checks, the notification kind `calendar.event`, `calendar_note_days`, `calendar_event_when`, `calendar_event_notify`, and `calendar_note_save`, `calendar_note_archive`, `calendar_note_get`, `list_calendar_entries` and `portal_list_calendar` with events). Server: `notes.functions.ts`, `calendar.functions.ts`, `schemas.ts`, `portal-calendar.functions.ts`. Screens: "Adicionar evento" in the day menu, `EventDialog`, the "Visível para o cliente" switch on dates, icons by type (camera, people, calendar) and the eye mark on shared entries, the legend, the details with place, visibility and internal notes, and the portal calendar with events and `PortalEventDialog`. Validation performed: 42 SQL assertions in `20_calendar_events.test.sql` (850 in total, 0 failures: validation of the event shape, shared versus internal, brand A versus brand B, a client reading no note straight from the table, internal notes never in the portal output, weekly and multi-day expansion, the notifications on create, change, hide and archive, collaborator and anon refused), typecheck, lint, Vitest. **Not applied to the linked project**; **not seen in a browser**; **not tested**: the event dialog with a daylight-saving time, a multi-day event in the month grid, the filter by event in the team calendar (events are always listed with the other notes).
 
 2026-10-22: The calendar remembers the last chosen brand in local storage and preselects it in global-calendar creation forms for content, ideas, dates and events. Brand-specific calendar contexts and existing notes retain their own brand. Files: `src/lib/shared/stored-keys.ts`, `src/components/marketing/calendar/calendar-page.tsx`, `src/components/marketing/calendar/note-dialog.tsx`, `src/components/marketing/calendar/event-dialog.tsx`, `src/components/marketing/content/content-editor-page.tsx`, `src/components/marketing/content/content-editor.tsx`. Validation performed: Prettier, targeted ESLint, TypeScript and `git diff --check`. **Not tested** in a browser.
+
+2026-10-30 (O22): `selectEntry` in `calendar-page.tsx` opens `ContentEditorPage itemId` in the existing modal for entries with `itemId`; `ContentEditor` invalidates `QueryKey.Calendar.all()` after any save made inside the modal. Validation: lint, typecheck. **Not tested**: browser interaction (needs login and database), modal on mobile, unsaved-changes prompt for an existing content.
+
+2026-10-30: the **"Sem data" panel** (`UndatedPanel`, `StoredKey.CalendarUndatedOpen`, `UndatedEntry`, the `undated` field of `listCalendarEntries`) and the **List view** (`CalendarList`, `CalendarView.List`) were removed from the app; the SQL `list_calendar_entries` still returns `undated` (ignored by the server function) until a migration drops it. The content opens in a **compact modal** with a button to expand to full screen (Notion style) instead of full screen; a `stableJson` signature in the content draft avoids the "unsaved changes" prompt when nothing changed (not confirmed in the browser). Validation: lint, typecheck and unit tests. **Not tested** in a browser: the modal sizes, the skeleton on week change, the week view on mobile.

@@ -1,19 +1,17 @@
-import { CalendarClock, Globe, RotateCw } from "lucide-react";
+import { Globe, Maximize2, Minimize2, RotateCw } from "lucide-react";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { z } from "zod";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { PageHeader } from "@/components/shared/admin/page-header";
-import { ListSkeleton } from "@/components/shared/admin/skeletons";
+import { CalendarSkeleton } from "@/components/shared/calendar/calendar-skeleton";
 import { ListFilters } from "@/components/shared/admin/list-filters";
 import { CalendarGrid } from "@/components/shared/calendar/calendar-grid";
 import { CalendarLegend } from "@/components/shared/calendar/calendar-legend";
-import { CalendarList } from "@/components/shared/calendar/calendar-list";
 import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { toGridItem } from "@/components/shared/calendar/entry-items";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
@@ -34,7 +32,6 @@ import {
   type RescheduleTarget,
   RescheduleDialog,
 } from "@/components/marketing/calendar/reschedule-dialog";
-import { UNDATED_PREFIX, UndatedPanel } from "@/components/marketing/calendar/undated-panel";
 import { useBrand } from "@/hooks/marketing/use-brand";
 import { useCalendarState } from "@/hooks/shared/use-calendar-state";
 import { listChannels } from "@/lib/marketing/channels/channels.functions";
@@ -52,7 +49,7 @@ import { entryKey, isMovable } from "@/lib/shared/calendar/entries";
 import { rangeTitle } from "@/lib/shared/calendar/range";
 import { moveToDay } from "@/lib/shared/calendar/reschedule";
 import { calendarSearchSchema } from "@/lib/shared/calendar/search";
-import type { CalendarEntry, UndatedEntry } from "@/lib/shared/calendar/types";
+import type { CalendarEntry } from "@/lib/shared/calendar/types";
 import {
   CalendarEntryKind,
   CalendarNoteKind,
@@ -68,7 +65,7 @@ import {
 } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
-import { StoredKey, readStored, writeStored } from "@/lib/shared/stored-keys";
+import { StoredKey, writeStored } from "@/lib/shared/stored-keys";
 import { cn } from "@/lib/shared/utils";
 import {
   browserTimeZone,
@@ -79,7 +76,6 @@ import {
 } from "@/lib/shared/dates";
 
 const ALL = "all";
-const DEFAULT_PLAN_TIME = "T09:00";
 
 const editorialOptions = [
   { value: ALL, label: "Todos os estados" },
@@ -117,22 +113,11 @@ const publicationTarget = (
         channelRowId: entry.channelRowId,
         title: entry.title,
         brandTimezone: entry.brandTimezone,
-        editorialStatus: entry.editorialStatus ?? EditorialStatus.Draft,
+        editorialStatus: entry.editorialStatus ?? EditorialStatus.Planning,
         currentAt: entry.at,
         version: entry.version ?? 1,
         ...(initialLocal === undefined ? {} : { initialLocal }),
       };
-
-const undatedTarget = (entry: UndatedEntry, day: string | null): RescheduleTarget => ({
-  kind: "publication",
-  channelRowId: entry.channelRowId,
-  title: entry.title,
-  brandTimezone: entry.brandTimezone,
-  editorialStatus: entry.editorialStatus,
-  currentAt: null,
-  version: entry.version,
-  ...(day === null ? {} : { initialLocal: `${day}${DEFAULT_PLAN_TIME}` }),
-});
 
 const noteKindOf = (entry: CalendarEntry): CalendarNoteKind => {
   if (entry.kind === CalendarEntryKind.Idea) return CalendarNoteKind.Idea;
@@ -156,30 +141,21 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
 
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [target, setTarget] = useState<RescheduleTarget | null>(null);
-  const [undatedOpen, setUndatedOpen] = useState(true);
   const [noteTarget, setNoteTarget] = useState<NoteDialogTarget | null>(null);
   const [archiving, setArchiving] = useState<CalendarEntry | null>(null);
   const [scheduledDay, setScheduledDay] = useState<string | null>(null);
   const [openItemId, setOpenItemId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setUndatedOpen(readStored(StoredKey.CalendarUndatedOpen, z.boolean(), true));
-  }, []);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (brandId === undefined) setBrowserZone(browserTimeZone());
   }, [brandId]);
 
-  function toggleUndated() {
-    const next = !undatedOpen;
-    setUndatedOpen(next);
-    writeStored(StoredKey.CalendarUndatedOpen, next);
-  }
-
   async function requestCloseScheduler() {
     if (unsavedGuard && !(await unsavedGuard.confirmDiscard())) return;
     setScheduledDay(null);
     setOpenItemId(null);
+    setExpanded(false);
   }
 
   function selectEntry(key: string) {
@@ -245,13 +221,6 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   });
 
   const selected = entries.find((entry) => entryKey(entry) === selectedKey) ?? null;
-  const showGrid = state.view !== CalendarView.List;
-
-  function dropUndated(channelRowId: string, day: string) {
-    const undated = query.data?.undated.find((entry) => entry.channelRowId === channelRowId);
-    if (undated) setTarget(undatedTarget(undated, day));
-  }
-
   function dropDeadline(entry: CalendarEntry, day: string) {
     if (entry.date === day || entry.itemId === null || entry.itemVersion === null) return;
     setTarget({
@@ -274,7 +243,6 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   }
 
   function startDrop(key: string, day: string) {
-    if (key.startsWith(UNDATED_PREFIX)) return dropUndated(key.slice(UNDATED_PREFIX.length), day);
     const entry = entries.find((candidate) => entryKey(candidate) === key);
     if (!entry || !movableEntry(entry)) return;
     if (entry.kind === CalendarEntryKind.ProductionDeadline) return dropDeadline(entry, day);
@@ -446,12 +414,6 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                 },
               ]}
             />
-            <IconButton
-              variant="outline"
-              icon={CalendarClock}
-              label={undatedOpen ? "Ocultar conteúdos sem data" : "Mostrar conteúdos sem data"}
-              onClick={toggleUndated}
-            />
           </div>
         }
       >
@@ -470,8 +432,8 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           </AlertDescription>
         </Alert>
       ) : null}
-      {zone === null || query.isPending ? (
-        <ListSkeleton rows={4} height="h-32" />
+      {zone === null || query.isPending || query.isPlaceholderData ? (
+        <CalendarSkeleton weeks={Math.ceil(state.range.days.length / 7)} />
       ) : query.isError ? (
         <Alert variant="destructive">
           <AlertDescription className="flex flex-wrap items-center gap-3">
@@ -483,35 +445,18 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           </AlertDescription>
         </Alert>
       ) : (
-        <div className={cn("relative", undatedOpen && "lg:pr-[17rem]")}>
-          <div className={query.isFetching ? "opacity-70 transition-opacity" : undefined}>
-            {showGrid ? (
-              <CalendarGrid
-                label={`Calendário, ${title}`}
-                days={state.range.days}
-                items={items}
-                today={todayInZone(activeZone)}
-                month={state.view === CalendarView.Month ? state.anchor.slice(0, 7) : null}
-                compact={state.view === CalendarView.Month}
-                onSelect={selectEntry}
-                onOpenDay={(day) => void state.openDay(day)}
-                onDropKey={canManage ? startDrop : undefined}
-                renderDayAction={addMenu}
-              />
-            ) : (
-              <CalendarList items={items} onSelect={selectEntry} />
-            )}
-          </div>
-          {undatedOpen ? (
-            <div className="absolute right-0 top-0 z-10 max-h-[70vh] w-64 max-w-[calc(100%_-_1rem)] overflow-y-auto rounded-xl shadow-md">
-              <UndatedPanel
-                entries={query.data.undated}
-                canPlan={canManage}
-                onPlan={(entry) => setTarget(undatedTarget(entry, null))}
-              />
-            </div>
-          ) : null}
-        </div>
+        <CalendarGrid
+          label={`Calendário, ${title}`}
+          days={state.range.days}
+          items={items}
+          today={todayInZone(activeZone)}
+          month={state.view === CalendarView.Month ? state.anchor.slice(0, 7) : null}
+          compact={state.view === CalendarView.Month}
+          onSelect={selectEntry}
+          onOpenDay={(day) => void state.openDay(day)}
+          onDropKey={canManage ? startDrop : undefined}
+          renderDayAction={addMenu}
+        />
       )}
       <CalendarLegend showKinds />
       {selected ? (
@@ -581,7 +526,21 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
         open={scheduledDay !== null || openItemId !== null}
         onOpenChange={(open) => !open && void requestCloseScheduler()}
       >
-        <DialogContent className="!fixed !inset-0 !left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-full !max-w-none !translate-x-0 !translate-y-0 !overflow-y-auto !rounded-none !p-4 sm:!p-6">
+        <DialogContent
+          className={cn(
+            "!overflow-y-auto !p-4 sm:!p-6",
+            expanded
+              ? "!fixed !inset-0 !left-0 !top-0 !h-[100dvh] !max-h-[100dvh] !w-full !max-w-none !translate-x-0 !translate-y-0 !rounded-none"
+              : "!h-[88dvh] !max-h-[88dvh] !w-[calc(100%-2rem)] !max-w-5xl",
+          )}
+        >
+          <div className="absolute left-3 top-3 z-10">
+            <IconButton
+              label={expanded ? "Voltar ao tamanho menor" : "Abrir em tela cheia"}
+              icon={expanded ? Minimize2 : Maximize2}
+              onClick={() => setExpanded(!expanded)}
+            />
+          </div>
           <DialogHeader className="sr-only">
             <DialogTitle>{openItemId === null ? "Agendar conteúdo" : "Conteúdo"}</DialogTitle>
             <DialogDescription>
@@ -590,16 +549,18 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
                 : "Veja e edite o conteúdo sem sair do calendário."}
             </DialogDescription>
           </DialogHeader>
-          {openItemId !== null ? (
-            <ContentEditorPage itemId={openItemId} onSaved={() => undefined} />
-          ) : null}
-          {scheduledDay !== null ? (
-            <ContentEditorPage
-              brandId={brandId}
-              day={scheduledDay}
-              onSaved={() => setScheduledDay(null)}
-            />
-          ) : null}
+          <div className="pt-8">
+            {openItemId !== null ? (
+              <ContentEditorPage itemId={openItemId} onSaved={() => undefined} />
+            ) : null}
+            {scheduledDay !== null ? (
+              <ContentEditorPage
+                brandId={brandId}
+                day={scheduledDay}
+                onSaved={() => setScheduledDay(null)}
+              />
+            ) : null}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -3,7 +3,6 @@ import {
   ChevronRight,
   CalendarDays,
   type LucideIcon,
-  List,
   CalendarRange,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -15,7 +14,6 @@ import { calendarViewLabels } from "@/lib/shared/labels";
 const viewIcons: Record<CalendarView, LucideIcon> = {
   [CalendarView.Month]: CalendarDays,
   [CalendarView.Week]: CalendarRange,
-  [CalendarView.List]: List,
 };
 
 export function CalendarToolbar({

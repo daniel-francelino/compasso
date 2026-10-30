@@ -6,7 +6,6 @@ export const StoredKey = {
   CalendarView: "aura:calendar-view",
   CalendarBrand: "aura:calendar-brand",
   CalendarRange: "aura:calendar-range",
-  CalendarUndatedOpen: "aura:calendar-undated-open",
   SidebarOpen: "aura:sidebar-open",
   LastSpace: "aura:last-space",
   ListColumns: "aura:list-columns",

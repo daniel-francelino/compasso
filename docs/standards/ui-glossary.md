@@ -35,7 +35,7 @@
 | Anchor | Âncora | Name of a section used in links such as /pagina#ancora |
 | Case authorization | Autorização do cliente | "Registrar autorização", "Retirar autorização" |
 | Calendar | Calendário | Views: "Mês", "Semana", "Lista"; button "Hoje"; filter "Somente prazos" |
-| Items without a date | Sem data | Side list of the calendar; button "Planejar…" |
+| Editorial status | Em planejamento, Em produção, Em aprovação, Alterações solicitadas, Aprovado, Publicado, Cancelado | The seven statuses of a content since 2026-10-30; "Rascunho", "Em revisão interna", "Planejamento em aprovação" and the other plan statuses no longer exist |
 | Change the date | Alterar data… | Opens the confirmation dialog; confirm with "Confirmar nova data" |
 | Deadline (production / approval) | Prazo de produção / Prazo de aprovação | |
 | Planned date | Data prevista | "Planejada" for the status |

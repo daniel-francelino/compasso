@@ -141,13 +141,8 @@ export const MediaVersionStatus = {
 export type MediaVersionStatus = ValueOf<typeof MediaVersionStatus>;
 
 export const EditorialStatus = {
-  Draft: "draft",
   Planning: "planning",
-  AwaitingPlanApproval: "awaiting_plan_approval",
-  PlanChangesRequested: "plan_changes_requested",
-  PlanApproved: "plan_approved",
   InProduction: "in_production",
-  InternalReview: "internal_review",
   AwaitingApproval: "awaiting_approval",
   ChangesRequested: "changes_requested",
   Approved: "approved",
@@ -337,7 +332,6 @@ export type DashboardReason = ValueOf<typeof DashboardReason>;
 export const CalendarView = {
   Month: "month",
   Week: "week",
-  List: "list",
 } as const;
 export type CalendarView = ValueOf<typeof CalendarView>;
 

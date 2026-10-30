@@ -37,7 +37,7 @@ begin
     '{"brand_id":"%s","title":"%s","caption":{"text":"Legenda de %s"},"channels":[{"channel_id":"%s","format":"image","planned_at":"%s","planned_timezone":"America/Sao_Paulo"}]}',
     current_setting('t.brand'), p_title, p_title, p_channel, p_planned
   )::jsonb) ->> 'id')::uuid;
-  perform public.approve_on_behalf(v_id, 'art', null, (select version from public.content_items where id = v_id));
+  perform public.approve_on_behalf(v_id, null, (select version from public.content_items where id = v_id));
   return v_id;
 end;
 $$;

@@ -83,7 +83,7 @@ select is(pg_temp.reasons(current_setting('t.v1')::uuid), 'changes_requested,pro
 select set_config('t.v2', public.content_item_save(format('{"brand_id":"%s","title":"Data passou","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"text","planned_at":"2020-01-01T10:00:00Z","planned_timezone":"America/Sao_Paulo"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 select is(pg_temp.reasons(current_setting('t.v2')::uuid), 'planned_date_passed', 'a planned date in the past without publication needs attention');
 select is((select (public.dashboard_status_counts(null) ->> 'changes_requested')::int), 1, 'the counts include the content waiting for changes');
-select is((select (public.dashboard_status_counts(null) ->> 'draft')::int), 1, 'and the draft one');
+select is((select (public.dashboard_status_counts(null) ->> 'planning')::int), 1, 'and the one in planning');
 select is(jsonb_array_length(public.dashboard_my_items()), 1, 'my items lists the item assigned to me');
 select is(jsonb_array_length(public.dashboard_attention(array[gen_random_uuid()])), 0, 'a brand filter with another brand shows nothing');
 reset role;

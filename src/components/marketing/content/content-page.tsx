@@ -8,7 +8,6 @@ import {
   Copy,
   CircleCheck,
   CircleX,
-  Eye,
   FileText,
   List,
   Pencil,
@@ -25,6 +24,7 @@ import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
+import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
@@ -33,7 +33,11 @@ import { ContentBoard } from "@/components/marketing/content/content-board";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
-import { PersonAvatar } from "@/components/shared/admin/person-avatar";
+import {
+  BrandCell,
+  FormatCells,
+  OwnerCell,
+} from "@/components/marketing/content/content-list-cells";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { useServerAction } from "@/hooks/shared/use-server-action";
@@ -51,10 +55,9 @@ import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { listContentTypes } from "@/lib/shared/content-types/content-types.functions";
-import { EditorialStatus, PublicationStatus } from "@/lib/shared/enums";
+import { type ContentFormat, EditorialStatus, PublicationStatus } from "@/lib/shared/enums";
 import { formatDateOnly } from "@/lib/shared/format";
 import {
-  contentFormatLabels,
   editorialStatusLabels,
   platformLabels,
   publicationStatusLabels,
@@ -90,8 +93,9 @@ const publicationOptions = [
 
 const DEFAULT_SORT = { key: ContentSort.Date, dir: SortDirection.Asc };
 
-const formatsOf = (row: ContentItemRow): string =>
-  [...new Set(row.channels.map((channel) => contentFormatLabels[channel.format]))].join(", ");
+const formatsOf = (row: ContentItemRow): ContentFormat[] => [
+  ...new Set(row.channels.map((channel) => channel.format)),
+];
 
 export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const auth = useAuth();
@@ -190,8 +194,12 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         </Link>
       ),
     },
-    { id: "format", label: "Formato", cell: (row) => formatsOf(row) || "—" },
-    { id: "brand", label: "Marca", cell: (row) => row.brandName },
+    { id: "format", label: "Formato", cell: (row) => <FormatCells formats={formatsOf(row)} /> },
+    {
+      id: "brand",
+      label: "Marca",
+      cell: (row) => <BrandCell name={row.brandName} logoUrl={row.brandLogoUrl} />,
+    },
     {
       id: "channels",
       label: "Canais",
@@ -205,15 +213,12 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     {
       id: "owner",
       label: "Responsável",
-      cell: (row) =>
-        row.assigneeId === null || row.assigneeName === null ? (
-          "—"
-        ) : (
-          <span className="inline-flex items-center gap-2">
-            <PersonAvatar name={row.assigneeName} url={avatars[row.assigneeId]} size="sm" />
-            {row.assigneeName}
-          </span>
-        ),
+      cell: (row) => (
+        <OwnerCell
+          name={row.assigneeName}
+          url={row.assigneeId === null ? undefined : avatars[row.assigneeId]}
+        />
+      ),
     },
   ];
 

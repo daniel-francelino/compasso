@@ -9,14 +9,12 @@ import {
   formatRules,
   mediaProblem,
   platformFormats,
+  submitStageOf,
 } from "@/lib/shared/editorial/editorial";
-import { ContentFormat, EditorialStatus, Platform } from "@/lib/shared/enums";
+import { ApprovalStage, ContentFormat, EditorialStatus, Platform } from "@/lib/shared/enums";
 
 const sqlTransitions = (): Record<string, string[]> => {
-  const sql = readFileSync(
-    "supabase/migrations/20261023110000_approvals_approve_on_behalf.sql",
-    "utf8",
-  );
+  const sql = readFileSync("supabase/migrations/20261030100000_simplified_approval.sql", "utf8");
   const body = sql.match(/function public\.editorial_transition_allowed[\s\S]*?\$fn\$;/)?.[0] ?? "";
   const map: Record<string, string[]> = {};
   for (const match of body.matchAll(/when '([a-z_]+)' then p_to in \(([^)]*)\)/g)) {
@@ -84,5 +82,14 @@ describe("formats", () => {
       "Este formato aceita 1 arquivo.",
     );
     expect(mediaProblem([ContentFormat.Image, ContentFormat.Text], 1)).toBeNull();
+  });
+});
+
+describe("submitStageOf", () => {
+  it("sends the art once there is text or files, and the planning before that", () => {
+    expect(submitStageOf("", 0)).toBe(ApprovalStage.Plan);
+    expect(submitStageOf("   ", 0)).toBe(ApprovalStage.Plan);
+    expect(submitStageOf("Texto", 0)).toBe(ApprovalStage.Art);
+    expect(submitStageOf("", 2)).toBe(ApprovalStage.Art);
   });
 });

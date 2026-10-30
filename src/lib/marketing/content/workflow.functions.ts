@@ -12,7 +12,6 @@ import {
   moveContentSchema,
   publishContentSchema,
   publishSchema,
-  reopenSchema,
   submitSchema,
 } from "@/lib/marketing/content/schemas";
 
@@ -108,7 +107,6 @@ export const approveOnBehalf = createServerFn({ method: "POST" })
     if (caller === null) return denied;
     const { data: row, error } = await caller.supabase.rpc("approve_on_behalf", {
       p_item: data.id,
-      p_stage: data.stage,
       p_reason: data.reason ?? "",
       p_expected_version: data.expectedVersion,
     });
@@ -119,14 +117,13 @@ export const approveOnBehalf = createServerFn({ method: "POST" })
   });
 
 export const reopenContent = createServerFn({ method: "POST" })
-  .validator(reopenSchema)
+  .validator(cancelSchema)
   .handler(async ({ data }): Promise<Result> => {
     const caller = await requireActionServer(Action.Content.Reopen);
     if (caller === null) return denied;
     const { error } = await caller.supabase.rpc("reopen_content", {
       p_item: data.id,
       p_reason: data.reason,
-      p_scope: data.scope,
     });
     if (error) return fail(error);
     return { ok: true };

@@ -7,7 +7,7 @@ import {
 } from "@/lib/marketing/calendar/schemas";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
-import type { CalendarEntry, UndatedEntry } from "@/lib/shared/calendar/types";
+import type { CalendarEntry } from "@/lib/shared/calendar/types";
 import {
   CalendarEntryKind,
   CalendarEventType,
@@ -60,21 +60,8 @@ const entrySchema = z.object({
   version: z.number().int().nullable().optional(),
 });
 
-const undatedSchema = z.object({
-  ...commonShape,
-  item_id: z.string().uuid(),
-  channel_row_id: z.string().uuid(),
-  channel_id: z.string().uuid(),
-  platform: z.nativeEnum(Platform),
-  profile_name: z.string(),
-  format: z.nativeEnum(ContentFormat),
-  editorial_status: z.nativeEnum(EditorialStatus),
-  version: z.number().int(),
-});
-
 const listSchema = z.object({
   entries: z.array(entrySchema),
-  undated: z.array(undatedSchema),
   truncated: z.boolean(),
 });
 
@@ -88,7 +75,6 @@ const deadlineSavedSchema = z.object({ id: z.string().uuid(), version: z.number(
 
 export type CalendarData = {
   entries: CalendarEntry[];
-  undated: UndatedEntry[];
   truncated: boolean;
 };
 
@@ -135,23 +121,6 @@ const toEntry = (row: z.infer<typeof entrySchema>): CalendarEntry => ({
   channelArchived: row.channel_archived ?? false,
 });
 
-const toUndated = (row: z.infer<typeof undatedSchema>): UndatedEntry => ({
-  itemId: row.item_id,
-  channelRowId: row.channel_row_id,
-  title: row.title,
-  brandId: row.brand_id,
-  brandName: row.brand_name,
-  brandTimezone: row.brand_timezone,
-  channelId: row.channel_id,
-  platform: row.platform,
-  profileName: row.profile_name,
-  format: row.format,
-  editorialStatus: row.editorial_status,
-  version: row.version,
-  assigneeName: row.assignee_name ?? null,
-  channelArchived: row.channel_archived ?? false,
-});
-
 export const listCalendarEntries = createServerFn({ method: "GET" })
   .validator(calendarRequestSchema)
   .handler(async ({ data }): Promise<Result<CalendarData>> => {
@@ -173,7 +142,6 @@ export const listCalendarEntries = createServerFn({ method: "GET" })
     return {
       ok: true,
       entries: parsed.entries.map(toEntry),
-      undated: parsed.undated.map(toUndated),
       truncated: parsed.truncated,
     };
   });

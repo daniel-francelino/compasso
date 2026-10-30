@@ -3044,7 +3044,7 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: { p_token_hash: string | null}; Returns: Json }
       approve_on_behalf: {
-        Args: {          p_expected_version: number | null,          p_item: string | null,          p_reason: string | null,          p_stage: string | null}
+        Args: {          p_expected_version: number | null,          p_item: string | null,          p_reason: string | null}
         Returns: Json
       }
       approver_is_valid: {
@@ -3553,7 +3553,7 @@ export type Database = {
         Returns: Json
       }
       reopen_content: {
-        Args: { p_item: string | null, p_reason: string | null, p_scope?: string | null}
+        Args: { p_item: string | null, p_reason: string | null}
         Returns: Json
       }
       reschedule_channel: {

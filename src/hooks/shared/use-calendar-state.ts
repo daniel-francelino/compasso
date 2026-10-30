@@ -18,7 +18,7 @@ export const useCalendarState = (zone: string) => {
 
   const chosenView =
     search.view ?? readStored(StoredKey.CalendarView, storedViewSchema, CalendarView.Week);
-  const view = mobile ? CalendarView.List : chosenView;
+  const view = mobile ? CalendarView.Week : chosenView;
   const anchor = search.date ?? todayInZone(zone);
   const range = visibleRange(view, anchor);
   const { from, to } = rangeInstants(range, zone);

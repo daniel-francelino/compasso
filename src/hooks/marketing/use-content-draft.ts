@@ -3,6 +3,7 @@ import { withPlanImages } from "@/lib/marketing/content/plan-images";
 import type { ContentDetail, FileItem } from "@/lib/marketing/content/types";
 import type { ContentFormat } from "@/lib/shared/enums";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
+import { stableJson } from "@/lib/shared/stable-json";
 
 export type DraftRow = {
   key: string;
@@ -74,7 +75,7 @@ export const draftOf = (content: ContentDetail): DraftValues => ({
 });
 
 const signature = (values: DraftValues): string =>
-  JSON.stringify({
+  stableJson({
     ...values,
     rows: values.rows.map((row) => ({ ...row, key: row.id ?? "" })),
   });

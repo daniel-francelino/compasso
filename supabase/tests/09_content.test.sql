@@ -1,6 +1,6 @@
 begin;
 
-select plan(176);
+select plan(173);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -91,7 +91,7 @@ select set_config('t.mediaB', pg_temp.upload('00000000-0000-0000-0000-0000000000
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.item', public.content_item_save(format('{"brand_id":"%s","title":"Lançamento de outono","publish_date":"2026-11-03"}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select is((select publish_date::text from public.content_items where id = current_setting('t.item')::uuid), '2026-11-03', 'the publication date is saved');
-select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'draft', 'a content starts as a draft');
+select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'planning', 'a content starts in planning');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"x"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'a title below two characters is refused');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Com responsavel","assignee_id":"00000000-0000-0000-0000-0000000000b2"}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'an assignee who is not linked to the brand is refused');
 select throws_ok(format($$select public.content_item_save('{"brand_id":"%s","title":"Tipo estranho","type_ids":["00000000-0000-0000-0000-00000000ffff"]}'::jsonb)$$, current_setting('t.brand')), 'invalid_input', 'a type that is not in the catalog is refused');
@@ -116,8 +116,6 @@ select throws_ok(format($$select pg_temp.save('%s', '"title":"Lançamento de out
 select throws_ok(format($$select public.content_move('%s', 'awaiting_approval', pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'transition_not_allowed', 'the board cannot jump to awaiting approval');
 select throws_ok(format($$select public.content_move('%s', 'approved', pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'transition_not_allowed', 'nor to approved');
 select lives_ok(format($$select public.content_move('%s', 'in_production', pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'a draft moves to production');
-select lives_ok(format($$select public.content_move('%s', 'internal_review', pg_temp.ver('%s'))$$, current_setting('t.item'), current_setting('t.item')), 'production moves to internal review');
-select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'internal_review', 'the content is in internal review');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
@@ -137,8 +135,6 @@ select set_config('t.empty', public.content_item_save(format('{"brand_id":"%s","
 select set_config('t.emptyRow', (select id::text from public.content_channels where content_item_id = current_setting('t.empty')::uuid), true);
 select public.content_move(current_setting('t.empty')::uuid, 'in_production', pg_temp.ver(current_setting('t.empty')::uuid));
 select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.empty'), current_setting('t.empty')), 'invalid_input', 'a content with no text and no files cannot be sent');
-select set_config('t.draft', public.content_item_save(format('{"brand_id":"%s","title":"Rascunho","caption":{"text":"Rascunho"},"channels":[{"channel_id":"%s","format":"text"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
-select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.draft'), current_setting('t.draft')), 'transition_not_allowed', 'a draft cannot be sent');
 select set_config('t.nochannel', public.content_item_save(format('{"brand_id":"%s","title":"Sem canal","caption":{"text":"Texto"}}', current_setting('t.brand'))::jsonb) ->> 'id', true);
 select public.content_move(current_setting('t.nochannel')::uuid, 'in_production', pg_temp.ver(current_setting('t.nochannel')::uuid));
 select throws_ok(format($$select public.submit_for_approval('%s', null, null, pg_temp.ver('%s'))$$, current_setting('t.nochannel'), current_setting('t.nochannel')), 'channel_required', 'a content with no channel cannot be sent');

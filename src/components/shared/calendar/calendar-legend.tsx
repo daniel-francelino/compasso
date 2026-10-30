@@ -31,9 +31,8 @@ const kinds = [
 ];
 
 const statuses = [
-  EditorialStatus.Draft,
+  EditorialStatus.Planning,
   EditorialStatus.InProduction,
-  EditorialStatus.InternalReview,
   EditorialStatus.AwaitingApproval,
   EditorialStatus.ChangesRequested,
   EditorialStatus.Approved,

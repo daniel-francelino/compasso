@@ -16,7 +16,7 @@
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
 |---|---|---|---|---|
-| `EditorialStatus` | `draft`, `planning`, `awaiting_plan_approval`, `plan_changes_requested`, `plan_approved`, `in_production`, `internal_review`, `awaiting_approval`, `changes_requested`, `approved`, `published`, `cancelled` | `content_items.editorial_status` | "Rascunho", "Em planejamento", "Planejamento em aprovação", "Alterações no planejamento", "Planejamento aprovado", "Em produção", "Em revisão interna", "Aguardando aprovação", "Alterações solicitadas", "Aprovado", "Publicado", "Cancelado" | content |
+| `EditorialStatus` | `planning`, `in_production`, `awaiting_approval`, `changes_requested`, `approved`, `published`, `cancelled` | `content_items.editorial_status` | "Em planejamento", "Em produção", "Em aprovação", "Alterações solicitadas", "Aprovado", "Publicado", "Cancelado" | content (simplified on 2026-10-30; see [../modules/content.md](../modules/content.md#simplified-approval-decided-2026-10-30)) |
 | `PublicationStatus` | `unplanned`, `planned`, `published_manually`, `cancelled` | `content_channels.publication_status` | "Não planejada", "Planejada", "Publicada", "Cancelada" | content; `published_manually` means "recorded as published", how it happened is in `content_channels.published_via` (null = by hand, `instagram_api` = automatic) |
 | `RichNodeType` | `doc`, `paragraph`, `heading`, `bulletList`, `orderedList`, `listItem`, `hardBreak`, `text` | Tiptap JSON of `content_items.briefing` (not a database column check; validated by zod in `lib/shared/rich-text/types.ts`) | (not shown) | content |
 | `RichMarkType` | `bold`, `italic` | Marks allowed in that JSON | (not shown) | content |
@@ -25,7 +25,7 @@
 | `ApprovalRequestStatus` | `pending`, `approved`, `changes_requested`, `superseded`, `cancelled` | `approval_requests.status` | "Pendente", "Aprovada", "Alterações solicitadas", "Substituída", "Cancelada" | approvals |
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |
 | `CommentVisibility` | `internal`, `external` | `comments.visibility` | "Interno", "Externo" | content |
-| `CalendarView` | `month`, `week`, `list` | URL param `view` (not stored in the database) | "Mês", "Semana", "Lista" | calendar |
+| `CalendarView` | `month`, `week` | URL param `view` (not stored in the database) | "Mês", "Semana" | calendar |
 | `EditorStep` | `planning`, `briefing`, `content` | Local state of the content editor (not stored, not a URL param) | "Planejamento", "Briefing", "Conteúdo" | content |
 | `CalendarEntryKind` | `publication`, `published`, `approval_deadline`, `production_deadline`, `idea`, `date`, `event` | `list_calendar_entries` output (`kind`, not stored) | "Publicação planejada", "Publicado", "Prazo de aprovação", "Prazo de produção", "Ideia", "Data", "Evento" | calendar |
 | `CalendarNoteKind` | `idea`, `date`, `event` | `calendar_notes.kind` | "Ideia", "Data", "Evento" | calendar |
@@ -37,7 +37,7 @@
 | `DashboardReason` | `approval_overdue`, `changes_requested`, `production_overdue`, `planned_date_passed`, `approver_without_access` | `dashboard_attention` output (`reasons`, not stored) | "Aprovação atrasada", "Alterações solicitadas", "Prazo de produção vencido", "Data prevista ultrapassada", "Ninguém pode aprovar" | dashboard |
 | `Platform` | `instagram`, `facebook`, `linkedin`, `tiktok`, `youtube`, `x`, `pinterest`, `threads`, `email`, `blog`, `other` | `channels.platform` | "Instagram", "Facebook", "LinkedIn", "TikTok", "YouTube", "X", "Pinterest", "Threads", "E-mail", "Blog", "Outro" | channels |
 
-Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → in_production | cancelled`; `in_production → internal_review | awaiting_approval | cancelled`; `internal_review → awaiting_approval | in_production | cancelled`; `awaiting_approval → approved | changes_requested | in_production (reopen) | cancelled`; `changes_requested → in_production | cancelled`; `approved → in_production (reopen) | cancelled`; `cancelled → ∅`. Only the transactional functions perform a transition; the map is shared by the editor, the board and tests.
+Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning → in_production | awaiting_approval | approved | cancelled`; `in_production → planning | awaiting_approval | approved | cancelled`; `changes_requested → planning | in_production | awaiting_approval | approved | cancelled`; `awaiting_approval → planning | in_production | approved | changes_requested | cancelled`; `approved → planning | in_production | published | cancelled`; `published` and `cancelled → ∅`. Only the transactional functions perform a transition (`content_move` only between `planning` and `in_production`); the map is shared by the editor, the board and tests, and `editorial.test.ts` checks it against `editorial_transition_allowed` in `20261030100000_simplified_approval.sql`.
 
 ## 2b. Instagram, publishing and metrics
 
@@ -110,7 +110,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `draft → i
 | Constant | Where | Content |
 |---|---|---|
 | `QueryKey` | `lib/shared/query-keys.ts` (+ per-module factories) | One namespace per module: `QueryKey.Clients.list(filters)`, `.detail(id)`, `QueryKey.Brands…`, `QueryKey.Content…`, `QueryKey.Approvals…`, `QueryKey.Calendar…`, `QueryKey.Media…`, `QueryKey.Notifications…`, `QueryKey.Site…`, `QueryKey.Portal…`, `QueryKey.Auth.state` |
-| `StoredKey` | `lib/shared/stored-keys.ts` | `CalendarView`, `CalendarRange`, `CalendarUndatedOpen`, `SidebarOpen`, `LastSpace`, `ListColumns`, `ApprovalDraftComment` (all prefixed `aura:`) |
+| `StoredKey` | `lib/shared/stored-keys.ts` | `CalendarView`, `CalendarRange`, `SidebarOpen`, `LastSpace`, `ListColumns`, `ApprovalDraftComment` (all prefixed `aura:`) |
 | `Action` | `lib/shared/auth/actions.ts` | Generated shape: `Action.<Module>.<Verb>` for every row of the actions catalog |
 | `AuditAction` | `lib/shared/audit/actions.ts` | `AuditAction.<Domain>.<Verb>` for the audit catalog |
 

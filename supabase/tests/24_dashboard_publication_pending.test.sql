@@ -37,8 +37,8 @@ select set_config('t.past', public.content_item_save(format('{"brand_id":"%s","t
 select set_config('t.future', public.content_item_save(format('{"brand_id":"%s","title":"Ainda vem","caption":{"text":"Texto"},"channels":[{"channel_id":"%s","format":"image","planned_at":"2099-01-01T12:00:00Z","planned_timezone":"America/Sao_Paulo"}]}', current_setting('t.brand'), current_setting('t.channel'))::jsonb) ->> 'id', true);
 
 select is(jsonb_array_length(public.dashboard_publication_pending(null)), 0, 'a content that is not approved is not listed');
-select public.approve_on_behalf(current_setting('t.past')::uuid, 'art', null, (select version from public.content_items where id = current_setting('t.past')::uuid));
-select public.approve_on_behalf(current_setting('t.future')::uuid, 'art', null, (select version from public.content_items where id = current_setting('t.future')::uuid));
+select public.approve_on_behalf(current_setting('t.past')::uuid, null, (select version from public.content_items where id = current_setting('t.past')::uuid));
+select public.approve_on_behalf(current_setting('t.future')::uuid, null, (select version from public.content_items where id = current_setting('t.future')::uuid));
 
 select is(jsonb_array_length(public.dashboard_publication_pending(null)), 1, 'an approved content with a planned date already passed is listed');
 select is(public.dashboard_publication_pending(null) -> 0 ->> 'title', 'Ja passou', 'and it is the one that passed');

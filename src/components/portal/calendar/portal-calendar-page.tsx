@@ -4,7 +4,6 @@ import { type ReactNode, useState } from "react";
 import { ArrowLeft, CalendarRange, RotateCw } from "lucide-react";
 import { ListSkeleton } from "@/components/shared/admin/skeletons";
 import { CalendarGrid } from "@/components/shared/calendar/calendar-grid";
-import { CalendarList } from "@/components/shared/calendar/calendar-list";
 import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { PortalCalendarEntryPreview } from "@/components/portal/calendar/portal-calendar-entry-preview";
 import { PortalEventDialog } from "@/components/portal/calendar/portal-event-dialog";
@@ -166,8 +165,6 @@ export function PortalCalendarPage({ brandId }: { brandId: string }) {
             </Button>
           </AlertDescription>
         </Alert>
-      ) : state.view === CalendarView.List ? (
-        <CalendarList items={items} renderItem={renderItem} onSelect={select} />
       ) : (
         <CalendarGrid
           label={`Calendário, ${title}`}

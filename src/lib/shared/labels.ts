@@ -69,14 +69,9 @@ export const platformLabels: Record<Platform, string> = {
 };
 
 export const editorialStatusLabels: Record<EditorialStatus, string> = {
-  [EditorialStatus.Draft]: "Rascunho",
   [EditorialStatus.Planning]: "Em planejamento",
-  [EditorialStatus.AwaitingPlanApproval]: "Planejamento em aprovação",
-  [EditorialStatus.PlanChangesRequested]: "Alterações no planejamento",
-  [EditorialStatus.PlanApproved]: "Planejamento aprovado",
   [EditorialStatus.InProduction]: "Em produção",
-  [EditorialStatus.InternalReview]: "Em revisão interna",
-  [EditorialStatus.AwaitingApproval]: "Aguardando aprovação",
+  [EditorialStatus.AwaitingApproval]: "Em aprovação",
   [EditorialStatus.ChangesRequested]: "Alterações solicitadas",
   [EditorialStatus.Approved]: "Aprovado",
   [EditorialStatus.Published]: "Publicado",
@@ -135,7 +130,6 @@ export const dashboardReasonLabels: Record<DashboardReason, string> = {
 export const calendarViewLabels: Record<CalendarView, string> = {
   [CalendarView.Month]: "Mês",
   [CalendarView.Week]: "Semana",
-  [CalendarView.List]: "Lista",
 };
 
 export const calendarEntryKindLabels: Record<CalendarEntryKind, string> = {

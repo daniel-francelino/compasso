@@ -6,14 +6,12 @@ import { PublishAutomationSection } from "@/components/marketing/content/publish
 import { SectionCard } from "@/components/shared/admin/section-card";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
-import type { StageState } from "@/lib/marketing/content/stage-state";
 import { mediaProblem } from "@/lib/shared/editorial/editorial";
 
 export function ContentStep({
   draft,
   channels,
   zone,
-  state,
   tab,
   onTab,
   editable,
@@ -29,7 +27,6 @@ export function ContentStep({
   draft: ContentDraft;
   channels: ChannelRow[];
   zone: string;
-  state: StageState;
   tab: string;
   onTab: (tab: string) => void;
   editable: boolean;
@@ -72,7 +69,7 @@ export function ContentStep({
           draft={draft}
           channels={channels}
           brandTimezone={zone}
-          disabled={!editable || saving || state.planLocked}
+          disabled={!editable || saving}
           errors={errors}
           canPublish={canPublish}
           canCancel={canCancelRow}

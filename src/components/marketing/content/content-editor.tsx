@@ -9,7 +9,6 @@ import { ContentActions } from "@/components/marketing/content/content-actions";
 import { ContentBanners } from "@/components/marketing/content/content-banners";
 import { ContentStep } from "@/components/marketing/content/content-step";
 import { EditorPreview } from "@/components/marketing/content/editor-preview";
-import { PlanScheduleFields } from "@/components/marketing/content/plan-schedule-fields";
 import { PlanningStep } from "@/components/marketing/content/planning-step";
 import { PublishDialog } from "@/components/marketing/content/publish-dialog";
 import { SubmitDialog } from "@/components/marketing/content/submit-dialog";
@@ -54,7 +53,6 @@ import {
 import { draftPayload } from "@/lib/marketing/content/draft-payload";
 import { followPublishDate, plannedOnDay } from "@/lib/marketing/content/publish-date";
 import { saveContentSchema } from "@/lib/marketing/content/schemas";
-import { stageStateOf } from "@/lib/marketing/content/stage-state";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import {
   cancelContentChannel,
@@ -68,7 +66,7 @@ import { ErrorCode } from "@/lib/shared/auth/errors";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
 import { platformFormats } from "@/lib/shared/editorial/editorial";
-import { ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
+import { EditorialStatus } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { focusFirstInvalid } from "@/lib/shared/forms";
@@ -116,22 +114,18 @@ export function ContentEditor({
   const [submitting, setSubmitting] = useState(false);
   const [publishing, setPublishing] = useState<DraftRow | null>(null);
   const [cancellingRow, setCancellingRow] = useState<DraftRow | null>(null);
-  const [reopening, setReopening] = useState<ApprovalStage | null>(null);
-  const [approvingStage, setApprovingStage] = useState<ApprovalStage | null>(null);
+  const [reopening, setReopening] = useState(false);
+  const [approving, setApproving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [confirmingPublish, setConfirmingPublish] = useState(false);
   const [tab, setTab] = useState(ALL_TAB);
 
   const isNew = content === undefined;
-  const editorialStatus = content?.editorialStatus ?? EditorialStatus.Draft;
+  const editorialStatus = content?.editorialStatus ?? EditorialStatus.Planning;
   const cancelled = content?.cancelled ?? false;
   const approved = editorialStatus === EditorialStatus.Approved;
   const canWrite = can(auth, isNew ? Action.Content.Create : Action.Content.Update);
   const editable = canWrite && !cancelled && !approved;
-  const state = stageStateOf(
-    content?.planRequired ?? true,
-    content?.planApprovedRevisionId ?? null,
-  );
   useUnsavedChanges(draft.dirty && !saving);
 
   const brands = useBrandOptions(isNew);
@@ -254,18 +248,6 @@ export function ContentEditor({
     );
   }
 
-  async function saveScheduleBeforeApproval(stage: ApprovalStage): Promise<number | string> {
-    if (content === undefined) return "Salve o conteúdo antes de aprovar.";
-    if (stage !== ApprovalStage.Plan || !draft.dirty) return content.version;
-    const parsed = saveContentSchema.safeParse(payload(content.version));
-    if (!parsed.success) return "Confira as datas e os horários antes de aprovar.";
-    const saved = await saveContentItem({ data: parsed.data });
-    if (!saved.ok) return saved.message;
-    draft.markSaved();
-    void queryClient.invalidateQueries({ queryKey: QueryKey.Content.all() });
-    return saved.version;
-  }
-
   async function move(to: EditorialStatus) {
     if (content === undefined) return;
     await run(
@@ -312,7 +294,7 @@ export function ContentEditor({
   const actionsBar = (
     <ContentActions
       status={editorialStatus}
-      state={state}
+      artApproved={content?.approvedRevisionId != null}
       isNew={isNew}
       cancelled={cancelled}
       hasPublished={hasPublished}
@@ -325,8 +307,8 @@ export function ContentEditor({
       acting={acting}
       onMove={(to) => void move(to)}
       onSubmit={() => setSubmitting(true)}
-      onApproveOnBehalf={setApprovingStage}
-      onReopen={setReopening}
+      onApproveOnBehalf={() => setApproving(true)}
+      onReopen={() => setReopening(true)}
       onCancel={() => setCancelling(true)}
       onDuplicate={() => void duplicate()}
     />
@@ -401,7 +383,6 @@ export function ContentEditor({
               selected={selected}
               locked={locked}
               assignees={assignees.data ?? []}
-              state={state}
               editable={editable}
               settingsDisabled={settingsDisabled}
               saving={saving}
@@ -416,7 +397,6 @@ export function ContentEditor({
               draft={draft}
               channels={channels}
               zone={zone}
-              state={state}
               tab={tab}
               onTab={setTab}
               editable={editable}
@@ -487,27 +467,21 @@ export function ContentEditor({
         }}
       />
       <ReasonDialog
-        open={approvingStage !== null}
-        onOpenChange={(next) => !next && setApprovingStage(null)}
+        open={approving}
+        onOpenChange={setApproving}
         title="Aprovar no lugar do cliente"
         description="Você está registrando a aprovação do cliente. Isto fica no histórico com o seu nome. Se houver um pedido aberto, ele será encerrado e o cliente será avisado."
-        confirmLabel={
-          approvingStage === ApprovalStage.Plan ? "Aprovar planejamento" : "Aprovar arte"
-        }
+        confirmLabel="Aprovar"
         icon={UserCheck}
         optional
         onSubmit={async (reason) => {
-          if (content === undefined || approvingStage === null) return null;
-          const stage = approvingStage;
-          const saved = await saveScheduleBeforeApproval(stage);
-          if (typeof saved === "string") return saved;
+          if (content === undefined) return null;
           const result = await run(
             () =>
               approveOnBehalf({
                 data: {
                   id: content.id,
-                  stage,
-                  expectedVersion: saved,
+                  expectedVersion: content.version,
                   ...(reason === "" ? {} : { reason }),
                 },
               }),
@@ -515,35 +489,20 @@ export function ContentEditor({
           );
           return result.ok ? null : result.message;
         }}
-      >
-        {approvingStage === ApprovalStage.Plan ? (
-          <PlanScheduleFields
-            draft={draft}
-            channels={channels}
-            zone={zone}
-            disabled={!editable || acting}
-            errors={errors}
-          />
-        ) : null}
-      </ReasonDialog>
+      />
       <ReasonDialog
-        open={reopening !== null}
-        onOpenChange={(next) => !next && setReopening(null)}
-        title={reopening === "plan" ? "Reabrir planejamento" : "Reabrir artes"}
-        description={
-          reopening === "plan"
-            ? "O conteúdo volta para o planejamento, o pedido pendente é substituído e as duas aprovações são limpas. As artes e o histórico ficam guardados. O motivo fica registrado."
-            : "Ele volta para produção e o pedido pendente ao cliente é substituído. Uma nova versão das artes precisará de nova aprovação. O motivo fica registrado."
-        }
+        open={reopening}
+        onOpenChange={setReopening}
+        title="Reabrir para produção"
+        description="Ele volta para produção e o pedido pendente ao cliente é substituído. Uma nova versão precisará de nova aprovação. O motivo fica registrado."
         confirmLabel="Reabrir"
         icon={RotateCcw}
         onSubmit={async (reason) => {
-          if (content === undefined || reopening === null) return null;
-          const scope = reopening;
-          const result = await run(
-            () => reopenContent({ data: { id: content.id, reason, scope } }),
-            { invalidate: refresh, success: "Conteúdo reaberto." },
-          );
+          if (content === undefined) return null;
+          const result = await run(() => reopenContent({ data: { id: content.id, reason } }), {
+            invalidate: refresh,
+            success: "Conteúdo reaberto.",
+          });
           return result.ok ? null : result.message;
         }}
       />

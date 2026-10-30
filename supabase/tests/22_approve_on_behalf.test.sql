@@ -1,6 +1,6 @@
 begin;
 
-select plan(31);
+select plan(26);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -89,42 +89,37 @@ reset role;
 select set_config('t.verA', pg_temp.ver(current_setting('t.itemA')::uuid)::text, true);
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'plan', null, %s)$$, current_setting('t.itemA'), current_setting('t.verA')), 'denied', 'a collaborator cannot approve on behalf');
+select throws_ok(format($$select public.approve_on_behalf('%s', null, %s)$$, current_setting('t.itemA'), current_setting('t.verA')), 'denied', 'a collaborator cannot approve on behalf');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'plan', null, %s)$$, current_setting('t.itemA'), current_setting('t.verA')), 'denied', 'neither can an external approver');
+select throws_ok(format($$select public.approve_on_behalf('%s', null, %s)$$, current_setting('t.itemA'), current_setting('t.verA')), 'denied', 'neither can an external approver');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b2');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'plan', null, %s)$$, current_setting('t.itemA'), current_setting('t.verA')), 'not_found', 'a manager of another brand does not find the content');
+select throws_ok(format($$select public.approve_on_behalf('%s', null, %s)$$, current_setting('t.itemA'), current_setting('t.verA')), 'not_found', 'a manager of another brand does not find the content');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'art', null, %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'plan_not_approved', 'the art needs the plan approved first');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'plan', null, 999)$$, current_setting('t.itemA')), 'conflict', 'a stale version conflicts');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'video', null, %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'invalid_input', 'an unknown stage is refused');
-select lives_ok(format($$select public.approve_on_behalf('%s', 'plan', 'Cliente confia na equipe', %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'the manager approves a plan that was never sent');
+select throws_ok(format($$select public.approve_on_behalf('%s', null, 999)$$, current_setting('t.itemA')), 'conflict', 'a stale version conflicts');
+select throws_ok(format($$select public.approve_on_behalf('%s', repeat('x', 501), %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'invalid_input', 'a reason that is too long is refused');
+select lives_ok(format($$select public.approve_on_behalf('%s', 'Cliente confia na equipe', %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'the manager approves a content that was never sent');
 reset role;
 
-select is((select editorial_status from public.content_items where id = current_setting('t.itemA')::uuid), 'plan_approved', 'the content has its plan approved');
-select isnt((select plan_approved_revision_id from public.content_items where id = current_setting('t.itemA')::uuid), null, 'with a frozen plan version');
+select isnt((select approved_revision_id from public.content_items where id = current_setting('t.itemA')::uuid), null, 'with a frozen version');
 select is((select d.on_behalf and d.reason = 'Cliente confia na equipe' from public.approval_decisions d join public.approval_requests q on q.id = d.request_id where q.item_id = current_setting('t.itemA')::uuid), true, 'the decision records the origin and the reason');
-select is((select count(*)::int from public.audit_events where action = 'approval.approved_by_team' and metadata ->> 'had_pending' = 'false' and metadata ->> 'stage' = 'plan'), 1, 'the approval is audited without a pending request');
+select is((select count(*)::int from public.audit_events where action = 'approval.approved_by_team' and metadata ->> 'had_pending' = 'false' and metadata ->> 'stage' = 'art'), 1, 'the approval is audited without a pending request');
 select is((select count(*)::int from public.notifications where kind = 'approval.approved_by_team'), 0, 'nobody is notified when nothing had been sent');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select throws_ok(format($$select public.approve_on_behalf('%s', 'plan', null, %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'transition_not_allowed', 'an approved plan cannot be approved again');
+select throws_ok(format($$select public.approve_on_behalf('%s', null, %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'transition_not_allowed', 'an approved content cannot be approved again');
 select throws_ok(format($$select public.content_move('%s', 'approved', %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'transition_not_allowed', 'a plain status move still cannot approve');
-select lives_ok(format($$select public.approve_on_behalf('%s', 'art', null, %s)$$, current_setting('t.itemA'), pg_temp.ver(current_setting('t.itemA')::uuid)), 'the art is approved right after the plan');
 reset role;
 
-select is((select editorial_status from public.content_items where id = current_setting('t.itemA')::uuid), 'approved', 'the content is approved');
-select isnt((select approved_revision_id from public.content_items where id = current_setting('t.itemA')::uuid), null, 'with a frozen art version');
-select is((select count(*)::int from public.content_revisions where item_id = current_setting('t.itemA')::uuid), 2, 'one plan version and one art version exist');
+select is((select count(*)::int from public.content_revisions where item_id = current_setting('t.itemA')::uuid), 1, 'and only one version was frozen');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select lives_ok(format($$select public.reopen_content('%s', 'Rever a arte', 'art')$$, current_setting('t.itemA')), 'reopening the art works as after a client approval');
+select lives_ok(format($$select public.reopen_content('%s', 'Rever a arte')$$, current_setting('t.itemA')), 'reopening works as after a client approval');
 reset role;
 select is((select editorial_status from public.content_items where id = current_setting('t.itemA')::uuid), 'in_production', 'and returns the content to production');
 
@@ -132,14 +127,14 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.itemB', public.content_item_save(pg_temp.body(null, 'Resumo do plano', current_setting('t.date1'), false))::jsonb ->> 'id', true);
 select set_config('t.subB', public.submit_for_approval(current_setting('t.itemB')::uuid, null, null, pg_temp.ver(current_setting('t.itemB')::uuid))::text, true);
 select set_config('t.reqB', current_setting('t.subB')::jsonb ->> 'request_id', true);
-select lives_ok(format($$select public.approve_on_behalf('%s', 'plan', null, %s)$$, current_setting('t.itemB'), pg_temp.ver(current_setting('t.itemB')::uuid)), 'the manager approves while the client has not answered');
+select lives_ok(format($$select public.approve_on_behalf('%s', null, %s)$$, current_setting('t.itemB'), pg_temp.ver(current_setting('t.itemB')::uuid)), 'the manager approves while the client has not answered');
 reset role;
 
 select is((select status from public.approval_requests where id = current_setting('t.reqB')::uuid), 'approved', 'the pending request is closed as approved');
 select is((select count(*)::int from public.content_revisions where item_id = current_setting('t.itemB')::uuid), 1, 'and no new version was created');
 select is((select d.on_behalf and d.reason is null from public.approval_decisions d where d.request_id = current_setting('t.reqB')::uuid), true, 'the decision is on behalf with no reason');
 select is((select count(*)::int from public.audit_events where action = 'approval.approved_by_team' and metadata ->> 'had_pending' = 'true'), 1, 'the audit tells that a request was pending');
-select is((select body from public.notifications where kind = 'approval.approved_by_team' and user_id = '00000000-0000-0000-0000-0000000000d1'), 'A equipe aprovou «Campanha de outono» (Planejamento).', 'the approver is told the team approved');
+select is((select body from public.notifications where kind = 'approval.approved_by_team' and user_id = '00000000-0000-0000-0000-0000000000d1'), 'A equipe aprovou «Campanha de outono».', 'the approver is told the team approved');
 select is((select count(*)::int from public.notifications where kind = 'approval.requested' and ref_id = current_setting('t.reqB')::uuid and status = 'active'), 0, 'and the request stops waiting for them');
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
@@ -149,7 +144,7 @@ select is(public.portal_get_approval(current_setting('t.reqB')::uuid) -> 'decisi
 reset role;
 
 set local role anon;
-select throws_ok($$select public.approve_on_behalf(gen_random_uuid(), 'plan', null, 1)$$, 'permission denied for function approve_on_behalf', 'anon cannot approve on behalf');
+select throws_ok($$select public.approve_on_behalf(gen_random_uuid(), null, 1)$$, 'permission denied for function approve_on_behalf', 'anon cannot approve on behalf');
 reset role;
 
 select * from finish();

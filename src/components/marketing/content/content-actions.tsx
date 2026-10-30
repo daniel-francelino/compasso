@@ -3,7 +3,6 @@ import {
   ClipboardList,
   Copy,
   Hammer,
-  MessageSquare,
   MoreHorizontal,
   RotateCcw,
   Save,
@@ -20,65 +19,42 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/shared/ui/dropdown-menu";
-import type { StageState } from "@/lib/marketing/content/stage-state";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { DirectMoves, approveStageOf, submitStageOf } from "@/lib/shared/editorial/editorial";
-import { ApprovalStage, EditorialStatus } from "@/lib/shared/enums";
+import {
+  DirectMoves,
+  approvableStatuses,
+  reopenableStatuses,
+  submittableStatuses,
+} from "@/lib/shared/editorial/editorial";
+import { EditorialStatus } from "@/lib/shared/enums";
 
 const MOVE_LABELS: Partial<Record<EditorialStatus, { label: string; icon: LucideIcon }>> = {
-  [EditorialStatus.Planning]: { label: "Iniciar planejamento", icon: ClipboardList },
+  [EditorialStatus.Planning]: { label: "Voltar para planejamento", icon: ClipboardList },
   [EditorialStatus.InProduction]: { label: "Iniciar produção", icon: Hammer },
-  [EditorialStatus.InternalReview]: { label: "Enviar para revisão interna", icon: MessageSquare },
 };
 
-const RESUME_FROM: readonly EditorialStatus[] = [
-  EditorialStatus.InternalReview,
-  EditorialStatus.ChangesRequested,
-];
-
-const REOPEN_ART: readonly EditorialStatus[] = [
-  EditorialStatus.Approved,
-  EditorialStatus.AwaitingApproval,
-];
-
-const REOPEN_PLAN: readonly EditorialStatus[] = [
-  EditorialStatus.AwaitingPlanApproval,
-  EditorialStatus.PlanApproved,
-  EditorialStatus.InProduction,
-  EditorialStatus.InternalReview,
-  EditorialStatus.AwaitingApproval,
-  EditorialStatus.ChangesRequested,
-  EditorialStatus.Approved,
-];
-
 const moveLabel = (from: EditorialStatus, to: EditorialStatus) => {
-  if (from === EditorialStatus.PlanApproved && to === EditorialStatus.InProduction) {
-    return { label: "Iniciar produção das artes", icon: Hammer };
-  }
-  if (RESUME_FROM.includes(from) && to === EditorialStatus.InProduction) {
+  if (from === EditorialStatus.ChangesRequested && to === EditorialStatus.InProduction) {
     return { label: "Retomar produção", icon: Undo2 };
   }
   return MOVE_LABELS[to];
 };
 
 const submitLabel = (status: EditorialStatus): string =>
-  submitStageOf(status) === ApprovalStage.Plan ? "Enviar para aprovação" : "Enviar para aprovação";
+  status === EditorialStatus.AwaitingApproval ? "Reenviar para aprovação" : "Enviar para aprovação";
 
-const movesOf = (status: EditorialStatus, state: StageState): readonly EditorialStatus[] =>
-  DirectMoves[status].filter((to) => {
-    if (to === EditorialStatus.Planning)
-      return state.planRequired && status === EditorialStatus.Draft;
-    if (to === EditorialStatus.InProduction && status === EditorialStatus.Draft) {
-      return !state.planRequired;
-    }
-    return true;
-  });
+const movesOf = (status: EditorialStatus, artApproved: boolean): readonly EditorialStatus[] => {
+  if (status === EditorialStatus.Approved) {
+    return artApproved ? [] : [EditorialStatus.InProduction, EditorialStatus.Planning];
+  }
+  return DirectMoves[status];
+};
 
 export function ContentActions({
   status,
-  state,
+  artApproved,
   isNew,
   cancelled,
   hasPublished,
@@ -97,7 +73,7 @@ export function ContentActions({
   onPublish,
 }: {
   status: EditorialStatus;
-  state: StageState;
+  artApproved: boolean;
   isNew: boolean;
   cancelled: boolean;
   hasPublished: boolean;
@@ -108,8 +84,8 @@ export function ContentActions({
   acting: boolean;
   onMove: (to: EditorialStatus) => void;
   onSubmit: () => void;
-  onApproveOnBehalf: (stage: ApprovalStage) => void;
-  onReopen: (scope: ApprovalStage) => void;
+  onApproveOnBehalf: () => void;
+  onReopen: () => void;
   onCancel: () => void;
   onDuplicate: () => void;
   onPublish: () => void;
@@ -117,16 +93,21 @@ export function ContentActions({
 }) {
   const auth = useAuth();
   const moves =
-    hasContent && can(auth, Action.Content.Update) && !cancelled ? movesOf(status, state) : [];
+    hasContent && can(auth, Action.Content.Update) && !cancelled
+      ? movesOf(status, artApproved)
+      : [];
   const canSubmit =
-    hasContent && can(auth, Action.Content.Submit) && !cancelled && submitStageOf(status) !== null;
-  const approveStage =
-    hasContent && can(auth, Action.Approvals.Override) && !cancelled
-      ? approveStageOf(status, state.planRequired, state.planLocked)
-      : null;
+    hasContent &&
+    can(auth, Action.Content.Submit) &&
+    !cancelled &&
+    submittableStatuses.includes(status);
+  const canApprove =
+    hasContent &&
+    can(auth, Action.Approvals.Override) &&
+    !cancelled &&
+    approvableStatuses.includes(status);
   const reopenAllowed = can(auth, Action.Content.Reopen) && !cancelled && !hasPublished;
-  const canReopenArt = reopenAllowed && REOPEN_ART.includes(status);
-  const canReopenPlan = reopenAllowed && state.planRequired && REOPEN_PLAN.includes(status);
+  const canReopen = reopenAllowed && reopenableStatuses.includes(status);
   const canPublish =
     hasContent &&
     can(auth, Action.Content.PublishManual) &&
@@ -137,15 +118,8 @@ export function ContentActions({
 
   const [primaryMove, ...otherMoves] = moves;
   const hasMenu =
-    otherMoves.length > 0 ||
-    approveStage !== null ||
-    canReopenPlan ||
-    canReopenArt ||
-    canPublish ||
-    canDuplicate ||
-    canCancel;
-  const approveLabel =
-    approveStage === ApprovalStage.Plan ? "Aprovar planejamento" : "Aprovar artes";
+    otherMoves.length > 0 || canApprove || canReopen || canPublish || canDuplicate || canCancel;
+  const approveLabel = "Aprovar pelo cliente";
   const primaryMeta = primaryMove === undefined ? undefined : moveLabel(status, primaryMove);
 
   return (
@@ -206,22 +180,16 @@ export function ContentActions({
                 </DropdownMenuItem>
               );
             })}
-            {approveStage !== null ? (
-              <DropdownMenuItem disabled={dirty} onSelect={() => onApproveOnBehalf(approveStage)}>
+            {canApprove ? (
+              <DropdownMenuItem disabled={dirty} onSelect={onApproveOnBehalf}>
                 <UserCheck aria-hidden="true" />
                 {dirty ? `${approveLabel} (salve antes)` : approveLabel}
               </DropdownMenuItem>
             ) : null}
-            {canReopenPlan ? (
-              <DropdownMenuItem onSelect={() => onReopen(ApprovalStage.Plan)}>
-                <ClipboardList aria-hidden="true" />
-                Reabrir planejamento
-              </DropdownMenuItem>
-            ) : null}
-            {canReopenArt ? (
-              <DropdownMenuItem onSelect={() => onReopen(ApprovalStage.Art)}>
+            {canReopen ? (
+              <DropdownMenuItem onSelect={onReopen}>
                 <RotateCcw aria-hidden="true" />
-                Reabrir artes
+                Reabrir para produção
               </DropdownMenuItem>
             ) : null}
             {canPublish ? (

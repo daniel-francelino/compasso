@@ -77,15 +77,15 @@ const artChecks = (content: ContentDetail, dirty: boolean): Check[] => {
 const copyOf = (stage: ApprovalStage) =>
   stage === ApprovalStage.Plan
     ? {
-        title: "Enviar planejamento para aprovação",
-        submit: "Enviar planejamento",
+        title: "Enviar para aprovação",
+        submit: "Enviar",
         subject: "do planejamento",
         seen: "canais, formatos, datas, resumo e imagens do planejamento",
       }
     : {
-        title: "Enviar artes para aprovação",
-        submit: "Enviar artes",
-        subject: "das artes",
+        title: "Enviar para aprovação",
+        submit: "Enviar",
+        subject: "do conteúdo",
         seen: "texto, arquivos e canais",
       };
 
@@ -105,7 +105,7 @@ export function SubmitDialog({
   const { formRef, errors, error, busy, submit } = useFormSubmit();
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const stage = submitStageOf(content.editorialStatus) ?? ApprovalStage.Art;
+  const stage = submitStageOf(content.caption, content.media.length);
   const copy = copyOf(stage);
 
   const options = useQuery({

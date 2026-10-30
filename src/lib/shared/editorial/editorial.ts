@@ -2,66 +2,35 @@ import { ApprovalStage, ContentFormat, EditorialStatus, Platform } from "@/lib/s
 import { MediaKind } from "@/lib/shared/media/limits";
 
 export const EditorialTransitions: Record<EditorialStatus, readonly EditorialStatus[]> = {
-  [EditorialStatus.Draft]: [
-    EditorialStatus.Planning,
-    EditorialStatus.InProduction,
-    EditorialStatus.PlanApproved,
-    EditorialStatus.Approved,
-    EditorialStatus.Cancelled,
-  ],
   [EditorialStatus.Planning]: [
-    EditorialStatus.AwaitingPlanApproval,
-    EditorialStatus.PlanApproved,
-    EditorialStatus.Cancelled,
-  ],
-  [EditorialStatus.AwaitingPlanApproval]: [
-    EditorialStatus.PlanApproved,
-    EditorialStatus.PlanChangesRequested,
-    EditorialStatus.Planning,
-    EditorialStatus.Cancelled,
-  ],
-  [EditorialStatus.PlanChangesRequested]: [
-    EditorialStatus.Planning,
-    EditorialStatus.AwaitingPlanApproval,
-    EditorialStatus.PlanApproved,
-    EditorialStatus.Cancelled,
-  ],
-  [EditorialStatus.PlanApproved]: [
     EditorialStatus.InProduction,
-    EditorialStatus.Planning,
+    EditorialStatus.AwaitingApproval,
     EditorialStatus.Approved,
     EditorialStatus.Cancelled,
   ],
   [EditorialStatus.InProduction]: [
-    EditorialStatus.InternalReview,
+    EditorialStatus.Planning,
     EditorialStatus.AwaitingApproval,
     EditorialStatus.Approved,
-    EditorialStatus.Planning,
-    EditorialStatus.Cancelled,
-  ],
-  [EditorialStatus.InternalReview]: [
-    EditorialStatus.AwaitingApproval,
-    EditorialStatus.InProduction,
-    EditorialStatus.Approved,
-    EditorialStatus.Planning,
-    EditorialStatus.Cancelled,
-  ],
-  [EditorialStatus.AwaitingApproval]: [
-    EditorialStatus.Approved,
-    EditorialStatus.ChangesRequested,
-    EditorialStatus.InProduction,
-    EditorialStatus.Planning,
     EditorialStatus.Cancelled,
   ],
   [EditorialStatus.ChangesRequested]: [
+    EditorialStatus.Planning,
+    EditorialStatus.InProduction,
+    EditorialStatus.AwaitingApproval,
+    EditorialStatus.Approved,
+    EditorialStatus.Cancelled,
+  ],
+  [EditorialStatus.AwaitingApproval]: [
+    EditorialStatus.Planning,
     EditorialStatus.InProduction,
     EditorialStatus.Approved,
-    EditorialStatus.Planning,
+    EditorialStatus.ChangesRequested,
     EditorialStatus.Cancelled,
   ],
   [EditorialStatus.Approved]: [
-    EditorialStatus.InProduction,
     EditorialStatus.Planning,
+    EditorialStatus.InProduction,
     EditorialStatus.Published,
     EditorialStatus.Cancelled,
   ],
@@ -73,73 +42,31 @@ export const canTransition = (from: EditorialStatus, to: EditorialStatus): boole
   EditorialTransitions[from].includes(to);
 
 export const DirectMoves: Record<EditorialStatus, readonly EditorialStatus[]> = {
-  [EditorialStatus.Draft]: [EditorialStatus.Planning, EditorialStatus.InProduction],
-  [EditorialStatus.Planning]: [],
-  [EditorialStatus.AwaitingPlanApproval]: [],
-  [EditorialStatus.PlanChangesRequested]: [EditorialStatus.Planning],
-  [EditorialStatus.PlanApproved]: [EditorialStatus.InProduction],
-  [EditorialStatus.InProduction]: [EditorialStatus.InternalReview],
-  [EditorialStatus.InternalReview]: [EditorialStatus.InProduction],
+  [EditorialStatus.Planning]: [EditorialStatus.InProduction],
+  [EditorialStatus.InProduction]: [EditorialStatus.Planning],
+  [EditorialStatus.ChangesRequested]: [EditorialStatus.Planning, EditorialStatus.InProduction],
   [EditorialStatus.AwaitingApproval]: [],
-  [EditorialStatus.ChangesRequested]: [EditorialStatus.InProduction],
   [EditorialStatus.Approved]: [],
   [EditorialStatus.Published]: [],
   [EditorialStatus.Cancelled]: [],
 };
 
-export const submitStageOf = (status: EditorialStatus): ApprovalStage | null => {
-  if (
-    status === EditorialStatus.Planning ||
-    status === EditorialStatus.PlanChangesRequested ||
-    status === EditorialStatus.AwaitingPlanApproval
-  ) {
-    return ApprovalStage.Plan;
-  }
-  if (
-    status === EditorialStatus.InProduction ||
-    status === EditorialStatus.InternalReview ||
-    status === EditorialStatus.AwaitingApproval
-  ) {
-    return ApprovalStage.Art;
-  }
-  return null;
-};
+export const submitStageOf = (caption: string, mediaCount: number): ApprovalStage =>
+  caption.trim() !== "" || mediaCount > 0 ? ApprovalStage.Art : ApprovalStage.Plan;
 
-const artApprovableStatuses: readonly EditorialStatus[] = [
-  EditorialStatus.Draft,
-  EditorialStatus.PlanApproved,
-  EditorialStatus.InProduction,
-  EditorialStatus.InternalReview,
-  EditorialStatus.AwaitingApproval,
-  EditorialStatus.ChangesRequested,
-];
-
-export const approveStageOf = (
-  status: EditorialStatus,
-  planRequired: boolean,
-  planApproved: boolean,
-): ApprovalStage | null => {
-  if (planRequired && !planApproved) {
-    return planStageStatuses.includes(status) ? ApprovalStage.Plan : null;
-  }
-  return artApprovableStatuses.includes(status) ? ApprovalStage.Art : null;
-};
-
-export const planLockedStatuses: readonly EditorialStatus[] = [
-  EditorialStatus.PlanApproved,
-  EditorialStatus.InProduction,
-  EditorialStatus.InternalReview,
-  EditorialStatus.AwaitingApproval,
-  EditorialStatus.ChangesRequested,
-  EditorialStatus.Approved,
-  EditorialStatus.Published,
-];
-
-export const planStageStatuses: readonly EditorialStatus[] = [
-  EditorialStatus.Draft,
+export const submittableStatuses: readonly EditorialStatus[] = [
   EditorialStatus.Planning,
-  EditorialStatus.AwaitingPlanApproval,
-  EditorialStatus.PlanChangesRequested,
+  EditorialStatus.InProduction,
+  EditorialStatus.ChangesRequested,
+  EditorialStatus.AwaitingApproval,
+];
+
+export const approvableStatuses: readonly EditorialStatus[] = submittableStatuses;
+
+export const reopenableStatuses: readonly EditorialStatus[] = [
+  EditorialStatus.Approved,
+  EditorialStatus.AwaitingApproval,
+  EditorialStatus.ChangesRequested,
 ];
 
 export const platformFormats: Record<Platform, readonly ContentFormat[]> = {

@@ -100,25 +100,25 @@ Today the sender picks **one designated approver** and only that person can deci
 
 ## Approval by the team (decided 2026-10-22)
 
-> Status: **implemented** (2026-10-23; the board, list badge and filter of [content.md](content.md) are missing). The statuses, the manager's options, the screens and the acceptance criteria are in [content.md](content.md#flexible-approval-decided-2026-10-22); this section holds the request, decision, permission and notification rules. Names are proposals and enter the registries in the implementing change (GOLD-4).
+> Status: **implemented** (2026-10-23; the board, list badge and filter of [content.md](content.md) are missing). The statuses, the manager's options, the screens and the acceptance criteria are in [content.md](content.md#simplified-approval-decided-2026-10-30) (changed on 2026-10-30: no stage); this section holds the request, decision, permission and notification rules. Names are proposals and enter the registries in the implementing change (GOLD-4).
 
-The client's approval must not block publication. The content manager records the approval of the plan or of the art **for the client**. It is an explicit, audited act by a named person; rule 6 ("delay or silence never equals approval") still holds, and rule 9 (a decision is never changed) too: the decision is created, not altered.
+The client's approval must not block publication. The content manager records the approval **for the client**. It is an explicit, audited act by a named person; rule 6 ("delay or silence never equals approval") still holds, and rule 9 (a decision is never changed) too: the decision is created, not altered.
 
-1. **Function.** `approve_on_behalf(p_item, p_stage, p_reason, p_expected_version)`, one transaction, called by a server function. It locks the content, checks the version and the status (content.md rules 2 and 3), and then:
-   - **With a pending request of that stage:** the request keeps its version (the client sees exactly what is approved), the decision is recorded on it, the request becomes `approved`.
+1. **Function.** `approve_on_behalf(p_item, p_reason, p_expected_version)`, one transaction, called by a server function. It locks the content, checks the version and the status (`planning`, `in_production`, `changes_requested` or `awaiting_approval`), and then:
+   - **With a pending request:** the request keeps its version (the client sees exactly what is approved), the decision is recorded on it, the request becomes `approved`.
    - **Without a pending request:** a version is created exactly as `submit_for_approval` would, with a request created already decided.
-   - In both cases it updates the content (`plan_approved` or `approved`, and the approved version), writes the audit event, resolves the notifications of the eligible approvers and notifies them (rule 5).
+   - In both cases it updates the content (`approved`, and the approved version when it is an art version), writes the audit event, resolves the notifications of the eligible approvers and notifies them (rule 5).
 2. **Permission.** `approvals.override` (internal, requires `content.submit`) and the brand link (`has_action` + `can_access_brand`). External users never call it; `anon` cannot.
 3. **Decision record.** `approval_decisions` gets `on_behalf boolean not null default false` and `reason text` (internal only). `decided_by` is the manager. The unique decision per request and the immutability trigger stay.
 4. **What the client may still do.** Comment. A decision attempt on the closed request is refused with `request_not_pending`; the first decision wins, whoever it is.
-5. **Notifications.** A new kind `approval.approved_by_team` goes to the eligible approvers **only when a request was pending** (they were asked): "A equipe aprovou «Café Aurora · Lançamento de outono» (Artes)." No notification when nothing had been sent. The email follows the usual preferences and outbox.
+5. **Notifications.** A new kind `approval.approved_by_team` goes to the eligible approvers **only when a request was pending** (they were asked): "A equipe aprovou «Lançamento de outono»." No notification when nothing had been sent. The email follows the usual preferences and outbox.
 6. **Audit.** One event, proposed action `approval.approved_by_team` (entity `approval_request`, metadata: stage, revision number, whether a request was pending, `reason_given` as a flag; ids and counts only, SEC-12). The reason text stays in the decision row, not in the audit metadata.
-7. **Errors.** Existing codes only: `denied`, `conflict`, `transition_not_allowed`, `plan_not_approved`, `plan_incomplete`, `channel_required`, `media_not_available`, `channel_archived`, `request_not_pending`.
+7. **Errors.** Existing codes only: `denied`, `conflict`, `transition_not_allowed`, `invalid_input`, `plan_incomplete`, `channel_required`, `media_not_available`, `channel_archived`, `request_not_pending`.
 8. **Portal exposure.** `portal_*` functions return `decided_on_behalf` (boolean) and never the manager's name or the reason.
 
 | Open decision | See |
 |---|---|
-| Art on behalf without an approved plan | O10, decided: refused (`plan_not_approved`), in [content.md](content.md#open-decisions) |
+| Art on behalf without an approved plan | Not applicable since 2026-10-30 (O23): there is no required order |
 | Reason optional or required | O11, decided: optional, in [content.md](content.md#open-decisions) |
 
 ## Screens (team side)
@@ -163,7 +163,7 @@ Deciding also requires being the designated approver and an active external memb
 
 > Messages (pt-BR) and categories are authoritative in [../reference/error-codes.md](../reference/error-codes.md); this list only names the codes this module uses.
 
-`request_not_pending`, `revision_superseded`, `comment_required`, `approver_required`, `plan_not_approved`, `plan_locked`, `conflict`, `denied`, `not_found`.
+`request_not_pending`, `revision_superseded`, `comment_required`, `approver_required`, `conflict`, `denied`, `not_found`.
 
 ## Acceptance criteria
 
@@ -191,3 +191,5 @@ Validation performed: the pgTAP assertions of [content.md](content.md) cover sub
 
 
 2026-10-23: **flexible approval implemented** (the manager approves the plan or the art on the client's behalf). O10 and O11 were decided with the recommendations (art refused without an approved plan; reason optional). Migration `20261023110000_approvals_approve_on_behalf.sql`: `approval_decisions.on_behalf` and `reason`, the action `approvals.override` (starting role `manager`), the notification kind `approval.approved_by_team`, the audit action of the same name, `editorial_transition_allowed` widened (a status can now reach `plan_approved`/`approved` from the statuses before it; `content_move` still refuses both), the internal helper `content_freeze_revision` (extracted from `submit_for_approval`, which now calls it, so sending and approving freeze a version the same way), `approve_on_behalf`, and `portal_request_row`/`portal_get_approval` returning `decided_on_behalf` and hiding the manager's name. Code: `approveOnBehalf` (`workflow.functions.ts`), `approveStageOf` and the new transitions (`editorial.ts`), the action "Aprovar planejamento pelo cliente"/"Aprovar arte pelo cliente" and its dialog (`content-actions.tsx`, `content-editor.tsx`, `ReasonDialog` got `optional`), the team approval detail and list ("Aprovado pela equipe", the reason), and the portal decision card and request card. Validation performed: `npm run db:verify` (950 assertions, 0 failures; 31 new in `22_approve_on_behalf.test.sql`), Vitest (153), typecheck, ESLint, Prettier, `check:consistency`, `check:docs`; Applied to the linked project on 2026-10-23 (`db push`, then `db:types -- --linked`; typecheck passes with the real types). **Not done:** the board's "Mover para…" opening the dialog, the "Aprovado pela equipe" marker and filter on the list and board badges, the same text in the revision history of the editor. **Not tested:** the screens in a browser, two simultaneous decisions from real sessions, the notification email.
+
+2026-10-30 (O23, simplified approval): a content has one approval with no stage in its status. `submit_for_approval`, `approve_on_behalf` (no `p_stage`), `portal_decide_approval` (status `approved` or `changes_requested`, `approved_revision_id` only for an art version), `reopen_content` (no `p_scope`), `send_approval_reminder` and the notification texts were replaced in `20261030100000_simplified_approval.sql`; the request keeps `stage` to tell a planning version from an art version. Validated with `npm run db:verify` (1105 assertions, tests `19_simplified_approval`, `21_content_published` and `22_approve_on_behalf` rewritten). **Not tested**: the migration on the linked project, the portal screens with a real session.

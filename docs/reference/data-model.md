@@ -280,8 +280,7 @@ create table content_items (
   plan_media jsonb not null default '[]',  -- derived from the image nodes of plan_summary (content.md, O19)
   plan_approved_revision_id uuid,
   editorial_status text not null default 'draft' check (editorial_status in
-    ('draft','planning','awaiting_plan_approval','plan_changes_requested','plan_approved',
-     'in_production','internal_review','awaiting_approval','changes_requested','approved','published','cancelled')),
+    ('planning','in_production','awaiting_approval','changes_requested','approved','published','cancelled')),
   approval_due_date date,
   current_revision_id uuid,
   approved_revision_id uuid,

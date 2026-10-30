@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  ApprovalStage,
-  CommentVisibility,
-  ContentFormat,
-  EditorialStatus,
-} from "@/lib/shared/enums";
+import { CommentVisibility, ContentFormat, EditorialStatus } from "@/lib/shared/enums";
 import { listRequestSchema } from "@/lib/shared/list-search";
 import { richDocSchema } from "@/lib/shared/rich-text/types";
 
@@ -87,11 +82,8 @@ export const idSchema = z.object({ id: z.string().uuid() });
 
 export const cancelSchema = z.object({ id: z.string().uuid(), reason: reasonSchema });
 
-export const reopenSchema = cancelSchema.extend({ scope: z.nativeEnum(ApprovalStage) });
-
 export const approveOnBehalfSchema = z.object({
   id: z.string().uuid(),
-  stage: z.nativeEnum(ApprovalStage),
   reason: z.string().trim().max(500, "O motivo é longo demais.").optional(),
   expectedVersion: z.number().int().min(1),
 });

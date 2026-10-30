@@ -99,10 +99,8 @@ export type ContentDetail = {
   types: ContentTypeRow[];
   cancelled: boolean;
   editorialStatus: EditorialStatus;
-  planRequired: boolean;
   planSummary: RichDoc | null;
   planMedia: ContentMedia[];
-  planApprovedRevisionId: string | null;
   approvalDueDate: string | null;
   caption: string;
   callToAction: string | null;

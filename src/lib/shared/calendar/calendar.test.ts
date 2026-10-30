@@ -83,7 +83,6 @@ describe("shiftAnchor", () => {
     expect(shiftAnchor(CalendarView.Week, "2026-10-18", 1)).toBe("2026-10-25");
     expect(shiftAnchor(CalendarView.Month, "2026-10-18", 1)).toBe("2026-11-01");
     expect(shiftAnchor(CalendarView.Month, "2026-01-31", -1)).toBe("2025-12-01");
-    expect(shiftAnchor(CalendarView.List, "2026-12-15", 1)).toBe("2027-01-01");
   });
 });
 

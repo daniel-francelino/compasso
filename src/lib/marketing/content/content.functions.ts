@@ -14,6 +14,7 @@ import {
 } from "@/lib/shared/enums";
 import type { ContentTypeRow } from "@/lib/shared/content-types/content-types.functions";
 import { PAGE_SIZE } from "@/lib/shared/list-search";
+import { brandLogoUrls } from "@/lib/shared/brands/brand-logos.server";
 import { personNames } from "@/lib/shared/people.server";
 import { richDocFromStored } from "@/lib/shared/rich-text/types";
 import {
@@ -54,6 +55,7 @@ export type ContentItemRow = {
   title: string;
   brandId: string;
   brandName: string;
+  brandLogoUrl: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
   publishDate: string | null;
@@ -277,11 +279,15 @@ export const listContentItems = createServerFn({ method: "GET" })
       caller.supabase,
       rows.map((row) => row.assignee_id),
     );
+    const logos = await brandLogoUrls(caller.supabase, [
+      ...new Set(rows.map((row) => row.brand_id)),
+    ]);
     const mapped = rows.map((row) => ({
       id: row.id,
       title: row.title,
       brandId: row.brand_id,
       brandName: row.brands?.name ?? "",
+      brandLogoUrl: logos.get(row.brand_id) ?? null,
       assigneeId: row.assignee_id,
       assigneeName: row.assignee_id === null ? null : (names.get(row.assignee_id) ?? null),
       publishDate: row.publish_date,
@@ -329,7 +335,7 @@ export const getContentItem = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("content_items")
       .select(
-        `id, title, brand_id, internal_notes, assignee_id, publish_date, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_required, plan_summary, plan_media, plan_approved_revision_id, current_revision_id, approved_revision_id, brands(name, timezone), ${TYPES_SELECT}, content_channels(${CHANNEL_SELECT})`,
+        `id, title, brand_id, internal_notes, assignee_id, publish_date, version, cancelled_at, updated_at, editorial_status, approval_due_date, caption, call_to_action, working_media, plan_summary, plan_media, current_revision_id, approved_revision_id, brands(name, timezone), ${TYPES_SELECT}, content_channels(${CHANNEL_SELECT})`,
       )
       .eq("id", data.id)
       .maybeSingle();
@@ -434,10 +440,8 @@ export const getContentItem = createServerFn({ method: "GET" })
         types: toTypes(row.content_item_types),
         cancelled: row.cancelled_at !== null,
         editorialStatus: row.editorial_status as EditorialStatus,
-        planRequired: row.plan_required,
         planSummary: richDocFromStored(row.plan_summary),
         planMedia: planMediaResult.media,
-        planApprovedRevisionId: row.plan_approved_revision_id,
         approvalDueDate: row.approval_due_date,
         caption: text,
         callToAction: row.call_to_action,
@@ -580,13 +584,8 @@ export const listBoard = createServerFn({ method: "GET" })
     if (caller === null) return denied;
     const search = cleanSearch(data.search);
     const statuses = [
-      EditorialStatus.Draft,
       EditorialStatus.Planning,
-      EditorialStatus.AwaitingPlanApproval,
-      EditorialStatus.PlanChangesRequested,
-      EditorialStatus.PlanApproved,
       EditorialStatus.InProduction,
-      EditorialStatus.InternalReview,
       EditorialStatus.AwaitingApproval,
       EditorialStatus.ChangesRequested,
       EditorialStatus.Approved,

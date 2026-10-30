@@ -49,23 +49,6 @@ export type CalendarEntry = {
   channelArchived: boolean;
 };
 
-export type UndatedEntry = {
-  itemId: string;
-  channelRowId: string;
-  title: string;
-  brandId: string;
-  brandName: string;
-  brandTimezone: string;
-  channelId: string;
-  platform: Platform;
-  profileName: string;
-  format: ContentFormat;
-  editorialStatus: EditorialStatus;
-  version: number;
-  assigneeName: string | null;
-  channelArchived: boolean;
-};
-
 export type PortalCalendarEntry = {
   requestId: string;
   status: ApprovalRequestStatus;

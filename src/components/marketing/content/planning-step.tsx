@@ -8,7 +8,6 @@ import { BrandSelect } from "@/components/shared/admin/brand-select";
 import { PropertyRow, propertyControlClass } from "@/components/shared/admin/property-row";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
-import type { StageState } from "@/lib/marketing/content/stage-state";
 import type { BrandOption } from "@/lib/shared/brands/brand-options.functions";
 import type { ContentTypeRow } from "@/lib/shared/content-types/content-types.functions";
 import { StoredKey, writeStored } from "@/lib/shared/stored-keys";
@@ -22,7 +21,6 @@ export function PlanningStep({
   selected,
   locked,
   assignees,
-  state,
   editable,
   settingsDisabled,
   saving,
@@ -39,7 +37,6 @@ export function PlanningStep({
   selected: Set<string>;
   locked: Set<string>;
   assignees: { id: string; name: string }[];
-  state: StageState;
   editable: boolean;
   settingsDisabled: boolean;
   saving: boolean;
@@ -49,10 +46,9 @@ export function PlanningStep({
   onToggleChannel: (channelId: string) => void;
 }) {
   const { values, set } = draft;
-  const planDisabled = !editable || saving || state.planLocked;
-  const bodyTip = state.planRequired
-    ? "Reúna a ideia do conteúdo. O cliente aprova o planejamento por aqui. Depois da aprovação, a data, os canais e os formatos ficam travados enquanto as artes são produzidas."
-    : "Reúna a ideia do conteúdo para quem vai produzir. Depois da aprovação, a data, os canais e os formatos ficam travados.";
+  const planDisabled = !editable || saving;
+  const bodyTip =
+    "Reúna a ideia do conteúdo para quem vai produzir. Você pode enviar para aprovação do cliente quando quiser, quantas vezes precisar.";
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <ContentTitleField draft={draft} disabled={settingsDisabled} error={errors["title"]} />
@@ -108,7 +104,7 @@ export function PlanningStep({
               loading={channelsLoading}
               selected={selected}
               locked={locked}
-              disabled={!editable || state.planLocked}
+              disabled={!editable}
               onToggle={onToggleChannel}
               error={errors["channels"]}
             />
@@ -120,7 +116,7 @@ export function PlanningStep({
               <PlanningFormats
                 draft={draft}
                 channels={channels}
-                disabled={!editable || state.planLocked}
+                disabled={!editable}
                 errors={errors}
               />
             </div>
