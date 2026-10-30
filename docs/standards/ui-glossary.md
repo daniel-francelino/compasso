@@ -25,11 +25,11 @@
 | Profile photo | Foto de perfil | Buttons "Enviar foto", "Trocar foto", "Remover foto"; library scope "Fotos de perfil"; fallback is the initials of the name |
 | Content name | Nome do conteúdo | Label of the internal title field |
 | Duplicate content | Duplicar conteúdo | Creates a copy named "Cópia de …" without dates |
-| Briefing | Briefing | Title of the large card of the "Planejamento" step (types, publication date, "Ideia inicial", "Referências"); the old "Briefing" step and its guided fields were removed on 2026-10-28 |
+| Briefing | Briefing | Title of the large card of the "Planejamento" step (types, publication date, "Briefing"); the old "Briefing" step and its guided fields were removed on 2026-10-28 |
 | Content type | Tipo de conteúdo / Tipos | Multi-select of the planning card, chips in the list, catalog screen "Tipos de conteúdo" in the settings; actions "Novo tipo", "Novo tipo de conteúdo" (icon button beside the multi-select, opens a side sheet), "Arquivar", "Reativar" |
 | Publication date | Data de publicação | Date of the planning card that the publication rows inherit; the first column of the content list is "Data" |
 | Planning reference files | Referências | Files of the planning step (label of the file list); the art files of the "Conteúdo" step stay "Arquivos" |
-| Planning summary | Ideia inicial | Rich text of the planning card that the client approves |
+| Planning summary | Briefing | Rich text of the planning card that the client approves |
 | Site / page / section | Site / Página / Seção | Menu of the space: "Páginas", "Serviços", "Depoimentos", "Portfólio", "Mensagens", "Menu e rodapé", "Configurações", "SEO", "Redirecionamentos", "Publicações" |
 | Publish (site) | Publicar | "Publicar…", "Tirar do ar", "Voltar para esta versão"; states "Fora do site", "No ar", "Despublicada", "Sai na próxima publicação" |
 | Anchor | Âncora | Name of a section used in links such as /pagina#ancora |

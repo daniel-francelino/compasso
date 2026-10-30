@@ -32,7 +32,6 @@ export function PlanTypesRow({
   const canCreate = can(auth, Action.Content.ManageTypes) && !disabled;
   return (
     <PropertyRow
-      stacked
       icon={Shapes}
       label="Tipo de conteúdo"
       tip={{
@@ -111,6 +110,7 @@ export function PlanDateRow({
         id="content-publish-date"
         label="Data de publicação"
         hideLabel
+        hideIcon
         triggerClassName={propertyControlClass}
         value={draft.values.publishDate ?? ""}
         onChange={(value) => onPublishDateChange(value === "" ? null : value)}
@@ -136,7 +136,7 @@ export function PlanBody({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5">
-        <h2 className="font-display text-xl font-semibold">Ideia inicial</h2>
+        <h2 className="font-display text-xl font-semibold">Briefing</h2>
         <InfoTip label="Sobre o briefing">{tip}</InfoTip>
       </div>
       <PlanEditor

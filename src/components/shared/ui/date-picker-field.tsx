@@ -23,9 +23,11 @@ export function DatePickerField({
   clearable = false,
   required = false,
   hideLabel = false,
+  hideIcon = false,
   triggerClassName,
 }: {
   hideLabel?: boolean;
+  hideIcon?: boolean;
   triggerClassName?: string;
   id: string;
   label: string;
@@ -73,7 +75,7 @@ export function DatePickerField({
               triggerClassName,
             )}
           >
-            <CalendarDays className="size-4" aria-hidden="true" />
+            {hideIcon ? null : <CalendarDays className="size-4" aria-hidden="true" />}
             <span>{selected ? formatLongDate(selected) : "Selecionar data"}</span>
           </Button>
         </PopoverTrigger>

@@ -57,7 +57,7 @@ export function PlanningStep({
     <div className="mx-auto w-full max-w-4xl space-y-6">
       <ContentTitleField draft={draft} disabled={settingsDisabled} error={errors["title"]} />
       <div className="space-y-2 border-y border-border py-3">
-        <div className="grid gap-x-4 gap-y-3 [grid-template-columns:repeat(auto-fit,minmax(12.5rem,1fr))]">
+        <div className="grid gap-x-4 gap-y-3 grid-cols-[repeat(auto-fit,minmax(12.5rem,1fr))]">
           {isNew ? (
             <PropertyRow stacked icon={Building2} label="Marca">
               <BrandSelect
@@ -87,12 +87,6 @@ export function PlanningStep({
               error={errors["assigneeId"]}
             />
           </PropertyRow>
-          <PlanTypesRow
-            draft={draft}
-            disabled={settingsDisabled}
-            typeOptions={typeOptions}
-            error={errors["typeIds"]}
-          />
           <PlanDateRow
             draft={draft}
             disabled={planDisabled}
@@ -100,6 +94,12 @@ export function PlanningStep({
             error={errors["publishDate"]}
           />
         </div>
+        <PlanTypesRow
+          draft={draft}
+          disabled={settingsDisabled}
+          typeOptions={typeOptions}
+          error={errors["typeIds"]}
+        />
         <PropertyRow icon={Radio} label="Canais">
           <div className="py-1">
             <ChannelPicker

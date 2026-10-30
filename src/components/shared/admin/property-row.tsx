@@ -4,7 +4,7 @@ import { InfoTip } from "@/components/shared/admin/info-tip";
 import { cn } from "@/lib/shared/utils";
 
 export const propertyControlClass =
-  "border-transparent bg-transparent shadow-none hover:bg-muted/60 data-[state=open]:bg-muted/60";
+  "border-transparent bg-transparent px-0 shadow-none hover:bg-muted/60 data-[state=open]:bg-muted/60";
 
 export function PropertyRow({
   icon: Icon,
