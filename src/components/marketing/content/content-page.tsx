@@ -232,13 +232,6 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           },
         ]
       : []),
-    {
-      id: "open",
-      label: "Abrir",
-      icon: Eye,
-      onSelect: (item) =>
-        void navigate({ to: "/admin/marketing/content/$itemId", params: { itemId: item.id } }),
-    },
     ...(can(auth, Action.Content.Create)
       ? [
           {
