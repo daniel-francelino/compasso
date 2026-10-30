@@ -93,6 +93,7 @@ export function PlanEditor({
         onValueChange={(json) => draft.set("planSummary", fromEditorJson(json))}
         editable={!disabled}
         surface="plain"
+        className="pl-0"
         minHeight="18rem"
         placeholder={PLACEHOLDER}
         blocks={PLAN_BLOCKS}
