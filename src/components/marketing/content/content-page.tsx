@@ -10,6 +10,7 @@ import {
   Copy,
   CircleCheck,
   CircleX,
+  Eraser,
   FileText,
   List,
   Pencil,
@@ -20,7 +21,7 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
-import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
+import { Empty } from "lost-ui/data/empty";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -457,13 +458,26 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           error={query.error?.message ?? null}
           onRetry={() => void query.refetch()}
           empty={
-            <SearchableEmptyState
-              icon={FileText}
-              search={list.debouncedSearch}
-              onClearSearch={() => list.setSearch("")}
-              emptyTitle="Nenhum conteúdo ainda"
-              emptyDescription="Crie o primeiro conteúdo para começar a planejar as publicações."
-              noResultsDescription="Tente outro título ou limpe os filtros."
+            <Empty
+              icon={<FileText aria-hidden="true" />}
+              title={list.debouncedSearch ? "Nenhum resultado" : "Nenhum conteúdo ainda"}
+              description={
+                list.debouncedSearch
+                  ? "Tente outro título ou limpe os filtros."
+                  : "Crie o primeiro conteúdo para começar a planejar as publicações."
+              }
+              actions={
+                list.debouncedSearch
+                  ? [
+                      {
+                        label: "Limpar pesquisa",
+                        icon: <Eraser aria-hidden="true" />,
+                        variant: "outline",
+                        onClick: () => list.setSearch(""),
+                      },
+                    ]
+                  : []
+              }
             />
           }
           paginationMode="infinite"

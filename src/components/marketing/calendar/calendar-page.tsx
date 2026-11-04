@@ -216,7 +216,6 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     return (
       <CalendarEntryPreview
         entry={entry}
-        subtitle={item.subtitle}
         brandLogoUrl={brands.data?.find((brand) => brand.id === entry.brandId)?.logoUrl ?? null}
       >
         {trigger}

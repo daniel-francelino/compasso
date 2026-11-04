@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode, useRef, useState } from "react";
+import { RichTextView } from "@/components/shared/admin/rich-text-view";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import { Skeleton } from "@/components/shared/ui/skeleton";
@@ -10,18 +11,17 @@ import { MediaVariant } from "@/lib/shared/media/schemas";
 import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
+import { isRichDocEmpty, richDocImages } from "@/lib/shared/rich-text/types";
 
 const CLOSE_DELAY_MS = 160;
 const STALE_MS = 60_000;
 
 export function CalendarEntryPreview({
   entry,
-  subtitle,
   brandLogoUrl,
   children,
 }: {
   entry: CalendarEntry;
-  subtitle: string;
   brandLogoUrl: string | null;
   children: ReactNode;
 }) {
@@ -38,6 +38,11 @@ export function CalendarEntryPreview({
     (content.data?.media ?? []).map((media) => media.mediaVersionId),
     MediaVariant.Display,
   );
+
+  const planImageIds = richDocImages(content.data?.planSummary ?? null).map(
+    (image) => image.mediaVersionId,
+  );
+  const planUrls = useSignedUrls(planImageIds, MediaVariant.Display);
 
   const cancelClose = () => {
     if (timer.current !== null) clearTimeout(timer.current);
@@ -64,19 +69,26 @@ export function CalendarEntryPreview({
         <p className="p-4 text-sm text-muted-foreground">Não foi possível carregar a prévia.</p>
       );
     }
-    return (
-      <div className="max-h-[min(75vh,38rem)] space-y-2 overflow-y-auto p-2">
-        <div className="px-2 pt-1">
-          <p className="truncate text-sm font-semibold">{content.data.title}</p>
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
+    const caption = row.caption === "" ? content.data.caption : row.caption;
+    const noPreview = content.data.media.length === 0 && caption === "";
+    if (noPreview && !isRichDocEmpty(content.data.planSummary)) {
+      return (
+        <div className="max-h-[min(75vh,38rem)] space-y-2 overflow-y-auto p-4">
+          <p className="text-xs font-medium text-muted-foreground">Planejamento</p>
+          <RichTextView doc={content.data.planSummary} images={planUrls.data} />
         </div>
+      );
+    }
+    return (
+      <div className="max-h-[min(75vh,38rem)] overflow-y-auto p-2">
         <ChannelPreview
           platform={row.platform}
           profileName={row.profileName}
           format={row.format}
-          caption={row.caption === "" ? content.data.caption : row.caption}
+          caption={caption}
           callToAction={content.data.callToAction}
           brandLogoUrl={brandLogoUrl}
+          showMediaPlaceholder
           media={content.data.media.map((media) => ({
             versionId: media.mediaVersionId,
             kind: media.kind,

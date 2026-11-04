@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, ImageOff } from "lucide-react";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
@@ -111,6 +111,7 @@ export function ChannelPreview({
   brandLogoUrl,
   showCounter = false,
   compact = false,
+  showMediaPlaceholder = false,
 }: {
   platform: Platform;
   profileName: string;
@@ -121,6 +122,7 @@ export function ChannelPreview({
   brandLogoUrl?: string | null;
   showCounter?: boolean;
   compact?: boolean;
+  showMediaPlaceholder?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
@@ -212,6 +214,15 @@ export function ChannelPreview({
               </div>
             </>
           ) : null}
+        </div>
+      ) : null}
+      {media.length === 0 && showMediaPlaceholder ? (
+        <div
+          className="flex flex-col items-center justify-center gap-2 bg-muted text-muted-foreground"
+          style={{ aspectRatio: previewFrameRatio(platform, format, undefined) }}
+        >
+          <ImageOff className="size-8" aria-hidden="true" />
+          <span className="text-xs">Sem imagem ou vídeo ainda</span>
         </div>
       ) : null}
       <div className={cn("space-y-2 text-sm", compact ? "p-2 text-xs" : "p-3")}>

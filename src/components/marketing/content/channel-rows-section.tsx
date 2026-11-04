@@ -3,7 +3,7 @@ import { PlatformMark } from "@/components/shared/preview/platform-mark";
 import { DateTimeField } from "@/components/shared/admin/date-time-field";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { Button } from "@/components/shared/ui/button";
-import { Label } from "@/components/shared/ui/label";
+import { Label } from "lost-ui/ui/label";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import { formatIcons } from "@/components/shared/content/format-icons";

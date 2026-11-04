@@ -4,8 +4,8 @@ import { useState } from "react";
 import { CommentComposer } from "@/components/marketing/content/comment-composer";
 import { CommentEntry } from "@/components/marketing/content/comment-entry";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
-import { EmptyState } from "@/components/shared/admin/empty-state";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Empty } from "lost-ui/data/empty";
+import { Skeleton } from "lost-ui/ui/skeleton";
 import { useContentComments } from "@/hooks/marketing/use-content-comments";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import { deleteComment } from "@/lib/marketing/content/comments.functions";
@@ -52,9 +52,10 @@ export function CommentsPanel({
         </p>
       ) : null}
       {query.data && roots.length === 0 ? (
-        <EmptyState
-          compact
-          icon={MessageSquare}
+        <Empty
+          size="sm"
+          variant="naked"
+          icon={<MessageSquare aria-hidden="true" />}
           title="Nenhum comentário"
           description="Seja a primeira pessoa a comentar."
         />

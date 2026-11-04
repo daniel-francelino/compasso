@@ -1,6 +1,6 @@
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { TextAreaField, TextField } from "@/components/shared/admin/form-fields";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "lost-ui/ui/tabs";
 import type { ContentDraft } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";

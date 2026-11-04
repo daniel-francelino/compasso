@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Skeleton } from "lost-ui/ui/skeleton";
 
 function PropertySkeleton({ stacked = false }: { stacked?: boolean }) {
   return (

@@ -26,8 +26,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/shared/ui/dropdown-menu";
-import { Progress } from "@/components/shared/ui/progress";
+} from "lost-ui/ui/dropdown-menu";
+import { Progress } from "lost-ui/ui/progress";
 import { UploadStatus, rejectionFor } from "@/hooks/shared/use-media-upload";
 import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
 import { type UploadedFile, useUploadTray } from "@/hooks/shared/use-upload-tray";

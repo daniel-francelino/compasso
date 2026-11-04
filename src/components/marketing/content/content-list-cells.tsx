@@ -3,12 +3,7 @@ import type { ReactNode } from "react";
 import { BrandAvatar } from "@/components/shared/admin/brand-avatar";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { formatIcons } from "@/components/shared/content/format-icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/shared/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "lost-ui/ui/tooltip";
 import type { ContentFormat } from "@/lib/shared/enums";
 import { contentFormatLabels } from "@/lib/shared/labels";
 

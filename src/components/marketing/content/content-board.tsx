@@ -10,14 +10,13 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { CalendarClock, GripVertical, RotateCw, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { Empty } from "lost-ui/data/empty";
 import { InfoTip } from "@/components/shared/admin/info-tip";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
-import { Button } from "@/components/shared/ui/button";
-import { Badge } from "@/components/shared/ui/badge";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Badge } from "lost-ui/ui/badge";
+import { Skeleton } from "lost-ui/ui/skeleton";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import {
   type BoardCard,
@@ -252,16 +251,17 @@ export function ContentBoard({
   if (query.isError) {
     return (
       <SectionCard>
-        <EmptyState
-          icon={TriangleAlert}
+        <Empty
+          icon={<TriangleAlert aria-hidden="true" />}
           title="Não foi possível carregar o quadro"
           description={query.error.message}
-          action={
-            <Button onClick={() => void query.refetch()}>
-              <RotateCw aria-hidden="true" />
-              Tentar novamente
-            </Button>
-          }
+          actions={[
+            {
+              label: "Tentar novamente",
+              icon: <RotateCw aria-hidden="true" />,
+              onClick: () => void query.refetch(),
+            },
+          ]}
         />
       </SectionCard>
     );

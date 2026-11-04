@@ -21,7 +21,7 @@ import { ReasonDialog } from "@/components/shared/admin/reason-dialog";
 import { StepNav } from "@/components/shared/admin/step-nav";
 import { StepPanel } from "@/components/shared/admin/step-panel";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
-import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "lost-ui/ui/alert";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { Button } from "@/components/shared/ui/button";
 import {

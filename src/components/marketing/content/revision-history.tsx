@@ -1,7 +1,7 @@
 import { History } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { ActivityEntry } from "@/components/marketing/content/activity-entry";
-import { EmptyState } from "@/components/shared/admin/empty-state";
+import { Empty } from "lost-ui/data/empty";
 import type { RequestRow } from "@/lib/marketing/content/types";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
@@ -80,9 +80,10 @@ export function RevisionHistory({
 
   if (events.length === 0) {
     return (
-      <EmptyState
-        compact
-        icon={History}
+      <Empty
+        size="sm"
+        variant="naked"
+        icon={<History aria-hidden="true" />}
         title="Nenhuma atividade ainda"
         description="Os envios para o cliente e as decisões aparecem aqui."
       />

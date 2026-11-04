@@ -12,7 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/shared/ui/dropdown-menu";
+} from "lost-ui/ui/dropdown-menu";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import { editComment } from "@/lib/marketing/content/comments.functions";
 import type { CommentRow } from "@/lib/marketing/content/types";

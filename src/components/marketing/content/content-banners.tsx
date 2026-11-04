@@ -1,5 +1,5 @@
 import { Ban, TriangleAlert } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/shared/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "lost-ui/ui/alert";
 import type { ContentDetail } from "@/lib/marketing/content/types";
 import { EditorialStatus } from "@/lib/shared/enums";
 import { isInPast } from "@/lib/shared/dates";
