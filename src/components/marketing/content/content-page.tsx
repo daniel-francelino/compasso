@@ -1,4 +1,6 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import type { DataTableAction } from "lost-ui/data/data-table-row-actions";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { type DataTableColumn, type SortState, DataTable } from "lost-ui/data/data-table";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useNavigate } from "@tanstack/react-router";
@@ -15,11 +17,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import {
-  type DataTableAction,
-  type DataTableColumn,
-  DataTable,
-} from "@/components/shared/admin/data-table";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { ListFilters, type FilterGroup } from "@/components/shared/admin/list-filters";
@@ -34,6 +31,7 @@ import {
   ContentModal,
 } from "@/components/marketing/content/content-modal";
 import { ContentBoard } from "@/components/marketing/content/content-board";
+import { ContentPeriodFilter } from "@/components/marketing/content/content-period-filter";
 import { ChannelLogos } from "@/components/marketing/content/channel-logos";
 import { ContentTypeChip } from "@/components/shared/content/content-type-chip";
 import { EditorialStatusBadge } from "@/components/shared/content/status-badges";
@@ -66,7 +64,6 @@ import {
   platformLabels,
   publicationStatusLabels,
 } from "@/lib/shared/labels";
-import { PAGE_SIZE } from "@/lib/shared/list-search";
 import { SortDirection } from "@/lib/shared/list-sort";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
@@ -95,7 +92,7 @@ const publicationOptions = [
   })),
 ];
 
-const DEFAULT_SORT = { key: ContentSort.Date, dir: SortDirection.Asc };
+const DEFAULT_SORT = { key: ContentSort.Date, dir: SortDirection.Desc };
 
 const formatsOf = (row: ContentItemRow): ContentFormat[] => [
   ...new Set(row.channels.map((channel) => channel.format)),
@@ -114,9 +111,10 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
 
   const request = {
     search: list.debouncedSearch,
-    page: list.page,
     status: list.status,
     ...(brandId ? { brandId } : {}),
+    ...(list.filters.dateFrom ? { dateFrom: list.filters.dateFrom } : {}),
+    ...(list.filters.dateTo ? { dateTo: list.filters.dateTo } : {}),
     ...(list.filters.channel ? { channelId: list.filters.channel } : {}),
     ...(list.filters.owner ? { ownerId: list.filters.owner } : {}),
     ...(list.filters.editorial ? { editorial: list.filters.editorial as EditorialStatus } : {}),
@@ -143,16 +141,28 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     enabled: brandId !== undefined,
   });
 
-  const query = useQuery({
+  const query = useInfiniteQuery({
     queryKey: QueryKey.Content.list(request),
-    queryFn: async () => unwrapResult(await listContentItems({ data: request })),
+    queryFn: async ({ pageParam }) =>
+      unwrapResult(await listContentItems({ data: { ...request, page: pageParam } })),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page * last.pageSize < last.total ? last.page + 1 : undefined,
     placeholderData: keepPreviousData,
     enabled: !board,
   });
+  const rows = query.data?.pages.flatMap((page) => page.rows) ?? [];
   const avatars = useAvatarUrls([
     ...(assignees.data ?? []).map((person) => person.id),
-    ...(query.data?.rows ?? []).map((row) => row.assigneeId),
+    ...rows.map((row) => row.assigneeId),
   ]);
+
+  const changeSort = (next: SortState) => {
+    if (next !== null) return void list.setSort({ key: next.id, dir: next.direction });
+    const atDefault = list.sort?.key === DEFAULT_SORT.key && list.sort.dir === DEFAULT_SORT.dir;
+    if (atDefault) return void list.setSort({ key: DEFAULT_SORT.key, dir: SortDirection.Asc });
+    void list.setSort(null);
+  };
   const invalidate = [QueryKey.Content.all(), QueryKey.Dashboard.all()];
 
   const duplicate = async (id: string) => {
@@ -167,13 +177,13 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const columns: DataTableColumn<ContentItemRow>[] = [
     {
       id: "date",
-      label: "Data",
+      header: "Data",
       sortable: true,
       cell: (row) => (row.publishDate ? formatDateOnly(row.publishDate) : "—"),
     },
     {
       id: "types",
-      label: "Tipos",
+      header: "Tipos",
       cell: (row) =>
         row.types.length === 0 ? (
           "—"
@@ -187,7 +197,7 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
     },
     {
       id: "title",
-      label: "Conteúdo",
+      header: "Conteúdo",
       sortable: true,
       cell: (row) => (
         <button
@@ -199,25 +209,25 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
         </button>
       ),
     },
-    { id: "format", label: "Formato", cell: (row) => <FormatCells formats={formatsOf(row)} /> },
+    { id: "format", header: "Formato", cell: (row) => <FormatCells formats={formatsOf(row)} /> },
     {
       id: "brand",
-      label: "Marca",
+      header: "Marca",
       cell: (row) => <BrandCell name={row.brandName} logoUrl={row.brandLogoUrl} />,
     },
     {
       id: "channels",
-      label: "Canais",
+      header: "Canais",
       cell: (row) => <ChannelLogos channels={row.channels} />,
     },
     {
       id: "status",
-      label: "Estado",
+      header: "Estado",
       cell: (row) => <EditorialStatusBadge status={row.editorialStatus} />,
     },
     {
       id: "owner",
-      label: "Responsável",
+      header: "Responsável",
       cell: (row) => (
         <OwnerCell
           name={row.assigneeName}
@@ -390,6 +400,13 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           : { statusOptions: tabs, status: list.status, onStatusChange: list.setStatus })}
         extra={
           <div className="flex w-full items-center gap-2 sm:w-auto">
+            {board ? null : (
+              <ContentPeriodFilter
+                from={list.filters.dateFrom}
+                to={list.filters.dateTo}
+                onChange={list.setPeriod}
+              />
+            )}
             <ListFilters
               groups={filterGroups}
               extraActive={
@@ -425,15 +442,17 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
       ) : (
         <DataTable
           caption="Conteúdos"
-          rows={query.data?.rows ?? []}
+          data={rows}
           columns={columns}
-          rowKey={(row) => row.id}
+          getRowId={(row) => row.id}
           rowLabel={(row) => row.title}
           actionsMenu
           actions={actions}
-          sort={{ current: list.sort, onToggle: list.toggleSort }}
+          manualSort
+          sort={list.sort ? { id: list.sort.key, direction: list.sort.dir } : null}
+          onSortChange={changeSort}
           loading={query.isPending}
-          refreshing={query.isFetching}
+          refreshing={query.isFetching && !query.isFetchingNextPage}
           error={query.error?.message ?? null}
           onRetry={() => void query.refetch()}
           empty={
@@ -446,12 +465,10 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
               noResultsDescription="Tente outro título ou limpe os filtros."
             />
           }
-          pagination={{
-            page: list.page,
-            pageSize: PAGE_SIZE,
-            total: query.data?.total ?? 0,
-            onPageChange: list.setPage,
-          }}
+          paginationMode="infinite"
+          hasMore={query.hasNextPage}
+          loadingMore={query.isFetchingNextPage}
+          onLoadMore={() => void query.fetchNextPage()}
         />
       )}
       <ReasonDialog

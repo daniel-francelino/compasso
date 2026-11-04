@@ -11,28 +11,28 @@ description: Build UIs with lost-ui, the shared React 19 + Tailwind v4 component
 
 Before the first change in an app, check (do not assume):
 
-1. `@danielsoaresf/lost-ui` is in the app's `package.json`, and which of its optional peers are installed (`react-day-picker`, `input-otp`, `libphonenumber-js`, `country-flag-icons`, `emoji-picker-react`, `sonner`, `cmdk`, `vaul`, `recharts`, `react-hook-form`, `react-resizable-panels`, `embla-carousel-react`). A component that needs a peer the app lacks needs that peer installed, not a replacement.
-2. The app's stylesheet imports `@danielsoaresf/lost-ui/styles.css` and defines the tokens (see [setup](references/setup.md)).
+1. `lost-ui` (the alias of `@danielsoaresf/lost-ui`; if the app uses the scoped name, write it in every import) is in the app's `package.json`, and which of its optional peers are installed (`react-day-picker`, `input-otp`, `libphonenumber-js`, `country-flag-icons`, `emoji-picker-react`, `sonner`, `cmdk`, `vaul`, `recharts`, `react-hook-form`, `react-resizable-panels`, `embla-carousel-react`). A component that needs a peer the app lacks needs that peer installed, not a replacement.
+2. The app's stylesheet imports `lost-ui/styles.css` and defines the tokens (see [setup](references/setup.md)).
 3. Which router the app uses, so you can write `renderLink`, and where its auth/permission helpers are.
 
 ## Principles
 
-1. **Use what exists.** Template, then component, then primitive. Never rebuild `AuthShell`, `PageHeader`, `EmptyState`, `SectionCard`, `PasswordField` or an app sidebar.
+1. **Use what exists.** Template, then component, then primitive. Never rebuild `AuthLayout`, `PageHeader`, `Empty`, `SettingsSection`, `FormInputPassword` or an app sidebar.
 2. **Props over markup.** Charts, tables, forms and pages are driven by props. Raw Recharts, hand-made tables and hand-validated forms are the last resort.
 3. **The app owns data, routes and permissions.** The library receives items and calls handlers. It never fetches, never reads auth, never knows the router.
 4. **Semantic tokens only.** `bg-primary`, `text-muted-foreground`. No hex, no raw Tailwind palette.
-5. **Look the API up, do not guess it.** Read the props in [references/api/](references/api/) (or the story of the component) before using it.
+5. **Look the API up, do not guess it.** Read the props of the component in [references/api/](references/api/) (or its story) before using it. The api files are large (`forms.md` alone is about 19k tokens): find the component's section with Grep (`## ComponentName`, with `-A 40`) instead of reading the whole file.
 
 ## Critical rules
 
 Short form; the full list with wrong/right pairs is in [guidelines](references/guidelines.md).
 
-- Wrap the app once in `App` (`@danielsoaresf/lost-ui/app/app`) or `LostI18nProvider` + `Toaster`.
+- Wrap the app once in `App` (`lost-ui/app/app`) or `LostI18nProvider` + `Toaster`.
 - Forms: `Form` + fields with `rules`; never validate by hand what `rules` covers. Many fields from data: `FormBuilder`.
 - Links: pass `renderLink` and the router `pathname` to navigation components.
 - Permissions: mark items `hidden` or pass `allow`; do not fork the sidebar.
 - Texts: the library brings en/es/pt; the app's own texts go in `registerMessages`. A prop always beats the translation.
-- Components with an optional peer are imported **by path** (`@danielsoaresf/lost-ui/forms/form-input-date`, `@danielsoaresf/lost-ui/ui/sonner`, `@danielsoaresf/lost-ui/app/app`…), not from the layer entry.
+- Components with an optional peer are imported **by path** (`lost-ui/forms/form-input-date`, `lost-ui/ui/sonner`, `lost-ui/app/app`…), not from the layer entry.
 - Tables: `DataTable` with `getRowId`, server mode via `total`, `manualSort`, `manualSearch`. Do not hand-roll pagination.
 - Do not add `motion` code for a page or panel swap: `PageTransition` and `AppShell`'s `transitionKey` exist, and animated parts already respect "reduce motion".
 
@@ -60,7 +60,7 @@ Load only what the task needs.
 ## Workflow
 
 1. Name the screen and find the piece: template, then component, in the [catalog](references/catalog.md).
-2. Read its props in `references/api/<layer>.md` and its story (`<name>.stories.tsx`) for a working example.
+2. Grep its section (`## ComponentName`) in `references/api/<layer>.md` for the props, and open its story (`<name>.stories.tsx`) for a working example.
 3. Compose it from props. Keep data fetching, routes and permissions in the app.
 4. If the design needs something the piece lacks, add the prop to the library (below). Do not copy the component into the app.
 5. Run the app's own typecheck, lint and tests, and report what failed and what was not run.
@@ -72,5 +72,5 @@ Only when the user asks, or when a missing prop would otherwise force a fork. Wo
 ## Limits
 
 - Tested in jsdom: structure and behaviour are proven, layout and pixels are not. Check new screens in the browser or in Storybook.
-- `@danielsoaresf/lost-ui/charts` and `@danielsoaresf/lost-ui/forms` are not re-exported from the root entry (they need optional peers).
+- `lost-ui/charts` and `lost-ui/editor` are not re-exported from the root entry (they need optional peers for the whole layer). `lost-ui/forms` is, except the fields that need a peer of their own (`form-input-date`, `form-pin-input`, `form-input-phone`, `form-country-select`, `form-emoji-picker`, `form-builder`), which are imported by path.
 - Not yet verified inside memoria-print (it uses `@import "tailwindcss" source(none)`): test the Tailwind `@source` there first.

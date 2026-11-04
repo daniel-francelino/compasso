@@ -57,7 +57,11 @@ export const useListState = <S extends string>(initialStatus: S, defaultSort: Li
       channel: search.channel,
       publication: search.publication,
       view: search.view,
+      dateFrom: search.dateFrom,
+      dateTo: search.dateTo,
     },
+    setPeriod: (dateFrom: string | undefined, dateTo: string | undefined) =>
+      update({ dateFrom, dateTo, page: undefined }),
     setFilter: (
       key:
         | "owner"
@@ -76,6 +80,12 @@ export const useListState = <S extends string>(initialStatus: S, defaultSort: Li
         | "view",
       value: string | undefined,
     ) => update({ [key]: value === "" ? undefined : value, page: undefined }),
+    setSort: (next: ListSort) =>
+      update(
+        next === null
+          ? { sort: undefined, dir: undefined, page: undefined }
+          : { sort: next.key, dir: next.dir, page: undefined },
+      ),
     toggleSort: (key: string) => {
       if (sort?.key !== key) return update({ sort: key, dir: SortDirection.Asc, page: undefined });
       if (sort.dir === SortDirection.Asc) {

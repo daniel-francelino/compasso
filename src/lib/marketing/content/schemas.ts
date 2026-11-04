@@ -23,6 +23,8 @@ export const listContentSchema = listRequestSchema.extend({
   editorial: z.nativeEnum(EditorialStatus).optional(),
   publication: z.string().max(30).optional(),
   typeId: z.string().uuid().optional(),
+  dateFrom: dateOnly.optional(),
+  dateTo: dateOnly.optional(),
 });
 
 export const boardSchema = z.object({

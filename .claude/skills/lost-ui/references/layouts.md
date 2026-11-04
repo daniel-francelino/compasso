@@ -1,11 +1,11 @@
 # Layouts and pages
 
-Templates from `@danielsoaresf/lost-ui/templates` (the props of each are in [api/templates](api/templates.md)) and the pieces of `@danielsoaresf/lost-ui/app` they are made of. Every one is router-agnostic (`renderLink`), takes its data as props and reports with handlers. `renderLink` below is `({ item, href: _href, children, ...rest }) => <Link to={item.to} {...rest}>{children}</Link>` with the router of the app.
+Templates from `lost-ui/templates` (the props of each are in [api/templates](api/templates.md)) and the pieces of `lost-ui/app` they are made of. Every one is router-agnostic (`renderLink`), takes its data as props and reports with handlers. `renderLink` below is `({ item, href: _href, children, ...rest }) => <Link to={item.to} {...rest}>{children}</Link>` with the router of the app.
 
 ## Backoffice layout
 
 ```tsx
-import { BackofficeLayout } from "@danielsoaresf/lost-ui/templates";
+import { BackofficeLayout } from "lost-ui/templates";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 
 const renderLink = ({ item, href: _href, children, ...rest }) => (
@@ -41,14 +41,14 @@ function AdminLayout() {
 }
 ```
 
-Need more control? Use `AppShell`, `AppSidebar`, `AppTopbar`, `UserMenu`, `SpaceSwitcher`, `NotificationButton`, `BottomNav` from `@danielsoaresf/lost-ui/app`. `NavItem` helpers: `filterNavigation`, `isNavItemActive`, `flattenNavigation`.
+Need more control? Use `AppShell`, `AppSidebar`, `AppTopbar`, `UserMenu`, `SpaceSwitcher`, `NotificationButton`, `BottomNav` from `lost-ui/app`. `NavItem` helpers: `filterNavigation`, `isNavItemActive`, `flattenNavigation`.
 
 ## Auth pages
 
 `LoginPage` is a card with the form on one side and an image on the other (the shadcn "login" block): welcome heading, email, password with "Forgot your password?" on the label line, the sign in button, "Or continue with" icon buttons, the sign up line, and the terms under the card.
 
 ```tsx
-import { LoginPage } from "@danielsoaresf/lost-ui/templates";
+import { LoginPage } from "lost-ui/templates";
 
 <LoginPage
   description="Login to your Acme Inc account"
@@ -91,7 +91,7 @@ Without `aside` it is one narrow card. All the auth pages (`RegisterPage`, `Forg
 <ForbiddenPage homeHref="/admin" renderLink={renderLink} />
 ```
 
-For a screen of its own (public site): `ErrorPage` from `@danielsoaresf/lost-ui/app/error-page` with `error={{ statusCode, message }}`.
+For a screen of its own (public site): `ErrorPage` from `lost-ui/app/error-page` with `error={{ statusCode, message }}`.
 
 ## Notifications page
 

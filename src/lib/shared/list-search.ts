@@ -3,6 +3,8 @@ import { SortDirection } from "@/lib/shared/list-sort";
 
 export const PAGE_SIZE = 20;
 
+export const dateOnlySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
 export const listSearchSchema = z.object({
   q: z.string().max(100).optional().catch(undefined),
   page: z.coerce.number().int().min(1).max(10000).optional().catch(undefined),
@@ -23,6 +25,8 @@ export const listSearchSchema = z.object({
   channel: z.string().uuid().optional().catch(undefined),
   publication: z.string().max(30).optional().catch(undefined),
   view: z.string().max(10).optional().catch(undefined),
+  dateFrom: dateOnlySchema.optional().catch(undefined),
+  dateTo: dateOnlySchema.optional().catch(undefined),
 });
 
 export type ListSearch = z.infer<typeof listSearchSchema>;

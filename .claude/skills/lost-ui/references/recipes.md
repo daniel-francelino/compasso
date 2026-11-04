@@ -5,13 +5,7 @@ Forms, tables, overlays and texts. For pages and layouts see [layouts](layouts.m
 ## Forms
 
 ```tsx
-import {
-  Form,
-  FormInput,
-  FormInputPassword,
-  FormSelect,
-  rules,
-} from "@danielsoaresf/lost-ui/forms";
+import { Form, FormInput, FormInputPassword, FormSelect, rules } from "lost-ui/forms";
 
 <Form onSubmit={() => save(values)}>
   <FormInput
@@ -27,12 +21,12 @@ import {
 </Form>;
 ```
 
-Many fields from data: `FormBuilder` (import by path `@danielsoaresf/lost-ui/forms/form-builder`) with `fields={[{ control: "input", name, label, rules, visible, colSpan }]}`, `columns`, `onSubmit(values)`. Masks: `<FormInput mask="(##) #####-####" unmask />`.
+Many fields from data: `FormBuilder` (import by path `lost-ui/forms/form-builder`) with `fields={[{ control: "input", name, label, rules, visible, colSpan }]}`, `columns`, `onSubmit(values)`. Masks: `<FormInput mask="(##) #####-####" unmask />`.
 
 ## DataTable
 
 ```tsx
-import { DataTable, type DataTableColumn } from "@danielsoaresf/lost-ui/data";
+import { DataTable, type DataTableColumn } from "lost-ui/data";
 
 const columns: DataTableColumn<User>[] = [
   { id: "name", header: "Name", accessor: "name", sortable: true },
@@ -58,8 +52,8 @@ Full feature table (search, selection across pages, expand, column visibility, r
 ## Toast and modal
 
 ```tsx
-import { toast } from "@danielsoaresf/lost-ui/ui/sonner";
-import { Modal } from "@danielsoaresf/lost-ui/elements/modal";
+import { toast } from "lost-ui/ui/sonner";
+import { Modal } from "lost-ui/elements/modal";
 
 toast.success("Saved.");
 
@@ -82,11 +76,7 @@ toast.success("Saved.");
 ## Text in another language
 
 ```tsx
-import {
-  LostI18nProvider,
-  registerMessages,
-  useLostTranslation,
-} from "@danielsoaresf/lost-ui/i18n";
+import { LostI18nProvider, registerMessages, useLostTranslation } from "lost-ui/i18n";
 
 registerMessages("app", { en: { hello: "Hello" }, pt: { hello: "Olá" } });
 const { t } = useLostTranslation("app"); // t("hello")

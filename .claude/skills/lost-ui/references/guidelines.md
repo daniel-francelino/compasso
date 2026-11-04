@@ -34,7 +34,7 @@ A **component** is a piece you place in a screen. A **template** is a page or th
 | empty list, timeline, tree, user card        | `Empty`, `Timeline`, `TreeView`, `UserInfo`                                         |
 | dialog / side panel                          | `Modal` / `Slideover` (props); `Dialog` / `Sheet` for custom content                |
 | confirm a destructive action                 | `AlertDialog`                                                                       |
-| toast                                        | `toast.success(...)` from `@danielsoaresf/lost-ui/ui/sonner`, `<Toaster />` once    |
+| toast                                        | `toast.success(...)` from `lost-ui/ui/sonner`, `<Toaster />` once                   |
 | swap a page or a panel with a transition     | `PageTransition`, or `transitionKey` on `AppShell`                                  |
 | steps of a wizard                            | `Stepper`                                                                           |
 | status label / tag / count                   | `Badge`, `Chip`                                                                     |

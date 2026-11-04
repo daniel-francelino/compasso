@@ -1,9 +1,13 @@
 import {
   type EditorAllow,
+  type EditorBlockContext,
+  type EditorBlockSpec,
   type EditorBubbleTool,
   type EditorImageAttrs,
   EditorBlock,
   RichTextEditor,
+  defineEditorBlock,
+  editorBlocks,
 } from "lost-ui/editor";
 import { useMemo } from "react";
 import { toast } from "sonner";
@@ -17,13 +21,26 @@ import { unwrapResult } from "@/lib/shared/result-client";
 import { fromEditorJson, missingImageSrc, toEditorJson } from "@/lib/shared/rich-text/editor-doc";
 import { RICH_TEXT_MAX_IMAGES } from "@/lib/shared/rich-text/types";
 
-const PLAN_BLOCKS = [
-  EditorBlock.Paragraph,
-  EditorBlock.Heading2,
-  EditorBlock.Heading3,
-  EditorBlock.BulletList,
-  EditorBlock.OrderedList,
-  EditorBlock.Image,
+const withoutLargestHeading = <Entry extends { id: string }>(entries: readonly Entry[]): Entry[] =>
+  entries.filter((entry) => entry.id !== EditorBlock.Heading1);
+
+const entriesOf = <Entry,>(
+  source: readonly Entry[] | ((context: EditorBlockContext) => readonly Entry[]) | undefined,
+  context: EditorBlockContext,
+): readonly Entry[] => (typeof source === "function" ? source(context) : (source ?? []));
+
+const PLAN_HEADING = defineEditorBlock({
+  ...editorBlocks.heading,
+  slash: (context) => withoutLargestHeading(entriesOf(editorBlocks.heading.slash, context)),
+  turnInto: (context) => withoutLargestHeading(entriesOf(editorBlocks.heading.turnInto, context)),
+});
+
+const PLAN_BLOCKS: readonly EditorBlockSpec[] = [
+  editorBlocks.paragraph,
+  PLAN_HEADING,
+  editorBlocks.bulletList,
+  editorBlocks.orderedList,
+  editorBlocks.image,
 ];
 
 const PLAN_ALLOW: EditorAllow = {

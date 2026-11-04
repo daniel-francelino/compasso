@@ -4,11 +4,14 @@ import { platformLabels } from "@/lib/shared/labels";
 
 const MAX_VISIBLE = 4;
 
-export function ChannelLogos({
-  channels,
-}: {
-  channels: { platform: Platform; profileName: string }[];
-}) {
+type LogoChannel = { platform: Platform; profileName: string };
+
+const distinctChannels = (rows: LogoChannel[]): LogoChannel[] => [
+  ...new Map(rows.map((row) => [`${row.platform}|${row.profileName}`, row])).values(),
+];
+
+export function ChannelLogos({ channels: rows }: { channels: LogoChannel[] }) {
+  const channels = distinctChannels(rows);
   if (channels.length === 0) return <span className="text-muted-foreground">—</span>;
   const visible = channels.slice(0, MAX_VISIBLE);
   const rest = channels.length - visible.length;

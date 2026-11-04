@@ -1,9 +1,9 @@
 # Calendar
 
-`@danielsoaresf/lost-ui/calendar` has `EventCalendar`: month, week and day views, previous / today / next, a list of calendars to show or hide, and a click on an empty time to create an event. No peers. Props of each piece: [api/calendar](api/calendar.md).
+`lost-ui/calendar` has `EventCalendar`: month, week and day views, previous / today / next, a list of calendars to show or hide, and a click on an empty time to create an event. No peers. Props of each piece: [api/calendar](api/calendar.md).
 
 ```tsx
-import { EventCalendar } from "@danielsoaresf/lost-ui/calendar";
+import { EventCalendar } from "lost-ui/calendar";
 
 <EventCalendar<Booking>
   events={bookings}

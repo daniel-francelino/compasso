@@ -1,9 +1,9 @@
 # Editor
 
-`@danielsoaresf/lost-ui/editor` has `RichTextEditor`, a Notion-style block editor on Tiptap 3: `/` menu for blocks, a toolbar over the selected text, a grip beside each block to drag it and open its menu, tables, to-do lists, callouts, toggles, images. It reads and writes **HTML** (default) or the Tiptap **JSON** (`format="json"`). Props: [api/editor](api/editor.md).
+`lost-ui/editor` has `RichTextEditor`, a Notion-style block editor on Tiptap 3: `/` menu for blocks, a toolbar over the selected text, a grip beside each block to drag it and open its menu, tables, to-do lists, callouts, toggles, images. It reads and writes **HTML** (default) or the Tiptap **JSON** (`format="json"`). Props: [api/editor](api/editor.md).
 
 ```tsx
-import { RichTextEditor } from "@danielsoaresf/lost-ui/editor";
+import { RichTextEditor } from "lost-ui/editor";
 
 <RichTextEditor
   value={html}
@@ -23,4 +23,4 @@ import { RichTextEditor } from "@danielsoaresf/lost-ui/editor";
 - `surface="plain"` for a whole page, `"boxed"` (default) for a field in a form. `editable={false}` shows the content only.
 - Use the `ref` (`focus`, `getHTML`, `setContent`, `clear`, `editor`) instead of reaching into Tiptap.
 - Not in it yet: columns, wikilinks, mentions, emoji, link previews, file blocks, code highlight. Do not rebuild them in the app; ask to add them to the library.
-- Made to fit: `extensions` (your own Tiptap extensions, keep the array stable), `slashItems` (your own blocks in the `/` menu), `renderBubbleMenu` (your tools over the selected text), `bubbleMenu` / `blockHandle` (turn them off), `autofocus`, `onReady(editor)`, `editorClassName`.
+- Made to fit: `blocks` (the registry: `[...defaultEditorBlocks, defineEditorBlock({...})]` brings your own Tiptap extensions, `/` entries, turn-into entries and read-view renderers; an inline array is fine), `renderBubbleMenu` (your tools over the selected text), `bubbleMenu` / `blockHandle` (turn them off), `autofocus`, `onReady(editor)`, `editorClassName`.

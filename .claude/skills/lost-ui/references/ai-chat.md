@@ -1,6 +1,6 @@
 # AI chat
 
-`@danielsoaresf/lost-ui/ai-chat` has the pieces of a chat with an assistant. They need no SDK: a message is `{ id, role, parts }`, the same shape as the Vercel AI SDK `UIMessage`, so `useChat().messages` goes in as it is. Props of each component: [api/ai-chat](api/ai-chat.md).
+`lost-ui/ai-chat` has the pieces of a chat with an assistant. They need no SDK: a message is `{ id, role, parts }`, the same shape as the Vercel AI SDK `UIMessage`, so `useChat().messages` goes in as it is. Props of each component: [api/ai-chat](api/ai-chat.md).
 
 ## Pick the piece
 
@@ -20,12 +20,7 @@
 ## A chat screen with the Vercel AI SDK
 
 ```tsx
-import {
-  ChatMessages,
-  ChatPrompt,
-  ChatSuggestions,
-  messageText,
-} from "@danielsoaresf/lost-ui/ai-chat";
+import { ChatMessages, ChatPrompt, ChatSuggestions, messageText } from "lost-ui/ai-chat";
 
 const { messages, status, sendMessage, stop, regenerate } = useChat();
 
@@ -72,7 +67,7 @@ const { messages, status, sendMessage, stop, regenerate } = useChat();
 
 ## The whole screen: `AiChatPage`
 
-`@danielsoaresf/lost-ui/templates/ai-chat/ai-chat-page` is the chat screen with the list of conversations (a drawer on a phone), the welcome with suggestions, the messages and the prompt. Give its parent a height. Props: [api/templates](api/templates.md).
+`lost-ui/templates/ai-chat/ai-chat-page` is the chat screen with the list of conversations (a drawer on a phone), the welcome with suggestions, the messages and the prompt. Give its parent a height. Props: [api/templates](api/templates.md).
 
 ```tsx
 <AiChatPage

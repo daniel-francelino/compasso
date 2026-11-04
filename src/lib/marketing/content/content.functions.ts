@@ -262,6 +262,8 @@ export const listContentItems = createServerFn({ method: "GET" })
     if (data.brandId !== undefined) query = query.eq("brand_id", data.brandId);
     if (data.ownerId !== undefined) query = query.eq("assignee_id", data.ownerId);
     if (search !== "") query = query.ilike("title", `%${search}%`);
+    if (data.dateFrom !== undefined) query = query.gte("publish_date", data.dateFrom);
+    if (data.dateTo !== undefined) query = query.lte("publish_date", data.dateTo);
 
     const ascending = data.dir !== SortDirection.Desc;
     const sort = data.sort ?? ContentSort.Date;

@@ -1,4 +1,4 @@
-import { RichTextView as LibraryRichTextView } from "lost-ui/editor";
+import { RichTextView as LibraryRichTextView } from "lost-ui/editor/rich-text-view";
 import { missingImageSrc, toEditorJson } from "@/lib/shared/rich-text/editor-doc";
 import type { RichDoc } from "@/lib/shared/rich-text/types";
 
