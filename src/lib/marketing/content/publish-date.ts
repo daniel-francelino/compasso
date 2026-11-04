@@ -21,6 +21,7 @@ export const followPublishDate = <T extends RowDates>(
   zone: string,
 ): T[] => {
   if (next === null) return rows;
+  const single = rows.length === 1;
   return rows.map((row) => {
     if (row.published) return row;
     if (row.plannedAt === null) {
@@ -28,8 +29,20 @@ export const followPublishDate = <T extends RowDates>(
       return plannedAt === null ? row : { ...row, plannedAt, plannedTimezone: zone };
     }
     const rowZone = row.plannedTimezone ?? zone;
-    if (previous === null || localDayOf(row.plannedAt, rowZone) !== previous) return row;
+    if (!single && (previous === null || localDayOf(row.plannedAt, rowZone) !== previous)) {
+      return row;
+    }
     const moved = moveToDay(row.plannedAt, next, rowZone);
     return moved.ok ? { ...row, plannedAt: toIso(moved.instant) } : row;
   });
+};
+
+export const publishDayOfSingleRow = <T extends RowDates>(
+  rows: T[],
+  zone: string,
+): string | null => {
+  const [only] = rows;
+  if (rows.length !== 1 || only === undefined) return null;
+  if (only.published || only.plannedAt === null) return null;
+  return localDayOf(only.plannedAt, zone);
 };

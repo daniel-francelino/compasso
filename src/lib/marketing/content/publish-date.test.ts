@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { EditorStep, stepToShow, stepsWithErrors } from "@/lib/marketing/content/editor-steps";
-import { followPublishDate, plannedOnDay } from "@/lib/marketing/content/publish-date";
+import {
+  followPublishDate,
+  plannedOnDay,
+  publishDayOfSingleRow,
+} from "@/lib/marketing/content/publish-date";
 
 const ZONE = "America/Sao_Paulo";
 
@@ -35,6 +39,25 @@ describe("followPublishDate", () => {
     const rows = [row(at, true)];
     expect(followPublishDate(rows, "2026-11-03", "2026-11-10", ZONE)).toEqual(rows);
     expect(followPublishDate([row(at)], "2026-11-03", null, ZONE)[0]?.plannedAt).toBe(at);
+  });
+});
+
+describe("a content with a single channel row", () => {
+  it("moves the only row to the new publication day even when it was on another day", () => {
+    const other = plannedOnDay("2026-11-05", ZONE);
+    const [moved] = followPublishDate([row(other)], "2026-11-03", "2026-11-10", ZONE);
+    expect(moved?.plannedAt).toBe(plannedOnDay("2026-11-10", ZONE));
+  });
+
+  it("takes the publication day from the only row", () => {
+    expect(publishDayOfSingleRow([row(plannedOnDay("2026-11-12", ZONE))], ZONE)).toBe("2026-11-12");
+  });
+
+  it("does not derive a publication day with two rows, a published row or no date", () => {
+    const at = plannedOnDay("2026-11-12", ZONE);
+    expect(publishDayOfSingleRow([row(at), row(at)], ZONE)).toBeNull();
+    expect(publishDayOfSingleRow([row(at, true)], ZONE)).toBeNull();
+    expect(publishDayOfSingleRow([row(null)], ZONE)).toBeNull();
   });
 });
 

@@ -6,7 +6,6 @@ import {
   Clock3,
   Eye,
   Hammer,
-  Hourglass,
   Lightbulb,
   Send,
 } from "lucide-react";
@@ -23,7 +22,6 @@ const marks = [
 const kinds = [
   { kind: CalendarEntryKind.Publication, icon: CalendarClock },
   { kind: CalendarEntryKind.Published, icon: Send },
-  { kind: CalendarEntryKind.ApprovalDeadline, icon: Hourglass },
   { kind: CalendarEntryKind.ProductionDeadline, icon: Hammer },
   { kind: CalendarEntryKind.Idea, icon: Lightbulb },
   { kind: CalendarEntryKind.Date, icon: CalendarDays },

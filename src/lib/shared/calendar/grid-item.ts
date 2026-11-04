@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { StatusTone } from "@/components/shared/admin/status-tones";
-import type { Platform } from "@/lib/shared/enums";
+import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import type { ValueOf } from "@/lib/shared/utils";
 
 export const StatusMark = {
@@ -24,6 +24,7 @@ export type GridItem = {
   movable: boolean;
   alerts: string[];
   platform: Platform | null;
+  format: ContentFormat | null;
   mark: StatusMark | null;
   muted: boolean;
 };

@@ -1,8 +1,15 @@
 import { CircleCheck, Clock3, Eye, Link2, TriangleAlert } from "lucide-react";
 import { statusTones } from "@/components/shared/admin/status-tones";
+import { formatIcons } from "@/components/shared/content/format-icons";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
+import type { ContentFormat } from "@/lib/shared/enums";
 import { type GridItem, StatusMark, itemLabel } from "@/lib/shared/calendar/grid-item";
 import { cn } from "@/lib/shared/utils";
+
+function FormatMark({ format }: { format: ContentFormat }) {
+  const Icon = formatIcons[format];
+  return <Icon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />;
+}
 
 export function EntryChip({ item, onSelect }: { item: GridItem; onSelect: (key: string) => void }) {
   const style = statusTones[item.tone];
@@ -31,6 +38,7 @@ export function EntryChip({ item, onSelect }: { item: GridItem; onSelect: (key: 
       ) : (
         <PlatformIcon platform={item.platform} className="size-3.5 shrink-0" />
       )}
+      {item.platform === null || item.format === null ? null : <FormatMark format={item.format} />}
       {item.time === "" ? null : (
         <span className="shrink-0 font-medium tabular-nums">{item.time}</span>
       )}

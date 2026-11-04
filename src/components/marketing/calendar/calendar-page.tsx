@@ -3,7 +3,7 @@ import { brandSelectOptions } from "@/components/shared/admin/brand-select-optio
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { useAvatarUrls } from "@/hooks/shared/use-avatar-urls";
 import { PageHeader } from "@/components/shared/admin/page-header";
@@ -15,6 +15,8 @@ import { CalendarToolbar } from "@/components/shared/calendar/calendar-toolbar";
 import { toGridItem } from "@/components/shared/calendar/entry-items";
 import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
+import { CalendarEntryPreview } from "@/components/marketing/calendar/calendar-entry-preview";
+import type { GridItem } from "@/lib/shared/calendar/grid-item";
 import { DayAddMenu } from "@/components/marketing/calendar/day-add-menu";
 import { EntryDetails } from "@/components/marketing/calendar/entry-details";
 import {
@@ -92,7 +94,6 @@ const deadlineOptions = [
 ];
 
 const isDeadline = (entry: CalendarEntry): boolean =>
-  entry.kind === CalendarEntryKind.ApprovalDeadline ||
   entry.kind === CalendarEntryKind.ProductionDeadline;
 
 const publicationTarget = (
@@ -186,7 +187,11 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   const activeZone = zone ?? "UTC";
   const entries = useMemo(
     () =>
-      (query.data?.entries ?? []).filter((entry) => !state.search.deadlines || isDeadline(entry)),
+      (query.data?.entries ?? []).filter(
+        (entry) =>
+          entry.kind !== CalendarEntryKind.ApprovalDeadline &&
+          (!state.search.deadlines || isDeadline(entry)),
+      ),
     [query.data, state.search.deadlines],
   );
   const alerts = useMemo(
@@ -204,6 +209,20 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
   });
 
   const selected = entries.find((entry) => entryKey(entry) === selectedKey) ?? null;
+
+  const renderPreview = (item: GridItem, trigger: ReactNode) => {
+    const entry = entries.find((candidate) => entryKey(candidate) === item.key);
+    if (entry === undefined || entry.itemId === null || entry.channelRowId === null) return trigger;
+    return (
+      <CalendarEntryPreview
+        entry={entry}
+        subtitle={item.subtitle}
+        brandLogoUrl={brands.data?.find((brand) => brand.id === entry.brandId)?.logoUrl ?? null}
+      >
+        {trigger}
+      </CalendarEntryPreview>
+    );
+  };
   function dropDeadline(entry: CalendarEntry, day: string) {
     if (entry.date === day || entry.itemId === null || entry.itemVersion === null) return;
     setTarget({
@@ -439,6 +458,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
           onOpenDay={(day) => void state.openDay(day)}
           onDropKey={canManage ? startDrop : undefined}
           renderDayAction={addMenu}
+          renderItem={renderPreview}
         />
       )}
       <CalendarLegend showKinds />

@@ -63,6 +63,7 @@ const toEventItem = (event: PortalCalendarEvent, zone: string): GridItem => ({
   movable: false,
   alerts: [],
   platform: null,
+  format: null,
   mark: null,
   muted: false,
 });
@@ -87,6 +88,7 @@ const toItem = (entry: PortalCalendarEntry, zone: string): GridItem => {
     movable: false,
     alerts: [],
     platform: entry.platform,
+    format: null,
     mark: StatusMark.Scheduled,
     muted: false,
   };

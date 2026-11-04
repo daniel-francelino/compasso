@@ -16,7 +16,7 @@ import { entryDay, entryTime } from "@/lib/shared/calendar/entries";
 import { type GridItem, StatusMark } from "@/lib/shared/calendar/grid-item";
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
 import {
-  type CalendarAlert,
+  CalendarAlert,
   CalendarEntryKind,
   CalendarEventType,
   PublicationStatus,
@@ -24,6 +24,7 @@ import {
 import {
   calendarAlertLabels,
   calendarEntryKindLabels,
+  contentFormatLabels,
   editorialStatusLabels,
   platformLabels,
 } from "@/lib/shared/labels";
@@ -80,7 +81,8 @@ export const entrySubtitle = (entry: CalendarEntry, zone: string): string => {
     entry.plannedTimezone !== null && entry.plannedTimezone !== zone
       ? entry.plannedTimezone.replaceAll("_", " ")
       : null;
-  return [entry.brandName, channel, own].filter((part) => part !== null).join(" · ");
+  const format = entry.format === null ? null : contentFormatLabels[entry.format];
+  return [entry.brandName, channel, format, own].filter((part) => part !== null).join(" · ");
 };
 
 export const toGridItem = (
@@ -117,8 +119,11 @@ export const toGridItem = (
         ? eventIcons[entry.eventType]
         : kindIcons[entry.kind],
     movable,
-    alerts: alerts.map((alert) => calendarAlertLabels[alert]),
+    alerts: alerts
+      .filter((alert) => alert !== CalendarAlert.NotApprovedYet)
+      .map((alert) => calendarAlertLabels[alert]),
     platform: entry.platform,
+    format: entry.format,
     mark: markOf(entry),
     muted: isNote(entry) && entry.convertedItemId !== null,
   };

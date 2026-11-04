@@ -7,6 +7,7 @@ import { Label } from "@/components/shared/ui/label";
 import type { ContentDraft, DraftRow } from "@/hooks/marketing/use-content-draft";
 import type { ChannelRow } from "@/lib/marketing/channels/channels.functions";
 import { formatIcons } from "@/components/shared/content/format-icons";
+import { publishDayOfSingleRow } from "@/lib/marketing/content/publish-date";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 
 export function ChannelRowsSection({
@@ -34,11 +35,13 @@ export function ChannelRowsSection({
   const channelOf = (id: string) => channels.find((channel) => channel.id === id);
   const channelIds = [...new Set(rows.map((row) => row.channelId))];
 
-  const update = (key: string, patch: Partial<DraftRow>) =>
-    draft.set(
-      "rows",
-      rows.map((row) => (row.key === key ? { ...row, ...patch } : row)),
-    );
+  const update = (key: string, patch: Partial<DraftRow>) => {
+    const next = rows.map((row) => (row.key === key ? { ...row, ...patch } : row));
+    draft.set("rows", next);
+    if (patch.plannedAt === undefined) return;
+    const day = publishDayOfSingleRow(next, brandTimezone);
+    if (day !== null) draft.set("publishDate", day);
+  };
 
   const addAfter = (source: DraftRow) => {
     const index = rows.findIndex((row) => row.key === source.key);
