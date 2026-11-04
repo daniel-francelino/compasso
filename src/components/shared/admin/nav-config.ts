@@ -21,8 +21,8 @@ import {
   Settings2,
   SlidersHorizontal,
   Tag,
-  UserRound,
   Users,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import { Action, type ActionKey } from "@/lib/shared/auth/actions";
@@ -37,10 +37,11 @@ export type AdminSpace = typeof Space.Marketing | typeof Space.Cms;
 export type NavItem = {
   title: string;
   icon: LucideIcon;
-  to: keyof FileRoutesByTo;
+  to?: keyof FileRoutesByTo;
   action?: ActionKey;
   exact?: boolean;
   developmentOnly?: boolean;
+  children?: NavItem[];
 };
 
 export type NavGroup = {
@@ -172,26 +173,27 @@ export const navGroups: NavGroup[] = [
     label: "Configurações",
     items: [
       { title: "Pessoas", icon: Users, to: AppRoute.Users, action: Action.Users.View },
-      { title: "Perfis", icon: ShieldCheck, to: AppRoute.Roles, action: Action.Roles.Manage },
       {
-        title: "Políticas",
-        icon: SlidersHorizontal,
-        to: AppRoute.Policies,
-        action: Action.Settings.Manage,
+        title: "Avançado",
+        icon: Wrench,
+        children: [
+          { title: "Perfis", icon: ShieldCheck, to: AppRoute.Roles, action: Action.Roles.Manage },
+          {
+            title: "Políticas",
+            icon: SlidersHorizontal,
+            to: AppRoute.Policies,
+            action: Action.Settings.Manage,
+          },
+          {
+            title: "Avisos padrão",
+            icon: BellRing,
+            to: AppRoute.NotificationDefaults,
+            action: Action.Notifications.Configure,
+          },
+          { title: "Auditoria", icon: ScrollText, to: AppRoute.Audit, action: Action.Audit.View },
+        ],
       },
-      {
-        title: "Avisos padrão",
-        icon: BellRing,
-        to: AppRoute.NotificationDefaults,
-        action: Action.Notifications.Configure,
-      },
-      { title: "Auditoria", icon: ScrollText, to: AppRoute.Audit, action: Action.Audit.View },
     ],
-  },
-  {
-    space: Space.Shared,
-    label: "Minha conta",
-    items: [{ title: "Meu perfil", icon: UserRound, to: AppRoute.Profile }],
   },
   {
     space: Space.Shared,
@@ -200,20 +202,30 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-const isVisible = (item: NavItem, auth: AuthState): boolean => {
+const isAllowed = (item: NavItem, auth: AuthState): boolean => {
   if (item.developmentOnly === true && !import.meta.env.DEV) return false;
   return item.action === undefined || can(auth, item.action);
 };
 
+const visibleItem = (item: NavItem, auth: AuthState): NavItem | null => {
+  if (!isAllowed(item, auth)) return null;
+  if (item.children === undefined) return item;
+  const children = item.children.flatMap((child) => visibleItem(child, auth) ?? []);
+  return children.length === 0 ? null : { ...item, children };
+};
+
+const visibleItems = (items: NavItem[], auth: AuthState): NavItem[] =>
+  items.flatMap((item) => visibleItem(item, auth) ?? []);
+
 export const visibleGroups = (auth: AuthState, space: AdminSpace): NavGroup[] =>
   navGroups
     .filter((group) => group.space === space || group.space === Space.Shared)
-    .map((group) => ({ ...group, items: group.items.filter((item) => isVisible(item, auth)) }))
+    .map((group) => ({ ...group, items: visibleItems(group.items, auth) }))
     .filter((group) => group.items.length > 0);
 
 export const availableSpaces = (auth: AuthState): SpaceEntry[] =>
   adminSpaces.filter((entry) =>
     navGroups.some(
-      (group) => group.space === entry.key && group.items.some((item) => isVisible(item, auth)),
+      (group) => group.space === entry.key && visibleItems(group.items, auth).length > 0,
     ),
   );

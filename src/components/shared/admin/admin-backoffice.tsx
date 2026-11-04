@@ -1,10 +1,11 @@
 import { useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { BackofficeLayout } from "lost-ui/templates/backoffice/backoffice-layout";
-import type { NavSection } from "lost-ui/app/app-nav";
+import type { NavItem as LibraryNavItem, NavSection } from "lost-ui/app/app-nav";
 import { renderAuthLink } from "@/components/shared/admin/render-auth-link";
 import {
   type AdminSpace,
+  type NavItem,
   availableSpaces,
   visibleGroups,
 } from "@/components/shared/admin/nav-config";
@@ -21,6 +22,14 @@ const spaceTile: Record<AdminSpace, string> = {
   [Space.Marketing]: "bg-primary text-primary-foreground",
   [Space.Cms]: "bg-secondary text-secondary-foreground",
 };
+
+const toLibraryItem = (item: NavItem): LibraryNavItem => ({
+  title: item.title,
+  ...(item.to ? { to: item.to } : {}),
+  ...(item.exact ? { exact: true } : {}),
+  icon: <item.icon aria-hidden="true" />,
+  ...(item.children ? { children: item.children.map(toLibraryItem) } : {}),
+});
 
 const userItems = [{ title: "Meu perfil", to: AppRoute.Profile }];
 
@@ -46,12 +55,7 @@ export function AdminBackoffice({
 
   const sections: NavSection[] = visibleGroups(auth, space).map((group) => ({
     ...(group.label ? { label: group.label } : {}),
-    items: group.items.map((item) => ({
-      title: item.title,
-      to: item.to,
-      ...(item.exact ? { exact: true } : {}),
-      icon: <item.icon aria-hidden="true" />,
-    })),
+    items: group.items.map(toLibraryItem),
   }));
 
   const spaces = availableSpaces(auth).map((entry) => ({

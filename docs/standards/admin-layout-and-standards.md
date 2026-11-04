@@ -26,7 +26,8 @@
 - **Sidebar** (`AppSidebar`): icons + text, sections with a title, items with collapsible **sub-items**, pending counters (for example approvals waiting), highlighted active item and `aria-current`.
   - **Collapses to icons only** (☰ button or `Ctrl/Cmd + B`) with a "rail" to reopen it. On small screens it opens as a **drawer**.
   - In icon mode, clicking an item with sub-items opens the sidebar first.
-  - Footer with the account: name, profile, "Meu perfil" and "Sair".
+  - Footer with the account: the name opens the user menu with "Meu perfil" and "Sair". The sidebar has no "Minha conta" section (removed 2026-11-04, it repeated the user menu).
+  - **Configurações** (decided 2026-11-04): "Pessoas" stays at the first level; the rarely used screens "Perfis", "Políticas", "Avisos padrão" and "Auditoria" are the sub-items of one collapsible item, **"Avançado"**, which has no page of its own. An item with sub-items shows only the sub-items the person may see and disappears when there are none.
 - **Header**: sidebar button, space selector and notification bell (always in the same position).
 - **Content**: maximum width of 72 rem by default, responsive margins, `id="main-content"` and a "Pular para o conteúdo" link for keyboard users. Brand detail pages, content screens and calendar screens use all available width because their dense grids and data benefit from the extra room.
 - **Inside the layout**: non-existent pages ("Página não encontrada"), errors ("Algo deu errado" + try again) and missing permission ("Sem acesso a esta área") appear **in the same layout**, with a way to continue.

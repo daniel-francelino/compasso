@@ -50,7 +50,7 @@
 | Case study | Case | "Estudo de caso" in long text |
 | Testimonial | Depoimento | |
 | Service | Serviço | |
-| Settings | Configurações | |
+| Settings | Configurações | Menu sub-item group for the rarely used settings screens: "Avançado" |
 | Users | Usuários | |
 | Roles (profiles) | Perfis | The UI says "Perfil" (not "papel") |
 | Invitation | Convite | |

@@ -451,7 +451,8 @@ export function ContentPage({ fixedBrandId }: { fixedBrandId?: string }) {
           manualSort
           sort={list.sort ? { id: list.sort.key, direction: list.sort.dir } : null}
           onSortChange={changeSort}
-          loading={query.isPending}
+          loading={query.isPending || query.isPlaceholderData}
+          loadingRows={8}
           refreshing={query.isFetching && !query.isFetchingNextPage}
           error={query.error?.message ?? null}
           onRetry={() => void query.refetch()}
