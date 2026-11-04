@@ -304,14 +304,6 @@ function PendingBlock({ brandId }: { brandId: string | undefined }) {
           ))}
         </ul>
       )}
-      {(query.data?.total ?? 0) > PENDING_ROWS ? (
-        <Button asChild variant="outline" size="sm">
-          <Link to={AppRoute.Approvals}>
-            <ArrowRight aria-hidden="true" />
-            Ver todas ({query.data?.total})
-          </Link>
-        </Button>
-      ) : null}
     </Block>
   );
 }

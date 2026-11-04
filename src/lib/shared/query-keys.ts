@@ -72,7 +72,6 @@ export const QueryKey = {
   },
   Approvals: {
     all: () => ["approvals"] as const,
-    list: (filters: Filters) => ["approvals", "list", filters] as const,
     detail: (id: string) => ["approvals", "detail", id] as const,
   },
   Portal: {

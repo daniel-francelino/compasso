@@ -104,8 +104,8 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
       <RecordUnavailable
         title="Pedido não encontrado"
         message="Ele não existe ou você não tem acesso."
-        backTo={AppRoute.Approvals}
-        backLabel="Voltar para aprovações"
+        backTo={AppRoute.Content}
+        backLabel="Voltar para conteúdos"
       />
     );
   }
@@ -121,7 +121,7 @@ export function ApprovalDetailPage({ requestId }: { requestId: string }) {
       <PageHeader
         title={snapshot.title}
         description={`${request.brandName} · ${approvalStageLabels[request.stage]} · Versão ${request.revision.revisionNo}`}
-        breadcrumbs={[{ label: "Aprovações", to: AppRoute.Approvals }, { label: snapshot.title }]}
+        breadcrumbs={[{ label: "Conteúdos", to: AppRoute.Content }, { label: snapshot.title }]}
         actions={
           <>
             <RequestStatusBadge status={request.status} />

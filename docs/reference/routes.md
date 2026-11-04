@@ -64,7 +64,6 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/marketing/instagram/callback` | `channels.connect` | instagram-publishing (OAuth return page; search params `code`, `state`, `error`) |
 | `/admin/marketing/brands/$brandId/content` | `content.view` | content |
 | `/admin/marketing/brands/$brandId/calendar` | `calendar.view` | calendar |
-| `/admin/marketing/brands/$brandId/approvals` | `approvals.view` | approvals |
 | `/admin/marketing/brands/$brandId/library` | `media.view` | media-library (filtered) |
 | `/admin/marketing/brands/$brandId/members` | `brands.view` (edit: `brands.manage_members`) | brands |
 | `/admin/marketing/brands/$brandId/identity` | `brands.view` (edit: `brands.update`) | brands |
@@ -72,7 +71,6 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/marketing/content` | `content.view` | content (all authorized brands) |
 | `/admin/marketing/content/$itemId` | `content.view` | content |
 | `/admin/marketing/content/new` | `content.create` | content (editor for a new content; search `brand`, `note`, `day`) |
-| `/admin/marketing/approvals` | `approvals.view` | approvals |
 | `/admin/marketing/approvals/$requestId` | `approvals.view` | approvals |
 | `/admin/marketing/calendar` | `calendar.view` | calendar |
 

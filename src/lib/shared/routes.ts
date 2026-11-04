@@ -25,7 +25,6 @@ export const AppRoute = {
   Brands: "/admin/marketing/brands",
   Marketing: "/admin/marketing",
   Content: "/admin/marketing/content",
-  Approvals: "/admin/marketing/approvals",
   Calendar: "/admin/marketing/calendar",
   InstagramCallback: "/admin/marketing/instagram/callback",
   Site: "/admin/site",

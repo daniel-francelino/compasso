@@ -5,7 +5,6 @@ import {
   Archive,
   BarChart3,
   CalendarDays,
-  ClipboardCheck,
   FileText,
   Images,
   LayoutDashboard,
@@ -132,16 +131,6 @@ export function BrandLayout({ brandId }: { brandId: string }) {
           >
             <CalendarDays aria-hidden="true" />
             Calendário
-          </Link>
-        ) : null}
-        {can(auth, Action.Approvals.View) ? (
-          <Link
-            to="/admin/marketing/brands/$brandId/approvals"
-            params={{ brandId }}
-            className={tabClass}
-          >
-            <ClipboardCheck aria-hidden="true" />
-            Aprovações
           </Link>
         ) : null}
         {can(auth, Action.Metrics.View) ? (
