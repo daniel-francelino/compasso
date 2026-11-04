@@ -54,7 +54,7 @@ Search these locations first. If a row says "forbidden", using that alternative 
 | **Email** | `lib/shared/email` adapter + outbox | Calling the email provider elsewhere |
 | **Social platforms (Instagram)** | `lib/shared/social` (the only code that calls Meta; responses validated with zod; failures classified into `PublishErrorCode`), jobs in `lib/shared/jobs`, token encrypted with `token-crypto.server.ts` | Calling the Graph API from a component, a route or another module; reading or logging a token; storing a token in clear text |
 | **Lists** | `useListState` (URL params) + `DataTable` + `PaginationBar` + `ListSkeleton` + `EmptyState` | Own pagination, client-side filtering of paged data |
-| **Forms** | The shared zod schema + `useFormSubmit` (parse on the client, call the server function, field errors, `focusFirstInvalid`) + the field components (`TextField`, `SelectField`, `Field`…) + `useUnsavedChanges`. `react-hook-form` is allowed only for forms with many dynamic fields and needs a written reason | A second submit hook, uncontrolled ad-hoc forms, validation only on the client |
+| **Forms** | **New pattern (decided 2026-11-04, Content module first):** the `lost-ui` `Form` with its fields and `rules` validates on the client (and focuses the first invalid field); the submit calls the server function through `useFormSubmit().send`, the **server still validates with zod** (SEC-6) and returns `fields` errors that the form shows in each field (`error`/`errorMessage`). **Existing pattern, kept where not yet migrated (the Content Planning step and the editor's whole-draft save):** The shared zod schema + `useFormSubmit` (parse on the client, call the server function, field errors, `focusFirstInvalid`) + the field components (`TextField`, `SelectField`, `Field`…) + `useUnsavedChanges`. `react-hook-form` is allowed only for forms with many dynamic fields and needs a written reason | A second submit hook, uncontrolled ad-hoc forms, validation only on the client |
 | **Dialogs** | `ConfirmDialog`, `ReasonDialog`, `FormDialog`, `EditorSheet` | New modal components, `window.confirm` |
 | **Toasts** | Global `Toaster` (`sonner`) | Custom toasts, `alert()` |
 | **Status badges** | `StatusBadge` with a `tone` | Color classes written in modules |
@@ -161,7 +161,7 @@ The route only wires: guard, search params, loader (if any) and the page compone
 
 ### 5.4 Form
 
-zod schema in the module's `schemas.ts`, used by both the form (`useFormSubmit` parses it before calling) and the server function. Submit button `loading` and disabled; `focusFirstInvalid` on error; `useUnsavedChanges(isDirty)`; success `toast` only after the server confirms; failure keeps the typed data.
+**Migrated forms (Content dialogs, decided 2026-11-04):** `Form` + fields with `rules` (messages in pt-BR) from `lost-ui/forms`; the submit handler runs only when the rules pass and calls `useFormSubmit().send(action, onSuccess)`; the zod schema in the module's `schemas.ts` is used by the **server function only**, and its field errors come back in `fields` and are passed to the matching field. Keep each `rules` limit equal to the schema's limit. **Not migrated yet:** zod schema in the module's `schemas.ts`, used by both the form (`useFormSubmit` parses it before calling) and the server function. Submit button `loading` and disabled; `focusFirstInvalid` on error; `useUnsavedChanges(isDirty)`; success `toast` only after the server confirms; failure keeps the typed data.
 
 ### 5.5 Migration (one concern per file)
 

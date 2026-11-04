@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/shared/ui/alert";
 import { Button } from "@/components/shared/ui/button";
 import { useCalendarState } from "@/hooks/shared/use-calendar-state";
 import { listPortalCalendar } from "@/lib/portal/calendar/portal-calendar.functions";
-import { type GridItem, StatusMark } from "@/lib/shared/calendar/grid-item";
+import type { GridItem } from "@/lib/shared/calendar/grid-item";
 import { rangeTitle } from "@/lib/shared/calendar/range";
 import type { PortalCalendarEntry, PortalCalendarEvent } from "@/lib/shared/calendar/types";
 import { ApprovalRequestStatus, CalendarNoteKind, CalendarView } from "@/lib/shared/enums";
@@ -61,10 +61,8 @@ const toEventItem = (event: PortalCalendarEvent, zone: string): GridItem => ({
   tone: "info",
   icon: eventIconOf(event.eventType),
   movable: false,
-  alerts: [],
   platform: null,
   format: null,
-  mark: null,
   muted: false,
 });
 
@@ -86,10 +84,8 @@ const toItem = (entry: PortalCalendarEntry, zone: string): GridItem => {
     tone: style.tone,
     icon: style.icon,
     movable: false,
-    alerts: [],
     platform: entry.platform,
     format: null,
-    mark: StatusMark.Scheduled,
     muted: false,
   };
 };

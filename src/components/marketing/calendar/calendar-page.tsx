@@ -202,7 +202,7 @@ export function CalendarPage({ fixedBrandId }: { fixedBrandId?: string }) {
     canManage && isMovable(entry) && !entry.channelArchived;
   const items = entries.flatMap((entry) => {
     const key = entryKey(entry);
-    const item = toGridItem(entry, activeZone, alerts.get(key) ?? [], movableEntry(entry), key);
+    const item = toGridItem(entry, activeZone, movableEntry(entry), key);
     return item !== null && item.day >= state.range.start && item.day < state.range.end
       ? [item]
       : [];

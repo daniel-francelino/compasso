@@ -21,6 +21,34 @@ export const useFormSubmit = (options: Options = {}) => {
     focusFirstInvalid(formRef.current);
   }
 
+  async function send<Res extends Outcome>(
+    action: () => Promise<Res>,
+    onSuccess: (result: Extract<Res, { ok: true }>) => void | Promise<void>,
+  ) {
+    if (busy) return;
+    setError(null);
+    setErrors({});
+    setBusy(true);
+    let result: Res;
+    try {
+      result = await action();
+    } catch {
+      result = {
+        ok: false,
+        code: "unavailable",
+        message: "Não foi possível salvar. Verifique sua conexão e tente novamente.",
+      } as Res;
+    } finally {
+      setBusy(false);
+    }
+
+    if (!result.ok) {
+      reportFailure(result);
+      return;
+    }
+    await onSuccess(result as Extract<Res, { ok: true }>);
+  }
+
   async function submit<Input, Res extends Outcome>(
     schema: ZodType<Input, ZodTypeDef, unknown>,
     values: unknown,
@@ -40,26 +68,8 @@ export const useFormSubmit = (options: Options = {}) => {
       return;
     }
 
-    setBusy(true);
-    let result: Res;
-    try {
-      result = await action(parsed.data);
-    } catch {
-      result = {
-        ok: false,
-        code: "unavailable",
-        message: "Não foi possível salvar. Verifique sua conexão e tente novamente.",
-      } as Res;
-    } finally {
-      setBusy(false);
-    }
-
-    if (!result.ok) {
-      reportFailure(result);
-      return;
-    }
-    await onSuccess(result as Extract<Res, { ok: true }>);
+    await send(() => action(parsed.data), onSuccess);
   }
 
-  return { formRef, errors, error, busy, submit, setError };
+  return { formRef, errors, error, busy, submit, send, setError };
 };

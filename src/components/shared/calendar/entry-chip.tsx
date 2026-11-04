@@ -1,9 +1,8 @@
-import { CircleCheck, Clock3, Eye, Link2, TriangleAlert } from "lucide-react";
 import { statusTones } from "@/components/shared/admin/status-tones";
 import { formatIcons } from "@/components/shared/content/format-icons";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import type { ContentFormat } from "@/lib/shared/enums";
-import { type GridItem, StatusMark, itemLabel } from "@/lib/shared/calendar/grid-item";
+import { type GridItem, itemLabel } from "@/lib/shared/calendar/grid-item";
 import { cn } from "@/lib/shared/utils";
 
 function FormatMark({ format }: { format: ContentFormat }) {
@@ -19,7 +18,6 @@ export function EntryChip({ item, onSelect }: { item: GridItem; onSelect: (key: 
       type="button"
       draggable={item.movable}
       aria-label={itemLabel(item)}
-      title={item.alerts.join(". ") || undefined}
       onDragStart={(event) => {
         event.dataTransfer.setData("text/plain", item.key);
         event.dataTransfer.effectAllowed = "move";
@@ -43,21 +41,6 @@ export function EntryChip({ item, onSelect }: { item: GridItem; onSelect: (key: 
         <span className="shrink-0 font-medium tabular-nums">{item.time}</span>
       )}
       <span className="truncate">{item.title}</span>
-      {item.alerts.length > 0 ? (
-        <TriangleAlert className="ml-auto size-3 shrink-0 text-warning" aria-hidden="true" />
-      ) : null}
-      {item.mark === StatusMark.Published ? (
-        <CircleCheck className="ml-auto size-3.5 shrink-0 text-success" aria-hidden="true" />
-      ) : null}
-      {item.mark === StatusMark.Scheduled ? (
-        <Clock3 className="ml-auto size-3.5 shrink-0 text-warning" aria-hidden="true" />
-      ) : null}
-      {item.mark === StatusMark.Shared ? (
-        <Eye className="ml-auto size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-      ) : null}
-      {item.mark === StatusMark.Converted ? (
-        <Link2 className="ml-auto size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-      ) : null}
     </button>
   );
 }

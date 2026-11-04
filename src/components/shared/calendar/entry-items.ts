@@ -13,16 +13,10 @@ import {
 import type { StatusTone } from "@/components/shared/admin/status-tones";
 import { editorialStyle } from "@/components/shared/content/status-styles";
 import { entryDay, entryTime } from "@/lib/shared/calendar/entries";
-import { type GridItem, StatusMark } from "@/lib/shared/calendar/grid-item";
+import type { GridItem } from "@/lib/shared/calendar/grid-item";
 import type { CalendarEntry } from "@/lib/shared/calendar/types";
+import { CalendarEntryKind, CalendarEventType } from "@/lib/shared/enums";
 import {
-  CalendarAlert,
-  CalendarEntryKind,
-  CalendarEventType,
-  PublicationStatus,
-} from "@/lib/shared/enums";
-import {
-  calendarAlertLabels,
   calendarEntryKindLabels,
   contentFormatLabels,
   editorialStatusLabels,
@@ -62,16 +56,6 @@ const isNote = (entry: CalendarEntry): boolean =>
   entry.kind === CalendarEntryKind.Date ||
   entry.kind === CalendarEntryKind.Event;
 
-const markOf = (entry: CalendarEntry): StatusMark | null => {
-  if (entry.clientVisible) return StatusMark.Shared;
-  if (isNote(entry)) return entry.convertedItemId === null ? null : StatusMark.Converted;
-  if (entry.kind === CalendarEntryKind.Published) return StatusMark.Published;
-  if (entry.kind === CalendarEntryKind.Publication) {
-    return entry.publicationStatus === PublicationStatus.Planned ? StatusMark.Scheduled : null;
-  }
-  return null;
-};
-
 export const entrySubtitle = (entry: CalendarEntry, zone: string): string => {
   const channel =
     entry.platform === null
@@ -88,7 +72,6 @@ export const entrySubtitle = (entry: CalendarEntry, zone: string): string => {
 export const toGridItem = (
   entry: CalendarEntry,
   zone: string,
-  alerts: CalendarAlert[],
   movable: boolean,
   key: string,
 ): GridItem | null => {
@@ -119,12 +102,8 @@ export const toGridItem = (
         ? eventIcons[entry.eventType]
         : kindIcons[entry.kind],
     movable,
-    alerts: alerts
-      .filter((alert) => alert !== CalendarAlert.NotApprovedYet)
-      .map((alert) => calendarAlertLabels[alert]),
     platform: entry.platform,
     format: entry.format,
-    mark: markOf(entry),
     muted: isNote(entry) && entry.convertedItemId !== null,
   };
 };
