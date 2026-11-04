@@ -1,6 +1,6 @@
 begin;
 
-select plan(61);
+select plan(62);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -174,6 +174,7 @@ select is(public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1
 select is((public.portal_list_approvals(current_setting('t.brand')::uuid, 'approved', 1, 20) ->> 'total')::int, 0, 'the filter applies to the latest request, so an old approved planning does not appear');
 select lives_ok(format($$select public.portal_add_comment('%s', 'Obrigado')$$, current_setting('t.item')), 'an approver comments on the content');
 select is((public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1, 20) -> 'rows' -> 0 ->> 'comment_count')::int, 1, 'and the feed counts the comment');
+select is(public.portal_list_comments(current_setting('t.item')::uuid) -> 0 ->> 'author_id', '00000000-0000-0000-0000-0000000000d1', 'and the comment carries its author, so the portal can show the photo');
 reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000e1');

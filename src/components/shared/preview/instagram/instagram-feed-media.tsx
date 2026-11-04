@@ -1,7 +1,9 @@
 import { ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react";
 import { InstagramMediaFallback } from "@/components/shared/preview/instagram/instagram-media-fallback";
-import { MediaSlide, type PreviewMedia } from "@/components/shared/preview/media-slide";
+import { InstagramSlide } from "@/components/shared/preview/instagram/instagram-slide";
+import { VideoVariant } from "@/components/shared/preview/instagram/instagram-video-player";
+import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Button } from "@/components/shared/ui/button";
 import { ContentFormat, Platform } from "@/lib/shared/enums";
 import { INSTAGRAM_CAROUSEL_MAX_ITEMS } from "@/lib/shared/preview/instagram";
@@ -61,7 +63,12 @@ export function InstagramFeedMedia({
         {current === undefined ? (
           <InstagramMediaFallback profileName={profileName} brandLogoUrl={brandLogoUrl} />
         ) : (
-          <MediaSlide item={current} position={index + 1} total={items.length} />
+          <InstagramSlide
+            item={current}
+            position={index + 1}
+            total={items.length}
+            variant={VideoVariant.Feed}
+          />
         )}
         {format === ContentFormat.Video && current !== undefined ? (
           <Clapperboard

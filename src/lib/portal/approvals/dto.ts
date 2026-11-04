@@ -136,6 +136,7 @@ export const portalCommentsSchema = z.object({
       body: z.string(),
       created_at: z.string(),
       author_name: z.string(),
+      author_id: z.string().uuid(),
       mine: z.boolean(),
       from_team: z.boolean(),
       revision_no: z.number().int().nullable(),

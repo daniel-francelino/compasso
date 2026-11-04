@@ -39,47 +39,45 @@ export function FeedActions({
   return (
     <div className="space-y-1 px-2">
       <div
-        className="flex flex-wrap items-center justify-between gap-2"
+        className="flex flex-wrap items-center gap-1"
         role="toolbar"
         aria-label="Ações do conteúdo"
       >
-        <div className="flex items-center gap-1">
-          {canDecide || approved ? (
-            <Button
-              type="button"
-              variant="ghost"
-              className="min-h-11 gap-2 disabled:opacity-100"
-              aria-pressed={approved}
-              disabled={!canDecide || decision.busy}
-              onClick={() => setConfirming(true)}
-            >
-              <Heart
-                className={cn("size-6", approved && "fill-current text-violet")}
-                aria-hidden="true"
-              />
-              {approved ? "Aprovado" : "Aprovar"}
-            </Button>
-          ) : null}
+        {canDecide || approved ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11 gap-2 disabled:opacity-100"
+            aria-pressed={approved}
+            disabled={!canDecide || decision.busy}
+            onClick={() => setConfirming(true)}
+          >
+            <Heart
+              className={cn("size-6", approved && "fill-current text-violet")}
+              aria-hidden="true"
+            />
+            {approved ? "Aprovado" : "Aprovar"}
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          variant="ghost"
+          className="min-h-11 gap-2"
+          aria-label={`Comentários (${request.commentCount})`}
+          onClick={onToggleComments}
+        >
+          <MessageCircle className="size-6" aria-hidden="true" />
+          {request.commentCount}
+        </Button>
+        {canDecide ? (
           <Button
             type="button"
             variant="ghost"
             className="min-h-11 gap-2"
-            aria-label={`Comentários (${request.commentCount})`}
-            onClick={onToggleComments}
-          >
-            <MessageCircle className="size-6" aria-hidden="true" />
-            {request.commentCount}
-          </Button>
-        </div>
-        {canDecide ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11"
             disabled={decision.busy}
             onClick={askChanges}
           >
-            <PencilLine aria-hidden="true" />
+            <PencilLine className="size-6" aria-hidden="true" />
             Solicitar alteração
           </Button>
         ) : null}

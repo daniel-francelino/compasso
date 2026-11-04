@@ -7,6 +7,7 @@ import {
   formatInZone,
   formatNumber,
   formatPercent,
+  formatSocialTime,
 } from "@/lib/shared/format";
 
 describe("formatDate", () => {
@@ -70,5 +71,27 @@ describe("formatNumber and formatBytes", () => {
     expect(formatBytes(512)).toBe("512 B");
     expect(formatBytes(1536)).toBe("1,5 KB");
     expect(formatBytes(5 * 1024 * 1024)).toBe("5,0 MB");
+  });
+});
+
+describe("formatSocialTime", () => {
+  const now = "2026-11-10T12:00:00Z";
+  const ago = (ms: number): string => new Date(Date.parse(now) - ms).toISOString();
+
+  it("says now for less than a minute and for a future instant", () => {
+    expect(formatSocialTime(ago(30_000), now)).toBe("agora");
+    expect(formatSocialTime(ago(-60_000), now)).toBe("agora");
+  });
+
+  it("counts minutes, hours, days and weeks", () => {
+    expect(formatSocialTime(ago(5 * 60_000), now)).toBe("5 min");
+    expect(formatSocialTime(ago(3 * 3_600_000), now)).toBe("3 h");
+    expect(formatSocialTime(ago(2 * 86_400_000), now)).toBe("2 d");
+    expect(formatSocialTime(ago(15 * 86_400_000), now)).toBe("2 sem");
+  });
+
+  it("uses a short date after five weeks, with the year only when it differs", () => {
+    expect(formatSocialTime("2026-08-12T12:00:00Z", now)).toBe("12 de ago");
+    expect(formatSocialTime("2025-08-12T12:00:00Z", now)).toBe("12 de ago de 2025");
   });
 });

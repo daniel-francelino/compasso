@@ -1,7 +1,17 @@
 import { TZDate } from "@date-fns/tz";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
-import { type Instant, parseDateOnly, toDate, toMs } from "@/lib/shared/dates";
+import {
+  DAY_MS,
+  HOUR_MS,
+  type Instant,
+  MINUTE_MS,
+  msBetween,
+  nowDate,
+  parseDateOnly,
+  toDate,
+  toMs,
+} from "@/lib/shared/dates";
 
 export const LOCALE = "pt-BR";
 export const DATE_LOCALE = ptBR;
@@ -10,6 +20,8 @@ const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DATE_PATTERN = "dd/MM/yyyy";
 const DATE_TIME_PATTERN = "dd/MM/yyyy HH:mm";
 const DATE_TIME_ZONE_PATTERN = "dd/MM/yyyy HH:mm z";
+const WEEK_MS = 7 * DAY_MS;
+const SOCIAL_MAX_WEEKS = 5;
 
 const zoned = (value: Instant, timeZone?: string): Date =>
   timeZone === undefined ? toDate(value) : new TZDate(toMs(value), timeZone);
@@ -98,4 +110,16 @@ export function formatMediumDate(value: Instant): string {
 
 export function formatMonthShort(value: Instant): string {
   return format(toDate(value), "MMM", { locale: DATE_LOCALE });
+}
+
+export function formatSocialTime(value: Instant, now: Instant = nowDate()): string {
+  const elapsed = msBetween(value, now);
+  if (elapsed < MINUTE_MS) return "agora";
+  if (elapsed < HOUR_MS) return `${Math.floor(elapsed / MINUTE_MS)} min`;
+  if (elapsed < DAY_MS) return `${Math.floor(elapsed / HOUR_MS)} h`;
+  if (elapsed < WEEK_MS) return `${Math.floor(elapsed / DAY_MS)} d`;
+  if (elapsed < SOCIAL_MAX_WEEKS * WEEK_MS) return `${Math.floor(elapsed / WEEK_MS)} sem`;
+  const sameYear = format(toDate(value), "yyyy") === format(toDate(now), "yyyy");
+  const pattern = sameYear ? "d 'de' MMM" : "d 'de' MMM 'de' yyyy";
+  return format(toDate(value), pattern, { locale: DATE_LOCALE });
 }

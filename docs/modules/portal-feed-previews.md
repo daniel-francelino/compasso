@@ -51,15 +51,32 @@ Mapping from our constants (`Platform.Instagram` with `ContentFormat`): `image`,
 |---|---|---|---|---|
 | `image` | Feed post | Ratio of the file clamped between **4:5 (0.8)** and **1.91:1**; outside the range Instagram crops to the nearest limit. Without dimensions: 4:5 (existing `previewFrameRatio`) | Header, media, action bar, caption (feed post layout) | image |
 | `carousel` | Feed post, several items | The **first item sets the frame for all items** (same clamp as `image`); the others are cropped to it | Feed post layout plus "›" and "‹" arrows, dots **under** the media, an item counter badge "1/N" at the top-right of the media | image, video (a video item plays inline, muted until tapped, no autoplay in the portal) |
-| `video` | Feed video | Same clamp as `image` using the first frame dimensions; fallback 4:5. On the real app a feed video is delivered as a Reel; we keep the feed frame and mark it with the Reels glyph at the top-right | Feed post layout, native controls without autoplay, a mute indicator at the bottom-right | video |
-| `reel` | Reels viewer | **9:16**, drawn inside a phone-like frame (max width 20 rem) | Full-bleed media; bottom-left: avatar, username, "Seguir" (not shown), the caption clamped to two lines with "… mais", the audio line ("♪ Áudio original · username"); right rail: heart, comment, share, save, more, with the **approve and comment buttons of our feed in their place** (see "Feed actions on immersive formats"); a "Reels" label at the top-left; **safe zones** (see below) | video |
-| `story` | Story viewer | **9:16**, phone-like frame (max width 18 rem) | Segmented **progress bar** at the top (one segment per file), header with avatar, username and age, close mark "✕" is not drawn; **tap zones** left and right to move between files; "Enviar mensagem" bar at the bottom is drawn as a muted placeholder; safe zones (see below). No caption under the frame: the Story caption, when there is one, is shown below the frame as "Texto da publicação" because Instagram does not show a caption | image, video |
+| `video` | Feed video | Same clamp as `image` using the first frame dimensions; fallback 4:5. On the real app a feed video is delivered as a Reel; we keep the feed frame and mark it with the Reels glyph at the top-right | Feed post layout; the Instagram-style player (see "Video player"): no native controls, tap to pause, mute button at the bottom-right | video |
+| `reel` | Reels viewer | **9:16**, drawn inside a phone-like frame (max width 20 rem) | Full-bleed media played by the Instagram-style player; bottom-left: avatar, username, "Seguir" (not shown), the caption clamped to two lines with "… mais", the audio line ("♪ Áudio original · username"); right rail: heart, comment, share, save, more, with the **approve and comment buttons of our feed in their place** (see "Feed actions on immersive formats"); a "Reels" label at the top-left; mute button at the top-right; a thin progress line at the bottom that can be scrubbed; **safe zones** (see below) | video |
+| `story` | Story viewer | **9:16**, phone-like frame (max width 18 rem) | Segmented **progress bar** at the top (one segment per file; the current one fills while the file plays and the story moves to the next file on its own: 5 seconds for an image, the length of a video); header with avatar and username and, at the right, pause/play and mute (mute only for a video); **tap zones**: the left third goes back, the rest goes forward, and holding a press pauses; the reply bar at the bottom is drawn as a muted placeholder: the pill "Enviar mensagem" with a heart and a send icon at its right (decorative); safe zones (see below). **A Story has no caption**: the caption is never drawn for a Story, even when it is filled in | image, video |
 
-**Safe zones (percentages of the frame height, measured, to be confirmed with the capture checklist).** Story: top about 14 % (progress bar and header) and bottom about 18 % (reply bar) are covered by interface; Reel: bottom about 22 % and right about 16 % are covered. The preview draws these areas as a dashed outline only while the person turns on "Mostrar áreas cobertas" (off by default), so the team and the client see where text would be hidden. Values are constants in `lib/shared/preview/instagram.ts`.
+**Safe zones (percentages of the frame height, measured, to be confirmed with the capture checklist).** Story: top about 14 % (progress bar and header) and bottom about 18 % (reply bar) are covered by interface; Reel: bottom about 22 % and right about 16 % are covered. The preview draws these areas as a dashed outline only while the option "Mostrar áreas cobertas" is on (off by default). The option lives in the **"⋯" menu of the post header**, as a dropdown checkbox item, for Reel and Story only (decided 2026-11-04; there is no button under the frame). Values are constants in `lib/shared/preview/instagram.ts`.
 
 **Carousel rules.** Up to 20 items (the limit used in [instagram-publishing.md](instagram-publishing.md) and in Meta's carousel rule), order by `content_revision_media.position`. Items keep their own media kind. When the first item is a video, the frame is read from the video dimensions. When an item is missing or failed to load, its slot shows the existing "Prévia indisponível" and the counter still counts it. Keyboard: left and right arrows move the item; the dots are buttons with `aria-pressed` (already true in `ChannelPreview`).
 
 **Feed actions on immersive formats.** In a Reel or a Story frame the real right rail has like, comment, share, save. Our actions (heart "Aprovar", comment, "Solicitar alteração") are **not drawn inside the frame**: they stay in the post action bar below the frame, exactly as on the other formats, so the same buttons, labels and rules apply to every format ([portal.md](portal.md#feed-decided-2026-11-04)). The right rail is drawn as non-interactive decoration (outlined icons, `aria-hidden`) so the proportions and the covered area are faithful, and it carries no counts.
+
+## Video player (reverse-engineered, decided 2026-11-04)
+
+Instagram does not use the browser's native video controls. The rules below are what the app does, recorded as targets for the capture checklist.
+
+| Behavior | Rule |
+|---|---|
+| Start | Plays **muted** by itself while at least 60 % of the frame is visible; pauses when it leaves the screen. With `prefers-reduced-motion` it does not start by itself and shows a play icon |
+| Loop | Feed video and Reel loop. A Story does not loop: it moves to the next file |
+| Tap | A tap on a feed video or Reel toggles pause; a centered play icon fades in while paused. A Story uses the tap zones (back, forward) and hold-to-pause |
+| Sound | A round mute button: bottom-right on a feed video, top-right on a Reel, in the header on a Story. It starts muted and remembers the choice for that post |
+| Progress | Feed video: none. Reel: a thin line at the bottom edge that can be dragged (an accessible slider "Posição do vídeo"). Story: the top segments |
+| Time | No elapsed or total time is shown |
+| Keyboard | The player is a button (Space or Enter toggles); the mute and pause buttons and the slider are focusable |
+| Failure | The slot shows "Prévia indisponível" |
+
+Component: `InstagramVideoPlayer` (`shared/preview/instagram`). `ChannelPreview` and the other platforms keep the native video element.
 
 ## Caption
 
@@ -97,14 +114,14 @@ Planning files (`plan_media`, references that are not the art) never count as ar
 | Frame | The same ratio the format would use without media: `previewFrameRatio(platform, format, undefined)` (4:5 for `image`, `carousel` and `video`; 9:16 for `reel` and `story`) |
 | Look | Surface token (`bg-muted`), the brand logo centered at about 30 % of the frame width (the initial letter on the avatar fallback when the brand has no logo), and the line "Imagem ainda não enviada" in the muted text token under it. No decorative graphic, no stock image, no text-on-color "quote card" |
 | Carousel | A single fallback slide: no arrows, no dots, no counter |
-| Reel and Story | The 9:16 frame keeps its chrome (progress bar, header, bottom bar or rail) over the placeholder; the Story caption is shown under the frame as "Texto da publicação" (existing rule) |
+| Reel and Story | The 9:16 frame keeps its chrome (progress bar, header, bottom bar or rail) over the placeholder; a Story never shows a caption |
 | Video | No player; the placeholder only |
 | Accessibility | `role="img"` with the label "Imagem ainda não enviada", never an empty `alt`, and the placeholder is announced once |
 | Component | `InstagramMediaFallback`, used by `InstagramFeedMedia` and `InstagramImmersiveFrame`; the existing `showMediaPlaceholder` branch of `ChannelPreview` is replaced by it for Instagram rows and stays for the other platforms until they are migrated |
 
 **Case 2, no caption.** The author line is not drawn and the caption area has no height, so the action bar follows the media directly. The call to action, when the revision has one, is still shown.
 
-**Case 4, the planning card.** Same post shell (header, action bar, comments) with a "Planejamento" chip in the header (`approvalStageLabels` for `plan`), and the media frame is replaced by a **planning sheet**. It reuses and extends the existing `PlanRequestSummary` (no parallel component):
+**Case 4, the planning card.** Same post shell (header, action bar, comments) with the word "Planejamento" (`approvalStageLabels` for `plan`) before the date line in the header ("Planejamento · Publicação: …"; not a chip, decided 2026-11-04), and the media frame is replaced by a **planning sheet**. It reuses and extends the existing `PlanRequestSummary` (no parallel component):
 
 | Part | Content |
 |---|---|
@@ -146,7 +163,9 @@ All under `src/components/shared/preview/instagram/` (no `index.ts`), one compon
 | `InstagramPost` | Picks the layout by `ContentFormat` and composes header, media, the `actions` slot, caption and the `footer` slot (the feed action bar and the comments are passed in as slots, so the preview stays free of portal logic); `onOpenMedia` makes a click on the media, outside its own controls, open the review |
 | `InstagramPostHeader` | Avatar, name, date line, decorative "⋯" |
 | `InstagramFeedMedia` | Frame and slides for `image`, `carousel`, `video`: ratio from `previewFrameRatio` (the single source of the clamp), arrows, keyboard and swipe, dots below, counter badge, Reels glyph |
-| `InstagramImmersiveFrame` | Phone-like 9:16 frame for `reel` and `story`: progress bar, header and bottom bar for `story`, decorative rail and audio line for `reel`, optional safe-zone outline |
+| `InstagramImmersiveFrame` | Phone-like 9:16 frame for `reel` and `story`: Story progress segments, auto-advance, hold to pause, tap zones, header controls and reply bar (with heart and send); decorative rail, audio line and scrubbable progress line for `reel`; optional safe-zone outline (switched on from the header menu) |
+| `InstagramVideoPlayer` | The Instagram-style player used by feed video, carousel video, Reel and Story (see "Video player") |
+| `InstagramSlide` | Chooses the player for a video and `MediaSlide` for the other kinds |
 | `InstagramCaption` | Author, truncation, "… mais", hashtag and mention styling; renders nothing when the caption is empty |
 | `InstagramMediaFallback` | The placeholder of case 3 in the frame of the format |
 | `InstagramDetailLayout` | Two-column arrangement for the dialog. **Not built yet** (2026-11-04): the dialog still shows the review screen |
@@ -164,7 +183,7 @@ Data constants (in `instagram.ts`): the clamp range, the carousel item limit, th
 | No media, with caption | The fallback image and the caption (case 3). The client sees "Imagem ainda não enviada" |
 | Media, no caption | The post without caption (case 2) |
 | No media and no caption | The planning card (case 4), decided by `request.stage = plan` |
-| Video | Native controls, `preload="metadata"`, no autoplay, `prefers-reduced-motion` respected for any transition |
+| Video | The Instagram-style player: muted autoplay while at least 60 % of the frame is visible, loop, tap to pause, no autoplay when `prefers-reduced-motion` is set (a play icon is shown instead), failed file shows "Prévia indisponível" |
 | Superseded revision | The post shows the revision that was shared; the banner of the feed states that a newer one exists |
 | Very long caption | Collapsed with "… mais"; the expanded text keeps the layout and never overflows horizontally |
 
@@ -180,7 +199,9 @@ Data constants (in `instagram.ts`): the clamp range, the carousel item limit, th
 
 - A portrait, square and landscape image show the same frame ratio Instagram uses (clamped to 4:5 to 1.91:1); a file outside the range is cropped, not distorted.
 - A carousel uses the first item's frame for every item, shows arrows, dots under the media and a counter, supports a video item, and is operable by keyboard.
-- A Reel and a Story render in a 9:16 phone-like frame with their own chrome; turning on the covered-area outline shows the safe zones.
+- A Reel and a Story render in a 9:16 phone-like frame with their own chrome; the covered-area outline is switched on from the "⋯" menu of the post header.
+- A video plays muted when visible, pauses when scrolled away or on a tap, loops (Reel, feed video) and never shows the native control bar or the "0:00 / 0:10" counter; a Story moves on by itself and pauses while pressed.
+- A Story shows no caption, even when the content has one.
 - A caption truncates as the capture shows, expands in place, and styles hashtags and mentions without making them links.
 - The feed actions are the same under every format; nothing in the preview implies a like count, a share or a save that does not exist.
 - A post never shifts layout while its media loads.
@@ -200,7 +221,7 @@ Recommendations are already the behavior written above; change them here first i
 4. **Location and tagged people.** Recommended: not drawn now. If wanted, they need new fields on the channel row (data model, editor, snapshot) and are a separate change.
 5. **Look of the fallback image.** *Decided and built 2026-11-04:* the neutral placeholder with the brand logo and "Imagem ainda não enviada". Alternative left open: the caption drawn as a text card, which looks nicer but can be mistaken for the final art.
 6. **Planning files in the portal.** *Resolved 2026-11-04:* no SQL change was needed. `content_freeze_revision` stores the planning files of a `plan` version in `content_revision_media`, so `request.media` already carries them; `PlanRequestSummary` now shows them as "Arquivos de referência".
-7. **Caption on a Story.** *Decided and built 2026-11-04:* "Texto da publicação" under the frame, so the text is still reviewed. Alternative: hide it and ask the team to put the text in the art.
+7. **Caption on a Story.** *Decided 2026-11-04 (reverses the earlier "Texto da publicação" decision):* a Story never shows a caption, because Instagram has none; the team puts the text in the art.
 8. **Verification of numbers.** The ratio range, the 20-item carousel, the 125-character rule and the safe zones need the capture checklist before being treated as verified; the official-source check of limits is also item M-preparation of [instagram-publishing.md](instagram-publishing.md).
 
 ## Implementation status

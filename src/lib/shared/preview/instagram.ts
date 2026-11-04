@@ -5,6 +5,16 @@ export const INSTAGRAM_STORY_MAX_REM = 18;
 
 export const FALLBACK_LOGO_PERCENT = 30;
 
+export const VIDEO_VISIBLE_THRESHOLD = 0.6;
+export const SEEK_STEPS = 1000;
+
+export const instagramStory = {
+  imageSeconds: 5,
+  holdPauseMs: 200,
+  tickMs: 100,
+  backZonePercent: 33,
+} as const;
+
 export const instagramCaptionRule = {
   visibleCharacters: 125,
   visibleLines: 2,

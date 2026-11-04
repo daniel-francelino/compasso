@@ -269,6 +269,7 @@ export const listPortalComments = createServerFn({ method: "GET" })
         body: row.body,
         createdAt: row.created_at,
         authorName: row.author_name,
+        authorId: row.author_id,
         mine: row.mine,
         fromTeam: row.from_team,
         revisionNo: row.revision_no,

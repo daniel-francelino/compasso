@@ -1,21 +1,42 @@
-import { Bookmark, Clapperboard, Ellipsis, Heart, Music2, MessageCircle, Send } from "lucide-react";
-import { useState } from "react";
+import {
+  Bookmark,
+  Clapperboard,
+  Ellipsis,
+  Heart,
+  MessageCircle,
+  Music2,
+  Pause,
+  Play,
+  Send,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { InstagramMediaFallback } from "@/components/shared/preview/instagram/instagram-media-fallback";
-import { MediaSlide, type PreviewMedia } from "@/components/shared/preview/media-slide";
+import { InstagramSlide } from "@/components/shared/preview/instagram/instagram-slide";
+import { VideoVariant } from "@/components/shared/preview/instagram/instagram-video-player";
+import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Button } from "@/components/shared/ui/button";
+import { useInView } from "@/hooks/shared/use-in-view";
+import { usePrefersReducedMotion } from "@/hooks/shared/use-prefers-reduced-motion";
 import { ContentFormat, Platform } from "@/lib/shared/enums";
+import { MediaKind } from "@/lib/shared/media/limits";
 import {
   INSTAGRAM_CAROUSEL_MAX_ITEMS,
   INSTAGRAM_REEL_MAX_REM,
   INSTAGRAM_STORY_MAX_REM,
+  VIDEO_VISIBLE_THRESHOLD,
   instagramSafeZones,
+  instagramStory,
 } from "@/lib/shared/preview/instagram";
+import { nowMs } from "@/lib/shared/dates";
 import { previewFrameRatio } from "@/lib/shared/preview/platforms";
 import { cn } from "@/lib/shared/utils";
 
 const railIcons = [Heart, MessageCircle, Send, Bookmark, Ellipsis];
 const zoneClass = "pointer-events-none absolute border border-dashed border-ivory bg-ink/25";
+const headerButton = "pointer-events-auto size-8 text-ivory hover:bg-ink/40 hover:text-ivory";
 
 function SafeZones({ story }: { story: boolean }) {
   const { story: s, reel: r } = instagramSafeZones;
@@ -57,66 +78,180 @@ export function InstagramImmersiveFrame({
   caption,
   profileName,
   brandLogoUrl,
+  showSafeZones,
 }: {
   format: ContentFormat;
   media: PreviewMedia[];
   caption: string;
   profileName: string;
   brandLogoUrl: string | null | undefined;
+  showSafeZones: boolean;
 }) {
   const [index, setIndex] = useState(0);
-  const [zones, setZones] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [userPaused, setUserPaused] = useState<boolean | null>(null);
+  const [holding, setHolding] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const downAt = useRef<number | null>(null);
+  const { ref: frameRef, inView } = useInView<HTMLDivElement>(VIDEO_VISIBLE_THRESHOLD);
+  const reduced = usePrefersReducedMotion();
   const story = format === ContentFormat.Story;
   const items = media.slice(0, INSTAGRAM_CAROUSEL_MAX_ITEMS);
   const last = items.length - 1;
   const current = items[Math.min(index, Math.max(last, 0))];
-  const many = items.length > 1;
+  const isVideo = current?.kind === MediaKind.Video && current.unavailable !== true;
+  const timed = story && current !== undefined && !isVideo;
+  const paused = (userPaused ?? reduced) || holding || !inView;
   const name = profileName.replace(/^@/, "");
   const maxRem = story ? INSTAGRAM_STORY_MAX_REM : INSTAGRAM_REEL_MAX_REM;
-  const move = (delta: number) => setIndex((value) => Math.min(last, Math.max(0, value + delta)));
+
+  useEffect(() => {
+    if (!timed || paused) return;
+    const step = instagramStory.tickMs / (instagramStory.imageSeconds * 1000);
+    const timer = window.setInterval(
+      () => setProgress((value) => Math.min(1, value + step)),
+      instagramStory.tickMs,
+    );
+    return () => window.clearInterval(timer);
+  }, [timed, paused]);
+
+  useEffect(() => {
+    if (!timed || progress < 1 || index >= last) return;
+    setIndex(index + 1);
+    setProgress(0);
+  }, [timed, progress, index, last]);
+
+  const go = (delta: number) => {
+    const next = Math.min(last, Math.max(0, index + delta));
+    setProgress(0);
+    setIndex(next);
+  };
+  const press = () => {
+    downAt.current = nowMs();
+    setHolding(true);
+  };
+  const release = () => setHolding(false);
+  const tap = (delta: number) => {
+    const held = downAt.current !== null && nowMs() - downAt.current > instagramStory.holdPauseMs;
+    downAt.current = null;
+    if (!held) go(delta);
+  };
+  const zoneHandlers = {
+    onPointerDown: press,
+    onPointerUp: release,
+    onPointerLeave: release,
+    onPointerCancel: release,
+  };
+  const slide =
+    current === undefined ? (
+      <InstagramMediaFallback profileName={profileName} brandLogoUrl={brandLogoUrl} />
+    ) : (
+      <InstagramSlide
+        item={current}
+        position={index + 1}
+        total={items.length}
+        variant={story ? VideoVariant.Story : VideoVariant.Reel}
+        paused={story ? paused : undefined}
+        muted={story ? muted : undefined}
+        onProgress={story ? setProgress : undefined}
+        onEnded={story ? () => go(1) : undefined}
+      />
+    );
 
   return (
-    <div className="space-y-2 pb-2">
+    <div className="pb-2">
       <div
+        ref={frameRef}
         className="relative mx-auto w-full overflow-hidden rounded-2xl bg-muted"
         style={{
           maxWidth: `${maxRem}rem`,
           aspectRatio: previewFrameRatio(Platform.Instagram, format, undefined),
         }}
       >
-        {current === undefined ? (
-          <InstagramMediaFallback profileName={profileName} brandLogoUrl={brandLogoUrl} />
-        ) : (
-          <MediaSlide item={current} position={index + 1} total={items.length} />
-        )}
+        {slide}
         {story ? (
-          <div className="pointer-events-none absolute inset-x-2 top-2 space-y-2">
-            <div className="flex gap-1" aria-hidden="true">
-              {Array.from({ length: Math.max(items.length, 1) }, (_, position) => (
-                <span
-                  key={position}
-                  className={cn(
-                    "h-0.5 flex-1 rounded-full",
-                    position <= index ? "bg-ivory" : "bg-ivory/40",
-                  )}
-                />
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <Avatar className="size-7">
-                {brandLogoUrl ? (
-                  <AvatarImage src={brandLogoUrl} alt="" className="object-contain" />
+          <>
+            <div className="pointer-events-none absolute inset-x-2 top-2 space-y-2">
+              <div className="flex gap-1" aria-hidden="true">
+                {Array.from({ length: Math.max(items.length, 1) }, (_, position) => {
+                  const fill = position < index ? 1 : position === index ? progress : 0;
+                  return (
+                    <span
+                      key={position}
+                      className="h-0.5 flex-1 overflow-hidden rounded-full bg-ivory/40"
+                    >
+                      <span className="block h-full bg-ivory" style={{ width: `${fill * 100}%` }} />
+                    </span>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-2">
+                <Avatar className="size-7">
+                  {brandLogoUrl ? (
+                    <AvatarImage src={brandLogoUrl} alt="" className="object-contain" />
+                  ) : null}
+                  <AvatarFallback className="bg-surface text-xs text-foreground">
+                    {name.slice(0, 1).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 flex-1 truncate text-xs font-semibold text-ivory">
+                  {name}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={headerButton}
+                  aria-label={paused ? "Reproduzir story" : "Pausar story"}
+                  onClick={() => setUserPaused(!paused)}
+                >
+                  {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+                </Button>
+                {isVideo ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className={headerButton}
+                    aria-label={muted ? "Ativar som" : "Silenciar"}
+                    aria-pressed={!muted}
+                    onClick={() => setMuted(!muted)}
+                  >
+                    {muted ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
+                  </Button>
                 ) : null}
-                <AvatarFallback className="bg-surface text-xs text-foreground">
-                  {name.slice(0, 1).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="truncate text-xs font-semibold text-ivory">{name}</span>
+              </div>
+              <span className="sr-only" aria-live="polite">
+                Arquivo {index + 1} de {Math.max(items.length, 1)}
+              </span>
             </div>
-            <span className="sr-only" aria-live="polite">
-              Arquivo {index + 1} de {Math.max(items.length, 1)}
-            </span>
-          </div>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center gap-3 text-ivory"
+            >
+              <span className="flex-1 rounded-full border border-ivory/70 px-3 py-2 text-xs">
+                Enviar mensagem
+              </span>
+              <Heart className="size-6" />
+              <Send className="size-6" />
+            </div>
+            <button
+              type="button"
+              className="absolute inset-y-16 left-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ width: `${instagramStory.backZonePercent}%` }}
+              aria-label="Arquivo anterior"
+              onClick={() => tap(-1)}
+              {...zoneHandlers}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-16 right-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              style={{ width: `${100 - instagramStory.backZonePercent}%` }}
+              aria-label="Próximo arquivo"
+              onClick={() => tap(1)}
+              {...zoneHandlers}
+            />
+          </>
         ) : (
           <>
             <span className="pointer-events-none absolute left-3 top-3 flex items-center gap-1 text-sm font-semibold text-ivory">
@@ -144,45 +279,7 @@ export function InstagramImmersiveFrame({
             </div>
           </>
         )}
-        {story ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-3 bottom-3 rounded-full border border-ivory/70 px-3 py-2 text-xs text-ivory"
-          >
-            Enviar mensagem
-          </span>
-        ) : null}
-        {many && story ? (
-          <>
-            <button
-              type="button"
-              className="absolute inset-y-16 left-0 w-1/4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Arquivo anterior"
-              disabled={index === 0}
-              onClick={() => move(-1)}
-            />
-            <button
-              type="button"
-              className="absolute inset-y-16 right-0 w-1/4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label="Próximo arquivo"
-              disabled={index === last}
-              onClick={() => move(1)}
-            />
-          </>
-        ) : null}
-        {zones ? <SafeZones story={story} /> : null}
-      </div>
-      <div className="flex justify-center">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="min-h-11"
-          aria-pressed={zones}
-          onClick={() => setZones((value) => !value)}
-        >
-          Mostrar áreas cobertas
-        </Button>
+        {showSafeZones ? <SafeZones story={story} /> : null}
       </div>
     </div>
   );

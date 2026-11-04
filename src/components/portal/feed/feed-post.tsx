@@ -1,18 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { ClipboardList } from "lucide-react";
 import { useRef, useState } from "react";
 import { PortalApprovalDialog } from "@/components/portal/approvals/portal-approval-dialog";
 import { PlanRequestSummary } from "@/components/portal/approvals/plan-request-summary";
-import { ResponseDeadlineBadge } from "@/components/portal/approvals/response-deadline-badge";
 import { FeedActions } from "@/components/portal/feed/feed-actions";
 import { FeedComments } from "@/components/portal/feed/feed-comments";
 import { InfoTip } from "@/components/shared/admin/info-tip";
 import { SectionCard } from "@/components/shared/admin/section-card";
-import { StatusBadge } from "@/components/shared/admin/status-badge";
-import { RequestStatusBadge } from "@/components/shared/content/status-badges";
 import { InstagramPost } from "@/components/shared/preview/instagram/instagram-post";
 import { InstagramPostHeader } from "@/components/shared/preview/instagram/instagram-post-header";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
+import { OpenOnClick } from "@/components/shared/preview/open-on-click";
 import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Button } from "@/components/shared/ui/button";
 import { useDecisionDraft } from "@/hooks/portal/use-decision-draft";
@@ -112,18 +109,24 @@ export function FeedPost({ request, brandId }: { request: PortalRequest; brandId
 
   const body = () => {
     if (channel === undefined) return null;
-    const subtitle = <PublicationDate request={request} channel={channel} />;
+    const date = <PublicationDate request={request} channel={channel} />;
     if (kind === FeedPostKind.Plan) {
       return (
         <div>
           <InstagramPostHeader
             profileName={channel.profileName}
             brandLogoUrl={logo}
-            subtitle={subtitle}
+            subtitle={
+              <>
+                {approvalStageLabels[ApprovalStage.Plan]} · {date}
+              </>
+            }
           />
-          <div className="px-3 pb-3">
-            <PlanRequestSummary request={request} urls={urls.data} />
-          </div>
+          <OpenOnClick onOpen={() => setDialog(true)}>
+            <div className="px-3 pb-3">
+              <PlanRequestSummary request={request} urls={urls.data} />
+            </div>
+          </OpenOnClick>
           {actions}
           {footer}
         </div>
@@ -137,7 +140,7 @@ export function FeedPost({ request, brandId }: { request: PortalRequest; brandId
           format={channel.format as ContentFormat}
           profileName={channel.profileName}
           brandLogoUrl={logo}
-          subtitle={subtitle}
+          subtitle={date}
           media={media}
           caption={caption}
           callToAction={null}
@@ -149,16 +152,18 @@ export function FeedPost({ request, brandId }: { request: PortalRequest; brandId
     }
     return (
       <div className="space-y-2 pb-1">
-        <ChannelPreview
-          platform={channel.platform as Platform}
-          profileName={channel.profileName}
-          brandLogoUrl={logo}
-          format={channel.format as ContentFormat}
-          caption={caption}
-          callToAction={null}
-          media={media}
-          showMediaPlaceholder={kind === FeedPostKind.CaptionOnly}
-        />
+        <OpenOnClick onOpen={() => setDialog(true)}>
+          <ChannelPreview
+            platform={channel.platform as Platform}
+            profileName={channel.profileName}
+            brandLogoUrl={logo}
+            format={channel.format as ContentFormat}
+            caption={caption}
+            callToAction={null}
+            media={media}
+            showMediaPlaceholder={kind === FeedPostKind.CaptionOnly}
+          />
+        </OpenOnClick>
         {actions}
         {footer}
       </div>
@@ -172,26 +177,8 @@ export function FeedPost({ request, brandId }: { request: PortalRequest; brandId
       className="mx-auto w-full max-w-lg overflow-hidden"
       aria-label={`${request.title} · ${channel ? platformLabels[channel.platform as Platform] : ""}`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-2 px-3 pt-3">
-        <button
-          type="button"
-          onClick={() => setDialog(true)}
-          className="min-h-11 rounded-md py-2 text-left font-semibold text-foreground underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {request.title}
-        </button>
-        <span className="flex flex-wrap items-center gap-1.5">
-          <ResponseDeadlineBadge request={request} />
-          {request.stage === ApprovalStage.Plan ? (
-            <StatusBadge tone="neutral" icon={ClipboardList}>
-              {approvalStageLabels[request.stage]}
-            </StatusBadge>
-          ) : null}
-          <RequestStatusBadge status={request.status} />
-        </span>
-      </div>
       {rows.length > 1 ? (
-        <div className="flex flex-wrap gap-1.5 px-3 pt-1" role="group" aria-label="Canais">
+        <div className="flex flex-wrap gap-1.5 px-3 pt-3" role="group" aria-label="Canais">
           {rows.map((row) => (
             <Button
               key={row.rowId}

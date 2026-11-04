@@ -108,6 +108,7 @@ export type PortalComment = {
   body: string;
   createdAt: string;
   authorName: string;
+  authorId: string;
   mine: boolean;
   fromTeam: boolean;
   revisionNo: number | null;

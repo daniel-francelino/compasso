@@ -89,7 +89,9 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Request changes | "Solicitar alteração" (button; the status stays "Alterações solicitadas"). In the portal feed the typed comment is sent as the guidance |
 | Portal feed | "Feed" (menu item and breadcrumb of the brand page); filters "Todos", "Pendentes", "Aprovados", "Alterações solicitadas"; "Carregar mais"; "Ver os N comentários" / "Ocultar comentários"; field "Adicione um comentário…" with "Publicar" |
 | Missing art in a post | "Imagem ainda não enviada" |
-| Approve a planning | Confirmation "Aprovar este planejamento?"; badge "Planejamento" |
+| Instagram preview video and story controls | "Reproduzir vídeo", "Pausar vídeo", "Ativar som", "Silenciar", "Posição do vídeo", "Pausar story", "Reproduzir story"; header menu item "Mostrar áreas cobertas" (Reel and Story only); reply placeholder "Enviar mensagem" |
+| Time of a comment (social style) | `formatSocialTime` in `lib/shared/format.ts`: "agora", "N min", "N h", "N d", "N sem", then a short date such as "12 de nov" (with the year when it is not the current one); never "há 2 dias" in comment lists |
+| Approve a planning | Confirmation "Aprovar este planejamento?"; word "Planejamento" before the date in the post header |
 | Reopen | "Reabrir" |
 | Move between statuses | drag the card on the board (no menu since 2026-10-30), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
 | Add a publication to a channel | "Adicionar publicação" |
