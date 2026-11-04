@@ -97,9 +97,8 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | URL | Action | Module |
 |---|---|---|
 | `/portal` | `portal.view` | portal (brand selection) |
-| `/portal/brands/$brandId` | `portal.view` | portal (dashboard) |
+| `/portal/brands/$brandId` | `portal.view` | portal (feed; URL param `status`: `pending`, `approved`, `changes_requested`) |
 | `/portal/brands/$brandId/calendar` | `portal.view` | portal / calendar |
-| `/portal/brands/$brandId/approvals` | `portal.view` | portal / approvals |
 | `/portal/brands/$brandId/approvals/$requestId` | `portal.view` (decide: `approvals.decide`) | portal / approvals |
 | `/portal/brands/$brandId/metrics` | `portal.view` + `metrics.portal_view` | metrics (published reports) |
 | `/portal/brands/$brandId/metrics/$reportId` | `portal.view` + `metrics.portal_view` | metrics (one published report) |

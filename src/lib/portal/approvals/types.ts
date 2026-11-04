@@ -46,6 +46,9 @@ export type PortalRequest = {
   status: ApprovalRequestStatus;
   title: string;
   planSummary: RichDoc | null;
+  caption: string;
+  commentCount: number;
+  decisionComment: string | null;
   channels: PortalChannel[];
   media: PortalMedia[];
   brandTimezone: string | null;

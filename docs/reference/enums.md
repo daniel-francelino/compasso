@@ -25,6 +25,7 @@
 | `ApprovalRequestStatus` | `pending`, `approved`, `changes_requested`, `superseded`, `cancelled` | `approval_requests.status` | "Pendente", "Aprovada", "Alterações solicitadas", "Substituída", "Cancelada" | approvals |
 | `ApprovalOutcome` | `approved`, `changes_requested` | `approval_decisions.outcome` | "Aprovado", "Alterações solicitadas" | approvals |
 | `CommentVisibility` | `internal`, `external` | `comments.visibility` | "Interno", "Externo" | content |
+| `FeedPostKind` | `full`, `media_only`, `caption_only`, `plan` | `lib/portal/approvals/feed.ts`: which post the portal feed draws for a request (computed in the browser from `stage`, caption and files; not stored) | see [../modules/portal-feed-previews.md](../modules/portal-feed-previews.md) | portal |
 | `CalendarView` | `month`, `week` | URL param `view` (not stored in the database) | "Mês", "Semana" | calendar |
 | `EditorStep` | `planning`, `briefing`, `content` | Local state of the content editor (not stored, not a URL param) | "Planejamento", "Briefing", "Conteúdo" | content |
 | `CalendarEntryKind` | `publication`, `published`, `approval_deadline`, `production_deadline`, `idea`, `date`, `event` | `list_calendar_entries` output (`kind`, not stored) | "Publicação planejada", "Publicado", "Prazo de aprovação", "Prazo de produção", "Ideia", "Data", "Evento" | calendar |

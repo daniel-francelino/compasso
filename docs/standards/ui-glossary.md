@@ -86,7 +86,10 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Retry | "Tentar novamente" |
 | Send for approval | "Enviar para aprovação" |
 | Approve | "Aprovar" |
-| Request changes | "Pedir alterações" |
+| Request changes | "Solicitar alteração" (button; the status stays "Alterações solicitadas"). In the portal feed the typed comment is sent as the guidance |
+| Portal feed | "Feed" (menu item and breadcrumb of the brand page); filters "Todos", "Pendentes", "Aprovados", "Alterações solicitadas"; "Carregar mais"; "Ver os N comentários" / "Ocultar comentários"; field "Adicione um comentário…" with "Publicar" |
+| Missing art in a post | "Imagem ainda não enviada" |
+| Approve a planning | Confirmation "Aprovar este planejamento?"; badge "Planejamento" |
 | Reopen | "Reabrir" |
 | Move between statuses | drag the card on the board (no menu since 2026-10-30), "Iniciar produção", "Enviar para revisão interna", "Retomar produção" |
 | Add a publication to a channel | "Adicionar publicação" |
@@ -139,7 +142,7 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 2. Sentence case, no ALL CAPS, no exclamation marks except for real celebration.
 3. Numbers and dates through `format.ts` (`pt-BR`): "18 de out. de 2026", "R$ 1.250,00".
 4. Button text never changes meaning between screens; if two verbs exist for the same action, pick the one in this glossary.
-5. The client portal uses the client's vocabulary: "Publicação" (not "canal do conteúdo"), "Versão" (not "revisão"), "Aprovar", "Pedir alterações".
+5. The client portal uses the client's vocabulary: "Publicação" (not "canal do conteúdo"), "Versão" (not "revisão"), "Aprovar", "Solicitar alteração".
 6. Automatic publishing is mentioned only on a connected Instagram channel ("Publicar automaticamente"); everywhere else the product records **manual** publication and says "Registrar publicação".
 7. Gender: use neutral forms where possible ("Pessoa responsável"), otherwise the form with parentheses only in short labels ("Aprovador(a)").
 

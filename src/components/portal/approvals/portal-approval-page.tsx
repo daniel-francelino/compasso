@@ -249,9 +249,9 @@ export function PortalApprovalPage({
           <p className="text-sm text-muted-foreground">{approval.brandName}</p>
         ) : (
           <Button asChild variant="ghost" className="-ml-3 min-h-11">
-            <Link to="/portal/brands/$brandId/approvals" params={{ brandId }}>
+            <Link to="/portal/brands/$brandId" params={{ brandId }}>
               <ArrowLeft aria-hidden="true" />
-              Aprovações · {approval.brandName}
+              Feed · {approval.brandName}
             </Link>
           </Button>
         )}
@@ -328,7 +328,7 @@ export function PortalApprovalPage({
             onClick={() => setAsking(true)}
           >
             <MessageSquareWarning aria-hidden="true" />
-            Pedir alterações
+            Solicitar alteração
           </Button>
           <Button
             type="button"
@@ -354,7 +354,7 @@ export function PortalApprovalPage({
         open={asking}
         onOpenChange={setAsking}
         icon={MessageSquareWarning}
-        title="Pedir alterações"
+        title="Solicitar alteração"
         description="Conte à equipe o que precisa mudar. O comentário é obrigatório."
         submitLabel="Enviar pedido"
         submitDisabled={draft.text.trim().length < MIN_CHANGE_COMMENT}

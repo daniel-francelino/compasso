@@ -17,6 +17,7 @@ Functional specification of the modules of Aura Creative, written before impleme
 | Calendar | `marketing` + `portal` (shared components) | Editorial calendar, deadlines, rescheduling, time zones | [calendar.md](calendar.md) |
 | Dashboard | `marketing` | Work overview: what needs attention, what is coming | [dashboard.md](dashboard.md) |
 | Client Portal | `portal` | External experience: pending items, calendar, approval, comments | [portal.md](portal.md) |
+| Portal feed previews | `shared` | How each Instagram format (image, carousel, video, Reel, Story) is drawn in the portal feed | [portal-feed-previews.md](portal-feed-previews.md) |
 | Organization and settings | `shared` | Organization data, defaults, users, roles, invitations | [organization-settings.md](organization-settings.md) |
 | Audit | `shared` | Business audit trail and its screen | [audit.md](audit.md) |
 

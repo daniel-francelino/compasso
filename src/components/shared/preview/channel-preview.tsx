@@ -1,105 +1,17 @@
-import { ChevronLeft, ChevronRight, FileText, ImageOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 import { useState } from "react";
 import { SectionCard } from "@/components/shared/admin/section-card";
+import { MediaSlide, type PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Button } from "@/components/shared/ui/button";
-import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { ContentFormat, Platform } from "@/lib/shared/enums";
 import { contentFormatLabels, platformLabels } from "@/lib/shared/labels";
-import { MediaKind } from "@/lib/shared/media/limits";
 import {
   isImmersivePreview,
   platformDescriptors,
   previewFrameRatio,
 } from "@/lib/shared/preview/platforms";
 import { cn } from "@/lib/shared/utils";
-
-export type PreviewMedia = {
-  versionId: string;
-  kind: MediaKind | null;
-  altText: string | null;
-  url: string | null;
-  unavailable?: boolean | undefined;
-  width?: number | null | undefined;
-  height?: number | null | undefined;
-};
-
-function UnavailableSlide() {
-  return (
-    <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
-      <FileText className="size-8" aria-hidden="true" />
-      <span className="text-xs">Prévia indisponível</span>
-    </div>
-  );
-}
-
-function ImageSlide({
-  item,
-  position,
-  total,
-}: {
-  item: PreviewMedia;
-  position: number;
-  total: number;
-}) {
-  const [failed, setFailed] = useState(false);
-  if (failed || item.url === null) return <UnavailableSlide />;
-  return (
-    <img
-      src={item.url}
-      alt={item.altText ?? `Imagem ${position} de ${total}`}
-      className="size-full object-cover"
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
-function VideoSlide({
-  item,
-  position,
-  total,
-}: {
-  item: PreviewMedia;
-  position: number;
-  total: number;
-}) {
-  const [failed, setFailed] = useState(false);
-  if (failed || item.url === null) return <UnavailableSlide />;
-  return (
-    <video
-      src={item.url}
-      controls
-      preload="metadata"
-      className="size-full object-contain"
-      aria-label={item.altText ?? `Vídeo ${position} de ${total}`}
-      onError={() => setFailed(true)}
-    />
-  );
-}
-
-function Slide({ item, position, total }: { item: PreviewMedia; position: number; total: number }) {
-  if (item.unavailable === true) return <UnavailableSlide />;
-  if (item.url === null) {
-    return (
-      <div className="size-full" role="status" aria-label="Carregando arquivo">
-        <Skeleton className="size-full rounded-none" />
-      </div>
-    );
-  }
-  if (item.kind === MediaKind.Video)
-    return <VideoSlide item={item} position={position} total={total} />;
-  if (item.kind === MediaKind.Document) {
-    return (
-      <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
-        <FileText className="size-8" aria-hidden="true" />
-        <span className="text-xs">Documento anexado</span>
-      </div>
-    );
-  }
-  if (item.kind === MediaKind.Image)
-    return <ImageSlide item={item} position={position} total={total} />;
-  return <UnavailableSlide />;
-}
 
 export function ChannelPreview({
   platform,
@@ -165,7 +77,7 @@ export function ChannelPreview({
           className="relative bg-muted"
           style={{ aspectRatio: previewFrameRatio(platform, format, media[0]) }}
         >
-          <Slide item={current} position={index + 1} total={media.length} />
+          <MediaSlide item={current} position={index + 1} total={media.length} />
           {media.length > 1 ? (
             <>
               <Button

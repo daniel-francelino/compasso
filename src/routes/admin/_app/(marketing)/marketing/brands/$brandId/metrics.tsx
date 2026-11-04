@@ -19,7 +19,10 @@ function MetricsRoute() {
       brandId={brandId}
       search={search}
       onSearch={(patch) =>
-        void navigate({ search: (previous) => ({ ...previous, ...patch }), replace: true })
+        void navigate({
+          search: (previous: typeof search) => ({ ...previous, ...patch }),
+          replace: true,
+        })
       }
     />
   );

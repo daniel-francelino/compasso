@@ -73,7 +73,6 @@ import { Route as AdminAppmarketingMarketingContentIndexRouteImport } from './ro
 import { Route as AdminAppmarketingMarketingContentItemIdRouteImport } from './routes/admin/_app/(marketing)/marketing/content/$itemId'
 import { Route as AdminAppmarketingMarketingContentNewRouteImport } from './routes/admin/_app/(marketing)/marketing/content/new'
 import { Route as AdminAppmarketingMarketingInstagramCallbackRouteImport } from './routes/admin/_app/(marketing)/marketing/instagram/callback'
-import { Route as PortalAppBrandsBrandIdApprovalsIndexRouteImport } from './routes/portal/_app/brands/$brandId/approvals/index'
 import { Route as PortalAppBrandsBrandIdApprovalsRequestIdRouteImport } from './routes/portal/_app/brands/$brandId/approvals/$requestId'
 import { Route as PortalAppBrandsBrandIdMetricsIndexRouteImport } from './routes/portal/_app/brands/$brandId/metrics/index'
 import { Route as PortalAppBrandsBrandIdMetricsReportIdRouteImport } from './routes/portal/_app/brands/$brandId/metrics/$reportId'
@@ -441,12 +440,6 @@ const AdminAppmarketingMarketingInstagramCallbackRoute =
     path: '/marketing/instagram/callback',
     getParentRoute: () => AdminAppRoute,
   } as any)
-const PortalAppBrandsBrandIdApprovalsIndexRoute =
-  PortalAppBrandsBrandIdApprovalsIndexRouteImport.update({
-    id: '/brands/$brandId/approvals/',
-    path: '/brands/$brandId/approvals/',
-    getParentRoute: () => PortalAppRoute,
-  } as any)
 const PortalAppBrandsBrandIdApprovalsRequestIdRoute =
   PortalAppBrandsBrandIdApprovalsRequestIdRouteImport.update({
     id: '/brands/$brandId/approvals/$requestId',
@@ -595,7 +588,6 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/calendar/': typeof AdminAppmarketingMarketingCalendarIndexRoute
   '/admin/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/marketing/content/': typeof AdminAppmarketingMarketingContentIndexRoute
-  '/portal/brands/$brandId/approvals/': typeof PortalAppBrandsBrandIdApprovalsIndexRoute
   '/portal/brands/$brandId/metrics/': typeof PortalAppBrandsBrandIdMetricsIndexRoute
   '/admin/marketing/brands/$brandId/calendar': typeof AdminAppmarketingMarketingBrandsBrandIdCalendarRoute
   '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
@@ -672,7 +664,6 @@ export interface FileRoutesByTo {
   '/admin/marketing/calendar': typeof AdminAppmarketingMarketingCalendarIndexRoute
   '/admin/marketing/clients': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/marketing/content': typeof AdminAppmarketingMarketingContentIndexRoute
-  '/portal/brands/$brandId/approvals': typeof PortalAppBrandsBrandIdApprovalsIndexRoute
   '/portal/brands/$brandId/metrics': typeof PortalAppBrandsBrandIdMetricsIndexRoute
   '/admin/marketing/brands/$brandId/calendar': typeof AdminAppmarketingMarketingBrandsBrandIdCalendarRoute
   '/admin/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
@@ -753,7 +744,6 @@ export interface FileRoutesById {
   '/admin/_app/(marketing)/marketing/calendar/': typeof AdminAppmarketingMarketingCalendarIndexRoute
   '/admin/_app/(marketing)/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/_app/(marketing)/marketing/content/': typeof AdminAppmarketingMarketingContentIndexRoute
-  '/portal/_app/brands/$brandId/approvals/': typeof PortalAppBrandsBrandIdApprovalsIndexRoute
   '/portal/_app/brands/$brandId/metrics/': typeof PortalAppBrandsBrandIdMetricsIndexRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/calendar': typeof AdminAppmarketingMarketingBrandsBrandIdCalendarRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/channels': typeof AdminAppmarketingMarketingBrandsBrandIdChannelsRoute
@@ -835,7 +825,6 @@ export interface FileRouteTypes {
     | '/admin/marketing/calendar/'
     | '/admin/marketing/clients/'
     | '/admin/marketing/content/'
-    | '/portal/brands/$brandId/approvals/'
     | '/portal/brands/$brandId/metrics/'
     | '/admin/marketing/brands/$brandId/calendar'
     | '/admin/marketing/brands/$brandId/channels'
@@ -912,7 +901,6 @@ export interface FileRouteTypes {
     | '/admin/marketing/calendar'
     | '/admin/marketing/clients'
     | '/admin/marketing/content'
-    | '/portal/brands/$brandId/approvals'
     | '/portal/brands/$brandId/metrics'
     | '/admin/marketing/brands/$brandId/calendar'
     | '/admin/marketing/brands/$brandId/channels'
@@ -992,7 +980,6 @@ export interface FileRouteTypes {
     | '/admin/_app/(marketing)/marketing/calendar/'
     | '/admin/_app/(marketing)/marketing/clients/'
     | '/admin/_app/(marketing)/marketing/content/'
-    | '/portal/_app/brands/$brandId/approvals/'
     | '/portal/_app/brands/$brandId/metrics/'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/calendar'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/channels'
@@ -1478,13 +1465,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppmarketingMarketingInstagramCallbackRouteImport
       parentRoute: typeof AdminAppRoute
     }
-    '/portal/_app/brands/$brandId/approvals/': {
-      id: '/portal/_app/brands/$brandId/approvals/'
-      path: '/brands/$brandId/approvals'
-      fullPath: '/portal/brands/$brandId/approvals/'
-      preLoaderRoute: typeof PortalAppBrandsBrandIdApprovalsIndexRouteImport
-      parentRoute: typeof PortalAppRoute
-    }
     '/portal/_app/brands/$brandId/approvals/$requestId': {
       id: '/portal/_app/brands/$brandId/approvals/$requestId'
       path: '/brands/$brandId/approvals/$requestId'
@@ -1733,7 +1713,6 @@ interface PortalAppRouteChildren {
   PortalAppBrandsBrandIdIndexRoute: typeof PortalAppBrandsBrandIdIndexRoute
   PortalAppBrandsBrandIdApprovalsRequestIdRoute: typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   PortalAppBrandsBrandIdMetricsReportIdRoute: typeof PortalAppBrandsBrandIdMetricsReportIdRoute
-  PortalAppBrandsBrandIdApprovalsIndexRoute: typeof PortalAppBrandsBrandIdApprovalsIndexRoute
   PortalAppBrandsBrandIdMetricsIndexRoute: typeof PortalAppBrandsBrandIdMetricsIndexRoute
 }
 
@@ -1747,8 +1726,6 @@ const PortalAppRouteChildren: PortalAppRouteChildren = {
     PortalAppBrandsBrandIdApprovalsRequestIdRoute,
   PortalAppBrandsBrandIdMetricsReportIdRoute:
     PortalAppBrandsBrandIdMetricsReportIdRoute,
-  PortalAppBrandsBrandIdApprovalsIndexRoute:
-    PortalAppBrandsBrandIdApprovalsIndexRoute,
   PortalAppBrandsBrandIdMetricsIndexRoute:
     PortalAppBrandsBrandIdMetricsIndexRoute,
 }
@@ -1781,13 +1758,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

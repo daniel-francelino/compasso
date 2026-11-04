@@ -21,3 +21,5 @@ export const useDecisionDraft = (requestId: string) => {
 
   return { text, change, clear: () => change("") };
 };
+
+export type DecisionDraft = ReturnType<typeof useDecisionDraft>;

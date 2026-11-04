@@ -1,6 +1,6 @@
 begin;
 
-select plan(53);
+select plan(61);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -165,6 +165,20 @@ select is(public.portal_decide_approval(current_setting('t.req2')::uuid, 'change
 reset role;
 
 select is((select editorial_status from public.content_items where id = current_setting('t.item')::uuid), 'changes_requested', 'the content has changes requested');
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
+select is((public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1, 20) ->> 'total')::int, 1, 'the feed has one post per content, not one per request');
+select is(public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1, 20) -> 'rows' -> 0 ->> 'id', current_setting('t.req2'), 'and shows the latest request of the content');
+select is(public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1, 20) -> 'rows' -> 0 ->> 'decision_comment', 'Troque a arte', 'with the comment of the decision');
+select is(public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1, 20) -> 'rows' -> 0 #>> '{caption,text}', 'Texto final', 'and carries the caption of the content');
+select is((public.portal_list_approvals(current_setting('t.brand')::uuid, 'approved', 1, 20) ->> 'total')::int, 0, 'the filter applies to the latest request, so an old approved planning does not appear');
+select lives_ok(format($$select public.portal_add_comment('%s', 'Obrigado')$$, current_setting('t.item')), 'an approver comments on the content');
+select is((public.portal_list_approvals(current_setting('t.brand')::uuid, null, 1, 20) -> 'rows' -> 0 ->> 'comment_count')::int, 1, 'and the feed counts the comment');
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000e1');
+select throws_ok(format($$select public.portal_list_approvals('%s', null, 1, 20)$$, current_setting('t.brand')), 'not_found', 'an approver of another brand does not read the feed');
+reset role;
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select set_config('t.sub3', public.submit_for_approval(current_setting('t.item')::uuid, null, null, pg_temp.ver(current_setting('t.item')::uuid))::text, true);

@@ -25,8 +25,7 @@ export function PortalBreadcrumbs() {
   });
   const paths = pathname.split("/").filter(Boolean);
   const page = paths.at(-1);
-  const requestDetail =
-    page !== undefined && page !== "calendar" && page !== "approvals" && page !== brandId;
+  const requestDetail = page !== undefined && page !== "calendar" && page !== brandId;
   const crumbs = brandId
     ? [
         { label: "Início", to: "/portal" as const },
@@ -37,18 +36,9 @@ export function PortalBreadcrumbs() {
         },
         ...(page === "calendar"
           ? [{ label: "Calendário" }]
-          : page === "approvals"
-            ? [{ label: "Aprovações" }]
-            : requestDetail
-              ? [
-                  {
-                    label: "Aprovações",
-                    to: "/portal/brands/$brandId/approvals" as const,
-                    params: { brandId },
-                  },
-                  { label: "Revisão" },
-                ]
-              : [{ label: "Painel" }]),
+          : requestDetail
+            ? [{ label: "Revisão" }]
+            : [{ label: "Feed" }]),
       ]
     : page === "notifications"
       ? [{ label: "Início", to: "/portal" as const }, { label: "Avisos" }]

@@ -19,6 +19,9 @@ export const portalRequestRowSchema = z.object({
   status: z.nativeEnum(ApprovalRequestStatus),
   title: z.string(),
   plan_summary: z.unknown().optional(),
+  caption: z.object({ text: z.string() }).nullable().optional(),
+  comment_count: z.number().int().optional(),
+  decision_comment: z.string().nullable().optional(),
   channels: z.array(portalChannelSchema),
   media: z.array(
     z.object({
@@ -73,8 +76,6 @@ export const portalBrandProfileSchema = z.object({
     }),
   ),
 });
-
-export const portalPendingSchema = z.object({ list: z.array(portalRequestRowSchema) });
 
 export const portalPageSchema = z.object({
   total: z.number().int(),

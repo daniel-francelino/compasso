@@ -34,7 +34,6 @@ import {
   portalCommentsSchema,
   portalMediaKeysSchema,
   portalPageSchema,
-  portalPendingSchema,
   type PortalRequestRow,
 } from "@/lib/portal/approvals/dto";
 import type {
@@ -73,6 +72,9 @@ const toRequest = (row: PortalRequestRow): PortalRequest => ({
     hasDisplay: item.has_display,
   })),
   planSummary: richDocFromStored(row.plan_summary),
+  caption: row.caption?.text ?? "",
+  commentCount: row.comment_count ?? 0,
+  decisionComment: row.decision_comment ?? null,
   brandTimezone: row.brand_timezone,
   revisionNo: row.revision_no,
   dueDate: row.due_date,
@@ -142,19 +144,6 @@ export const getPortalBrand = createServerFn({ method: "GET" })
         })),
       },
     };
-  });
-
-export const listPortalPending = createServerFn({ method: "GET" })
-  .validator(portalBrandSchema)
-  .handler(async ({ data }): Promise<Result<{ requests: PortalRequest[] }>> => {
-    const caller = await requireActionServer(Action.Portal.View);
-    if (caller === null) return denied;
-    const { data: rows, error } = await caller.supabase.rpc("portal_list_pending", {
-      p_brand: data.brandId,
-    });
-    if (error) return fail(error);
-    const parsed = parseOutput(portalPendingSchema, { list: rows });
-    return parsed.ok ? { ok: true, requests: parsed.list.map(toRequest) } : parsed;
   });
 
 export const listPortalApprovals = createServerFn({ method: "GET" })

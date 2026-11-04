@@ -49,7 +49,6 @@ test("the media cleanup job refuses calls without the cron secret", async ({ req
 
 for (const path of [
   "/portal/brands/00000000-0000-0000-0000-000000000001",
-  "/portal/brands/00000000-0000-0000-0000-000000000001/approvals",
   "/portal/brands/00000000-0000-0000-0000-000000000001/approvals/00000000-0000-0000-0000-000000000002",
   "/portal/brands/00000000-0000-0000-0000-000000000001/calendar",
   "/portal/notifications",

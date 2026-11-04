@@ -12,6 +12,8 @@ Included: brand selection, pending dashboard, calendar, approval screen, externa
 
 > Changed on 2026-10-20: the portal calendar also shows the events the team marks as visible to the client (shoot days, meetings) and the shared dates, read-only, with a detail dialog. See [calendar.md](calendar.md#events-shared-with-the-client-decided-2026-10-20).
 
+> Changed on 2026-11-04: the brand panel is now a **social-network style feed** (Instagram as the reference) that shows what is pending and what was already decided, newest first. "Aprovar" works like a like, comments are inline, and "Solicitar alteração" sends the change request using the typed comment. It replaces the dashboard and the approval list. See [Feed](#feed-decided-2026-11-04).
+
 ## Access
 
 - Login at `/admin/login` (same identity pool); after sign-in, a person who only has portal actions is redirected to `/portal`. The portal layout has its own guard (`requireAction(context, Action.Portal.View)`).
@@ -36,11 +38,57 @@ Technically the external role has **no `select` policy** on any internal table; 
 | Route | Screen |
 |---|---|
 | `/portal` | Brand selection (only linked brands). With a single brand, it goes straight to it |
-| `/portal/brands/$brandId` | **Painel**: a header with the brand logo, name, client, time zone and the registered brand data the person may see (description, target audience, tone of voice, objectives, active channels with their links), then pending approvals first (with deadlines), upcoming planned posts and recent decisions (the calendar and the full list are reached through the side menu, with no shortcut buttons on the page) |
+| `/portal/brands/$brandId` | **Feed** ([details](#feed-decided-2026-11-04)): a header with the brand logo, name, client, time zone and the registered brand data the person may see (description, target audience, tone of voice, objectives, active channels with their links), the filters and the posts. URL param `status` |
 | `/portal/brands/$brandId/calendar` | Read-only calendar of shared contents (month/week/list; list by default on mobile); hovering or focusing a content shows its shared revision preview, and selecting it opens the review screen |
-| `/portal/brands/$brandId/approvals` | List of requests with filters: Pendentes, Aprovadas, Alterações solicitadas, Substituídas |
 | `/portal/brands/$brandId/approvals/$requestId` | **Review and decision** |
 | `/portal/notifications`, `/portal/profile` | Notifications and own profile (name, password) |
+
+### Feed (decided 2026-11-04)
+
+The brand page is a single-column feed in the style of a social network. It replaced the dashboard sections ("Aguardando você", "Em análise pela marca", "Próximas publicações", "Decisões recentes"), the bento card grid and the approval list screen (`/portal/brands/$brandId/approvals`, removed). The brand header (`PortalBrandHeader`) stays on top. Each post also has a bar with the title (opens the review in the full-screen dialog), the `ResponseDeadlineBadge`, the stage badge for a planning and the status badge.
+
+**What it lists.** Every content with a revision shared with the person, in **any** state: waiting for a decision, approved, changes requested, superseded. Cancelled requests never appear (same as `portal_list_approvals`). One post per content, showing its latest shared request.
+
+**Order.** Newest first. The sort key is the planned publication date of the content (the latest `planned_at` among its channels), descending; contents without a planned date are ordered by the date the request was sent (`requested_at`), descending, and mixed into the same list by that date. Server-side (`portal_list_approvals`), paginated by 20 (UI-1) with "Carregar mais" at the end of the list. A filter bar above the feed offers "Todos" (default), "Pendentes", "Aprovados", "Alterações solicitadas" (URL param `status`, resets the list). A content with several channel rows shows one post with a chip per channel ("Instagram · Carrossel"), the earliest planned date first.
+
+**Post anatomy (top to bottom).**
+
+| Part | Content |
+|---|---|
+| Header | Brand logo as avatar, brand name, channel and format ("Instagram · Carrossel"), the status badge and, while pending, the `ResponseDeadlineBadge` |
+| Date line | "Publicação: {data e fuso}" or "Publicação sem data definida" (same rule as the current cards) |
+| Media | The channel preview of the exact shared revision (`RequestPreview` / `ChannelPreview`); one preview per channel row of the revision when there are several formats. Clicking the preview opens the review screen in the full-screen dialog |
+| Action bar | Left: heart "Aprovar" and comment bubble. Right: "Solicitar alteração" |
+| Caption | The caption of the revision, clamped with "ver mais" |
+| Comments | "Ver os N comentários" expands the thread inline (the decision comment appears in it as "Alteração solicitada"); a "Adicione um comentário…" field with "Publicar" is always at the bottom and is the same field used by "Solicitar alteração" |
+
+**Actions (only for an approver of the brand with `can_decide` and a pending request).**
+
+- **Heart ("Aprovar")** is the approve decision (`portal_decide_approval` with outcome `approved`). It keeps the light confirmation of the review screen ("Aprovar esta versão?"), because the decision cannot be undone (rule 3). After approval the heart is filled, cannot be toggled off, and the post shows "Aprovado por {nome}".
+- **Comment bubble** focuses the comment field and expands the thread. Comments use `portal_add_comment` / `portal_list_comments` (`comments.create_external`) and are open to every external member, with or without `can_decide`.
+- **"Solicitar alteração"** sends the change request **using the text of the comment field as the guidance**, with no second form: it calls `portal_decide_approval` with outcome `changes_requested` and that text as the comment. Minimum 5 characters (`MIN_CHANGE_COMMENT`). If the field is empty or too short, the button does not submit: it opens the thread, moves focus to the field and shows the hint "Escreva o que precisa mudar para solicitar a alteração." The typed text is kept locally while it is not sent (`useDecisionDraft`) and kept if the request fails.
+- The text sent with "Solicitar alteração" is the **decision comment**; it appears in the thread as an entry "Alteração solicitada" and is **not** also stored as a separate comment (no duplicate). Commenting with "Publicar" never changes the status.
+- Both decision actions are disabled while any decision for that request is running, and are hidden or inert for decided, superseded and cancelled requests.
+
+**States of a post.**
+
+| State | What the person sees |
+|---|---|
+| Pending, can decide | Heart, comment and "Solicitar alteração" enabled |
+| Pending, cannot decide | Comments only, with "Você pode comentar, mas a decisão é de quem aprova a marca." (the person who will decide is not known while pending) |
+| Approved | Filled heart, "Aprovado por {nome}", comments still allowed |
+| Changes requested | "Alteração solicitada" badge and the guidance comment; the team revises and a new post version replaces it (the feed shows the latest request of the content) |
+| Superseded | The feed shows one post per content (its latest request), so a superseded request is not listed; one reached by an old link keeps the banner of the review screen |
+
+**Feed states.** Skeleton with the post layout (stable height) → error with retry → empty ("Nada por aqui ainda", "Quando a equipe enviar um conteúdo, ele aparece aqui.") → no results for the filter (clear filter) → list.
+
+**Accessibility and layout.** One column up to about 32 rem on desktop and full width at 360 px; targets of at least 44 px; the heart is a button with `aria-pressed` and a text label (never only an icon or color); the whole action bar works by keyboard; focus stays on the post after an action; success and error messages in an `aria-live` region; the filled heart state is shown by shape and text as well as color; colors only from the palette tokens.
+
+**Incomplete content.** What a post shows depends on the version sent: caption and files (full post), files only (no caption), caption only (a fallback image) or neither, which is a **planning** version and is drawn as the planning card with the summary, channels, formats and planned dates. The feed follows `request.stage`; rules and the fallback in [portal-feed-previews.md](portal-feed-previews.md#what-is-drawn-when-parts-are-missing-decided-2026-11-04).
+
+**Per-format rendering.** How each Instagram format (image, carousel, video, Reel, Story) is framed and decorated, the caption rules, the component split and the method to measure the reference are in [portal-feed-previews.md](portal-feed-previews.md). This document owns the feed behavior; that one owns the preview drawing.
+
+**Reuse (GOLD-2).** `RequestPreview`, `ChannelPreview`, `ResponseDeadlineBadge`, `portal-comments`, `useDecisionDraft`, `usePortalPreviewUrls`, `decidePortalApproval`, `addPortalComment`, `listPortalComments`. The feed list reads from the existing `portal_list_approvals`, changed in place (one row per content, the sort above, `comment_count`, `decision_comment`); no parallel list function. The "bento" files, the old cards, the list page and `listPortalPending` were removed in the same change (CODE-11). Built files: `components/portal/feed/*`, `hooks/portal/use-feed-decision.ts`, `lib/portal/approvals/feed.ts`.
 
 ### Review and decision screen
 
@@ -68,29 +116,17 @@ Technically the external role has **no `select` policy** on any internal table; 
 - **External comments:** a thread below the content; the person adds comments (`comments.create_external`); the team sees them with an "Externo" badge.
 - **History:** previous revisions of the same content with their decisions (only those shared with the person).
 
-### Approval lists and dashboard previews
-
-- Approval cards in the dashboard and approval list show a separate preview for every channel row in the exact shared revision, including its format, caption, the linked brand's configured logo as the channel avatar, and signed display media (falling back to the original when no display derivative exists). Multiple formats from one platform appear together without tabs.
-- An approver of the brand with current decision access can use "Aprovar" or "Pedir alterações" directly from a pending card. Approval uses the existing confirmation; requesting changes requires the same comment dialog and minimum length as the review screen. Other members and non-pending requests have no decision actions.
-- Each portal section shows a matching skeleton while its data is loading; one section loading does not hide the rest of the dashboard.
-
 ### Layout and side menu
 
 The top bar also shows the shared notification bell at the upper right, with the unread count, latest notifications, read and snooze actions, and a "Ver todos" link to `/portal/notifications`.
 
-The portal uses the same shell as the back office: a **side menu** (collapsible, a drawer on mobile) and a top bar with the menu toggle. The menu has the title "Portal do Cliente", the brand switcher, the group "Marca" (Painel, Aprovações, Calendário, always for the current brand) and the group "Conta" (Avisos with the unread counter, Meu perfil), and "Sair" with the person's name in the footer. On pages that are not tied to a brand (Avisos, Meu perfil) the brand links use the first linked brand.
+The portal uses the same shell as the back office: a **side menu** (collapsible, a drawer on mobile) and a top bar with the menu toggle. The menu has the title "Portal do Cliente", the brand switcher, the group "Marca" (Feed, Calendário and, with `metrics.portal_view`, Resultados, always for the current brand) and the group "Conta" (Avisos with the unread counter, Meu perfil), and "Sair" with the person's name in the footer. On pages that are not tied to a brand (Avisos, Meu perfil) the brand links use the first linked brand.
 
 ### Brand switcher
 
 The side menu holds a **brand switcher** (popover "Suas marcas"): the current brand with its logo, name and client, and the list of the brands the person is linked to, each with its logo and the count of requests waiting for the person. Choosing one opens that brand's panel. With a single brand the menu shows its identity without a popover. There is no "Trocar de marca" button on the pages. The logo is a short signed URL (120 s) of the thumbnail, issued after the database confirms the link.
 
 Brand data the external user reads (function `portal_get_brand`): name, client name, description, target audience, tone of voice, objectives, time zone and the active channels (platform, profile name, public link). **Not exposed**: reference notes, the visual identity record, internal notes, members.
-
-### Dashboard
-
-Shows, by brand: "Aguardando você (N)" with deadline and age, "Próximas publicações" (read-only), "Decisões recentes". Every section has an icon and uses `EmptyState` (icon, title, one-line description), for example "Nada pendente por aqui".
-
-Each request is a card that focuses on the **preview**: the title with the status badge and a colored **response deadline badge** on top ("Responder até {data}" in the info tone with a clock, "Responder até hoje" or "amanhã" in the warning tone with an alarm clock, "Prazo vencido há N dias" in the negative tone with a warning triangle; only while the request is pending and has a due date), then a bar with the **publication date** of the channel being previewed ("Publicação: {data e fuso}", or "Publicação sem data definida") above the channel preview, and at the bottom "Ver detalhes" and, for the designated approver, "Pedir alterações" and "Aprovar". Clicking the title, the preview or "Ver detalhes" opens the review screen in a **full-screen dialog** (the same content as `/portal/brands/$brandId/approvals/$requestId`, with the decision bar fixed at the bottom of the dialog), so the person does not navigate away from the list.
 
 ## Rules
 
@@ -131,16 +167,34 @@ Starting roles: `external_approver` (all three) and `external_commenter` (`porta
 
 - An external member of brand A cannot obtain data, comments or private URLs of brand B, even by changing identifiers in requests.
 - The approver sees exactly the revision sent; later edits by the team do not change it.
-- Approval lists and dashboard cards preview only the revision shared with the client; approvers of the brand can decide from those cards.
-- Every portal section presents a skeleton while its data is loading.
+- The feed posts preview only the revision shared with the client; approvers of the brand can decide from them.
+- The feed presents a skeleton with the layout of a post while its data is loading.
 - A decision on a superseded revision is refused, also with concurrent sessions.
 - Only shared contents appear in the portal calendar; drafts and internal deadlines never do.
 - A member without `can_decide` can comment but cannot decide.
 - The approval flow works completely on a phone (360 px) and with keyboard only.
 - Revoking access blocks the next read or decision; the history of past decisions stays.
 - Failure of the notification email does not remove the request from the portal.
+- The feed lists pending and already decided contents together, newest first, and the order does not change when a decision is made.
+- "Solicitar alteração" with typed text sends the change request in one click, using that text as the comment; with an empty or too short field it sends nothing and focuses the field.
+- The heart asks for confirmation, records an approval only once and cannot be toggled off.
+- A member without `can_decide` sees the feed and can comment, but has no heart and no "Solicitar alteração".
+- The feed works at 360 px and by keyboard only, with paginated loading.
+
+## Open decisions
+
+Decided on 2026-11-04 by building the recommendations written in this document: the sort key (planned publication date, else the date sent), the irreversible approval with a light confirmation (rule 3 stands), the feed replacing the panel and the approval list, extending `portal_list_approvals` and the label "Solicitar alteração". Points about previews per format are in [portal-feed-previews.md](portal-feed-previews.md).
+
+1. **Sort by a date that is not yet published.** The order uses the planned date, so a content whose planned date is changed by the team moves in the feed. Revisit after real use.
+2. **Notification links.** The in-app and email notification links for the client still point to `/portal/brands/$brandId/approvals/$requestId` (the review screen), which still exists. Pointing them to the feed post is a later improvement.
 
 ## Implementation status
+
+2026-11-04: **Feed implemented** on `/portal/brands/$brandId`, following [portal-feed-previews.md](portal-feed-previews.md). Migrations `20261104100000_portal_feed.sql` (`portal_list_approvals`: one row per content, feed order, `comment_count`, `decision_comment`) and `20261104100100_portal_request_caption.sql` (`portal_request_row` carries the base `caption`); neither was applied to the linked project. Code: `src/components/portal/feed/*` (page, post, actions, comments, skeleton), `src/hooks/portal/use-feed-decision.ts`, `src/lib/portal/approvals/feed.ts`, `src/components/shared/preview/instagram/*`, `src/components/shared/preview/media-slide.tsx` (slides moved out of `channel-preview.tsx`), `src/lib/shared/preview/instagram.ts`, `plan-request-summary.tsx` (reference files), the sidebar ("Feed", "Aprovações" removed), the breadcrumbs, `portal-approval-page.tsx` ("Solicitar alteração", back link to the feed), `e2e/auth-guards.spec.ts`, the regenerated `src/routeTree.gen.ts`. Removed: `portal-brand-page.tsx`, `portal-approvals-page.tsx`, `request-card.tsx`, `request-decision-actions.tsx`, `request-preview.tsx`, `use-bento-layout.ts`, `bento.ts` and its test, the `/approvals` list route, `listPortalPending`, `QueryKey.Portal.pending`. Registries updated: routes, functions, enums, glossary, design system.
+
+Validation performed: `npm run db:verify` (1113 assertions, 0 failures; 8 new in `19_simplified_approval.test.sql`: one post per content, latest request, decision comment, filter on the latest request, comment count, caption, another brand refused), Vitest (286 tests, 14 new in `feed.test.ts` and `instagram.test.ts`), `npm run typecheck`, `npm run lint`, `npm run check:consistency`, `npm run check:docs`. `typecheck` first reported an implicit `any` in `src/routes/admin/_app/(marketing)/marketing/brands/$brandId/metrics.tsx(22,34)`, a file this change did not otherwise touch; it was fixed with a one-line parameter type (`previous: typeof search`), outside the scope of the feed and made only so the check passes. It was not confirmed whether the error existed before this change. **Not tested**: the feed in a browser (360 px, keyboard, every format: carousel, Reel, Story, planning card, fallback), real signed media URLs, the two migrations against the linked project, the Playwright flow approve and request changes, deciding from the dialog. **Not built**: the two-column detail layout (`InstagramDetailLayout`) of the dialog.
+
+2026-11-04: **Feed specified, not implemented.** Only this document changed (sections "Feed", "Open decisions", acceptance criteria, note on the dashboard). No code, migration, route or registry changed; [../reference/routes.md](../reference/routes.md), [../reference/functions.md](../reference/functions.md) and the glossary are updated when the open decisions are confirmed and the work starts. Validation: none run beyond reading the existing portal code.
 
 Phase 3 (task P3-05, 2026-10-18). Done: migration `20261018100920_portal_functions.sql` (`portal_list_brands`, `portal_list_pending`, `portal_list_approvals`, `portal_get_approval`, `portal_record_view`, `portal_decide_approval`, `portal_list_comments`, `portal_add_comment`, `portal_media_urls`); server functions in `src/lib/portal/approvals/*` (outputs validated with zod, explicit DTOs, signed URLs of 2 minutes issued only after the database confirms the revision is shared); screens `/portal` (brand selection, straight to the brand when there is one), `/portal/brands/$brandId` ("Painel": "Aguardando você", pending with other people, "Próximas publicações", "Decisões recentes"), `/portal/brands/$brandId/approvals` (filters and pagination), `/portal/brands/$brandId/approvals/$requestId` (exact revision, files on demand, history, decision bar that is sticky on mobile, light confirmation for "Aprovar", required comment for "Pedir alterações" kept locally until it is sent, states superseded, decided, cancelled and not designated), external comments, `/portal/notifications`, `/portal/profile`; layout with skip link, notifications counter and sign-out.
 

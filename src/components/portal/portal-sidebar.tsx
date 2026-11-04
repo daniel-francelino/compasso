@@ -4,7 +4,6 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
-  ClipboardCheck,
   LayoutDashboard,
   LogOut,
   UserRound,
@@ -44,7 +43,6 @@ type BrandLink = {
   icon: LucideIcon;
   to:
     | "/portal/brands/$brandId"
-    | "/portal/brands/$brandId/approvals"
     | "/portal/brands/$brandId/calendar"
     | "/portal/brands/$brandId/metrics";
   exact?: boolean;
@@ -52,8 +50,7 @@ type BrandLink = {
 };
 
 const brandLinks: BrandLink[] = [
-  { title: "Painel", icon: LayoutDashboard, to: "/portal/brands/$brandId", exact: true },
-  { title: "Aprovações", icon: ClipboardCheck, to: "/portal/brands/$brandId/approvals" },
+  { title: "Feed", icon: LayoutDashboard, to: "/portal/brands/$brandId", exact: true },
   { title: "Calendário", icon: CalendarDays, to: "/portal/brands/$brandId/calendar" },
   {
     title: "Resultados",
@@ -94,7 +91,6 @@ export function PortalSidebar({ auth }: { auth: AuthState }) {
   return (
     <Sidebar>
       <SidebarHeader className="gap-1">
-        <p className="heading-card px-2 pt-1 text-sidebar-foreground">Portal do Cliente</p>
         <PortalBrandSwitcher />
       </SidebarHeader>
       <SidebarContent className="gap-0">
