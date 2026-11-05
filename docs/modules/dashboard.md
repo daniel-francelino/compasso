@@ -28,7 +28,7 @@ Each item links to the exact record. Counts that would reveal brands or content 
 
 ## Filters and behavior
 
-- Brand selector (all authorized brands by default); the choice lives in the URL.
+- Brand: the dashboard follows the active brand of the global selector (all authorized brands by default); the choice lives in the URL as `brand`. Its own brand selector is removed when the global one is built ([../standards/admin-layout-and-standards.md](../standards/admin-layout-and-standards.md) section 6, decided 2026-11-05).
 - Blocks load independently with skeletons; a failing block shows an inline error with "Tentar novamente" without breaking the page.
 - Responsive: on mobile the blocks stack in the order "Precisa de atenção", "Pendentes", "Próximos"; the rest below.
 - **Everything is derived**: nothing on the dashboard is stored or editable. Definitions of the counts live in one place (`lib/marketing/dashboard`) and are reused by notifications and list filters so numbers always agree.

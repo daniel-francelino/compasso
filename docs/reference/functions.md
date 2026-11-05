@@ -300,7 +300,7 @@ The client side (`portal_feedback_*`) is in section 5. Manager side:
 |---|---|---|---|---|---|
 | `feedback_list(p_brand, p_period, p_status, p_attention, p_page, p_page_size)` | `listFeedback` | `feedback.view` + brand link | — | — | `invalid_input`, `not_found` |
 | `feedback_summary(p_brand, p_period)` | `getFeedbackSummary` | `feedback.view` + brand link | — | — | `invalid_input`, `not_found` |
-| `feedback_policy_enabled`, `feedback_policy_open_day`, `feedback_brand_has_work`, `feedback_period_for`, `feedback_member_eligible`, `feedback_expected`, `feedback_score`, `feedback_text`, `feedback_lock_row`; trigger `feedback_responses_guard` | — | internal | — | — | `feedback_not_open`, `feedback_already_answered`, `invalid_input` |
+| `feedback_policy_enabled`, `feedback_policy_open_day`, `feedback_brand_has_work`, `feedback_brand_asked`, `feedback_period_for`, `feedback_member_eligible`, `feedback_expected`, `feedback_score`, `feedback_text`, `feedback_lock_row`; trigger `feedback_responses_guard` | — | internal | — | — | `feedback_not_open`, `feedback_already_answered`, `invalid_input` |
 
 ## 10. Rules
 

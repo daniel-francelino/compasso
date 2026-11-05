@@ -1,6 +1,6 @@
 begin;
 
-select plan(39);
+select plan(41);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -58,6 +58,8 @@ select set_config('t.newbrand', (select id::text from public.brands where name =
 update public.brands set created_at = now() - interval '120 days' where id = current_setting('t.brand')::uuid;
 update public.brand_members set granted_at = now() - interval '100 days'
 where brand_id = current_setting('t.brand')::uuid and kind = 'external';
+update public.brand_members set granted_at = now() - interval '100 days'
+where brand_id = current_setting('t.brandB')::uuid and kind = 'external';
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select public.brand_member_set(current_setting('t.brand')::uuid, '00000000-0000-0000-0000-0000000000d3', 'external', true, 'active');
@@ -294,6 +296,19 @@ select throws_ok(
   format($$select public.feedback_list('%s', '%s', 'answered', false, 1, 12)$$, current_setting('t.brand'), current_setting('t.period')),
   'denied',
   'an external user cannot call the manager list'
+);
+reset role;
+
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000b2');
+select is(
+  (public.feedback_summary(current_setting('t.brandB')::uuid, current_setting('t.period')::date) ->> 'expected')::int,
+  0,
+  'a brand younger than a month has no expected contacts in the summary'
+);
+select is(
+  (public.feedback_list(current_setting('t.brandB')::uuid, current_setting('t.period')::date, 'pending', false, 1, 12) ->> 'total')::int,
+  0,
+  'and its contacts are not listed as without answer, matching what the portal asks'
 );
 reset role;
 

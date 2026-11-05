@@ -21,6 +21,7 @@ The content editor uses the library block editor (`RichTextEditor`, `lost-ui/edi
 | L9 | **Slash menu crash.** In `EditorSlashMenu` (`editor-slash-menu.tsx`) write `useEffect(() => { active.current?.scrollIntoView({ block: "nearest" }); }, [selected])` (and the same block body for `setSelected(0)`). | Current Chrome returns a Promise from `scrollIntoView`; as the arrow function returns it, React throws `destroy is not a function` and the page shows its error screen when the person moves through the `/` menu. | None. | open (reproduced on 0.2.1) |
 | L10 | **Emoji picker for text fields.** A popover component such as `EmojiPickerPopover` (props: `onSelect(emoji)`, `trigger?`, `pickerProps`, `categories` labels in the app language) that opens the `emoji-picker-react` panel and only reports the chosen emoji, without owning a value. `FormEmojiPicker` is a single-value field and cannot insert into a text. | The portal feed comment box needs a smile button that inserts the emoji at the cursor of a textarea, like Instagram. | Local `EmojiPopover` and `EmojiPickerPanel` in `src/components/shared/admin/` (the panel is also used by the local `EmojiPickerField`). | open |
 | L11 | **Virtual list of free-height items.** A window-scrolled virtual list for cards (variable height measured after render, `overscan`, `onEndReached` for infinite loading, `aria-setsize` and `aria-posinset`). The library's `virtualized` exists only inside `DataTable`. | The portal feed shows many posts with images and videos and must keep only the ones near the screen mounted. | The feed uses `@tanstack/react-virtual` directly (`useWindowVirtualizer`), declared as a dependency of the app on 2026-11-04. | open |
+| L12 | **Start slot in the top bar of `BackofficeLayout`.** A prop such as `topbarStart` (a node) rendered before the breadcrumbs in `AppTopbar`; `AppTopbar` already has `children` between the breadcrumbs and the actions, but the layout does not pass it on. | The brand selector of the Marketing space belongs at the start of the bar, like the project selector of Vercel. | Rendered in `topbarActions`, at the end of the bar, next to the bell. | open |
 
 ## 3. How the app will change when a request is done
 
@@ -29,6 +30,7 @@ The content editor uses the library block editor (`RichTextEditor`, `lost-ui/edi
 - **L5 + L6:** the app stops counting images itself.
 - **L7:** non-image references come back to the planning (decision O9 is restored for them).
 - **L8:** `RichTextView` is replaced by the library component.
+- **L12:** `BrandContextSwitcher` moves from `topbarActions` to `topbarStart`.
 - **L10:** `EmojiPopover` and `EmojiPickerPanel` are deleted; `EmojiPickerField` can move to `FormEmojiPicker`.
 
 ## 4. Open decisions

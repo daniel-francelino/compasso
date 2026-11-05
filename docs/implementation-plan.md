@@ -152,6 +152,18 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 | F-05 | Manager: `/admin/marketing/feedback` with filters, summary, cards, pending view, detail sheet and menu item; policies screen switch | feedback, admin-layout-and-standards | acceptance criteria "Manager" | done in code (2026-11-05), not seen in a browser: page with filters in the URL, summary, cards, pending view, detail panel, menu item, policy switch |
 | F-06 | Browser pass at 360 px, tablet and desktop, keyboard, one Playwright flow (answer, then see the card); every "Implementation status" honest | base.md 10 | `/check-standards` clean | todo |
 
+## Phase B — Brand selector (global brand context)
+
+> Decided 2026-11-05: [standards/admin-layout-and-standards.md](standards/admin-layout-and-standards.md) section 6. It reverses the decision of 2026-10-19 (no global selector). Confirm O1 and O2 of that section before B-02. No migration is needed.
+
+| ID | Task | Read | Done when | Status |
+|---|---|---|---|---|
+| B-01 | Documents first: the specification, the superseded notes in brands, calendar, dashboard and feedback, request L12 | admin-layout section 6, base.md 9.1 and 9.3 | `check:docs` passes | done (2026-11-05) |
+| B-02 | `useActiveBrand`, `BrandContextSwitcher`, `ActiveBrandChip`, `StoredKey.ActiveBrand`, glossary terms; mount in the Marketing top bar (`topbarActions` until L12) | section 6.1 to 6.3, 6.5, 6.6 | acceptance criteria of the control (single brand, none, search, keyboard, invalid brand) with Vitest for the resolution rules | todo |
+| B-03 | Screens follow the active brand and lose their own brand filter: dashboard, content (list, board), calendar, approvals, feedbacks, Marketing library; menu links carry `brand` | section 6.2 and 6.4 | the counts and lists of each screen agree with the active brand | todo |
+| B-04 | Brand pages: the route brand becomes the active one, switching keeps the tab; replace `StoredKey.CalendarBrand` and its five readers by the active brand in the creation forms | section 6.3 | no reference to `CalendarBrand` remains | todo |
+| B-05 | Browser pass at 360 px, tablet and desktop, keyboard only; one Playwright flow (choose a brand, the lists change, reload keeps it); every "Implementation status" honest | base.md 10 | `/check-standards` clean | todo |
+
 ## Phase 6 — Hardening and launch
 
 | ID | Task | Done when | Status |

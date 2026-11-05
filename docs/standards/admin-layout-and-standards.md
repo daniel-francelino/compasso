@@ -22,7 +22,7 @@
 ```
 
 - **Space selector** (`SpaceSwitcher`) in the fixed header, next to the notification bell: an icon button that opens a popover with one tile per space the person can use ("Gestão de Marketing", "Site e CMS"); the selector is hidden when there is only one. The current space is deduced from the **route** (`/admin/site/*` → Site and CMS; `/admin/marketing/*` → Marketing Management); on shared routes (library, settings, notifications, profile) the last space is kept (`StoredKey.LastSpace`). Choosing a space navigates to its home. Decided 2026-10-19 after the visual review (the first version was a select in the sidebar that did not follow the route).
-- **Brand context**: marketing list screens expose their own brand filters. Brand-specific screens take the brand from the URL (`/admin/marketing/brands/$brandId/...`); there is no global brand selector in the sidebar or header.
+- **Brand context** (decided 2026-11-05, specified in section 6, not implemented): the top bar of the Marketing space has a **brand selector** ("Marca ativa"); an active brand filters every Marketing screen that lists by brand. Brand-specific screens still take the brand from the URL (`/admin/marketing/brands/$brandId/...`). Until it is built, screens keep their own brand filters.
 - **Sidebar** (`AppSidebar`): icons + text, sections with a title, items with collapsible **sub-items**, pending counters (for example approvals waiting), highlighted active item and `aria-current`.
   - **Collapses to icons only** (☰ button or `Ctrl/Cmd + B`) with a "rail" to reopen it. On small screens it opens as a **drawer**.
   - In icon mode, clicking an item with sub-items opens the sidebar first.
@@ -160,4 +160,83 @@ Creating a record from a list uses a `Sheet` (`EditorSheet`): `onSaved` closes t
 - [ ] Contrast and keyboard checked (see [color-palette.md](color-palette.md)).
 - [ ] Main flows and relevant failures covered by tests (pgTAP for rules, Playwright for flows).
 
-**Brand filter (2026-10-19).** Marketing list screens own their brand filters; brand context is carried by the URL on brand-specific screens. The global brand selector was removed from the sidebar because each relevant screen already provides its own filter.
+**Brand filter (2026-10-19, superseded 2026-11-05).** Marketing list screens owned their brand filters and the global brand selector had been removed from the sidebar. Replaced by the brand selector of section 6, which also removes the per-screen brand filters when it is implemented.
+
+## 6. Brand selector (decided 2026-11-05)
+
+> **Decision.** The Marketing space gets a **global brand selector** in the top bar, in the style of the project selector of Vercel: the person picks a brand once and every Marketing screen shows only that brand; "Todas as marcas" removes the filter. **This reverses the decision of 2026-10-19** ("there is no global brand selector", [../modules/brands.md](../modules/brands.md) status of 2026-10-19). Reason: with several brands the screens mix content from all of them and the manager repeats the same brand filter on every screen. **Status: specified, not implemented** (tasks B-02 to B-05 of [../implementation-plan.md](../implementation-plan.md)). Names below are proposals and enter the registries in the implementing change (GOLD-4).
+
+### 6.1 The control
+
+| Part | Rule |
+|---|---|
+| Name and component | "Marca ativa" in the copy; `BrandContextSwitcher` (proposal, `components/shared/admin/`, because the shared layout renders it) |
+| Where | The top bar, **only in the Marketing space** (never in Site and CMS). Target: at the start of the bar, before the breadcrumbs, like the Vercel project selector. Today `BackofficeLayout` of `lost-ui` only has `topbarActions` (end of the bar), so the first delivery puts it there, next to the bell, and the library request L12 ([../lost-ui-requests.md](../lost-ui-requests.md)) asks for a start slot. On phones the trigger shows the logo and a truncated name |
+| Trigger | Brand logo (`BrandAvatar`) + name + the up/down chevrons; with no brand chosen, a grid icon and "Todas as marcas". Accessible name "Marca ativa: {nome}. Trocar de marca" |
+| Popover | A search field "Buscar marca…" focused on open (filters by brand and client name; Esc closes); the first row "Todas as marcas"; then one row per brand with logo, name, client name and a check on the active one; arrow keys, Enter and type-ahead (combobox and listbox roles, `aria-selected`). Footer: "Nova marca" (only with `brands.create`) and "Gerenciar marcas" (to `/admin/marketing/brands`) |
+| Source | `listBrandOptions` through `useBrandOptions`: only the brands the person can access (RLS), active ones, alphabetical, at most 200. A brand that is archived appears only while it is the active one, labelled "Arquivada" |
+| Single brand | No popover: the trigger shows the brand identity, as the portal does ([../modules/portal.md](../modules/portal.md#brand-switcher)); the screens behave as with "Todas as marcas" |
+| No brand | The control is hidden |
+
+### 6.2 What an active brand does
+
+When a brand is active, every Marketing screen that lists or adds up by brand shows **only that brand**, and nothing of another brand appears in a count, a list or a block.
+
+| Screen | With an active brand |
+|---|---|
+| Dashboard `/admin/marketing` | Every block is computed for that brand |
+| Conteúdos (list and board) | Only that brand; "Criar conteúdo" starts in that brand |
+| Calendário | Only that brand's entries; the forms for a content, an idea, a date and an event start in that brand |
+| Aprovações | Only that brand's requests. A request opened by its own link belongs to its brand: the screen opens it and the selector switches to that brand |
+| Feedbacks | Only that brand |
+| Biblioteca `/admin/library`, inside the Marketing space | Only the files of that brand (the library of the Site space ignores the selector) |
+| Brand pages `/admin/marketing/brands/$brandId/...` | The brand of the route is the active one (see 6.3) |
+| Clientes and Marcas (the catalog) | **Not filtered**: they always list everything, so the person can find and open any brand |
+| Configurações | Not affected |
+
+### 6.3 Where the choice lives
+
+- **The URL is the source of truth** (UI-1): list screens keep the search param `brand` they already have; brand pages carry `$brandId`. Changing the brand resets the page to 1.
+- **Memory** (`StoredKey.ActiveBrand`, proposal, through `readStored` and `writeStored`): the last choice is stored. When the person opens a Marketing screen without `brand` in the URL, the stored brand is applied by a replace navigation (no history entry). "Todas as marcas" clears it. This key **replaces `StoredKey.CalendarBrand`** (the remembered brand of the calendar forms, [../modules/calendar.md](../modules/calendar.md)): one way to remember a brand (GOLD-2).
+- **Menu links keep the brand**: going from the dashboard to "Conteúdos" or "Calendário" carries `?brand=` of the active brand.
+- **A link with `brand` wins over the stored one.** A link without it takes the stored brand of whoever opens it, so every filtered screen shows a removable chip "Marca: {nome}" next to its filters; the person always sees which brand is filtering.
+- **A brand the person cannot use** (link revoked, archived, deleted, another person's id in a URL) is ignored: the screen falls back to "Todas as marcas", the stored value is cleared and a toast says "Essa marca não está disponível para você." The decision is the database's, never the stored value's (SEC-2, SEC-3, SEC-13).
+- **Brand pages**: opening `/brands/$brandId/...` makes that brand active. Choosing another brand there opens **the same tab** of the other brand; "Todas as marcas" opens `/admin/marketing/brands`.
+- Server functions keep receiving the brand explicitly and checking `can_access_brand`; the selector changes only what the screen asks for.
+
+### 6.4 What it replaces (GOLD-2)
+
+The brand `Select` that several screens carry in their own filters (dashboard, content, calendar, approvals, metrics and the Feedbacks page) is **removed**: the screen reads the active brand and keeps the `brand` param. Two controls for the same thing would disagree. Forms that have a brand field (content, idea, date, event) start with the active brand and stay editable; with "Todas as marcas" they start empty and the field is required.
+
+### 6.5 States and accessibility (UI-2, UI-7, UI-8)
+
+Loading: a skeleton of the trigger's size. Error: the popover says "Não foi possível carregar as marcas" with "Tentar de novo". Search with no match: "Nenhuma marca encontrada". Touch targets of at least 44 px; on a phone the popover uses the full width. Focus returns to the trigger on close; state is never only color; colors only from the palette tokens; `prefers-reduced-motion` respected.
+
+### 6.6 Code and registries (proposal)
+
+No migration and no new function: it reads the existing `listBrandOptions`. New: `useActiveBrand` (`hooks/shared/`: reads the route or URL brand, the stored brand and validates it against the options), `BrandContextSwitcher` and its chip `ActiveBrandChip` (`components/shared/admin/`), `StoredKey.ActiveBrand`, `QueryKey` unchanged (`QueryKey.Brands.options()`). Removed in the same change: `StoredKey.CalendarBrand` and its readers (`calendar-page.tsx`, `event-dialog.tsx`, `note-dialog.tsx`, `content-editor-page.tsx`, `planning-step.tsx`) and the per-screen brand selects. UI terms for [ui-glossary.md](ui-glossary.md): "Marca ativa", "Todas as marcas", "Buscar marca…", "Gerenciar marcas", "Marca: {nome}".
+
+### 6.7 Acceptance criteria
+
+- [ ] Choosing a brand makes the dashboard, content, calendar, approvals, feedbacks and the Marketing library show only that brand, and the counts agree.
+- [ ] "Todas as marcas" shows every brand the person may access, and nothing else.
+- [ ] The choice survives a menu navigation and a reload; a link with `brand` overrides it; the chip shows and clears it.
+- [ ] A stale, revoked or foreign brand id falls back to "Todas as marcas" without an error screen and without leaking whether the brand exists.
+- [ ] On a brand page, switching brand keeps the tab; the selector reflects the route.
+- [ ] Clientes and Marcas still list everything.
+- [ ] A person with one brand sees its identity and no popover; with none, no control.
+- [ ] It works at 360 px and by keyboard only (open, search, choose, close); the person never sees data of a brand they are not linked to, also by editing the URL.
+- [ ] No screen keeps its own brand filter next to the selector, and `StoredKey.CalendarBrand` no longer exists.
+
+### 6.8 Open decisions
+
+Recommended answers are what the text above assumes. Confirm or change them before the first task (base.md 9.1).
+
+| # | Question | Recommendation |
+|---|---|---|
+| O1 | Remember the brand across sessions (browser storage) or only while the tab lives? | Across sessions, with the visible chip. Opening the tool on the brand you were working on is the point |
+| O2 | Should Clientes and Marcas follow the selector? | No: they are the catalog used to find a brand |
+| O3 | More than 200 brands? | Not needed now; if it happens, the search goes to the server |
+| O4 | Put "Recentes" and the pending counters per brand (as the portal switcher does) in the popover? | Later, once the selector is in use |
+| O5 | A keyboard shortcut to open the selector? | Later |
+| O6 | With a single brand, should it count as the active brand? | No: it only shows the identity; the screens behave as "Todas as marcas" |
