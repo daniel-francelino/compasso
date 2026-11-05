@@ -1,3 +1,4 @@
+import { Maximize2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { PortalApprovalDialog } from "@/components/portal/approvals/portal-approval-dialog";
 import { PlanRequestSummary } from "@/components/portal/approvals/plan-request-summary";
@@ -8,7 +9,6 @@ import { SectionCard } from "@/components/shared/admin/section-card";
 import { InstagramPost } from "@/components/shared/preview/instagram/instagram-post";
 import { InstagramPostHeader } from "@/components/shared/preview/instagram/instagram-post-header";
 import { ChannelPreview } from "@/components/shared/preview/channel-preview";
-import { OpenOnClick } from "@/components/shared/preview/open-on-click";
 import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Button } from "@/components/shared/ui/button";
 import { useDecisionDraft } from "@/hooks/portal/use-decision-draft";
@@ -79,6 +79,7 @@ export function FeedPost({
   const channel = rows.find((row) => row.rowId === activeRow) ?? rows[0];
   const logo = logoUrl;
 
+  const openDetails = () => setDialog(true);
   const needText = () => {
     setHint(CHANGES_HINT);
     setCommentsOpen(true);
@@ -118,17 +119,16 @@ export function FeedPost({
           <InstagramPostHeader
             profileName={channel.profileName}
             brandLogoUrl={logo}
+            menu={{ onOpen: openDetails }}
             subtitle={
               <>
                 {approvalStageLabels[ApprovalStage.Plan]} · {date}
               </>
             }
           />
-          <OpenOnClick onOpen={() => setDialog(true)}>
-            <div className="px-3 pb-3">
-              <PlanRequestSummary request={request} urls={urls} />
-            </div>
-          </OpenOnClick>
+          <div className="px-3 pb-3">
+            <PlanRequestSummary request={request} urls={urls} />
+          </div>
           {actions}
           {footer}
         </div>
@@ -148,24 +148,33 @@ export function FeedPost({
           callToAction={null}
           actions={actions}
           footer={footer}
-          onOpenMedia={() => setDialog(true)}
+          onOpenDetails={openDetails}
         />
       );
     }
     return (
       <div className="space-y-2 pb-1">
-        <OpenOnClick onOpen={() => setDialog(true)}>
-          <ChannelPreview
-            platform={channel.platform as Platform}
-            profileName={channel.profileName}
-            brandLogoUrl={logo}
-            format={channel.format as ContentFormat}
-            caption={caption}
-            callToAction={null}
-            media={media}
-            showMediaPlaceholder={kind === FeedPostKind.CaptionOnly}
-          />
-        </OpenOnClick>
+        <ChannelPreview
+          platform={channel.platform as Platform}
+          profileName={channel.profileName}
+          brandLogoUrl={logo}
+          format={channel.format as ContentFormat}
+          caption={caption}
+          callToAction={null}
+          media={media}
+          showMediaPlaceholder={kind === FeedPostKind.CaptionOnly}
+        />
+        <div className="px-1">
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11 gap-1.5 px-2 [&_svg]:size-5"
+            onClick={openDetails}
+          >
+            <Maximize2 aria-hidden="true" />
+            Ver detalhes
+          </Button>
+        </div>
         {actions}
         {footer}
       </div>

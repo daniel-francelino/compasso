@@ -1,4 +1,4 @@
-import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import {
   CircleCheck,
@@ -9,7 +9,7 @@ import {
   TriangleAlert,
   Undo2,
 } from "lucide-react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { FeedPost } from "@/components/portal/feed/feed-post";
 import { FeedSkeleton } from "@/components/portal/feed/feed-skeleton";
 import { PortalBrandHeader } from "@/components/portal/brands/portal-brand-header";
@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/shared/admin/empty-state";
 import { RecordUnavailable } from "@/components/shared/admin/record-unavailable";
 import { Button } from "@/components/shared/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/shared/ui/tabs";
+import { useFeedMemory } from "@/hooks/portal/use-feed-memory";
 import { usePortalBrand } from "@/hooks/portal/use-portal-brand";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { shouldLoadMore } from "@/lib/portal/approvals/feed";
@@ -28,6 +29,7 @@ import { AppRoute } from "@/lib/shared/routes";
 
 const ESTIMATED_POST_PX = 720;
 const OVERSCAN_POSTS = 2;
+const MAX_RESTORE_PAGES = 10;
 
 const tabs = [
   { value: PortalApprovalFilter.All, label: "Todos", icon: List },
@@ -37,7 +39,15 @@ const tabs = [
 ];
 
 export function PortalFeedPage({ brandId }: { brandId: string }) {
-  const list = useListState<string>(PortalApprovalFilter.All);
+  const memory = useFeedMemory(brandId);
+  const [start, setStart] = useState<string | null>(null);
+  const [pendingAnchor, setPendingAnchor] = useState<string | null>(null);
+  const list = useListState<string>(start ?? PortalApprovalFilter.All);
+  useEffect(() => {
+    const stored = memory.read();
+    setStart(stored?.status ?? PortalApprovalFilter.All);
+    setPendingAnchor(stored?.anchorId ?? null);
+  }, [memory]);
   const request = { brandId, status: list.status };
   const brand = usePortalBrand(brandId);
   const query = useInfiniteQuery({
@@ -47,9 +57,9 @@ export function PortalFeedPage({ brandId }: { brandId: string }) {
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.page * last.pageSize < last.total ? last.page + 1 : undefined,
-    placeholderData: keepPreviousData,
+    enabled: start !== null,
   });
-  const rows = query.data?.pages.flatMap((page) => page.rows) ?? [];
+  const rows = useMemo(() => query.data?.pages.flatMap((page) => page.rows) ?? [], [query.data]);
   const filtered = list.status !== PortalApprovalFilter.All;
 
   const listRef = useRef<HTMLDivElement>(null);
@@ -72,6 +82,7 @@ export function PortalFeedPage({ brandId }: { brandId: string }) {
     getItemKey: (index) => rows[index]?.id ?? index,
   });
   const items = virtualizer.getVirtualItems();
+  const firstVisibleId = rows[virtualizer.range?.startIndex ?? -1]?.id ?? null;
   const lastVisibleIndex = items.at(-1)?.index ?? -1;
   const { hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage } = query;
 
@@ -91,6 +102,43 @@ export function PortalFeedPage({ brandId }: { brandId: string }) {
     isFetchingNextPage,
     isFetchNextPageError,
     fetchNextPage,
+  ]);
+
+  useEffect(() => {
+    if (start === null || memory.read()?.status === list.status) return;
+    memory.save({ status: list.status, anchorId: null });
+    setPendingAnchor(null);
+  }, [start, list.status, memory]);
+
+  useEffect(() => {
+    if (start === null || pendingAnchor !== null || firstVisibleId === null) return;
+    memory.save({ status: list.status, anchorId: firstVisibleId });
+  }, [start, pendingAnchor, firstVisibleId, list.status, memory]);
+
+  const pagesLoaded = query.data?.pages.length ?? 0;
+  const isPending = query.isPending;
+  useEffect(() => {
+    if (pendingAnchor === null || isPending) return;
+    const index = rows.findIndex((row) => row.id === pendingAnchor);
+    if (index >= 0) {
+      virtualizer.scrollToIndex(index, { align: "start" });
+      setPendingAnchor(null);
+      return;
+    }
+    if (hasNextPage && !isFetchingNextPage && pagesLoaded < MAX_RESTORE_PAGES) {
+      void fetchNextPage();
+      return;
+    }
+    setPendingAnchor(null);
+  }, [
+    pendingAnchor,
+    isPending,
+    rows,
+    hasNextPage,
+    isFetchingNextPage,
+    pagesLoaded,
+    fetchNextPage,
+    virtualizer,
   ]);
 
   if (query.isError && rows.length === 0 && !filtered) {

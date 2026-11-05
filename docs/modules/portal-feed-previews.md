@@ -156,7 +156,7 @@ The actions are the same as for any post (heart "Aprovar", comment, "Solicitar a
 | Age or date | The planned publication date and zone, in the same wording as the date line of the feed ("Publicação: …"); never "há 2 d" because the post is not published yet |
 | Location | Not stored today. Not drawn (open decision: whether a location field is added to the channel row) |
 | Collab and "Patrocinado" | Not drawn (no data) |
-| Overflow "⋯" | A dropdown menu (decided 2026-11-04) with "Ver detalhes" (icon `Maximize2`; opens the review; a video swallows the click on its surface, so this is the way in for video posts) and, for Reel and Story only, the checkbox item "Mostrar áreas cobertas" (icon `SquareDashed`). Without a handler it stays a decoration |
+| Overflow "⋯" | A dropdown menu (decided 2026-11-04) with "Ver detalhes" (icon `Maximize2`; opens the review; it is the only way in, since a click on the media opens nothing; the planning card has the same menu and the other platforms a "Ver detalhes" button under the preview) and, for Reel and Story only, the checkbox item "Mostrar áreas cobertas" (icon `SquareDashed`). Without a handler it stays a decoration |
 | Tagged people | Not stored; not drawn |
 
 ## Where each layout is used
@@ -173,7 +173,7 @@ All under `src/components/shared/preview/instagram/` (no `index.ts`), one compon
 
 | Component | Role |
 |---|---|
-| `InstagramPost` | Picks the layout by `ContentFormat` and composes header, media, the `actions` slot, caption and the `footer` slot (the feed action bar and the comments are passed in as slots, so the preview stays free of portal logic); `onOpenMedia` makes a click on the media, outside its own controls, open the review |
+| `InstagramPost` | Picks the layout by `ContentFormat` and composes header, media, the `actions` slot, caption and the `footer` slot (the feed action bar and the comments are passed in as slots, so the preview stays free of portal logic); `onOpenDetails` only feeds the item "Ver detalhes" of the header menu; a click on the media opens nothing (decided 2026-11-04) |
 | `InstagramPostHeader` | Avatar, name, date line, decorative "⋯" |
 | `InstagramFeedMedia` | Frame and slides for `image`, `carousel`, `video`: ratio from `previewFrameRatio` (the single source of the clamp), arrows, keyboard and swipe, dots below, counter badge, Reels glyph |
 | `InstagramImmersiveFrame` | Phone-like 9:16 frame for `reel` and `story`: Story progress segments, auto-advance, hold to pause, tap zones, header controls and reply bar (with heart and send); decorative rail, audio line and scrubbable progress line for `reel`; optional safe-zone outline (switched on from the header menu) |

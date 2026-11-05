@@ -5,7 +5,6 @@ import { InstagramFeedMedia } from "@/components/shared/preview/instagram/instag
 import { InstagramImmersiveFrame } from "@/components/shared/preview/instagram/instagram-immersive-frame";
 import { InstagramPostHeader } from "@/components/shared/preview/instagram/instagram-post-header";
 import type { PreviewMedia } from "@/components/shared/preview/media-slide";
-import { OpenOnClick } from "@/components/shared/preview/open-on-click";
 import { ContentFormat } from "@/lib/shared/enums";
 
 export function InstagramPost({
@@ -18,7 +17,7 @@ export function InstagramPost({
   callToAction,
   actions,
   footer,
-  onOpenMedia,
+  onOpenDetails,
 }: {
   format: ContentFormat;
   profileName: string;
@@ -29,7 +28,7 @@ export function InstagramPost({
   callToAction: string | null;
   actions?: ReactNode;
   footer?: ReactNode;
-  onOpenMedia?: () => void;
+  onOpenDetails?: () => void;
 }) {
   const [safeZones, setSafeZones] = useState(false);
   const story = format === ContentFormat.Story;
@@ -44,29 +43,27 @@ export function InstagramPost({
         subtitle={subtitle}
         ring={immersive}
         menu={{
-          onOpen: onOpenMedia,
+          onOpen: onOpenDetails,
           safeZones: immersive ? { checked: safeZones, onCheckedChange: setSafeZones } : undefined,
         }}
       />
-      <OpenOnClick onOpen={onOpenMedia}>
-        {immersive ? (
-          <InstagramImmersiveFrame
-            format={format}
-            media={media}
-            caption={caption}
-            profileName={profileName}
-            brandLogoUrl={brandLogoUrl}
-            showSafeZones={safeZones}
-          />
-        ) : (
-          <InstagramFeedMedia
-            format={format}
-            media={media}
-            profileName={profileName}
-            brandLogoUrl={brandLogoUrl}
-          />
-        )}
-      </OpenOnClick>
+      {immersive ? (
+        <InstagramImmersiveFrame
+          format={format}
+          media={media}
+          caption={caption}
+          profileName={profileName}
+          brandLogoUrl={brandLogoUrl}
+          showSafeZones={safeZones}
+        />
+      ) : (
+        <InstagramFeedMedia
+          format={format}
+          media={media}
+          profileName={profileName}
+          brandLogoUrl={brandLogoUrl}
+        />
+      )}
       {actions}
       <div className="space-y-1 pb-2">
         <InstagramCaption caption={shownCaption} />

@@ -87,7 +87,7 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Send for approval | "Enviar para aprovação" |
 | Approve | "Aprovar" |
 | Request changes | "Solicitar alteração" (the name of the action, used as the accessible name; the button in the portal feed shows the one word "Alterar"; the status stays "Alterações solicitadas"). In the portal feed the typed comment is sent as the guidance |
-| Portal feed | "Feed" (menu item and breadcrumb of the brand page); filters "Todos", "Pendentes", "Aprovados", "Alterações solicitadas"; "Carregar mais"; "Ver os N comentários" / "Ocultar comentários"; field "Adicione um comentário…" with "Publicar" |
+| Portal feed | "Feed" (menu item and breadcrumb of the brand page); filters "Todos", "Pendentes", "Aprovados", "Alterações solicitadas"; "Ver os N comentários" / "Ocultar comentários"; field "Adicione um comentário…" with "Publicar" |
 | Missing art in a post | "Imagem ainda não enviada" |
 | End of the portal feed, and a failed page | "Você viu todos os conteúdos."; button "Tentar novamente" |
 | Emoji picker | Button "Inserir emoji"; search "Buscar emoji"; category names in pt-BR ("Frequentes", "Rostos e pessoas", "Animais e natureza", "Comidas e bebidas", "Viagens e lugares", "Atividades", "Objetos", "Símbolos", "Bandeiras") |

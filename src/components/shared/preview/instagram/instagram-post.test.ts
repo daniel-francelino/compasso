@@ -24,7 +24,7 @@ const render = (format: ContentFormat, media: PreviewMedia[], caption: string): 
       media,
       caption,
       callToAction: null,
-      onOpenMedia: () => undefined,
+      onOpenDetails: () => undefined,
     }),
   );
 

@@ -10,6 +10,7 @@ export const StoredKey = {
   LastSpace: "aura:last-space",
   ListColumns: "aura:list-columns",
   ApprovalDraftComment: "aura:approval-draft-comment",
+  PortalFeed: "aura:portal-feed",
 } as const;
 export type StoredKey = ValueOf<typeof StoredKey>;
 
