@@ -1,10 +1,9 @@
-import { Ellipsis, Maximize2, SquareDashed } from "lucide-react";
+import { Check, Ellipsis, Maximize2, SquareDashed } from "lucide-react";
 import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Button } from "@/components/shared/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
@@ -68,13 +67,15 @@ export function InstagramPostHeader({
               </DropdownMenuItem>
             ) : null}
             {menu.safeZones ? (
-              <DropdownMenuCheckboxItem
-                checked={menu.safeZones.checked}
-                onCheckedChange={menu.safeZones.onCheckedChange}
+              <DropdownMenuItem
+                role="menuitemcheckbox"
+                aria-checked={menu.safeZones.checked}
+                onSelect={() => menu.safeZones?.onCheckedChange(!menu.safeZones.checked)}
               >
                 <SquareDashed aria-hidden="true" />
                 Mostrar áreas cobertas
-              </DropdownMenuCheckboxItem>
+                {menu.safeZones.checked ? <Check className="ml-auto" aria-hidden="true" /> : null}
+              </DropdownMenuItem>
             ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
