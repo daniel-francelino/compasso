@@ -28,6 +28,10 @@ export const policySchemas = {
   [SettingKey.Invitations]: z.object({ expiresDays: days("a validade", 1, 30) }),
   [SettingKey.Security]: z.object({ requireOwnerMfa: z.boolean() }),
   [SettingKey.Email]: z.object({ senderName: z.string().trim().min(1).max(80) }),
+  [SettingKey.Feedback]: z.object({
+    enabled: z.boolean().default(true),
+    openDay: days("o dia", 1, 28).default(1),
+  }),
 } as const;
 
 export const policyDefaults = {
@@ -39,6 +43,7 @@ export const policyDefaults = {
   [SettingKey.Invitations]: { expiresDays: 7 },
   [SettingKey.Security]: { requireOwnerMfa: false },
   [SettingKey.Email]: { senderName: "Aura Creative" },
+  [SettingKey.Feedback]: { enabled: true, openDay: 1 },
 } as const;
 
 export const saveSettingSchema = z.object({
@@ -56,4 +61,5 @@ export const policyLabels: Record<SettingKey, string> = {
   [SettingKey.Invitations]: "Convites",
   [SettingKey.Security]: "Segurança",
   [SettingKey.Email]: "E-mail",
+  [SettingKey.Feedback]: "Pesquisa mensal com o cliente",
 };

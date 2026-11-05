@@ -380,6 +380,14 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Unavailable,
     message: "A publicação demorou demais e foi interrompida. Tente de novo.",
   },
+  feedback_not_open: {
+    category: ErrorCode.Invalid,
+    message: "A pesquisa deste mês não está aberta.",
+  },
+  feedback_already_answered: {
+    category: ErrorCode.Conflict,
+    message: "Você já respondeu ou dispensou a pesquisa deste mês.",
+  },
   report_empty: {
     category: ErrorCode.Invalid,
     message: "Escolha ao menos um bloco para o relatório.",

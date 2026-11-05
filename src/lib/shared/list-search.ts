@@ -25,6 +25,12 @@ export const listSearchSchema = z.object({
   channel: z.string().uuid().optional().catch(undefined),
   publication: z.string().max(30).optional().catch(undefined),
   view: z.string().max(10).optional().catch(undefined),
+  period: z
+    .string()
+    .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+    .optional()
+    .catch(undefined),
+  attention: z.literal("1").optional().catch(undefined),
   dateFrom: dateOnlySchema.optional().catch(undefined),
   dateTo: dateOnlySchema.optional().catch(undefined),
 });

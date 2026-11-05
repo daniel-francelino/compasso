@@ -44,6 +44,7 @@ Each kind requires an **action** and, when the subject belongs to a brand, a **b
 | `content.publish_failed` | An automatic publication failed or could not be confirmed | People with `content.publish_manual` on the brand | Event | Immediate |
 | `content.published_auto` | A content was published automatically | People with `content.view` on the brand | Event | Immediate |
 | `metrics.report_published` | A result report was published to the client | The client members of the brand (`metrics.portal_view`) | Event | Immediate |
+| `feedback.received` | A client contact answered the monthly survey | People with `feedback.view` on the brand. The body names the brand, the month and the overall score (and says "Precisa de atenção." for 1 or 2); it never carries the client's comments | Event | Immediate |
 
 The kinds, required actions and default lead times live in a **catalog** (`notification_kinds`), seeded by the migrations just like the actions. Each module adds its own when implemented, with `available = true`. Each notification also has a **severity**: `info`, `warning` (needs attention) or `urgent` (delay/risk); it defines icon, ordering and tone, within the palette.
 
@@ -102,6 +103,7 @@ The "next content, deadlines and pending approvals" block of the dashboard reuse
 | `content.due_soon` | Prazo de produção chegando | "«Lançamento de outono» deve ficar pronto em 2 dias." |
 | `content.publish_due` | Hora de registrar a publicação | "«Lançamento de outono» estava planejado para ontem às 10h. Já foi publicado?" |
 | `calendar.event` | Novo evento no calendário / Evento alterado / Evento cancelado | "«Reunião de alinhamento» · 21/10/2026 13:00 (America/Sao_Paulo)" |
+| `feedback.received` | Novo feedback de cliente | "Café Aurora respondeu a pesquisa de outubro: nota 4." |
 | `invitation.accepted` | Convite aceito | "Marta Silva aceitou o convite e já pode acessar." |
 | `site.published` | Site publicado | "A versão 12 do site está no ar." |
 

@@ -5,6 +5,7 @@ import {
   HardDrive,
   Link2,
   Mail,
+  MessageSquare,
   ShieldCheck,
   UserPlus,
   type LucideIcon,
@@ -56,6 +57,10 @@ export const policyGroups: Record<SettingKey, PolicyGroup> = {
   [SettingKey.Email]: {
     icon: Mail,
     description: "Como os e-mails da Aura Creative se apresentam.",
+  },
+  [SettingKey.Feedback]: {
+    icon: MessageSquare,
+    description: "Quando o cliente é convidado a avaliar o trabalho do mês anterior.",
   },
 };
 
@@ -119,6 +124,23 @@ export const policyFields: Record<SettingKey, PolicyField[]> = {
       label: "Nome do remetente dos e-mails",
       type: "text",
       description: "É o nome que a pessoa vê na caixa de entrada.",
+    },
+  ],
+  [SettingKey.Feedback]: [
+    {
+      name: "enabled",
+      label: "Pedir feedback mensal aos clientes",
+      type: "boolean",
+      description:
+        "Desligado, ninguém recebe novos convites. As respostas já dadas ficam guardadas.",
+    },
+    {
+      name: "openDay",
+      label: "Dia do mês em que a pesquisa abre",
+      type: "number",
+      unit: "dia",
+      description:
+        "Entre 1 e 28. A pesquisa pergunta sobre o mês anterior e fica aberta até o fim do mês.",
     },
   ],
 };

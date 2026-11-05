@@ -34,6 +34,7 @@ for (const path of [
   "/admin/marketing/content/new",
   "/admin/marketing/approvals/00000000-0000-0000-0000-000000000001",
   "/admin/marketing/calendar",
+  "/admin/marketing/feedback",
   "/admin/marketing/brands/00000000-0000-0000-0000-000000000001/calendar",
 ]) {
   test(`${path} requires a session`, async ({ page }) => {

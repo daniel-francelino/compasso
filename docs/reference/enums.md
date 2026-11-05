@@ -58,6 +58,13 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 | `MetricCompare` | `previous`, `year`, `none` | `metric_reports.compare_mode` | "Período anterior", "Mesmo período do ano passado", "Sem comparação" | metrics |
 | `MetricGranularity`, `PostRanking`, `PeriodPreset`, `MetricBlockKind`, `HighlightTone` | TypeScript only (no column): see `src/lib/shared/enums.ts` and `src/lib/shared/metrics/` | — | — | metrics |
 
+## 2c. Client feedback
+
+| TS constant | Values | DB column ✔ | pt-BR labels | Owner |
+|---|---|---|---|---|
+| `FeedbackStatus` | `snoozed`, `answered`, `declined` | `feedback_responses.status` | (internal) | feedback |
+| `FeedbackQuestion`, `FeedbackPromptState`, `FeedbackListStatus`, `FeedbackCardState`, `FeedbackScoreTone` | TypeScript only (no column): see `src/lib/shared/feedback/types.ts`. Prompt states `none`, `due`, `banner`; list status `answered`, `pending`; card state `answered`, `not_opened`, `snoozed`, `declined`; tone `attention`, `neutral`, `positive` | — | Questions in `src/lib/shared/feedback/questions.ts`; tones "Precisa de atenção", "Dentro do esperado", "Positivo" | feedback |
+
 ## 3. Media
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
@@ -97,7 +104,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 |---|---|---|---|---|
 | `NotificationSeverity` | `info`, `warning`, `urgent` | `notifications.severity`, `notification_kinds.severity` | | notifications |
 | `NotificationStatus` | `active`, `resolved` | `notifications.status` | | notifications |
-| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.approved_by_team`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `calendar.event`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed`, `channel.connection_expiring`, `channel.connection_expired`, `content.publish_failed`, `content.published_auto`, `metrics.report_published` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
+| `NotificationKind` | `approval.requested`, `approval.decided`, `approval.superseded`, `approval.approved_by_team`, `approval.overdue`, `content.due_soon`, `content.overdue`, `content.publish_due`, `comment.created`, `calendar.event`, `invitation.accepted`, `invitation.expiring`, `site.published`, `site.contact_message`, `media.upload_failed`, `channel.connection_expiring`, `channel.connection_expired`, `content.publish_failed`, `content.published_auto`, `metrics.report_published`, `feedback.received` | `notification_kinds.kind` (FK) | Authoritative list and recipients in notifications.md | notifications |
 | `AuditActorKind` | `internal`, `external`, `system` | `audit_events.actor_kind` ✔ | | audit |
 | `AuditAction` | See [../modules/audit.md](../modules/audit.md) | catalog in `audit_write` | | audit |
 | `EmailStatus` | `queued`, `sent`, `failed` | `email_outbox.status` | | notifications |
@@ -111,7 +118,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 | Constant | Where | Content |
 |---|---|---|
 | `QueryKey` | `lib/shared/query-keys.ts` (+ per-module factories) | One namespace per module: `QueryKey.Clients.list(filters)`, `.detail(id)`, `QueryKey.Brands…`, `QueryKey.Content…`, `QueryKey.Approvals…`, `QueryKey.Calendar…`, `QueryKey.Media…`, `QueryKey.Notifications…`, `QueryKey.Site…`, `QueryKey.Portal…`, `QueryKey.Auth.state` |
-| `StoredKey` | `lib/shared/stored-keys.ts` | `CalendarView`, `CalendarRange`, `SidebarOpen`, `LastSpace`, `ListColumns`, `ApprovalDraftComment`, `PortalFeed` (per brand: last filter and first visible post of the portal feed) (all prefixed `aura:`) |
+| `StoredKey` | `lib/shared/stored-keys.ts` | `CalendarView`, `CalendarRange`, `SidebarOpen`, `LastSpace`, `ListColumns`, `ApprovalDraftComment`, `FeedbackDraft` (per brand and month: the unsent answers of the monthly survey), `PortalFeed` (per brand: last filter and first visible post of the portal feed) (all prefixed `aura:`) |
 | `Action` | `lib/shared/auth/actions.ts` | Generated shape: `Action.<Module>.<Verb>` for every row of the actions catalog |
 | `AuditAction` | `lib/shared/audit/actions.ts` | `AuditAction.<Domain>.<Verb>` for the audit catalog |
 

@@ -141,6 +141,11 @@ export const kindInfo: Record<string, KindInfo> = {
     group: "Canais e métricas",
     description: "Um relatório de resultados foi publicado para o cliente.",
   },
+  "feedback.received": {
+    icon: MessageSquare,
+    group: "Feedback de clientes",
+    description: "Um cliente respondeu a pesquisa mensal sobre o trabalho.",
+  },
   "media.upload_failed": {
     icon: FileWarning,
     group: "Arquivos",
@@ -154,6 +159,7 @@ export const kindGroupIcons: Record<string, LucideIcon> = {
   Aprovações: ClipboardCheck,
   "Produção e publicação": CalendarClock,
   Comentários: MessageSquare,
+  "Feedback de clientes": MessageSquare,
   Convites: UserPlus,
   Site: Globe,
   Arquivos: FileUp,

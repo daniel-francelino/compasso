@@ -18,6 +18,7 @@
 | `channel_connections` | instagram-publishing | yes | **no policy and no grant for any client role**: read only through `channel_connection_list` (safe columns) and the service functions |
 | `publish_attempts` | instagram-publishing | yes | `content.view` + `can_access_brand` (read); written only by service functions |
 | `channel_metric_daily`, `channel_audience_snapshot`, `channel_media_index`, `content_channel_metrics`, `metric_marks`, `metric_reports` | metrics | yes | `metrics.view` + `can_access_brand` (read); external users read only through `portal_metrics_*` |
+| `feedback_responses` | feedback | yes | `feedback.view` + `can_access_brand` (read); **no policy for external roles**: they use `portal_feedback_*` only |
 | `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
 | `content_types`, `content_item_types` | content | yes | `content.view` (read; the catalog is per organization) and `content.view` + `can_access_brand` through the item (links); written only by `content_type_save`, `content_type_set_archived` (`content.manage_types`) and `content_item_save`; **no policy for external roles** |
 | `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
@@ -251,6 +252,14 @@ Migrations `20261026100000_channel_connections.sql`, `20261026100100_instagram_p
 **`channel_metric_daily`** (`channel_id`, `metric`, `day` primary key; `value numeric ≥ 0`; `MetricKey`), **`channel_audience_snapshot`** (`channel_id`, `captured_on`, `dimension`; `breakdown jsonb`), **`channel_media_index`** (post catalogue per channel: `external_media_id`, `permalink`, `media_type`, `product_type`, `posted_at`, `caption_excerpt`, `content_channel_id` when the post was made by Aura Creative), **`content_channel_metrics`** (`media_index_id`, `age_bucket`, `metrics jsonb`, one row per post and age bucket, never overwritten). Absent data is stored as no row, never as zero.
 
 **`metric_marks`** (`brand_id`, `channel_id`, `kind`, `label`, `starts_on`, `ends_on`, `content_item_id`, `version`) and **`metric_reports`** (`brand_id`, `channel_id`, `period_start`, `period_end`, `compare_mode`, `title`, `message`, `next_steps`, `blocks`, `snapshot`, `status`, `version`, `previous_report_id`, `published_by`, `published_at`, `withdrawn_at`). A published report is immutable except for the withdrawal (trigger `metric_reports_guard`); `snapshot` is null only while `draft`.
+
+## 4c. Client feedback
+
+Migration `20261105100000_feedback.sql`. Rules: [../modules/feedback.md](../modules/feedback.md).
+
+**`feedback_responses`** — one row per contact, brand and month, created on the first interaction (snooze, decline or send): `brand_id`, `respondent_id` (composite foreign key `(brand_id, respondent_id)` to `brand_members`), `period_month` (`date`, always the first day of the evaluated month, `unique (brand_id, respondent_id, period_month)`), `status` (`FeedbackStatus`), `snoozed_until`, `snooze_count` (0 to 3), `score_overall`, `score_quality`, `score_communication`, `score_deadlines`, `score_results` (1 to 5, null when not rated; only `score_overall` is required when `answered`), `highlight`, `improvement` (1 to 1000 characters or null), `form_version`, `timezone` (the brand's IANA zone at the time of sending), `answered_at`. CHECKs: scores, texts and `answered_at` are null unless `answered`; `snoozed_until` only while `snoozed`. Trigger `feedback_responses_guard`: an `answered` or `declined` row cannot be updated or deleted (`feedback_already_answered`). RLS enabled; read policy for `feedback.view` and `can_access_brand`; `revoke all` from clients, `select` only for `authenticated`; written only by `security definer` functions.
+
+**Policy group** `policies.feedback` in `organization_settings`: `enabled` (default true) and `openDay` (1 to 28, default 1).
 
 ## 5. Content, versions, comments and approvals
 

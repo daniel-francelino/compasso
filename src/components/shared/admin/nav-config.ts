@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Settings2,
   SlidersHorizontal,
+  Star,
   Tag,
   Users,
   Wrench,
@@ -92,6 +93,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { title: "Clientes", icon: Building2, to: AppRoute.Clients, action: Action.Clients.View },
       { title: "Marcas", icon: Tag, to: AppRoute.Brands, action: Action.Brands.View },
+      { title: "Feedbacks", icon: Star, to: AppRoute.Feedback, action: Action.Feedback.View },
     ],
   },
   {

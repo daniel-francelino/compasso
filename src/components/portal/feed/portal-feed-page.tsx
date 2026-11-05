@@ -10,6 +10,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { FeedbackPrompt } from "@/components/portal/feedback/feedback-prompt";
 import { FeedPost } from "@/components/portal/feed/feed-post";
 import { FeedSkeleton } from "@/components/portal/feed/feed-skeleton";
 import { PortalBrandHeader } from "@/components/portal/brands/portal-brand-header";
@@ -155,6 +156,7 @@ export function PortalFeedPage({ brandId }: { brandId: string }) {
   return (
     <div className="space-y-6">
       <PortalBrandHeader brandId={brandId} />
+      <FeedbackPrompt brandId={brandId} />
       <Tabs value={list.status} onValueChange={list.setStatus} className="flex justify-center">
         <TabsList className="h-auto flex-wrap justify-center pointer-coarse:h-auto">
           {tabs.map((tab) => (

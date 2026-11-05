@@ -3237,6 +3237,11 @@ export type Database = {
         Args: { p_from: string | null, p_to: string | null}
         Returns: boolean
       }
+      feedback_list: {
+        Args: {          p_attention: boolean | null,          p_brand: string | null,          p_page: number | null,          p_page_size: number | null,          p_period: string | null,          p_status: string | null}
+        Returns: Json
+      }
+      feedback_summary: { Args: { p_brand: string | null, p_period: string | null}; Returns: Json }
       generate_due_notifications: { Args: never; Returns: Json }
       has_action: { Args: { p_action: string | null}; Returns: boolean }
       invitation_create: {
@@ -3488,6 +3493,19 @@ export type Database = {
       }
       portal_decide_approval: {
         Args: { p_comment: string | null, p_outcome: string | null, p_request: string | null}
+        Returns: Json
+      }
+      portal_feedback_decline: {
+        Args: { p_brand: string | null, p_period: string | null}
+        Returns: undefined
+      }
+      portal_feedback_prompt: { Args: { p_brand: string | null}; Returns: Json }
+      portal_feedback_snooze: {
+        Args: { p_brand: string | null, p_period: string | null}
+        Returns: undefined
+      }
+      portal_feedback_submit: {
+        Args: { p_answers: Json | null, p_brand: string | null, p_period: string | null}
         Returns: Json
       }
       portal_get_approval: { Args: { p_request: string | null}; Returns: Json }

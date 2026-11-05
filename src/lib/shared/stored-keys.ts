@@ -11,6 +11,7 @@ export const StoredKey = {
   ListColumns: "aura:list-columns",
   ApprovalDraftComment: "aura:approval-draft-comment",
   PortalFeed: "aura:portal-feed",
+  FeedbackDraft: "aura:feedback-draft",
 } as const;
 export type StoredKey = ValueOf<typeof StoredKey>;
 

@@ -154,6 +154,13 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `report_period_invalid` | invalid | "O período do relatório é inválido." | metrics_report_save |
 | `report_already_published` | conflict | "Este relatório já foi publicado e não pode ser alterado." | metric_reports_guard, metrics_report_save, metrics_report_publish, metrics_report_delete |
 
+### Client feedback
+
+| Code | Category | Message (pt-BR) | Raised by |
+|---|---|---|---|
+| `feedback_not_open` | invalid | "A pesquisa deste mês não está aberta." | portal_feedback_submit, portal_feedback_snooze, portal_feedback_decline |
+| `feedback_already_answered` | conflict | "Você já respondeu ou dispensou a pesquisa deste mês." | feedback_responses_guard, portal_feedback_submit, portal_feedback_snooze, portal_feedback_decline |
+
 ## 3. Rules
 
 1. SQL raises only codes from this table; TypeScript maps unknown database errors to `unknown` and logs them.

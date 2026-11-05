@@ -165,6 +165,19 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Resultados | Client portal menu | The published reports of the brand |
 | Marca (de métricas) | Metrics | A dated note on the charts (campaign, viral post…); not the same as "Marca" (brand) |
 
+## 4c. Client feedback
+
+| Term (pt-BR) | Where | Meaning |
+|---|---|---|
+| Feedbacks | Marketing menu | The page where the manager reads the monthly answers of the clients |
+| Pesquisa mensal | Portal, policies | The survey the client answers once a month about the previous month |
+| Responder depois / Agora não quero responder / Enviar respostas | Portal modal | Postpone for 3 days, dismiss the month, send |
+| Prefiro não avaliar | Portal modal | Leave one subject without a score (stored empty, never zero) |
+| Precisa de atenção / Dentro do esperado / Positivo | Cards | Tone of the overall score (1–2, 3, 4–5) |
+| Não avaliou | Cards | A subject the client chose not to rate |
+| Respondidos / Sem resposta | Feedbacks tabs | Answers received / contacts who did not answer, postponed or dismissed |
+| Dispensou este mês | Cards | The contact dismissed the survey of the month |
+
 ## 5. Adding a term
 
 Add the row here, use it in the screen, and if it names a status or enum value also update [../reference/enums.md](../reference/enums.md). `review` checks new strings against this glossary.

@@ -88,8 +88,16 @@ export const SettingKey = {
   Invitations: "policies.invitations",
   Security: "policies.security",
   Email: "policies.email",
+  Feedback: "policies.feedback",
 } as const;
 export type SettingKey = ValueOf<typeof SettingKey>;
+
+export const FeedbackStatus = {
+  Snoozed: "snoozed",
+  Answered: "answered",
+  Declined: "declined",
+} as const;
+export type FeedbackStatus = ValueOf<typeof FeedbackStatus>;
 
 export const MediaScope = {
   Site: "site",

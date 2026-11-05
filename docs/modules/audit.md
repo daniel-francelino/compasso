@@ -86,6 +86,8 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `metric_mark.deleted` | `metric_mark` | `metric_mark_delete` |
 | `metrics_report.published` | `metrics_report` | `metrics_report_publish` |
 | `metrics_report.withdrawn` | `metrics_report` | `metrics_report_withdraw` |
+| `feedback.answered` | `feedback_response` | `portal_feedback_submit` (metadata: the month and the overall score; never the comments) |
+| `feedback.declined` | `feedback_response` | `portal_feedback_decline` (metadata: the month) |
 | `content_channel.cancelled` | `content_channel` | `content_channel_cancel` |
 | `calendar_note.created` | `calendar_note` | `calendar_note_save` (metadata: `kind`, `client_visible`) |
 | `calendar_note.updated` | `calendar_note` | `calendar_note_save` |

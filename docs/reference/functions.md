@@ -145,6 +145,10 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `portal_list_comments(p_item)` (each comment also carries `author_id`, migration `20261104110000_portal_comment_author.sql`, so the portal can show the author's photo through `person_avatar_keys`) | `listPortalComments` | link | — | — | `not_found` |
 | `portal_add_comment(p_item, p_body)` | `addPortalComment` | `comments.create_external` | `comment.created` | `comment.created` | `invalid_input` |
 | `portal_list_calendar(p_brand, p_from, p_to)` | `listPortalCalendar` | link to the brand; returns `{ brand_timezone, events, entries }`: `entries` has one entry per channel row of the latest version of each content that has a request that is not cancelled (date, status and title from the snapshot); `events` has the occurrences of the shared events and dates of the brand (title, description, type, day, time and zone, place; never the internal notes); range at most 100 days | — | — | `not_found`, `invalid_input` |
+| `portal_feedback_prompt(p_brand)` returns `{ state, period_month, snooze_count }` and never any text | `getPortalFeedbackPrompt` | `feedback.answer` + external link | — | — | `denied`, `not_found` |
+| `portal_feedback_submit(p_brand, p_period, p_answers jsonb)` | `submitPortalFeedback` | `feedback.answer` + external link | `feedback.answered` | `feedback.received` | `denied`, `not_found`, `invalid_input`, `feedback_not_open`, `feedback_already_answered` |
+| `portal_feedback_snooze(p_brand, p_period)` | `snoozePortalFeedback` | same | — | — | `denied`, `not_found`, `feedback_not_open`, `feedback_already_answered` |
+| `portal_feedback_decline(p_brand, p_period)` | `declinePortalFeedback` | same | `feedback.declined` | — | `denied`, `not_found`, `feedback_not_open`, `feedback_already_answered` |
 | `portal_media_urls(p_revision, p_version_ids uuid[])` (checks, then the server signs; `signPortalPreviewMedia` batches display-derivative signing for listing previews, falling back to the original when no derivative exists) | `signPortalMedia`, `signPortalPreviewMedia` | revision shared with the person | — | — | `denied` |
 
 ## 6. Calendar and dashboard (modules: calendar, dashboard)
@@ -288,10 +292,20 @@ Specified in [../modules/instagram-publishing.md](../modules/instagram-publishin
 | — | `testChannelConnection` (checks the brand link with the caller's client, then `probeConnection` in `lib/shared/jobs/connection-test.server.ts` reads the stored token with the service role) | `channels.connect` | — | — | `not_found` |
 | — | server route `/api/cron/publish-due` | `CRON_SECRET` | runs the publishing, token renewal and metrics collection jobs | — | — |
 
+## 9c. Client feedback (module: feedback)
+
+The client side (`portal_feedback_*`) is in section 5. Manager side:
+
+| SQL function | Server function | Act. | Audit | Notif. | Errors |
+|---|---|---|---|---|---|
+| `feedback_list(p_brand, p_period, p_status, p_attention, p_page, p_page_size)` | `listFeedback` | `feedback.view` + brand link | — | — | `invalid_input`, `not_found` |
+| `feedback_summary(p_brand, p_period)` | `getFeedbackSummary` | `feedback.view` + brand link | — | — | `invalid_input`, `not_found` |
+| `feedback_policy_enabled`, `feedback_policy_open_day`, `feedback_brand_has_work`, `feedback_period_for`, `feedback_member_eligible`, `feedback_expected`, `feedback_score`, `feedback_text`, `feedback_lock_row`; trigger `feedback_responses_guard` | — | internal | — | — | `feedback_not_open`, `feedback_already_answered`, `invalid_input` |
+
 ## 10. Rules
 
 1. A server function calls **at most one** write RPC per user action (atomicity lives in SQL).
 2. Every function that writes a business fact calls `audit_write` and, where listed, `notify_users` in the same transaction.
 3. Public (`anon`) functions are exactly: `site_published_page`, `site_published_settings`, `site_published_sitemap`, `site_contact_submit`. Everything else revokes `anon`.
-4. Portal functions are exactly the `portal_*` set of section 5. External roles call nothing else.
+4. Portal functions are exactly the `portal_*` set of section 5, plus `portal_metrics_report_list` and `portal_metrics_report_get` (section 9b). External roles call nothing else.
 5. New function → new row here with action, audit, notification and errors; mirror in `check:consistency` where applicable.

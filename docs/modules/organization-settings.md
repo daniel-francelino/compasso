@@ -65,6 +65,7 @@ Stored as validated settings groups (jsonb with zod schemas, optimistic version)
 | **Retention** | Media trash (days); audit events (months); notification cleanup (days) | 30 days; 24 months; 90 days |
 | **Invitation validity** | Days | 7 |
 | **Password and session** | Minimum length (10, not lower), session duration, MFA requirement for Owners | 10; provider default; required from phase 6 |
+| **Monthly client survey** | Switch on or off; day of the month the survey opens (1 to 28). Key `policies.feedback`, specified in [feedback.md](feedback.md) | On; day 1 |
 | **Email** | Sender name, reply-to, which notification kinds send email by default | See [../foundations/notifications.md](../foundations/notifications.md) |
 
 A change to a policy is audited with old and new values; policies that affect running flows (for example making internal review mandatory) apply to **new** submissions only.

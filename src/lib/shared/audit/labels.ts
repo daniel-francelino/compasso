@@ -88,6 +88,8 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.ContentType.Saved]: "Tipo de conteúdo salvo",
   [AuditAction.ContentType.Archived]: "Tipo de conteúdo arquivado ou reativado",
   [AuditAction.Organization.Updated]: "Dados da organização alterados",
+  [AuditAction.Feedback.Answered]: "Feedback mensal respondido pelo cliente",
+  [AuditAction.Feedback.Declined]: "Feedback mensal dispensado pelo cliente",
   [AuditAction.Audit.Exported]: "Auditoria exportada",
 };
 
@@ -102,6 +104,7 @@ export const auditDomains: { value: string; label: string }[] = [
   { value: "calendar_note", label: "Ideias e datas" },
   { value: "metric_mark", label: "Marcas de métricas" },
   { value: "metrics_report", label: "Relatórios de resultados" },
+  { value: "feedback", label: "Feedback de clientes" },
   { value: "variant", label: "Versões por canal (histórico)" },
   { value: "comment", label: "Comentários" },
   { value: "approval", label: "Aprovações" },

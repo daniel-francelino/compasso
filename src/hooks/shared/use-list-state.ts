@@ -57,6 +57,8 @@ export const useListState = <S extends string>(initialStatus: S, defaultSort: Li
       channel: search.channel,
       publication: search.publication,
       view: search.view,
+      period: search.period,
+      attention: search.attention,
       dateFrom: search.dateFrom,
       dateTo: search.dateTo,
     },
@@ -77,7 +79,9 @@ export const useListState = <S extends string>(initialStatus: S, defaultSort: Li
         | "editorial"
         | "channel"
         | "publication"
-        | "view",
+        | "view"
+        | "period"
+        | "attention",
       value: string | undefined,
     ) => update({ [key]: value === "" ? undefined : value, page: undefined }),
     setSort: (next: ListSort) =>

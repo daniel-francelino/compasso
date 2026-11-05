@@ -26,6 +26,10 @@ export const Action = {
     Report: "metrics.report",
     PortalView: "metrics.portal_view",
   },
+  Feedback: {
+    View: "feedback.view",
+    Answer: "feedback.answer",
+  },
   Content: {
     View: "content.view",
     Create: "content.create",

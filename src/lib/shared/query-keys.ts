@@ -70,6 +70,11 @@ export const QueryKey = {
     types: () => ["content", "types"] as const,
     typeCatalog: () => ["content", "type-catalog"] as const,
   },
+  Feedback: {
+    all: () => ["feedback"] as const,
+    list: (filters: Filters) => ["feedback", "list", filters] as const,
+    summary: (filters: Filters) => ["feedback", "summary", filters] as const,
+  },
   Approvals: {
     all: () => ["approvals"] as const,
     detail: (id: string) => ["approvals", "detail", id] as const,
@@ -84,6 +89,7 @@ export const QueryKey = {
     comments: (itemId: string) => ["portal", "comments", itemId] as const,
     calendar: (brandId: string, filters: Filters) =>
       ["portal", "calendar", brandId, filters] as const,
+    feedbackPrompt: (brandId: string) => ["portal", "feedback-prompt", brandId] as const,
     metricsReports: (brandId: string) => ["portal", "metrics-reports", brandId] as const,
     metricsReport: (reportId: string) => ["portal", "metrics-report", reportId] as const,
     urls: (revisionId: string, variant: string, versionIds: readonly string[]) =>

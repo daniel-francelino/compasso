@@ -124,6 +124,10 @@ export const AuditAction = {
   Organization: {
     Updated: "organization.updated",
   },
+  Feedback: {
+    Answered: "feedback.answered",
+    Declined: "feedback.declined",
+  },
   Audit: {
     Exported: "audit.exported",
   },

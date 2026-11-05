@@ -14,6 +14,8 @@ Included: brand selection, pending dashboard, calendar, approval screen, externa
 
 > Changed on 2026-11-04: the brand panel is now a **social-network style feed** (Instagram as the reference) that shows what is pending and what was already decided, newest first. "Aprovar" works like a like, comments are inline, and "Solicitar alteração" sends the change request using the typed comment. It replaces the dashboard and the approval list. See [Feed](#feed-decided-2026-11-04).
 
+> Specified on 2026-11-05, not implemented: once a month the brand feed opens a **monthly survey** modal (and, after three postponements, a banner) so the client rates the work of the previous month. It adds no portal route; the feed only hosts it. See [feedback.md](feedback.md).
+
 ## Access
 
 - Login at `/admin/login` (same identity pool); after sign-in, a person who only has portal actions is redirected to `/portal`. The portal layout has its own guard (`requireAction(context, Action.Portal.View)`).
