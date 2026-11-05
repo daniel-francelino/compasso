@@ -43,9 +43,11 @@ describe("instagram post", () => {
     expect(markup).not.toContain("line-clamp-2");
   });
 
-  it("draws the caption for a feed post", () => {
+  it("draws the caption for a feed post without the profile name in front", () => {
     const markup = render(ContentFormat.Image, [], "Legenda do post");
     expect(markup).toContain("Legenda do post");
+    expect(markup).not.toContain('font-semibold">aurora</span> Legenda');
+    expect(markup.split("aurora")).toHaveLength(2);
   });
 
   it("plays a reel with the own player and no native controls", () => {

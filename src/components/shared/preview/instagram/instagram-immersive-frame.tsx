@@ -269,7 +269,6 @@ export function InstagramImmersiveFrame({
               className="pointer-events-none absolute bottom-12 left-3 right-16 space-y-1 text-ivory"
               aria-hidden="true"
             >
-              <span className="block truncate text-sm font-semibold">{name}</span>
               <span className="block truncate text-xs">{caption}</span>
               <span className="flex min-w-0 items-center gap-1 text-xs">
                 <Music2 className="size-3 shrink-0" />

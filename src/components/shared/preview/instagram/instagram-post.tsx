@@ -69,7 +69,7 @@ export function InstagramPost({
       </OpenOnClick>
       {actions}
       <div className="space-y-1 pb-2">
-        <InstagramCaption profileName={profileName} caption={shownCaption} />
+        <InstagramCaption caption={shownCaption} />
         {callToAction && !story ? (
           <p className="px-3 text-xs text-muted-foreground">{callToAction}</p>
         ) : null}

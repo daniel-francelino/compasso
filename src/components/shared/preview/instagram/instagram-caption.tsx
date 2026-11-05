@@ -5,13 +5,7 @@ import {
   tokenizeCaption,
 } from "@/lib/shared/preview/instagram";
 
-export function InstagramCaption({
-  profileName,
-  caption,
-}: {
-  profileName: string;
-  caption: string;
-}) {
+export function InstagramCaption({ caption }: { caption: string }) {
   const [expanded, setExpanded] = useState(false);
   if (caption.trim() === "") return null;
   const collapsed = collapseInstagramCaption(caption);
@@ -19,7 +13,6 @@ export function InstagramCaption({
   const shown = hidden ? collapsed.text : caption;
   return (
     <p className="whitespace-pre-wrap break-words px-3 text-sm text-foreground">
-      <span className="font-semibold">{profileName.replace(/^@/, "")}</span>{" "}
       {tokenizeCaption(shown).map((token, index) =>
         token.kind === CaptionTokenKind.Tag ? (
           <span key={`${index}-${token.text}`} className="text-violet">
