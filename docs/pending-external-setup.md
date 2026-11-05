@@ -132,8 +132,8 @@ Specified and built in [modules/feedback.md](modules/feedback.md). **Nothing bel
 
 | ID | Item | Status |
 |---|---|---|
-| FB1 | **Apply the migration** `20261105100000_feedback.sql` to the linked project (`npx supabase db push --dry-run` first; it must list only this file) | Open |
-| FB2 | **Regenerate the database types with the real CLI** (`npm run db:types -- --linked`) after FB1; the six function signatures in `database.types.ts` were added by hand | Open |
+| FB1 | **Apply the migration** `20261105100000_feedback.sql` to the linked project | Done 2026-11-05: `npx supabase db push --remote --dry-run` listed only this file on the project Compasso (production), then `npx supabase db push --remote --yes` applied it; a second dry run reports up to date |
+| FB2 | **Regenerate the database types with the real CLI** after FB1 | Done 2026-11-05: `npm run db:types -- --linked` replaced the hand-added signatures; typecheck and lint pass |
 | FB3 | Open the portal feed and the Feedbacks page in a browser at 360 px, tablet and desktop, with the keyboard only; check the rating fields, the draft after a reload, the banner after three postponements and the cards | Open |
 | FB4 | Run `e2e/auth-guards.spec.ts` (the new route is in its list) and write the flow answer then see the card; the Playwright web server did not start within 120 s on the development machine | Open |
 | FB5 | With real accounts: a client answers, the manager receives `feedback.received` in the bell, a manager of another brand does not | Open |

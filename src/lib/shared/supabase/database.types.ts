@@ -1442,6 +1442,94 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_responses: {
+        Row: {
+          answered_at: string | null
+          brand_id: string
+          created_at: string
+          form_version: number
+          highlight: string | null
+          id: string
+          improvement: string | null
+          period_month: string
+          respondent_id: string
+          score_communication: number | null
+          score_deadlines: number | null
+          score_overall: number | null
+          score_quality: number | null
+          score_results: number | null
+          snooze_count: number
+          snoozed_until: string | null
+          status: string
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          answered_at?: string | null
+          brand_id: string
+          created_at?: string
+          form_version?: number
+          highlight?: string | null
+          id?: string
+          improvement?: string | null
+          period_month: string
+          respondent_id: string
+          score_communication?: number | null
+          score_deadlines?: number | null
+          score_overall?: number | null
+          score_quality?: number | null
+          score_results?: number | null
+          snooze_count?: number
+          snoozed_until?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answered_at?: string | null
+          brand_id?: string
+          created_at?: string
+          form_version?: number
+          highlight?: string | null
+          id?: string
+          improvement?: string | null
+          period_month?: string
+          respondent_id?: string
+          score_communication?: number | null
+          score_deadlines?: number | null
+          score_overall?: number | null
+          score_quality?: number | null
+          score_results?: number | null
+          snooze_count?: number
+          snoozed_until?: string | null
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_responses_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_responses_brand_id_respondent_id_fkey"
+            columns: ["brand_id", "respondent_id"]
+            isOneToOne: false
+            referencedRelation: "brand_members"
+            referencedColumns: ["brand_id", "user_id"]
+          },
+          {
+            foreignKeyName: "feedback_responses_respondent_id_fkey"
+            columns: ["respondent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -3237,11 +3325,73 @@ export type Database = {
         Args: { p_from: string | null, p_to: string | null}
         Returns: boolean
       }
+      feedback_brand_has_work: {
+        Args: { p_brand: string | null, p_period: string | null}
+        Returns: boolean
+      }
+      feedback_expected: {
+        Args: { p_brand: string | null, p_period: string | null}
+        Returns: {
+          brand_id: string
+          user_id: string
+        }[]
+      }
       feedback_list: {
         Args: {          p_attention: boolean | null,          p_brand: string | null,          p_page: number | null,          p_page_size: number | null,          p_period: string | null,          p_status: string | null}
         Returns: Json
       }
-      feedback_summary: { Args: { p_brand: string | null, p_period: string | null}; Returns: Json }
+      feedback_lock_row: {
+        Args: { p_brand: string | null, p_period: string | null}
+        Returns: {
+          answered_at: string | null
+          brand_id: string
+          created_at: string
+          form_version: number
+          highlight: string | null
+          id: string
+          improvement: string | null
+          period_month: string
+          respondent_id: string
+          score_communication: number | null
+          score_deadlines: number | null
+          score_overall: number | null
+          score_quality: number | null
+          score_results: number | null
+          snooze_count: number
+          snoozed_until: string | null
+          status: string
+          timezone: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "feedback_responses"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      feedback_member_eligible: {
+        Args: { p_brand: string | null, p_period: string | null, p_user: string | null}
+        Returns: boolean
+      }
+      feedback_period_for: {
+        Args: { p_brand: string | null, p_now?: string | null}
+        Returns: string
+      }
+      feedback_policy_enabled: { Args: never; Returns: boolean }
+      feedback_policy_open_day: { Args: never; Returns: number }
+      feedback_score: {
+        Args: { p_answers: Json | null, p_key: string | null, p_required: boolean | null}
+        Returns: number
+      }
+      feedback_summary: {
+        Args: { p_brand: string | null, p_period: string | null}
+        Returns: Json
+      }
+      feedback_text: {
+        Args: { p_answers: Json | null, p_key: string | null}
+        Returns: string
+      }
       generate_due_notifications: { Args: never; Returns: Json }
       has_action: { Args: { p_action: string | null}; Returns: boolean }
       invitation_create: {
