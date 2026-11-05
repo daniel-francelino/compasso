@@ -101,7 +101,8 @@ export function InstagramImmersiveFrame({
   const current = items[Math.min(index, Math.max(last, 0))];
   const isVideo = current?.kind === MediaKind.Video && current.unavailable !== true;
   const timed = story && current !== undefined && !isVideo;
-  const paused = (userPaused ?? reduced) || holding || !inView;
+  const stopped = userPaused ?? reduced;
+  const paused = stopped || holding || !inView;
   const name = profileName.replace(/^@/, "");
   const maxRem = story ? INSTAGRAM_STORY_MAX_REM : INSTAGRAM_REEL_MAX_REM;
 
@@ -202,10 +203,10 @@ export function InstagramImmersiveFrame({
                   variant="ghost"
                   size="icon"
                   className={headerButton}
-                  aria-label={paused ? "Reproduzir story" : "Pausar story"}
-                  onClick={() => setUserPaused(!paused)}
+                  aria-label={stopped ? "Reproduzir story" : "Pausar story"}
+                  onClick={() => setUserPaused(!stopped)}
                 >
-                  {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+                  {stopped ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
                 </Button>
                 {isVideo ? (
                   <Button
