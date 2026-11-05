@@ -266,7 +266,7 @@ export function InstagramImmersiveFrame({
               Reels
             </span>
             <div
-              className="pointer-events-none absolute bottom-12 left-3 right-16 space-y-1 text-ivory"
+              className="pointer-events-none absolute bottom-4 left-3 right-16 space-y-1 text-ivory"
               aria-hidden="true"
             >
               <span className="block truncate text-xs">{caption}</span>
@@ -276,7 +276,7 @@ export function InstagramImmersiveFrame({
               </span>
             </div>
             <div
-              className="pointer-events-none absolute bottom-24 right-2 flex flex-col items-center gap-4 text-ivory"
+              className="pointer-events-none absolute bottom-10 right-2 flex flex-col items-center gap-4 text-ivory"
               aria-hidden="true"
             >
               {railIcons.map((Icon, position) => (

@@ -19,6 +19,7 @@ The content editor uses the library block editor (`RichTextEditor`, `lost-ui/edi
 | L7 | **File block.** A block for non-image files (PDF, documents) with the same reference mechanism as L1. Already listed as "not ported" in the library document `docs/editor.md`. | Before O19 the planning accepted PDFs and other references; that is lost until this exists. | None: only images can be attached to a plan. | open |
 | L8 | **Read-only rendering of the JSON.** A component that renders the editor JSON (with the L1 attributes and the L2 resolver) without Tiptap, for the client portal. | The portal must show the plan text and its images without loading the editor. | The app has its own `RichTextView` for the closed set. | done in 0.2.1 (adopted 2026-10-30) |
 | L9 | **Slash menu crash.** In `EditorSlashMenu` (`editor-slash-menu.tsx`) write `useEffect(() => { active.current?.scrollIntoView({ block: "nearest" }); }, [selected])` (and the same block body for `setSelected(0)`). | Current Chrome returns a Promise from `scrollIntoView`; as the arrow function returns it, React throws `destroy is not a function` and the page shows its error screen when the person moves through the `/` menu. | None. | open (reproduced on 0.2.1) |
+| L10 | **Emoji picker for text fields.** A popover component such as `EmojiPickerPopover` (props: `onSelect(emoji)`, `trigger?`, `pickerProps`, `categories` labels in the app language) that opens the `emoji-picker-react` panel and only reports the chosen emoji, without owning a value. `FormEmojiPicker` is a single-value field and cannot insert into a text. | The portal feed comment box needs a smile button that inserts the emoji at the cursor of a textarea, like Instagram. | Local `EmojiPopover` and `EmojiPickerPanel` in `src/components/shared/admin/` (the panel is also used by the local `EmojiPickerField`). | open |
 
 ## 3. How the app will change when a request is done
 
@@ -27,6 +28,7 @@ The content editor uses the library block editor (`RichTextEditor`, `lost-ui/edi
 - **L5 + L6:** the app stops counting images itself.
 - **L7:** non-image references come back to the planning (decision O9 is restored for them).
 - **L8:** `RichTextView` is replaced by the library component.
+- **L10:** `EmojiPopover` and `EmojiPickerPanel` are deleted; `EmojiPickerField` can move to `FormEmojiPicker`.
 
 ## 4. Open decisions
 

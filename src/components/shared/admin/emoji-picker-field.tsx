@@ -1,6 +1,6 @@
-import EmojiPicker, { EmojiStyle, Theme } from "emoji-picker-react";
 import { Smile, X } from "lucide-react";
 import { useState } from "react";
+import { EmojiPickerPanel } from "@/components/shared/admin/emoji-picker-panel";
 import { Label } from "@/components/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import { cn } from "@/lib/shared/utils";
@@ -50,17 +50,9 @@ export function EmojiPickerField({
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="w-auto border-0 p-0">
-              <EmojiPicker
-                theme={Theme.LIGHT}
-                emojiStyle={EmojiStyle.NATIVE}
-                lazyLoadEmojis
-                skinTonesDisabled
-                width={320}
-                height={380}
-                searchPlaceholder="Buscar emoji"
-                previewConfig={{ showPreview: false }}
-                onEmojiClick={(emoji) => {
-                  onValueChange(emoji.emoji);
+              <EmojiPickerPanel
+                onSelect={(emoji) => {
+                  onValueChange(emoji);
                   setOpen(false);
                 }}
               />

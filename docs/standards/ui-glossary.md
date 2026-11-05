@@ -86,9 +86,10 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Retry | "Tentar novamente" |
 | Send for approval | "Enviar para aprovação" |
 | Approve | "Aprovar" |
-| Request changes | "Solicitar alteração" (button; the status stays "Alterações solicitadas"). In the portal feed the typed comment is sent as the guidance |
+| Request changes | "Solicitar alteração" (the name of the action, used as the accessible name; the button in the portal feed shows the one word "Alterar"; the status stays "Alterações solicitadas"). In the portal feed the typed comment is sent as the guidance |
 | Portal feed | "Feed" (menu item and breadcrumb of the brand page); filters "Todos", "Pendentes", "Aprovados", "Alterações solicitadas"; "Carregar mais"; "Ver os N comentários" / "Ocultar comentários"; field "Adicione um comentário…" with "Publicar" |
 | Missing art in a post | "Imagem ainda não enviada" |
+| Emoji picker | Button "Inserir emoji"; search "Buscar emoji"; category names in pt-BR ("Frequentes", "Rostos e pessoas", "Animais e natureza", "Comidas e bebidas", "Viagens e lugares", "Atividades", "Objetos", "Símbolos", "Bandeiras") |
 | Instagram preview video and story controls | "Reproduzir vídeo", "Pausar vídeo", "Ativar som", "Silenciar", "Posição do vídeo", "Pausar story", "Reproduzir story"; header menu items "Ver detalhes" and "Mostrar áreas cobertas" (the latter for Reel and Story only), button "Mais opções"; reply placeholder "Enviar mensagem" |
 | Time of a comment (social style) | `formatSocialTime` in `lib/shared/format.ts`: "agora", "N min", "N h", "N d", "N sem", then a short date such as "12 de nov" (with the year when it is not the current one); never "há 2 dias" in comment lists |
 | Approve a planning | Confirmation "Aprovar este planejamento?"; word "Planejamento" before the date in the post header |

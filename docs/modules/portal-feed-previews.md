@@ -226,6 +226,8 @@ Recommendations are already the behavior written above; change them here first i
 
 ## Implementation status
 
+2026-11-04 (emoji and reel): in a Reel the caption/audio group sits 1 rem from the bottom edge and the decorative rail 2.5 rem above it (they were 3 rem and 6 rem); the comment field of the feed has a working emoji picker (see [portal.md](portal.md#implementation-status)). Not tested in a browser.
+
 2026-11-04 (name removed): the profile name is no longer drawn in front of the caption nor as a bold line in the Reel frame; it stays in the post header and in the Reel audio line. Files: `instagram-caption.tsx`, `instagram-post.tsx`, `instagram-immersive-frame.tsx`, `instagram-post.test.ts`. Validation: see [portal.md](portal.md#implementation-status).
 
 2026-11-04 (feed review pass): a Reel keeps its caption and its audio line on one line each with an ellipsis; a Story caption comes back as one line with an ellipsis above the reply bar; the action icons are 24 px (the button style used to shrink them to 16 px) with tighter padding; "Aprovado pela equipe" is no longer drawn. Validation and what was not tested: see [portal.md](portal.md#implementation-status).

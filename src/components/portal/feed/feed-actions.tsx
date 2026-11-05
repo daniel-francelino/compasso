@@ -39,7 +39,7 @@ export function FeedActions({
   return (
     <div className="space-y-1 px-1">
       <div
-        className="flex flex-wrap items-center gap-1"
+        className="flex flex-nowrap items-center gap-1"
         role="toolbar"
         aria-label="Ações do conteúdo"
       >
@@ -68,6 +68,8 @@ export function FeedActions({
         </Button>
         {canDecide ? (
           <Button
+            aria-label="Solicitar alteração"
+            title="Solicitar alteração"
             type="button"
             variant="ghost"
             className="min-h-11 gap-1.5 px-2 [&_svg]:size-6"
@@ -75,7 +77,7 @@ export function FeedActions({
             onClick={askChanges}
           >
             <PencilLine aria-hidden="true" />
-            Solicitar alteração
+            Alterar
           </Button>
         ) : null}
       </div>

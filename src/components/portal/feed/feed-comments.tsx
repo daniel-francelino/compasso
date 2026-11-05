@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { Smile } from "lucide-react";
 import type { RefObject } from "react";
 import { toast } from "sonner";
+import { EmojiPopover } from "@/components/shared/admin/emoji-popover";
 import { PersonAvatar } from "@/components/shared/admin/person-avatar";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import { Textarea } from "@/components/shared/ui/textarea";
@@ -18,6 +18,8 @@ import { formatDateTime, formatSocialTime } from "@/lib/shared/format";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 import { cn } from "@/lib/shared/utils";
+
+const COMMENT_MAX = 4000;
 
 type Entry = {
   id: string;
@@ -89,6 +91,15 @@ export function FeedComments({
   const total = request.commentCount + decisionEntry.length;
   const text = draft.text.trim();
 
+  function insertEmoji(emoji: string) {
+    const field = fieldRef.current;
+    const start = field?.selectionStart ?? draft.text.length;
+    const end = field?.selectionEnd ?? start;
+    onTextChange(
+      (draft.text.slice(0, start) + emoji + draft.text.slice(end)).slice(0, COMMENT_MAX),
+    );
+  }
+
   async function publish() {
     if (busy || text === "") return;
     const result = await run(
@@ -147,13 +158,13 @@ export function FeedComments({
       ) : null}
       {canComment || canDecide ? (
         <div className="border-t border-border">
-          <div className="flex items-center gap-2 px-3">
-            <Smile className="size-6 shrink-0 text-foreground" aria-hidden="true" />
+          <div className="flex items-start gap-1 px-3">
+            <EmojiPopover disabled={busy} onSelect={insertEmoji} />
             <Textarea
               ref={fieldRef}
               rows={1}
-              maxLength={4000}
-              className="field-sizing-content max-h-32 min-h-11 flex-1 resize-none border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 pointer-coarse:min-h-11"
+              maxLength={COMMENT_MAX}
+              className="field-sizing-content max-h-32 min-h-11 flex-1 resize-none border-0 py-3 leading-5 bg-transparent px-0 shadow-none focus-visible:ring-0 pointer-coarse:min-h-11"
               placeholder="Adicione um comentário…"
               aria-label="Comentário ou orientação da alteração"
               aria-invalid={hint !== undefined}
