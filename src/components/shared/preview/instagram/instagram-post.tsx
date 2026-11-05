@@ -53,7 +53,7 @@ export function InstagramPost({
           <InstagramImmersiveFrame
             format={format}
             media={media}
-            caption={shownCaption}
+            caption={caption}
             profileName={profileName}
             brandLogoUrl={brandLogoUrl}
             showSafeZones={safeZones}

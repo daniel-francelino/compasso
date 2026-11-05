@@ -50,8 +50,14 @@ export function InstagramPostHeader({
       {hasMenu ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="icon" aria-label="Mais opções">
-              <Ellipsis className="size-5" aria-hidden="true" />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="[&_svg]:size-6"
+              aria-label="Mais opções"
+            >
+              <Ellipsis aria-hidden="true" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

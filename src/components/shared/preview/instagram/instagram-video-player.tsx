@@ -124,7 +124,7 @@ export function InstagramVideoPlayer({
           variant="secondary"
           size="icon"
           className={cn(
-            "absolute size-9 rounded-full bg-ink/60 text-ivory hover:bg-ink/80",
+            "absolute size-9 rounded-full bg-ink/60 text-ivory hover:bg-ink/80 [&_svg]:size-5",
             mutePosition[variant],
           )}
           aria-label={muted ? "Ativar som" : "Silenciar"}
@@ -135,7 +135,7 @@ export function InstagramVideoPlayer({
         </Button>
       )}
       {variant === VideoVariant.Reel ? (
-        <div className="absolute inset-x-0 bottom-0 h-4 focus-within:ring-2 focus-within:ring-ring">
+        <div className="absolute inset-x-0 bottom-0 h-6 focus-within:ring-2 focus-within:ring-ring">
           <div className="absolute inset-x-0 bottom-0 h-0.5 bg-ivory/30" aria-hidden="true">
             <div className="h-full bg-ivory" style={{ width: `${fraction * 100}%` }} />
           </div>

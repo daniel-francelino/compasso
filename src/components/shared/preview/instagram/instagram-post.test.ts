@@ -29,10 +29,18 @@ const render = (format: ContentFormat, media: PreviewMedia[], caption: string): 
   );
 
 describe("instagram post", () => {
-  it("never draws a caption for a story", () => {
-    const markup = render(ContentFormat.Story, [video], "Legenda que não aparece");
-    expect(markup).not.toContain("Legenda que não aparece");
+  it("draws a story caption once, on a single line inside the frame", () => {
+    const markup = render(ContentFormat.Story, [video], "Legenda do story");
+    expect(markup.split("Legenda do story")).toHaveLength(2);
+    expect(markup).toContain("truncate text-sm text-ivory");
     expect(markup).not.toContain("Texto da publicação");
+  });
+
+  it("keeps the reel caption and audio line on one line", () => {
+    const markup = render(ContentFormat.Reel, [video], "Legenda do reel");
+    expect(markup).toContain("block truncate text-xs");
+    expect(markup).toContain('truncate">Áudio original');
+    expect(markup).not.toContain("line-clamp-2");
   });
 
   it("draws the caption for a feed post", () => {

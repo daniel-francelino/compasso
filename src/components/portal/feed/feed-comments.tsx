@@ -153,7 +153,7 @@ export function FeedComments({
               ref={fieldRef}
               rows={1}
               maxLength={4000}
-              className="min-h-11 flex-1 resize-none border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 pointer-coarse:min-h-11"
+              className="field-sizing-content max-h-32 min-h-11 flex-1 resize-none border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 pointer-coarse:min-h-11"
               placeholder="Adicione um comentário…"
               aria-label="Comentário ou orientação da alteração"
               aria-invalid={hint !== undefined}

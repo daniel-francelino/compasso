@@ -36,7 +36,8 @@ import { cn } from "@/lib/shared/utils";
 
 const railIcons = [Heart, MessageCircle, Send, Bookmark, Ellipsis];
 const zoneClass = "pointer-events-none absolute border border-dashed border-ivory bg-ink/25";
-const headerButton = "pointer-events-auto size-8 text-ivory hover:bg-ink/40 hover:text-ivory";
+const headerButton =
+  "pointer-events-auto size-8 text-ivory hover:bg-ink/40 hover:text-ivory [&_svg]:size-5";
 
 function SafeZones({ story }: { story: boolean }) {
   const { story: s, reel: r } = instagramSafeZones;
@@ -226,6 +227,11 @@ export function InstagramImmersiveFrame({
                 Arquivo {index + 1} de {Math.max(items.length, 1)}
               </span>
             </div>
+            {caption.trim() === "" ? null : (
+              <p className="pointer-events-none absolute inset-x-3 bottom-16 truncate text-sm text-ivory drop-shadow">
+                {caption}
+              </p>
+            )}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center gap-3 text-ivory"
@@ -264,10 +270,10 @@ export function InstagramImmersiveFrame({
               aria-hidden="true"
             >
               <span className="block truncate text-sm font-semibold">{name}</span>
-              <span className="line-clamp-2 block text-xs">{caption}</span>
-              <span className="flex items-center gap-1 text-xs">
-                <Music2 className="size-3" />
-                Áudio original · {name}
+              <span className="block truncate text-xs">{caption}</span>
+              <span className="flex min-w-0 items-center gap-1 text-xs">
+                <Music2 className="size-3 shrink-0" />
+                <span className="truncate">Áudio original · {name}</span>
               </span>
             </div>
             <div

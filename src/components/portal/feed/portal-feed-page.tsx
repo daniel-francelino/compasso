@@ -58,10 +58,14 @@ export function PortalFeedPage({ brandId }: { brandId: string }) {
   return (
     <div className="space-y-6">
       <PortalBrandHeader brandId={brandId} />
-      <Tabs value={list.status} onValueChange={list.setStatus}>
-        <TabsList className="h-auto flex-wrap">
+      <Tabs value={list.status} onValueChange={list.setStatus} className="flex justify-center">
+        <TabsList className="h-auto flex-wrap justify-center pointer-coarse:h-auto">
           {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="min-h-11">
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="h-8 gap-1 px-2.5 py-0 text-xs pointer-coarse:h-11 pointer-coarse:px-3 [&_svg]:size-3.5"
+            >
               <tab.icon aria-hidden="true" />
               {tab.label}
             </TabsTrigger>

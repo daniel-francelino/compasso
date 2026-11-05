@@ -57,7 +57,7 @@ export function InstagramFeedMedia({
         onKeyDown={many ? onKeyDown : undefined}
         onTouchStart={many ? onTouchStart : undefined}
         onTouchEnd={many ? onTouchEnd : undefined}
-        className="relative overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="relative touch-pan-y overflow-hidden bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         style={{ aspectRatio: previewFrameRatio(Platform.Instagram, format, items[0]) }}
       >
         {current === undefined ? (
@@ -89,7 +89,7 @@ export function InstagramFeedMedia({
                 type="button"
                 variant="secondary"
                 size="icon"
-                className="absolute left-2 top-1/2 size-11 -translate-y-1/2"
+                className="absolute left-2 top-1/2 size-11 -translate-y-1/2 [&_svg]:size-6"
                 aria-label="Arquivo anterior"
                 onClick={() => move(-1)}
               >
@@ -101,7 +101,7 @@ export function InstagramFeedMedia({
                 type="button"
                 variant="secondary"
                 size="icon"
-                className="absolute right-2 top-1/2 size-11 -translate-y-1/2"
+                className="absolute right-2 top-1/2 size-11 -translate-y-1/2 [&_svg]:size-6"
                 aria-label="Próximo arquivo"
                 onClick={() => move(1)}
               >

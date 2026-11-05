@@ -37,7 +37,7 @@ export function FeedActions({
   }
 
   return (
-    <div className="space-y-1 px-2">
+    <div className="space-y-1 px-1">
       <div
         className="flex flex-wrap items-center gap-1"
         role="toolbar"
@@ -47,46 +47,40 @@ export function FeedActions({
           <Button
             type="button"
             variant="ghost"
-            className="min-h-11 gap-2 disabled:opacity-100"
+            className="min-h-11 gap-1.5 px-2 [&_svg]:size-6 disabled:opacity-100"
             aria-pressed={approved}
             disabled={!canDecide || decision.busy}
             onClick={() => setConfirming(true)}
           >
-            <Heart
-              className={cn("size-6", approved && "fill-current text-violet")}
-              aria-hidden="true"
-            />
+            <Heart className={cn(approved && "fill-current text-violet")} aria-hidden="true" />
             {approved ? "Aprovado" : "Aprovar"}
           </Button>
         ) : null}
         <Button
           type="button"
           variant="ghost"
-          className="min-h-11 gap-2"
+          className="min-h-11 gap-1.5 px-2 [&_svg]:size-6"
           aria-label={`Comentários (${request.commentCount})`}
           onClick={onToggleComments}
         >
-          <MessageCircle className="size-6" aria-hidden="true" />
+          <MessageCircle aria-hidden="true" />
           {request.commentCount}
         </Button>
         {canDecide ? (
           <Button
             type="button"
             variant="ghost"
-            className="min-h-11 gap-2"
+            className="min-h-11 gap-1.5 px-2 [&_svg]:size-6"
             disabled={decision.busy}
             onClick={askChanges}
           >
-            <PencilLine className="size-6" aria-hidden="true" />
+            <PencilLine aria-hidden="true" />
             Solicitar alteração
           </Button>
         ) : null}
       </div>
       {approved && request.decidedByName ? (
         <p className="px-1 text-xs text-muted-foreground">Aprovado por {request.decidedByName}</p>
-      ) : null}
-      {approved && request.decidedOnBehalf ? (
-        <p className="px-1 text-xs text-muted-foreground">Aprovado pela equipe</p>
       ) : null}
       {pending && !request.canDecide ? (
         <p className="px-1 text-xs text-muted-foreground">
