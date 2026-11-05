@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { UnavailableSlide, type PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Button } from "@/components/shared/ui/button";
 import { useInView } from "@/hooks/shared/use-in-view";
+import { useMediaRetry } from "@/hooks/shared/use-media-retry";
 import { usePrefersReducedMotion } from "@/hooks/shared/use-prefers-reduced-motion";
 import { SEEK_STEPS, VIDEO_VISIBLE_THRESHOLD } from "@/lib/shared/preview/instagram";
 import { cn } from "@/lib/shared/utils";
@@ -49,7 +50,8 @@ export function InstagramVideoPlayer({
   const [intent, setIntent] = useState<Intent>(Intent.Auto);
   const [internalMuted, setInternalMuted] = useState(true);
   const [fraction, setFraction] = useState(0);
-  const [failed, setFailed] = useState(false);
+  const retry = useMediaRetry(item);
+  const resumeAt = useRef(0);
   const story = variant === VideoVariant.Story;
   const muted = mutedProp ?? internalMuted;
   const selfPlaying = inView && intent !== Intent.Pause && (intent === Intent.Play || !reduced);
@@ -69,13 +71,14 @@ export function InstagramVideoPlayer({
       return;
     }
     void video.play().catch(() => setIntent(Intent.Pause));
-  }, [playing]);
+  }, [playing, item.url]);
 
-  if (failed || item.url === null) return <UnavailableSlide />;
+  if (retry.failed || item.url === null) return <UnavailableSlide />;
 
   const onTimeUpdate = () => {
     const video = videoRef.current;
     if (video === null || !(video.duration > 0)) return;
+    resumeAt.current = video.currentTime;
     const next = video.currentTime / video.duration;
     setFraction(next);
     onProgress?.(next);
@@ -98,7 +101,12 @@ export function InstagramVideoPlayer({
         preload="metadata"
         className="size-full object-cover"
         aria-label={item.altText ?? `Vídeo ${position} de ${total}`}
-        onError={() => setFailed(true)}
+        onError={retry.onError}
+        onLoadedData={retry.onLoad}
+        onLoadedMetadata={() => {
+          const video = videoRef.current;
+          if (video !== null && resumeAt.current > 0) video.currentTime = resumeAt.current;
+        }}
         onTimeUpdate={onTimeUpdate}
         onEnded={onEnded}
       />

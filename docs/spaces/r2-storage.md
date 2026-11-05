@@ -47,7 +47,7 @@ Rules that apply at every point:
 2. Before signing a read, check **at that moment**: internal user with `media.view` and brand access (or `site.view` for site media); external user with `portal.view`, a brand link and a shared revision that references that exact version.
 3. `createUploadTarget` only after the upload session exists, and the session creation checks `media.upload` and the brand.
 4. `remove` only for records the person may delete, and never for files referenced by approved revisions.
-5. Signed URLs are short: **5 minutes** for internal users, **2 minutes** for external users. A signed URL already issued remains valid until it expires, even if access is revoked afterwards; this is accepted and documented.
+5. Signed URLs are short: **5 minutes** for internal users, **2 minutes** for external users. A signed URL already issued remains valid until it expires, even if access is revoked afterwards; this is accepted and documented. The preview and display URLs of the client portal also carry `response-cache-control: private, max-age=<lifetime>` so the browser can reuse a file while its URL lives (2026-11-04); the lifetime itself did not change.
 
 ## 5. Limits the bucket does not enforce
 

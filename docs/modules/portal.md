@@ -49,7 +49,9 @@ The brand page is a single-column feed in the style of a social network. It repl
 
 **What it lists.** Every content with a revision shared with the person, in **any** state: waiting for a decision, approved, changes requested, superseded. Cancelled requests never appear (same as `portal_list_approvals`). One post per content, showing its latest shared request.
 
-**Order.** Newest first. The sort key is the planned publication date of the content (the latest `planned_at` among its channels), descending; contents without a planned date are ordered by the date the request was sent (`requested_at`), descending, and mixed into the same list by that date. Server-side (`portal_list_approvals`), paginated by 20 (UI-1) with "Carregar mais" at the end of the list. A compact, centered filter bar above the feed offers "Todos" (default), "Pendentes", "Aprovados", "Alterações solicitadas" (URL param `status`, resets the list). A content with several channel rows shows one post with a chip per channel ("Instagram · Carrossel"), the earliest planned date first.
+**Order.** Newest first. The sort key is the planned publication date of the content (the latest `planned_at` among its channels), descending; contents without a planned date are ordered by the date the request was sent (`requested_at`), descending, and mixed into the same list by that date. Server-side (`portal_list_approvals`), paginated by 20 (UI-1) and loaded by scrolling (see "Loading and performance"). A compact, centered filter bar above the feed offers "Todos" (default), "Pendentes", "Aprovados", "Alterações solicitadas" (URL param `status`, resets the list). A content with several channel rows shows one post with a chip per channel ("Instagram · Carrossel"), the earliest planned date first.
+
+**Loading and performance (decided 2026-11-04).** The list is **virtualized** with the window scroll (`@tanstack/react-virtual`): only the posts near the screen are mounted, so the images, videos and timers of the others are released. The height of a post is measured after it renders (comments open, a Story, a carousel). The next page of 20 contents loads **by itself** when the last mounted post is within three posts of the end of the loaded list; a post skeleton shows at the end while it loads and a "Tentar novamente" button if it fails. The "Carregar mais" button no longer exists. At the end of the list the feed says "Você viu todos os conteúdos.". Scrolling far and coming back keeps the order and the data but not the local state of a post (open thread, chosen channel chip, video position, Story progress); the typed comment is kept (draft). Media URLs and their expiry are handled as described in [portal-feed-previews.md](portal-feed-previews.md#media-loading-cache-and-expiry-decided-2026-11-04).
 
 **Post anatomy (top to bottom).**
 
@@ -179,7 +181,8 @@ Starting roles: `external_approver` (all three) and `external_commenter` (`porta
 - "Solicitar alteração" with typed text sends the change request in one click, using that text as the comment; with an empty or too short field it sends nothing and focuses the field.
 - The heart asks for confirmation, records an approval only once and cannot be toggled off.
 - A member without `can_decide` sees the feed and can comment, but has no heart and no "Solicitar alteração".
-- The feed works at 360 px and by keyboard only, with paginated loading.
+- The feed works at 360 px and by keyboard only. It loads the next page by itself near the end, keeps only the posts near the screen mounted, and shows a retry button when a page fails.
+- A preview that was visible a moment ago is not replaced by "Prévia indisponível" only because its URL expired: the feed asks for a new URL first.
 
 ## Open decisions
 

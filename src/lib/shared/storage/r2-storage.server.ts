@@ -67,12 +67,13 @@ export const r2ServerStorage = (config: R2Config): ServerStorage => {
       }
     },
 
-    async signUrls(paths, seconds, downloadName) {
+    async signUrls(paths, seconds, downloadName, options) {
       const keys = [...new Set(paths.filter((key): key is string => !!key))];
       const urls = new Map<string, string>();
-      const extra: Record<string, string> = downloadName
-        ? { "response-content-disposition": dispositionOf(downloadName) }
-        : {};
+      const extra: Record<string, string> = {
+        ...(downloadName ? { "response-content-disposition": dispositionOf(downloadName) } : {}),
+        ...(options?.cache ? { "response-cache-control": `private, max-age=${seconds}` } : {}),
+      };
       await Promise.all(
         keys.map(async (key) => {
           try {

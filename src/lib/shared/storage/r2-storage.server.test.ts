@@ -34,6 +34,15 @@ describe("r2 presigning (offline)", () => {
     );
   });
 
+  it("marks a read URL as privately cacheable for its own lifetime when asked", async () => {
+    const cached = await storage.signUrls(["k1"], 120, undefined, { cache: true });
+    const plain = await storage.signUrls(["k1"], 120);
+    expect(new URL(cached.get("k1") ?? "").searchParams.get("response-cache-control")).toBe(
+      "private, max-age=120",
+    );
+    expect(new URL(plain.get("k1") ?? "").searchParams.has("response-cache-control")).toBe(false);
+  });
+
   it("never lets a file name break out of the header", async () => {
     const urls = await storage.signUrls(["k1"], 60, 'evil"\r\nSet-Cookie: x=1.jpg');
     const disposition =

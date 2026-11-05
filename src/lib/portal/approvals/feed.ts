@@ -24,3 +24,16 @@ export const feedPostKind = (request: PortalRequest): FeedPostKind => {
   if (request.media.length === 0) return FeedPostKind.CaptionOnly;
   return hasCaption(request) ? FeedPostKind.Full : FeedPostKind.MediaOnly;
 };
+
+export const FEED_PREFETCH_POSTS = 3;
+
+export const shouldLoadMore = (state: {
+  lastVisibleIndex: number;
+  loaded: number;
+  hasNextPage: boolean;
+  fetching: boolean;
+  failed: boolean;
+}): boolean => {
+  if (!state.hasNextPage || state.fetching || state.failed) return false;
+  return state.lastVisibleIndex >= state.loaded - FEED_PREFETCH_POSTS;
+};

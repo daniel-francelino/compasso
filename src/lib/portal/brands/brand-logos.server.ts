@@ -15,6 +15,8 @@ export const portalBrandLogoUrls = async (
   const signed = await storage.signUrls(
     data.map((row) => row.thumb_key),
     EXTERNAL_URL_SECONDS,
+    undefined,
+    { cache: true },
   );
   for (const row of data) {
     const url = signed.get(row.thumb_key);

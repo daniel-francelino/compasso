@@ -1,10 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 import { signPortalPreviewMedia } from "@/lib/portal/approvals/portal.functions";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
+import { PORTAL_URL_GC_MS, PORTAL_URL_STALE_MS } from "@/lib/shared/media/limits";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
-const STALE_MS = 60_000;
+const BATCH = 50;
 
 export const usePortalPreviewUrls = (requests: readonly PortalRequest[]) => {
   const sources = requests
@@ -14,22 +16,27 @@ export const usePortalPreviewUrls = (requests: readonly PortalRequest[]) => {
       versionIds: request.media.map((item) => item.versionId),
     }));
 
-  return useQuery({
+  const query = useQuery({
     queryKey: QueryKey.Portal.previewUrls(sources),
     queryFn: async () => {
       const batches: Array<typeof sources> = [];
-      for (let index = 0; index < sources.length; index += 50) {
-        batches.push(sources.slice(index, index + 50));
+      for (let index = 0; index < sources.length; index += BATCH) {
+        batches.push(sources.slice(index, index + BATCH));
       }
       const results = await Promise.all(
         batches.map(
-          async (requests) =>
-            unwrapResult(await signPortalPreviewMedia({ data: { requests } })).urls,
+          async (batch) =>
+            unwrapResult(await signPortalPreviewMedia({ data: { requests: batch } })).urls,
         ),
       );
-      return Object.assign({}, ...results);
+      return Object.assign({}, ...results) as Record<string, string>;
     },
     enabled: sources.length > 0,
-    staleTime: STALE_MS,
+    staleTime: PORTAL_URL_STALE_MS,
+    gcTime: PORTAL_URL_GC_MS,
   });
+  const { refetch } = query;
+  const refresh = useCallback(async () => (await refetch()).data, [refetch]);
+
+  return { urls: query.data, refresh };
 };

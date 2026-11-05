@@ -61,6 +61,19 @@ Mapping from our constants (`Platform.Instagram` with `ContentFormat`): `image`,
 
 **Feed actions on immersive formats.** In a Reel or a Story frame the real right rail has like, comment, share, save. Our actions (heart "Aprovar", comment, "Solicitar alteração") are **not drawn inside the frame**: they stay in the post action bar below the frame, exactly as on the other formats, so the same buttons, labels and rules apply to every format ([portal.md](portal.md#feed-decided-2026-11-04)). The right rail is drawn as non-interactive decoration (outlined icons, `aria-hidden`) so the proportions and the covered area are faithful, and it carries no counts.
 
+## Media loading, cache and expiry (decided 2026-11-04)
+
+The feed shows many images and videos, and signed URLs for external users last **2 minutes** ([../spaces/r2-storage.md](../spaces/r2-storage.md), rule 5, unchanged). A new signature produces a different URL, so a cached or remounted post could hold an expired URL and a failed load used to be recorded as "Prévia indisponível" for good. The rules:
+
+| Part | Rule |
+|---|---|
+| Browser cache | The preview and display URLs carry `response-cache-control: private, max-age=<lifetime of the URL>` (signed in), so the browser may reuse a file while its URL lives. Originals for download are not marked |
+| URL manager | One hook, `usePortalPreviewUrls` (`hooks/portal/`), owns the signing of a post. Its data is fresh for 90 s (`PORTAL_URL_STALE_MS`) and is dropped after 120 s without observers (`PORTAL_URL_GC_MS`), so an expired URL is never shown from the cache; it also returns `refresh()` |
+| Failure | A first load error of an image or video asks for new URLs **once**. Only if the new URL also fails, or comes back the same, the slot shows "Prévia indisponível". A new URL clears an earlier failure. A video resumes at the second where it stopped |
+| Brand logo | One query per page (`usePortalBrand`), refreshed every 90 s while the page is open; the posts receive the logo as a prop (no query per post) |
+| Memory | The virtual list unmounts the posts far from the screen, which releases their `<video>` and `<img>` elements |
+| Not done, needs a decision | Longer URLs (would change r2-storage rule 5); a same-origin proxy (the Vercel response limit is 4.5 MB and it costs bandwidth); keeping the files in the browser's Cache Storage across URL changes (needs read CORS on the R2 bucket, which was not verified) |
+
 ## Video player (reverse-engineered, decided 2026-11-04)
 
 Instagram does not use the browser's native video controls. The rules below are what the app does, recorded as targets for the capture checklist.
@@ -143,7 +156,7 @@ The actions are the same as for any post (heart "Aprovar", comment, "Solicitar a
 | Age or date | The planned publication date and zone, in the same wording as the date line of the feed ("Publicação: …"); never "há 2 d" because the post is not published yet |
 | Location | Not stored today. Not drawn (open decision: whether a location field is added to the channel row) |
 | Collab and "Patrocinado" | Not drawn (no data) |
-| Overflow "⋯" | A dropdown menu (decided 2026-11-04) with "Ver detalhes" (opens the review; a video swallows the click on its surface, so this is the way in for video posts) and, for Reel and Story only, the checkbox item "Mostrar áreas cobertas". Without a handler it stays a decoration |
+| Overflow "⋯" | A dropdown menu (decided 2026-11-04) with "Ver detalhes" (icon `Maximize2`; opens the review; a video swallows the click on its surface, so this is the way in for video posts) and, for Reel and Story only, the checkbox item "Mostrar áreas cobertas" (icon `SquareDashed`). Without a handler it stays a decoration |
 | Tagged people | Not stored; not drawn |
 
 ## Where each layout is used

@@ -2,6 +2,8 @@ export type UploadTarget = { path: string; url: string };
 
 export type StorageResult = { ok: true } | { ok: false; message: string };
 
+export type SignOptions = { cache?: boolean };
+
 export type ObjectInfo = { size: number; contentType: string | null };
 
 export interface ServerStorage {
@@ -10,6 +12,7 @@ export interface ServerStorage {
     paths: (string | null | undefined)[],
     seconds: number,
     downloadName?: string,
+    options?: SignOptions,
   ): Promise<Map<string, string>>;
   stat(path: string): Promise<ObjectInfo | null>;
   sha256(path: string): Promise<string | null>;

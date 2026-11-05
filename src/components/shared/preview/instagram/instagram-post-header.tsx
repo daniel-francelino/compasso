@@ -1,4 +1,4 @@
-import { Ellipsis } from "lucide-react";
+import { Ellipsis, Maximize2, SquareDashed } from "lucide-react";
 import type { ReactNode } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shared/ui/avatar";
 import { Button } from "@/components/shared/ui/button";
@@ -62,13 +62,17 @@ export function InstagramPostHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {menu.onOpen ? (
-              <DropdownMenuItem onSelect={() => menu.onOpen?.()}>Ver detalhes</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => menu.onOpen?.()}>
+                <Maximize2 aria-hidden="true" />
+                Ver detalhes
+              </DropdownMenuItem>
             ) : null}
             {menu.safeZones ? (
               <DropdownMenuCheckboxItem
                 checked={menu.safeZones.checked}
                 onCheckedChange={menu.safeZones.onCheckedChange}
               >
+                <SquareDashed aria-hidden="true" />
                 Mostrar áreas cobertas
               </DropdownMenuCheckboxItem>
             ) : null}

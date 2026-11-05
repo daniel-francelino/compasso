@@ -315,6 +315,8 @@ export const signPortalMedia = createServerFn({ method: "POST" })
     const signed = await storage.signUrls(
       parsed.list.map(keyOf).filter((key): key is string => key !== null),
       EXTERNAL_URL_SECONDS,
+      undefined,
+      { cache: data.variant !== MediaVariant.Original },
     );
     const urls: Record<string, string> = {};
     for (const row of parsed.list) {
@@ -354,6 +356,8 @@ export const signPortalPreviewMedia = createServerFn({ method: "POST" })
     const signed = await storage.signUrls(
       media.map(keyOf).filter((key): key is string => key !== null),
       EXTERNAL_URL_SECONDS,
+      undefined,
+      { cache: true },
     );
     const urls: Record<string, string> = {};
     for (const row of media) {

@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
   Clock,
   ExternalLink,
@@ -15,12 +14,10 @@ import { IconTile } from "@/components/shared/admin/icon-tile";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { PlatformIcon } from "@/components/shared/preview/platform-icon";
 import { Skeleton } from "@/components/shared/ui/skeleton";
-import { getPortalBrand } from "@/lib/portal/approvals/portal.functions";
+import { usePortalBrand } from "@/hooks/portal/use-portal-brand";
 import type { PortalBrandProfile } from "@/lib/portal/approvals/types";
 import type { Platform } from "@/lib/shared/enums";
 import { platformLabels } from "@/lib/shared/labels";
-import { QueryKey } from "@/lib/shared/query-keys";
-import { unwrapResult } from "@/lib/shared/result-client";
 
 type Detail = { icon: LucideIcon; label: string; value: string | null };
 
@@ -75,10 +72,7 @@ function ChannelList({ brand }: { brand: PortalBrandProfile }) {
 }
 
 export function PortalBrandHeader({ brandId }: { brandId: string }) {
-  const query = useQuery({
-    queryKey: QueryKey.Portal.brand(brandId),
-    queryFn: async () => unwrapResult(await getPortalBrand({ data: { brandId } })).brand,
-  });
+  const query = usePortalBrand(brandId);
 
   if (query.isPending) return <Skeleton className="h-28 w-full rounded-2xl" />;
   if (query.isError) return null;

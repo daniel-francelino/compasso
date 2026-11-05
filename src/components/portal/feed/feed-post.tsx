@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { PortalApprovalDialog } from "@/components/portal/approvals/portal-approval-dialog";
 import { PlanRequestSummary } from "@/components/portal/approvals/plan-request-summary";
@@ -14,7 +13,6 @@ import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { Button } from "@/components/shared/ui/button";
 import { useDecisionDraft } from "@/hooks/portal/use-decision-draft";
 import { usePortalPreviewUrls } from "@/hooks/portal/use-portal-preview-urls";
-import { getPortalBrand } from "@/lib/portal/approvals/portal.functions";
 import { FeedPostKind, channelCaption, feedPostKind } from "@/lib/portal/approvals/feed";
 import type { PortalChannel, PortalRequest } from "@/lib/portal/approvals/types";
 import { ApprovalStage, type ContentFormat, Platform } from "@/lib/shared/enums";
@@ -22,8 +20,6 @@ import { formatInZone } from "@/lib/shared/format";
 import { approvalStageLabels, contentFormatLabels, platformLabels } from "@/lib/shared/labels";
 import { kindOfMime } from "@/lib/shared/media/limits";
 import { mediaUnavailable } from "@/lib/shared/preview/media-urls";
-import { QueryKey } from "@/lib/shared/query-keys";
-import { unwrapResult } from "@/lib/shared/result-client";
 
 const DEFAULT_ZONE = "America/Sao_Paulo";
 const CHANGES_HINT = "Escreva o que precisa mudar para solicitar a alteração.";
@@ -38,6 +34,7 @@ const byPlannedDate = (a: PortalChannel, b: PortalChannel): number => {
 const toPreviewMedia = (
   request: PortalRequest,
   urls: Record<string, string> | undefined,
+  refresh: () => Promise<Record<string, string> | undefined>,
 ): PreviewMedia[] =>
   request.media.map((item) => ({
     versionId: item.versionId,
@@ -47,6 +44,7 @@ const toPreviewMedia = (
     height: item.height,
     url: urls?.[item.versionId] ?? null,
     unavailable: mediaUnavailable(urls, item.versionId),
+    refresh,
   }));
 
 function PublicationDate({ request, channel }: { request: PortalRequest; channel: PortalChannel }) {
@@ -60,22 +58,26 @@ function PublicationDate({ request, channel }: { request: PortalRequest; channel
   );
 }
 
-export function FeedPost({ request, brandId }: { request: PortalRequest; brandId: string }) {
+export function FeedPost({
+  request,
+  brandId,
+  logoUrl,
+}: {
+  request: PortalRequest;
+  brandId: string;
+  logoUrl: string | null;
+}) {
   const [dialog, setDialog] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [hint, setHint] = useState<string | undefined>();
   const draft = useDecisionDraft(request.id);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const brand = useQuery({
-    queryKey: QueryKey.Portal.brand(brandId),
-    queryFn: async () => unwrapResult(await getPortalBrand({ data: { brandId } })).brand,
-  });
-  const urls = usePortalPreviewUrls([request]);
+  const { urls, refresh } = usePortalPreviewUrls([request]);
   const kind = feedPostKind(request);
   const rows = [...request.channels].sort(byPlannedDate);
   const [activeRow, setActiveRow] = useState(rows[0]?.rowId ?? "");
   const channel = rows.find((row) => row.rowId === activeRow) ?? rows[0];
-  const logo = brand.data?.logoUrl ?? null;
+  const logo = logoUrl;
 
   const needText = () => {
     setHint(CHANGES_HINT);
@@ -124,7 +126,7 @@ export function FeedPost({ request, brandId }: { request: PortalRequest; brandId
           />
           <OpenOnClick onOpen={() => setDialog(true)}>
             <div className="px-3 pb-3">
-              <PlanRequestSummary request={request} urls={urls.data} />
+              <PlanRequestSummary request={request} urls={urls} />
             </div>
           </OpenOnClick>
           {actions}
@@ -132,7 +134,7 @@ export function FeedPost({ request, brandId }: { request: PortalRequest; brandId
         </div>
       );
     }
-    const media = kind === FeedPostKind.CaptionOnly ? [] : toPreviewMedia(request, urls.data);
+    const media = kind === FeedPostKind.CaptionOnly ? [] : toPreviewMedia(request, urls, refresh);
     const caption = channelCaption(request, channel);
     if (channel.platform === Platform.Instagram) {
       return (

@@ -40,6 +40,8 @@ export const QUOTA_ALERT_RATIO = 0.95;
 
 export const INTERNAL_URL_SECONDS = 300;
 export const EXTERNAL_URL_SECONDS = 120;
+export const PORTAL_URL_STALE_MS = 90_000;
+export const PORTAL_URL_GC_MS = EXTERNAL_URL_SECONDS * 1000;
 
 export const DEFAULT_LIMITS_MB = { image: 25, video: 100, document: 50 } as const;
 

@@ -1,6 +1,6 @@
 import { FileText } from "lucide-react";
-import { useState } from "react";
 import { Skeleton } from "@/components/shared/ui/skeleton";
+import { useMediaRetry } from "@/hooks/shared/use-media-retry";
 import { MediaKind } from "@/lib/shared/media/limits";
 
 export type PreviewMedia = {
@@ -9,6 +9,7 @@ export type PreviewMedia = {
   altText: string | null;
   url: string | null;
   unavailable?: boolean | undefined;
+  refresh?: (() => Promise<Record<string, string> | undefined>) | undefined;
   width?: number | null | undefined;
   height?: number | null | undefined;
 };
@@ -31,14 +32,16 @@ function ImageSlide({
   position: number;
   total: number;
 }) {
-  const [failed, setFailed] = useState(false);
-  if (failed || item.url === null) return <UnavailableSlide />;
+  const retry = useMediaRetry(item);
+  if (retry.failed || item.url === null) return <UnavailableSlide />;
   return (
     <img
       src={item.url}
       alt={item.altText ?? `Imagem ${position} de ${total}`}
       className="size-full object-cover"
-      onError={() => setFailed(true)}
+      decoding="async"
+      onError={retry.onError}
+      onLoad={retry.onLoad}
     />
   );
 }
@@ -52,8 +55,8 @@ function VideoSlide({
   position: number;
   total: number;
 }) {
-  const [failed, setFailed] = useState(false);
-  if (failed || item.url === null) return <UnavailableSlide />;
+  const retry = useMediaRetry(item);
+  if (retry.failed || item.url === null) return <UnavailableSlide />;
   return (
     <video
       src={item.url}
@@ -61,7 +64,8 @@ function VideoSlide({
       preload="metadata"
       className="size-full object-contain"
       aria-label={item.altText ?? `Vídeo ${position} de ${total}`}
-      onError={() => setFailed(true)}
+      onError={retry.onError}
+      onLoadedData={retry.onLoad}
     />
   );
 }

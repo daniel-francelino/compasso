@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { FeedPostKind, channelCaption, feedPostKind } from "@/lib/portal/approvals/feed";
+import {
+  FEED_PREFETCH_POSTS,
+  FeedPostKind,
+  channelCaption,
+  feedPostKind,
+  shouldLoadMore,
+} from "@/lib/portal/approvals/feed";
 import type { PortalChannel, PortalMedia, PortalRequest } from "@/lib/portal/approvals/types";
 import { ApprovalRequestStatus, ApprovalStage } from "@/lib/shared/enums";
 
@@ -87,5 +93,24 @@ describe("channelCaption", () => {
   it("falls back to the base caption", () => {
     const row = channel({ caption: "  " });
     expect(channelCaption(request({ caption: "Base", channels: [row] }), row)).toBe("Base");
+  });
+});
+
+describe("shouldLoadMore", () => {
+  const base = { loaded: 20, hasNextPage: true, fetching: false, failed: false };
+
+  it("loads the next page when the last visible post is near the end", () => {
+    expect(shouldLoadMore({ ...base, lastVisibleIndex: 20 - FEED_PREFETCH_POSTS })).toBe(true);
+    expect(shouldLoadMore({ ...base, lastVisibleIndex: 19 })).toBe(true);
+  });
+
+  it("waits while the reader is still far from the end", () => {
+    expect(shouldLoadMore({ ...base, lastVisibleIndex: 5 })).toBe(false);
+  });
+
+  it("does not load without a next page, while fetching or after a failure", () => {
+    expect(shouldLoadMore({ ...base, lastVisibleIndex: 19, hasNextPage: false })).toBe(false);
+    expect(shouldLoadMore({ ...base, lastVisibleIndex: 19, fetching: true })).toBe(false);
+    expect(shouldLoadMore({ ...base, lastVisibleIndex: 19, failed: true })).toBe(false);
   });
 });
