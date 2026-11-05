@@ -141,15 +141,15 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 
 ## Phase F — Client feedback (monthly survey)
 
-> Specified 2026-11-05: [modules/feedback.md](modules/feedback.md). Decide the open decisions of its section 14 (O1 and O2 first) before F-02. The registries receive the names of its section 11 in F-02, not before.
+> Specified 2026-11-05: [modules/feedback.md](modules/feedback.md). O1 and O2 took the recommended answers. The registries received the names of its section 11 in F-02.
 
 | ID | Task | Read | Done when | Status |
 |---|---|---|---|---|
 | F-01 | Documents first: the module document, the index links and the portal note | feedback, base.md 9.1 | `check:docs` passes | done (2026-11-05) |
-| F-02 | Migration `feedback` (table, CHECKs, guard trigger, RLS, actions, notification kind, audit actions, policy group), the SQL functions of section 10 and pgTAP `NN_feedback`; add the names of section 11 to every registry and run `db:types` | feedback, data-model, functions | `db:verify` and `check:consistency` pass; the matrix of section 13 is tested | todo |
-| F-03 | Server side: `lib/shared/feedback` (questions, schemas, limits, tone, with Vitest), server functions of both spaces, `errors.ts`, `AuditAction`, `NotificationKind`, `Action`, keys | feedback | typecheck, lint and Vitest pass | todo |
-| F-04 | Portal: prompt hook, single-step modal, banner in the brand feed, local draft | feedback, portal | acceptance criteria "Client" | todo |
-| F-05 | Manager: `/admin/marketing/feedback` with filters, summary, cards, pending view, detail sheet and menu item; policies screen switch | feedback, admin-layout-and-standards | acceptance criteria "Manager" | todo |
+| F-02 | Migration `feedback` (table, CHECKs, guard trigger, RLS, actions, notification kind, audit actions, policy group), the SQL functions of section 10 and pgTAP `NN_feedback`; add the names of section 11 to every registry and run `db:types` | feedback, data-model, functions | `db:verify` and `check:consistency` pass; the matrix of section 13 is tested | done on PGlite (2026-11-05): migration `20261105100000_feedback.sql`, 39 assertions in `30_feedback.test.sql`, registries updated; **not applied to the linked project** |
+| F-03 | Server side: `lib/shared/feedback` (questions, schemas, limits, tone, with Vitest), server functions of both spaces, `errors.ts`, `AuditAction`, `NotificationKind`, `Action`, keys | feedback | typecheck, lint and Vitest pass | done (2026-11-05): `lib/shared/feedback` with 13 Vitest tests, both server-function files, constants and messages; the types of the six functions were added by hand until a real `db:types` |
+| F-04 | Portal: prompt hook, single-step modal, banner in the brand feed, local draft | feedback, portal | acceptance criteria "Client" | done in code (2026-11-05), not seen in a browser: prompt hook, single-step modal, banner, local draft, mounted in the brand feed |
+| F-05 | Manager: `/admin/marketing/feedback` with filters, summary, cards, pending view, detail sheet and menu item; policies screen switch | feedback, admin-layout-and-standards | acceptance criteria "Manager" | done in code (2026-11-05), not seen in a browser: page with filters in the URL, summary, cards, pending view, detail panel, menu item, policy switch |
 | F-06 | Browser pass at 360 px, tablet and desktop, keyboard, one Playwright flow (answer, then see the card); every "Implementation status" honest | base.md 10 | `/check-standards` clean | todo |
 
 ## Phase 6 — Hardening and launch

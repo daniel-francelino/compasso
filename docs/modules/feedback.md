@@ -1,6 +1,6 @@
 # Module — Client feedback (monthly survey)
 
-> **Status: specified on 2026-11-05, not implemented.** It specifies a monthly survey the client answers in the portal and the card view where the marketing manager reads the answers. Names below are proposals: per GOLD-4 they enter the registries ([../reference/README.md](../reference/README.md)) in the change that implements them (same approach as [metrics.md](metrics.md)). Open decisions take the recommended answer unless a row says otherwise (section 14). UI copy is Brazilian Portuguese (in quotes); everything else is English.
+> **Status: implemented on 2026-11-05 in code and one migration; never opened in a browser, not applied to the linked project (section "Implementation status").** It specifies a monthly survey the client answers in the portal and the card view where the marketing manager reads the answers. The names of the sections below are registered in [../reference/README.md](../reference/README.md). Open decisions took the recommended answer unless a row says otherwise (section 14). UI copy is Brazilian Portuguese (in quotes); everything else is English.
 
 ## 1. Objective
 
@@ -20,7 +20,7 @@ Out of this module: public or anonymous surveys (external users always sign in),
 | Read data safely for an external user | `portal_*` functions with explicit columns (DATA-2) | Two new `portal_feedback_*` reads/writes; no policy for external roles on the new table |
 | Month boundaries | `brands.timezone` (IANA), `date`/`timestamptz` rules (DATA-7), `dates.ts` | A "month" is cut in the brand's zone, like the metrics periods |
 | Tell the team something arrived | `notify_users(...)` in the same transaction ([../foundations/notifications.md](../foundations/notifications.md)) | New kind `feedback.received` |
-| Switches that belong to the organization | `organization_settings` policy groups ([organization-settings.md](organization-settings.md)) | One policy group `feedback` |
+| Switches that belong to the organization | `organization_settings` policy groups ([organization-settings.md](organization-settings.md)) | One policy group, key `policies.feedback` |
 | Star input, dialog, stat tiles | `lost-ui`: `FormInputRating`, `Form`, dialog and `Sheet`, stat/`ChartCard` pieces | Nothing is rebuilt here (CLAUDE.md item 10) |
 | List of cards with server paging | `useListState` + `PaginationBar` + `ListSkeleton` + `EmptyState` | Cards replace only the `DataTable` body; URL state, paging and the five states are unchanged (UI-1, UI-2) |
 
@@ -104,7 +104,7 @@ An answer stores the five scores (each 1 to 5 or empty), the two texts, the form
 
 ## 7. What the marketing manager sees
 
-Route (proposal): `/admin/marketing/feedback`, guard `feedback.view`, menu item "Feedbacks" in the Marketing group of `nav-config.ts`. It lists every brand the person may see ([../foundations/roles-and-actions.md](../foundations/roles-and-actions.md) section 3). It follows [../standards/admin-layout-and-standards.md](../standards/admin-layout-and-standards.md): `PageHeader`, filters in the URL, the five list states.
+Route: `/admin/marketing/feedback`, guard `feedback.view`, menu item "Feedbacks" in the Marketing group of `nav-config.ts`. It lists every brand the person may see ([../foundations/roles-and-actions.md](../foundations/roles-and-actions.md) section 3). It follows [../standards/admin-layout-and-standards.md](../standards/admin-layout-and-standards.md): `PageHeader`, filters in the URL, the five list states.
 
 ### 7.1 Filters (URL params)
 
@@ -144,7 +144,7 @@ Skeleton with the card layout (stable height) → error with retry → empty ("N
 
 ### 7.5 Notification
 
-`feedback.received` goes to people with `feedback.view` on the brand when an answer is sent. Severity `warning` when the overall score is 2 or lower, otherwise `info`. Title "Novo feedback de cliente". Body: "{Marca} respondeu a pesquisa de {mês}: nota {n}." The body carries no free text from the client (private content stays in the page). Dedupe key `feedback.received:<response_id>`. The link opens the page filtered by brand and period.
+`feedback.received` goes to people with `feedback.view` on the brand when an answer is sent. Severity `info`, because the severity belongs to the kind; a score of 1 or 2 is flagged in the body instead ("Precisa de atenção." is appended). Title "Novo feedback de cliente". Body: "{Marca} respondeu a pesquisa de {mês}: nota {n}." The body carries no free text from the client (private content stays in the page). Dedupe key `feedback.received:<response_id>`. The link opens the page filtered by brand and period.
 
 ## 8. Rules
 
@@ -160,9 +160,9 @@ Skeleton with the card layout (stable height) → error with retry → empty ("N
 10. Time values are shown with the brand's zone visible; date work only through `dates.ts`, display through `format.ts` (UI-11, UI-14).
 11. Failure of anything outside the transaction (the notification email, a refresh of the page) never removes a saved answer.
 
-## 9. Data model (proposal)
+## 9. Data model
 
-Added to [../reference/data-model.md](../reference/data-model.md) section 4b-style in the implementing change. Migration name: `YYYYMMDDHHMMSS_feedback.sql`.
+Registered in [../reference/data-model.md](../reference/data-model.md) section 4c. Migration `20261105100000_feedback.sql`.
 
 **`feedback_responses`** — one row per contact, brand and period, created on the first interaction (snooze, decline or send):
 
@@ -180,57 +180,56 @@ Added to [../reference/data-model.md](../reference/data-model.md) section 4b-sty
 | `form_version` | `smallint not null default 1` | Version of the question set, so old answers stay readable if the questions change later |
 | `timezone` | `text` | IANA zone of the brand at the moment of sending |
 | `answered_at` | `timestamptz` | |
-| `version`, `created_at`, `updated_at` | | Standard; `updated_at` trigger |
+| `created_at`, `updated_at` | | Standard; `updated_at` trigger |
 
 Constraints: `unique (brand_id, respondent_id, period_month)`; the CHECKs of rule 6. Indexes: `(brand_id, period_month)` for the list and summary, `(respondent_id, period_month)` for the prompt. RLS enabled; `select` for `feedback.view` and `can_access_brand(brand_id)`; **no** insert, update or delete policy for any client role (writes only by `security definer` functions); no policy for external roles or `anon`.
 
-**Policy group `feedback`** in `organization_settings`: `enabled` (boolean, default true) and `openDay` (integer 1 to 28, default 1), validated by zod, audited like the other policies, shown on the policies screen as "Pesquisa mensal com o cliente".
+**Policy group `policies.feedback`** in `organization_settings`: `enabled` (boolean, default true) and `openDay` (integer 1 to 28, default 1), validated by zod, audited like the other policies, shown on the policies screen as "Pesquisa mensal com o cliente".
 
-## 10. Functions (proposal)
+## 10. Functions
 
-Added to [../reference/functions.md](../reference/functions.md) in the implementing change.
+Registered in [../reference/functions.md](../reference/functions.md) sections 5 and 9c.
 
 | SQL function | Server function | Act. | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
-| `portal_feedback_prompt(p_brand)` returns `{ state, period_month, period_label, snooze_count }`; never any text | `getPortalFeedbackPrompt` | `feedback.answer` + external link | — | — | `denied`, `not_found` |
+| `portal_feedback_prompt(p_brand)` returns `{ state, period_month, snooze_count }`; never any text | `getPortalFeedbackPrompt` | `feedback.answer` + external link | — | — | `denied`, `not_found` |
 | `portal_feedback_submit(p_brand, p_period, p_answers jsonb)` | `submitPortalFeedback` | `feedback.answer` + external link | `feedback.answered` | `feedback.received` | `denied`, `not_found`, `invalid_input`, `feedback_not_open`, `feedback_already_answered` |
-| `portal_feedback_snooze(p_brand, p_period)` | `snoozePortalFeedback` | same | — | — | `denied`, `feedback_not_open`, `feedback_already_answered` |
+| `portal_feedback_snooze(p_brand, p_period)` | `snoozePortalFeedback` | same | — | — | `denied`, `not_found`, `feedback_not_open`, `feedback_already_answered` |
 | `portal_feedback_decline(p_brand, p_period)` | `declinePortalFeedback` | same | `feedback.declined` | — | same |
 | `feedback_list(p_brand, p_period, p_status, p_attention, p_page, p_page_size)` | `listFeedback` | `feedback.view` + brand link | — | — | `invalid_input`, `not_found` |
 | `feedback_summary(p_brand, p_period)` | `getFeedbackSummary` | same | — | — | `invalid_input`, `not_found` |
-| `feedback_get(p_response)` | `getFeedback` | same | — | — | `not_found` |
-| `feedback_period_open(p_brand, p_now)`, trigger `feedback_responses_guard` | — | internal | — | — | `feedback_already_answered` |
+| `feedback_policy_enabled`, `feedback_policy_open_day`, `feedback_brand_has_work`, `feedback_period_for`, `feedback_member_eligible`, `feedback_expected`, `feedback_score`, `feedback_text`, `feedback_lock_row`; trigger `feedback_responses_guard` | — | internal | — | — | `feedback_not_open`, `feedback_already_answered`, `invalid_input` |
 
 Rules from the registry apply: one write RPC per user action, outputs validated with `parseOutput`, explicit DTOs, errors through `fail` (base.md 5.1). `feedback_list` for `status = pending` derives the expected contacts from `brand_members` (active, external, role with `feedback.answer`) without a row or with a `snoozed`/`declined` row.
 
-## 11. Names to register when implementing
+## 11. Registered names
 
 | Registry | New names |
 |---|---|
 | Actions ([../foundations/roles-and-actions.md](../foundations/roles-and-actions.md)) | `feedback.view` (internal; requires `brands.view`), `feedback.answer` (external, `portal = true`; requires `portal.view`). Starting roles: `manager` gets `feedback.view`; `external_approver` and `external_commenter` get `feedback.answer` (O2). Portal-only roles may hold `feedback.answer` only if the seed marks it as a portal action (rule 6 of that document) |
 | Notification kind | `feedback.received` (required action `feedback.view`, `portal = false`, not schedulable) |
-| Audit actions ([audit.md](audit.md)) | `feedback.answered`, `feedback.declined` (entity `feedback_response`; metadata: ids, `period_month` and, for answers, the overall score; never text) |
-| Error codes ([../reference/error-codes.md](../reference/error-codes.md)) | `feedback_not_open` "A pesquisa deste mês não está aberta.", `feedback_already_answered` "Você já respondeu a pesquisa deste mês." |
-| Enums ([../reference/enums.md](../reference/enums.md)) | `FeedbackStatus` (`snoozed`, `answered`, `declined`; column `feedback_responses.status`); TypeScript only: `FeedbackQuestion`, `FeedbackPromptState`, `FeedbackScoreTone` |
-| Keys | `StoredKey.FeedbackDraft`; `QueryKey.Portal.feedbackPrompt(brandId)`, `QueryKey.Feedback.list(filters)`, `.summary(filters)`, `.detail(id)` |
+| Audit actions ([audit.md](audit.md)) | `feedback.answered`, `feedback.declined` (entity `feedback_response`; metadata: the month and, for answers, the overall score; never text) |
+| Error codes ([../reference/error-codes.md](../reference/error-codes.md)) | `feedback_not_open` "A pesquisa deste mês não está aberta.", `feedback_already_answered` "Você já respondeu ou dispensou a pesquisa deste mês." |
+| Enums ([../reference/enums.md](../reference/enums.md)) | `FeedbackStatus` (`snoozed`, `answered`, `declined`; column `feedback_responses.status`); TypeScript only: `FeedbackQuestion`, `FeedbackPromptState`, `FeedbackListStatus`, `FeedbackCardState`, `FeedbackScoreTone` |
+| Keys | `StoredKey.FeedbackDraft`; `QueryKey.Portal.feedbackPrompt(brandId)`, `QueryKey.Feedback.list(filters)`, `.summary(filters)` |
 | Routes ([../reference/routes.md](../reference/routes.md)) | `/admin/marketing/feedback` (`feedback.view`). The portal has no new route |
 | Constants (`lib/shared/feedback/limits.ts`) | `FEEDBACK_SNOOZE_DAYS = 3`, `FEEDBACK_MAX_SNOOZES = 3`, `FEEDBACK_TEXT_MAX = 1000`, `FEEDBACK_ATTENTION_SCORE = 2`, `FEEDBACK_PAGE_SIZE = 12` |
 | UI glossary ([../standards/ui-glossary.md](../standards/ui-glossary.md)) | The labels of sections 5 and 7: "Feedbacks", "Pesquisa mensal", "Precisa de atenção", "Não avaliou", "Prefiro não avaliar", "Responder depois", "Dispensou" |
-| Policy group | `feedback` (`enabled`, `openDay`) |
+| Policy group | `policies.feedback` (`enabled`, `openDay`) |
 
-## 12. Code layout (proposal)
+## 12. Code layout
 
 Spaces never import each other (base.md section 4), so what both sides use lives in `shared`.
 
 | Folder | Content |
 |---|---|
-| `src/lib/shared/feedback/` | `types.ts`, `schemas.ts` (answers, zod), `limits.ts`, `questions.ts` (the five questions, labels, help and score words), `score-tone.ts` (score to tone), with unit tests |
+| `src/lib/shared/feedback/` | `types.ts`, `schemas.ts` (answers, zod), `limits.ts`, `questions.ts` (the five questions, labels, help and score words), `score-tone.ts` (score to tone), `period.ts` (month parameters and labels), with unit tests in `feedback.test.ts` |
 | `src/lib/portal/feedback/` | `feedback.functions.ts` (the four client-side server functions), DTO and output schemas |
-| `src/components/portal/feedback/` | `feedback-prompt-dialog.tsx`, `feedback-form.tsx`, `feedback-banner.tsx` |
-| `src/hooks/portal/` | `use-feedback-prompt.ts` (query, snooze, decline, submit, the draft) |
-| `src/lib/marketing/feedback/` | `feedback.functions.ts` (list, summary, detail) |
+| `src/components/portal/feedback/` | `feedback-prompt.tsx` (mounted in the brand feed), `feedback-prompt-dialog.tsx`, `feedback-form.tsx`, `feedback-banner.tsx` |
+| `src/hooks/portal/` | `use-feedback-prompt.ts` (the prompt query), `use-feedback-draft.ts` (the unsent answers in the browser) |
+| `src/lib/marketing/feedback/` | `feedback.functions.ts` (list, summary) |
 | `src/components/marketing/feedback/` | `feedback-page.tsx`, `feedback-card.tsx`, `feedback-summary.tsx`, `feedback-detail-sheet.tsx` |
-| `src/routes/admin/_app/(marketing)/marketing/feedback.tsx` | Only guard, search params and the page component (base.md 5.2) |
+| `src/routes/admin/_app/(marketing)/marketing/feedback/index.tsx` | Only guard, search params and the page component (base.md 5.2) |
 
 Shared UI comes from `lost-ui` (forms with `rules`, `FormInputRating`, dialog, sheet, tiles). The `Form` migration pattern applies: client rules with pt-BR messages, the submit through `useFormSubmit().send`, the server still validates with zod and returns `fields` errors ([../standards/base.md](../standards/base.md) section 5.4). If `lost-ui` lacks something (for example a full-screen dialog on phones or a card grid), list it in [../lost-ui-requests.md](../lost-ui-requests.md) instead of rebuilding it.
 
@@ -279,4 +278,14 @@ Recommended answers are what the specification above already assumes. Confirm or
 
 ## Implementation status
 
-2026-11-05: **Specified, not implemented.** This document is new; [README.md](README.md), [../README.md](../README.md), [portal.md](portal.md) and [../implementation-plan.md](../implementation-plan.md) (phase F) point to it. No code, migration, route or registry changed: the registries receive the names of section 11 in task F-02, as the metrics module did, so `check:consistency` (which compares `audit.md` with `AuditAction`) keeps passing. Validation: none run beyond reading the existing portal, metrics, approvals, notifications, roles and registry documents and the `lost-ui` catalog. **Not verified**: that `FormInputRating` and the dialog of `lost-ui` fit a full-screen phone layout; that the brand feed host can mount the modal without interfering with the feed's own restoration of position ([portal.md](portal.md#feed-decided-2026-11-04)).
+2026-11-05: **Implemented (tasks F-02 to F-05), not seen in a browser and not applied to the linked project.**
+
+Decisions taken while building (they refine the specification above): the policy key is `policies.feedback`; the notification severity is `info` and a low score is flagged in the body; the table has no `version` column (an answer is final and the rows change only through locked functions); `portal_feedback_prompt` returns no period label (the client formats the month) and there is no `feedback_get` (the cards already carry the full texts); the list `period` and `attention` filters were added to the shared `listSearchSchema` and `useListState` as `period` (`YYYY-MM`) and `attention` (`1`); the card states live in `FeedbackCardState`.
+
+Migration: `supabase/migrations/20261105100000_feedback.sql` (table, CHECKs, guard trigger, RLS, two actions, one notification kind, the policy key in `organization_setting_save`, the two audit actions in the `audit_write` catalog, the functions of section 10). Not applied to the linked project: it needs `npx supabase db push` after a dry run.
+
+Code: `src/lib/shared/feedback/*` (types, limits, questions, score tone, period, schemas, `feedback.test.ts`), `src/lib/portal/feedback/feedback.functions.ts`, `src/lib/marketing/feedback/feedback.functions.ts`, `src/hooks/portal/use-feedback-prompt.ts`, `src/hooks/portal/use-feedback-draft.ts`, `src/components/portal/feedback/*`, `src/components/marketing/feedback/*`, the route `src/routes/admin/_app/(marketing)/marketing/feedback/index.tsx`, the mount in `portal-feed-page.tsx`, the menu item in `nav-config.ts`, the policy fields (`schemas.ts`, `policy-fields.ts`), audit labels, notification kind info, `Action`, `AuditAction`, `FeedbackStatus`, `StoredKey`, `QueryKey`, `AppRoute`, `errors.ts`, `list-search.ts`, `use-list-state.ts`, `e2e/auth-guards.spec.ts` (the new route), `scripts/check-consistency.mjs` (the `feedback_responses.status` CHECK). Registries updated: data model, functions, routes, enums, error codes, actions and starting roles, notifications, audit, glossary, organization settings.
+
+Validation performed: `npm run db:verify` (1153 assertions, 0 failures; 39 new in `supabase/tests/30_feedback.test.sql`: eligibility by brand age and by work shared in the month, the prompt states, snooze and the banner after three, validation of the answers, one answer per month, immutability, audit without text, the notification and who does not get it, the manager list, pending list and summary, brand A versus brand B, a collaborator, an external user and `anon`; `01_auth_roles_profiles.test.sql` counts moved from 53 to 55 actions), `npm run test` (314 Vitest tests, 13 new), `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run check:consistency`, `npm run check:docs`.
+
+**Not tested**: any screen in a browser (the modal on a phone at 360 px and on desktop, the two-line layout of the rating fields, `FormInputRating` with keyboard only, the draft restored after a reload, the inline "dispensar" confirmation, the banner, the cards grid at 360 px, tablet and desktop, the detail panel); the Playwright flow answer then see the card (the guard list now includes the route, but the Playwright web server did not start within 120 s here, so even `auth-guards.spec.ts` was not run); the migration against a real Supabase project (only PGlite); the notification email and bell for a manager; the policies screen with the new group. **Types**: `database.types.ts` was not regenerated with `npm run db:types` (no Docker or linked project with this migration); the six public function signatures were added by hand in the generator's format and must be replaced by a real generation after the push (DATA-11). **Known limits**: a brand with feedback answers cannot be deleted (the foreign key blocks it, by design: history is preserved); `lost-ui` has no phone full-screen option wired in, so the modal uses `scrollable` and its default sizing.

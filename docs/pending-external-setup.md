@@ -125,3 +125,15 @@ Specified in [modules/instagram-publishing.md](modules/instagram-publishing.md) 
 | I9 | The new screens (connection panel, publish mode per channel row, metrics analysis, report builder, portal results, dashboard blocks) were never opened in a browser; charts were not checked at 360 px | Open |
 | I10 | Not collected yet although the model allows it: `follows`, `unfollows`, `online_hours`, story insights | Open |
 | I11 | **Fixed 2026-10-27.** `channel_connection_connect` (callable by any person with `channels.connect`, which let them register a made-up account id and block the real owner) was dropped; `channel_connection_store` is service only, takes the actor explicitly, and re-checks `channels.connect` and the brand link for that actor. `completeInstagramConnection` calls it through `lib/shared/jobs/connection-store.server.ts` with the id and token Meta returned. Migration `20261026100300_channel_connection_store.sql`; pgTAP 26 covers a signed-in user calling it (refused), no actor, an actor of another brand, an actor without the action | Done; migration applied to the remote 2026-10-27, types regenerated |
+
+## Client feedback (2026-11-05)
+
+Specified and built in [modules/feedback.md](modules/feedback.md). **Nothing below was run against a real Supabase project or a browser.**
+
+| ID | Item | Status |
+|---|---|---|
+| FB1 | **Apply the migration** `20261105100000_feedback.sql` to the linked project (`npx supabase db push --dry-run` first; it must list only this file) | Open |
+| FB2 | **Regenerate the database types with the real CLI** (`npm run db:types -- --linked`) after FB1; the six function signatures in `database.types.ts` were added by hand | Open |
+| FB3 | Open the portal feed and the Feedbacks page in a browser at 360 px, tablet and desktop, with the keyboard only; check the rating fields, the draft after a reload, the banner after three postponements and the cards | Open |
+| FB4 | Run `e2e/auth-guards.spec.ts` (the new route is in its list) and write the flow answer then see the card; the Playwright web server did not start within 120 s on the development machine | Open |
+| FB5 | With real accounts: a client answers, the manager receives `feedback.received` in the bell, a manager of another brand does not | Open |
