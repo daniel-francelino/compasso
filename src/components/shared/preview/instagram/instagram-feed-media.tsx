@@ -1,11 +1,13 @@
-import { ChevronLeft, ChevronRight, Clapperboard } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { type KeyboardEvent, type TouchEvent, useRef, useState } from "react";
 import { InstagramMediaFallback } from "@/components/shared/preview/instagram/instagram-media-fallback";
 import { InstagramSlide } from "@/components/shared/preview/instagram/instagram-slide";
 import { VideoVariant } from "@/components/shared/preview/instagram/instagram-video-player";
 import type { PreviewMedia } from "@/components/shared/preview/media-slide";
+import { formatIcons } from "@/components/shared/content/format-icons";
 import { Button } from "@/components/shared/ui/button";
-import { ContentFormat, Platform } from "@/lib/shared/enums";
+import { type ContentFormat, Platform } from "@/lib/shared/enums";
+import { contentFormatLabels } from "@/lib/shared/labels";
 import { INSTAGRAM_CAROUSEL_MAX_ITEMS } from "@/lib/shared/preview/instagram";
 import { previewFrameRatio } from "@/lib/shared/preview/platforms";
 import { cn } from "@/lib/shared/utils";
@@ -29,6 +31,7 @@ export function InstagramFeedMedia({
   const last = items.length - 1;
   const current = items[Math.min(index, Math.max(last, 0))];
   const many = items.length > 1;
+  const FormatGlyph = formatIcons[format];
   const move = (delta: number) => setIndex((value) => Math.min(last, Math.max(0, value + delta)));
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -70,12 +73,10 @@ export function InstagramFeedMedia({
             variant={VideoVariant.Feed}
           />
         )}
-        {format === ContentFormat.Video && current !== undefined ? (
-          <Clapperboard
-            className="absolute right-3 top-3 size-5 text-ivory drop-shadow"
-            aria-hidden="true"
-          />
-        ) : null}
+        <span className="pointer-events-none absolute left-3 top-3 flex items-center gap-1 text-sm font-semibold text-ivory drop-shadow">
+          <FormatGlyph className="size-4" aria-hidden="true" />
+          {contentFormatLabels[format]}
+        </span>
         {many ? (
           <>
             <span

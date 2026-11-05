@@ -73,6 +73,16 @@ describe("instagram post", () => {
   });
 });
 
+describe("format label on the feed media", () => {
+  it("labels a post, a carousel and a video, but not a story", () => {
+    expect(render(ContentFormat.Image, [], "")).toContain("Post");
+    expect(render(ContentFormat.Carousel, [], "")).toContain("Carrossel");
+    expect(render(ContentFormat.Video, [video], "")).toContain("Vídeo");
+    expect(render(ContentFormat.Reel, [video], "")).toContain("Reels");
+    expect(render(ContentFormat.Story, [video], "")).not.toContain("Story</span>");
+  });
+});
+
 describe("instagram media fitted to the screen", () => {
   const media = (format: ContentFormat, fitScreen: boolean): string =>
     renderToStaticMarkup(
