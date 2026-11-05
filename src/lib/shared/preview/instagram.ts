@@ -4,6 +4,14 @@ export const INSTAGRAM_REEL_MAX_REM = 20;
 export const INSTAGRAM_STORY_MAX_REM = 18;
 
 export const FALLBACK_LOGO_PERCENT = 30;
+export const DETAIL_SCREEN_PERCENT = 88;
+
+export const ratioValue = (ratio: string): number => {
+  const [width, height] = ratio.split("/").map((part) => Number(part.trim()));
+  return width !== undefined && height !== undefined && height > 0 && width > 0
+    ? width / height
+    : 1;
+};
 
 export const VIDEO_VISIBLE_THRESHOLD = 0.6;
 export const SEEK_STEPS = 1000;

@@ -225,7 +225,7 @@ export function PortalFeedPage({ brandId }: { brandId: string }) {
                   className="absolute left-0 top-0 w-full pb-4"
                   style={{ transform: `translateY(${item.start - margin}px)` }}
                 >
-                  <FeedPost request={row} brandId={brandId} logoUrl={brand.data?.logoUrl ?? null} />
+                  <FeedPost request={row} logoUrl={brand.data?.logoUrl ?? null} />
                 </div>
               );
             })}

@@ -1,9 +1,9 @@
 import { Maximize2 } from "lucide-react";
 import { useRef, useState } from "react";
-import { PortalApprovalDialog } from "@/components/portal/approvals/portal-approval-dialog";
 import { PlanRequestSummary } from "@/components/portal/approvals/plan-request-summary";
 import { FeedActions } from "@/components/portal/feed/feed-actions";
 import { FeedComments } from "@/components/portal/feed/feed-comments";
+import { FeedPostDialog } from "@/components/portal/feed/feed-post-dialog";
 import { InfoTip } from "@/components/shared/admin/info-tip";
 import { SectionCard } from "@/components/shared/admin/section-card";
 import { InstagramPost } from "@/components/shared/preview/instagram/instagram-post";
@@ -58,15 +58,7 @@ function PublicationDate({ request, channel }: { request: PortalRequest; channel
   );
 }
 
-export function FeedPost({
-  request,
-  brandId,
-  logoUrl,
-}: {
-  request: PortalRequest;
-  brandId: string;
-  logoUrl: string | null;
-}) {
+export function FeedPost({ request, logoUrl }: { request: PortalRequest; logoUrl: string | null }) {
   const [dialog, setDialog] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [hint, setHint] = useState<string | undefined>();
@@ -78,6 +70,11 @@ export function FeedPost({
   const [activeRow, setActiveRow] = useState(rows[0]?.rowId ?? "");
   const channel = rows.find((row) => row.rowId === activeRow) ?? rows[0];
   const logo = logoUrl;
+  const media =
+    channel !== undefined && kind !== FeedPostKind.CaptionOnly
+      ? toPreviewMedia(request, urls, refresh)
+      : [];
+  const caption = channel === undefined ? "" : channelCaption(request, channel);
 
   const openDetails = () => setDialog(true);
   const needText = () => {
@@ -134,8 +131,6 @@ export function FeedPost({
         </div>
       );
     }
-    const media = kind === FeedPostKind.CaptionOnly ? [] : toPreviewMedia(request, urls, refresh);
-    const caption = channelCaption(request, channel);
     if (channel.platform === Platform.Instagram) {
       return (
         <InstagramPost
@@ -207,10 +202,16 @@ export function FeedPost({
         </div>
       ) : null}
       {body()}
-      {dialog ? (
-        <PortalApprovalDialog
-          brandId={brandId}
-          requestId={request.id}
+      {dialog && channel !== undefined ? (
+        <FeedPostDialog
+          request={request}
+          channel={channel}
+          kind={kind}
+          media={media}
+          caption={caption}
+          logoUrl={logo}
+          date={<PublicationDate request={request} channel={channel} />}
+          urls={urls}
           onClose={() => setDialog(false)}
         />
       ) : null}

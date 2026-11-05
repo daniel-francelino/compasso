@@ -1,22 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { readFeedMemory, saveFeedMemory } from "@/hooks/portal/use-feed-memory";
-import { StoredKey } from "@/lib/shared/stored-keys";
 
-const store = new Map<string, string>();
+const store = new Map<string, unknown>();
+
+vi.mock("@/lib/shared/stored-keys", () => ({
+  StoredKey: { PortalFeed: "aura:portal-feed" },
+  readStored: (
+    key: string,
+    schema: { safeParse: (value: unknown) => { success: boolean; data?: unknown } },
+    fallback: unknown,
+  ) => {
+    const parsed = schema.safeParse(store.get(key));
+    return parsed.success ? parsed.data : fallback;
+  },
+  writeStored: (key: string, value: unknown) => void store.set(key, value),
+}));
 
 beforeEach(() => {
   store.clear();
-  vi.stubGlobal("window", {
-    localStorage: {
-      getItem: (key: string) => store.get(key) ?? null,
-      setItem: (key: string, value: string) => void store.set(key, value),
-      removeItem: (key: string) => void store.delete(key),
-    },
-  });
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
 });
 
 describe("feed memory", () => {
@@ -32,7 +33,7 @@ describe("feed memory", () => {
   });
 
   it("ignores a stored value with the wrong shape", () => {
-    store.set(StoredKey.PortalFeed, JSON.stringify({ "brand-a": { status: 3 } }));
+    store.set("aura:portal-feed", { "brand-a": { status: 3 } });
     expect(readFeedMemory("brand-a")).toBeUndefined();
   });
 });

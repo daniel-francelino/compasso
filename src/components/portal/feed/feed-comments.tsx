@@ -36,6 +36,7 @@ const toggleLabel = (total: number, open: boolean): string => {
 };
 
 export function FeedComments({
+  part = "all",
   request,
   open,
   onOpenChange,
@@ -44,6 +45,7 @@ export function FeedComments({
   hint,
   onTextChange,
 }: {
+  part?: "all" | "thread" | "field";
   request: PortalRequest;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -116,7 +118,7 @@ export function FeedComments({
 
   return (
     <div className="space-y-3 pt-1">
-      {total > 0 || open ? (
+      {part === "all" && (total > 0 || open) ? (
         <button
           type="button"
           className="px-3 text-sm text-muted-foreground underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -126,13 +128,13 @@ export function FeedComments({
           {toggleLabel(total, open)}
         </button>
       ) : null}
-      {open && comments.isPending ? <Skeleton className="mx-3 h-12" /> : null}
-      {open && comments.isError ? (
+      {part !== "field" && open && comments.isPending ? <Skeleton className="mx-3 h-12" /> : null}
+      {part !== "field" && open && comments.isError ? (
         <p role="alert" className="px-3 text-sm text-destructive">
           {comments.error.message}
         </p>
       ) : null}
-      {open && entries.length > 0 ? (
+      {part !== "field" && open && entries.length > 0 ? (
         <ul className="space-y-3 px-3">
           {entries.map((entry) => (
             <li key={entry.id} className="flex items-start gap-3">
@@ -156,7 +158,7 @@ export function FeedComments({
           ))}
         </ul>
       ) : null}
-      {canComment || canDecide ? (
+      {part !== "thread" && (canComment || canDecide) ? (
         <div className="border-t border-border">
           <div className="flex items-start gap-1 px-3">
             <EmojiPopover disabled={busy} onSelect={insertEmoji} />

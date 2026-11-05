@@ -1,9 +1,10 @@
 import { Heart, MessageCircle, PencilLine } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
 import { Button } from "@/components/shared/ui/button";
 import type { DecisionDraft } from "@/hooks/portal/use-decision-draft";
 import { useFeedDecision } from "@/hooks/portal/use-feed-decision";
+import { useTransientFlag } from "@/hooks/shared/use-transient-flag";
 import { MIN_CHANGE_COMMENT } from "@/lib/portal/approvals/schemas";
 import type { PortalRequest } from "@/lib/portal/approvals/types";
 import { ApprovalOutcome, ApprovalRequestStatus, ApprovalStage } from "@/lib/shared/enums";
@@ -26,6 +27,15 @@ export function FeedActions({
   const canDecide = pending && request.canDecide;
   const approved = request.status === ApprovalRequestStatus.Approved;
   const plan = request.stage === ApprovalStage.Plan;
+  const [popping, pop] = useTransientFlag(450);
+  const [nudging, nudge] = useTransientFlag(350);
+  const [wiggling, wiggle] = useTransientFlag(450);
+  const wasApproved = useRef(approved);
+
+  useEffect(() => {
+    if (approved && !wasApproved.current) pop();
+    wasApproved.current = approved;
+  }, [approved, pop]);
 
   function askChanges() {
     const text = draft.text.trim();
@@ -33,6 +43,7 @@ export function FeedActions({
       onNeedText();
       return;
     }
+    wiggle();
     void decision.decide(ApprovalOutcome.ChangesRequested, text);
   }
 
@@ -47,23 +58,29 @@ export function FeedActions({
           <Button
             type="button"
             variant="ghost"
-            className="min-h-11 gap-1.5 px-2 [&_svg]:size-6 disabled:opacity-100"
+            className="min-h-11 gap-1.5 px-2 transition-transform active:scale-90 [&_svg]:size-6 disabled:opacity-100"
             aria-pressed={approved}
             disabled={!canDecide || decision.busy}
             onClick={() => setConfirming(true)}
           >
-            <Heart className={cn(approved && "fill-current text-violet")} aria-hidden="true" />
+            <Heart
+              className={cn(approved && "fill-current text-violet", popping && "animate-heart-pop")}
+              aria-hidden="true"
+            />
             {approved ? "Aprovado" : "Aprovar"}
           </Button>
         ) : null}
         <Button
           type="button"
           variant="ghost"
-          className="min-h-11 gap-1.5 px-2 [&_svg]:size-6"
+          className="min-h-11 gap-1.5 px-2 transition-transform active:scale-90 [&_svg]:size-6"
           aria-label={`Comentários (${request.commentCount})`}
-          onClick={onToggleComments}
+          onClick={() => {
+            nudge();
+            onToggleComments();
+          }}
         >
-          <MessageCircle aria-hidden="true" />
+          <MessageCircle aria-hidden="true" className={cn(nudging && "animate-bubble-nudge")} />
           {request.commentCount}
         </Button>
         {canDecide ? (
@@ -72,11 +89,11 @@ export function FeedActions({
             title="Solicitar alteração"
             type="button"
             variant="ghost"
-            className="min-h-11 gap-1.5 px-2 [&_svg]:size-6"
+            className="min-h-11 gap-1.5 px-2 transition-transform active:scale-90 [&_svg]:size-6"
             disabled={decision.busy}
             onClick={askChanges}
           >
-            <PencilLine aria-hidden="true" />
+            <PencilLine aria-hidden="true" className={cn(wiggling && "animate-pencil-wiggle")} />
             Alterar
           </Button>
         ) : null}

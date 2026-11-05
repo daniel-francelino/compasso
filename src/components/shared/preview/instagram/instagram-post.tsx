@@ -1,8 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { InstagramCaption } from "@/components/shared/preview/instagram/instagram-caption";
-import { InstagramFeedMedia } from "@/components/shared/preview/instagram/instagram-feed-media";
-import { InstagramImmersiveFrame } from "@/components/shared/preview/instagram/instagram-immersive-frame";
+import { InstagramMedia } from "@/components/shared/preview/instagram/instagram-media";
 import { InstagramPostHeader } from "@/components/shared/preview/instagram/instagram-post-header";
 import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { ContentFormat } from "@/lib/shared/enums";
@@ -47,23 +46,14 @@ export function InstagramPost({
           safeZones: immersive ? { checked: safeZones, onCheckedChange: setSafeZones } : undefined,
         }}
       />
-      {immersive ? (
-        <InstagramImmersiveFrame
-          format={format}
-          media={media}
-          caption={caption}
-          profileName={profileName}
-          brandLogoUrl={brandLogoUrl}
-          showSafeZones={safeZones}
-        />
-      ) : (
-        <InstagramFeedMedia
-          format={format}
-          media={media}
-          profileName={profileName}
-          brandLogoUrl={brandLogoUrl}
-        />
-      )}
+      <InstagramMedia
+        format={format}
+        media={media}
+        caption={caption}
+        profileName={profileName}
+        brandLogoUrl={brandLogoUrl}
+        showSafeZones={safeZones}
+      />
       {actions}
       <div className="space-y-1 pb-2">
         <InstagramCaption caption={shownCaption} />

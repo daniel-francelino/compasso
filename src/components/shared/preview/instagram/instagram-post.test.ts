@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { InstagramMedia } from "@/components/shared/preview/instagram/instagram-media";
 import { InstagramPost } from "@/components/shared/preview/instagram/instagram-post";
 import type { PreviewMedia } from "@/components/shared/preview/media-slide";
 import { ContentFormat } from "@/lib/shared/enums";
@@ -61,7 +62,7 @@ describe("instagram post", () => {
   it("gives a story the header controls and the reply bar", () => {
     const markup = render(ContentFormat.Story, [video], "");
     expect(markup).toContain("Pausar story");
-    expect(markup).toContain("Enviar mensagem");
+    expect(markup).toContain("Responder a aurora…");
     expect(markup).not.toContain("Mostrar áreas cobertas");
   });
 
@@ -69,5 +70,28 @@ describe("instagram post", () => {
     const markup = render(ContentFormat.Reel, [video], "");
     expect(markup).toContain("Mais opções");
     expect(markup).not.toContain("Mostrar áreas cobertas");
+  });
+});
+
+describe("instagram media fitted to the screen", () => {
+  const media = (format: ContentFormat, fitScreen: boolean): string =>
+    renderToStaticMarkup(
+      createElement(InstagramMedia, {
+        format,
+        media: [video],
+        caption: "",
+        profileName: "@aurora",
+        brandLogoUrl: null,
+        fitScreen,
+      }),
+    );
+
+  it("fits a story to the height of the screen", () => {
+    expect(media(ContentFormat.Story, true)).toContain("calc(88dvh * 0.5625)");
+    expect(media(ContentFormat.Story, false)).not.toContain("dvh");
+  });
+
+  it("fits a feed video to the height of the screen with the clamped 4:5 frame", () => {
+    expect(media(ContentFormat.Video, true)).toContain("min(100%, calc(88dvh * 0.8))");
   });
 });

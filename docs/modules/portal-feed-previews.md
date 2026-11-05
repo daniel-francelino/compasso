@@ -53,7 +53,7 @@ Mapping from our constants (`Platform.Instagram` with `ContentFormat`): `image`,
 | `carousel` | Feed post, several items | The **first item sets the frame for all items** (same clamp as `image`); the others are cropped to it | Feed post layout plus "›" and "‹" arrows, dots **under** the media, an item counter badge "1/N" at the top-right of the media | image, video (a video item plays inline, muted until tapped, no autoplay in the portal) |
 | `video` | Feed video | Same clamp as `image` using the first frame dimensions; fallback 4:5. On the real app a feed video is delivered as a Reel; we keep the feed frame and mark it with the Reels glyph at the top-right | Feed post layout; the Instagram-style player (see "Video player"): no native controls, tap to pause, mute button at the bottom-right | video |
 | `reel` | Reels viewer | **9:16**, drawn inside a phone-like frame (max width 20 rem) | Full-bleed media played by the Instagram-style player; bottom-left: the caption on a **single line with an ellipsis** (no username line, decided 2026-11-04), the audio line ("♪ Áudio original · username") also on a single line with an ellipsis; right rail: heart, comment, share, save, more, with the **approve and comment buttons of our feed in their place** (see "Feed actions on immersive formats"); a "Reels" label at the top-left; mute button at the top-right; a thin progress line at the bottom that can be scrubbed; **safe zones** (see below) | video |
-| `story` | Story viewer | **9:16**, phone-like frame (max width 18 rem) | Segmented **progress bar** at the top (one segment per file; the current one fills while the file plays and the story moves to the next file on its own: 5 seconds for an image, the length of a video); header with avatar and username and, at the right, pause/play and mute (mute only for a video); **tap zones**: the left third goes back, the rest goes forward, and holding a press pauses; the reply bar at the bottom is drawn as a muted placeholder: the pill "Enviar mensagem" with a heart and a send icon at its right (decorative); safe zones (see below). Instagram has no caption on a Story, but when the content has one it is drawn as a **single line with an ellipsis** inside the frame, just above the reply bar (decided 2026-11-04, reverses the earlier rule); the full text is in the review | image, video |
+| `story` | Story viewer | **9:16**, phone-like frame (max width 18 rem) | Segmented **progress bar** at the top (one segment per file; the current one fills while the file plays and the story moves to the next file on its own: 5 seconds for an image, the length of a video); header with avatar and username and, at the right, pause/play and mute (mute only for a video); **tap zones**: the left third goes back, the rest goes forward, and holding a press pauses; the reply bar at the bottom is drawn as a muted placeholder: the pill "Responder a {profile name}…" (as in the capture of 2026-11-04) with a heart and a send icon at its right (decorative); safe zones (see below). Instagram has no caption on a Story, but when the content has one it is drawn as a **single line with an ellipsis** inside the frame, just above the reply bar (decided 2026-11-04, reverses the earlier rule); the full text is in the review | image, video |
 
 **Safe zones (percentages of the frame height, measured, to be confirmed with the capture checklist).** Story: top about 14 % (progress bar and header) and bottom about 18 % (reply bar) are covered by interface; Reel: bottom about 22 % and right about 16 % are covered. The preview draws these areas as a dashed outline only while the option "Mostrar áreas cobertas" is on (off by default). The option lives in the **"⋯" menu of the post header**, as a dropdown checkbox item, for Reel and Story only (decided 2026-11-04; there is no button under the frame). Values are constants in `lib/shared/preview/instagram.ts`.
 
@@ -164,7 +164,8 @@ The actions are the same as for any post (heart "Aprovar", comment, "Solicitar a
 | Place | Layout |
 |---|---|
 | Portal feed card | Mobile-width post (header, media by format, action bar of the feed, caption, comments) in one column |
-| Detail dialog and review screen | Two columns from the `lg` breakpoint: media on the left, right column with header, caption as first entry, the comments thread, the action bar and the comment field; one column below `lg` |
+| Details modal of the feed ("Ver detalhes", built 2026-11-04) | Two columns from the `lg` breakpoint on a dark backdrop: media on the left, right column with header, caption as first entry, the comments thread, the action bar and the comment field; one column below `lg`. The media is fitted to the height of the screen (88 % of it) |
+| Review screen (notification links, calendar) | The existing `PortalApprovalPage`; the feed does not open it |
 | Calendar hover and approval cards | Existing compact `ChannelPreview` until migrated (no change in this task) |
 
 ## Component design (to be added to [../standards/design-system.md](../standards/design-system.md) when built)
@@ -181,7 +182,8 @@ All under `src/components/shared/preview/instagram/` (no `index.ts`), one compon
 | `InstagramSlide` | Chooses the player for a video and `MediaSlide` for the other kinds |
 | `InstagramCaption` | Author, truncation, "… mais", hashtag and mention styling; renders nothing when the caption is empty |
 | `InstagramMediaFallback` | The placeholder of case 3 in the frame of the format |
-| `InstagramDetailLayout` | Two-column arrangement for the dialog. **Not built yet** (2026-11-04): the dialog still shows the review screen |
+| `InstagramDetailLayout` | The two-column arrangement of the details modal (`media` and `side` slots, media width fitted to the screen height). Built 2026-11-04 |
+| `InstagramMedia` | Chooses `InstagramImmersiveFrame` (Reel, Story) or `InstagramFeedMedia`; used by `InstagramPost` and by the details modal |
 
 Reuse (GOLD-2): the slide components `ImageSlide`, `VideoSlide`, `UnavailableSlide` and the media skeleton were **moved** out of `channel-preview.tsx` to `shared/preview/media-slide.tsx` (`MediaSlide`, `PreviewMedia`) and are used by both, not copied; `previewFrameRatio` and `FEED_RATIO_RANGES` stay the single source of the clamp and `platforms.ts` gains no second ratio table. `ChannelPreview` keeps serving the other platforms and the editor.
 
@@ -238,6 +240,8 @@ Recommendations are already the behavior written above; change them here first i
 8. **Verification of numbers.** The ratio range, the 20-item carousel, the 125-character rule and the safe zones need the capture checklist before being treated as verified; the official-source check of limits is also item M-preparation of [instagram-publishing.md](instagram-publishing.md).
 
 ## Implementation status
+
+2026-11-04 (details modal): `InstagramDetailLayout` and `InstagramMedia` built; the Story reply pill reads "Responder a {name}…". The Reel viewer of Instagram (rail of icons outside the frame, information at the bottom left of the screen) is **not** reproduced: a Reel opens in the same two-column modal. Details, validation and what was not tested in [portal.md](portal.md#implementation-status).
 
 2026-11-04 (emoji and reel): in a Reel the caption/audio group sits 1 rem from the bottom edge and the decorative rail 2.5 rem above it (they were 3 rem and 6 rem); the comment field of the feed has a working emoji picker (see [portal.md](portal.md#implementation-status)). Not tested in a browser.
 

@@ -95,7 +95,51 @@
   --radius: 0.75rem;
 }
 
+@keyframes heart-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.4);
+  }
+  65% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bubble-nudge {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  40% {
+    transform: translateY(-3px) rotate(-10deg);
+  }
+  70% {
+    transform: translateY(1px) rotate(6deg);
+  }
+}
+
+@keyframes pencil-wiggle {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-16deg);
+  }
+  75% {
+    transform: rotate(14deg);
+  }
+}
+
 @theme inline {
+  --animate-heart-pop: heart-pop 450ms ease-out;
+  --animate-bubble-nudge: bubble-nudge 350ms ease-out;
+  --animate-pencil-wiggle: pencil-wiggle 450ms ease-in-out;
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-violet: var(--violet);

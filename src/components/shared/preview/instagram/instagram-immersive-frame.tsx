@@ -80,6 +80,7 @@ export function InstagramImmersiveFrame({
   profileName,
   brandLogoUrl,
   showSafeZones,
+  maxWidth,
 }: {
   format: ContentFormat;
   media: PreviewMedia[];
@@ -87,6 +88,7 @@ export function InstagramImmersiveFrame({
   profileName: string;
   brandLogoUrl: string | null | undefined;
   showSafeZones: boolean;
+  maxWidth?: string | undefined;
 }) {
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -166,7 +168,7 @@ export function InstagramImmersiveFrame({
         ref={frameRef}
         className="relative mx-auto w-full overflow-hidden rounded-2xl bg-muted"
         style={{
-          maxWidth: `${maxRem}rem`,
+          maxWidth: maxWidth ?? `${maxRem}rem`,
           aspectRatio: previewFrameRatio(Platform.Instagram, format, undefined),
         }}
       >
@@ -236,8 +238,8 @@ export function InstagramImmersiveFrame({
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center gap-3 text-ivory"
             >
-              <span className="flex-1 rounded-full border border-ivory/70 px-3 py-2 text-xs">
-                Enviar mensagem
+              <span className="min-w-0 flex-1 truncate rounded-full border border-ivory/70 px-3 py-2 text-xs">
+                Responder a {name}…
               </span>
               <Heart className="size-6" />
               <Send className="size-6" />

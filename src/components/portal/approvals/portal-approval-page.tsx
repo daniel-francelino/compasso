@@ -40,7 +40,6 @@ import { kindOfMime } from "@/lib/shared/media/limits";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
-import { cn } from "@/lib/shared/utils";
 
 function StateNotice({ approval }: { approval: PortalApproval }) {
   const { request } = approval;
@@ -150,15 +149,7 @@ function History({ approval }: { approval: PortalApproval }) {
   );
 }
 
-export function PortalApprovalPage({
-  brandId,
-  requestId,
-  embedded = false,
-}: {
-  brandId: string;
-  requestId: string;
-  embedded?: boolean;
-}) {
+export function PortalApprovalPage({ brandId, requestId }: { brandId: string; requestId: string }) {
   const queryClient = useQueryClient();
   const draft = useDecisionDraft(requestId);
   const viewed = useRef(false);
@@ -243,18 +234,14 @@ export function PortalApprovalPage({
 
   const { request } = approval;
   return (
-    <div className={cn("space-y-6", !embedded && "pb-28 sm:pb-0")}>
+    <div className="space-y-6 pb-28 sm:pb-0">
       <div>
-        {embedded ? (
-          <p className="text-sm text-muted-foreground">{approval.brandName}</p>
-        ) : (
-          <Button asChild variant="ghost" className="-ml-3 min-h-11">
-            <Link to="/portal/brands/$brandId" params={{ brandId }}>
-              <ArrowLeft aria-hidden="true" />
-              Feed · {approval.brandName}
-            </Link>
-          </Button>
-        )}
+        <Button asChild variant="ghost" className="-ml-3 min-h-11">
+          <Link to="/portal/brands/$brandId" params={{ brandId }}>
+            <ArrowLeft aria-hidden="true" />
+            Feed · {approval.brandName}
+          </Link>
+        </Button>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="heading-page">{request.title}</h1>
           <StatusBadge tone="neutral" icon={ClipboardList}>
@@ -311,12 +298,7 @@ export function PortalApprovalPage({
       <PortalComments itemId={request.itemId} />
       {approval.canDecide ? (
         <div
-          className={cn(
-            "z-10 flex flex-wrap justify-end gap-2 bg-background",
-            embedded
-              ? "sticky bottom-0 border-t border-border py-3"
-              : "fixed inset-x-0 bottom-0 border-t border-border p-3 sm:static sm:border-0 sm:p-0",
-          )}
+          className="fixed inset-x-0 bottom-0 z-10 flex flex-wrap justify-end gap-2 border-t border-border bg-background p-3 sm:static sm:border-0 sm:p-0"
           role="group"
           aria-label="Sua decisão"
         >

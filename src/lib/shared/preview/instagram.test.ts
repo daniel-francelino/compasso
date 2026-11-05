@@ -5,8 +5,22 @@ import {
   collapseInstagramCaption,
   instagramCaptionRule,
   instagramSafeZones,
+  ratioValue,
   tokenizeCaption,
 } from "@/lib/shared/preview/instagram";
+
+describe("ratioValue", () => {
+  it("turns a frame ratio into a number", () => {
+    expect(ratioValue("4 / 5")).toBe(0.8);
+    expect(ratioValue("9 / 16")).toBe(0.5625);
+    expect(ratioValue("1910 / 1000")).toBe(1.91);
+  });
+
+  it("falls back to a square for an unreadable ratio", () => {
+    expect(ratioValue("wide")).toBe(1);
+    expect(ratioValue("4 / 0")).toBe(1);
+  });
+});
 
 describe("instagram rules", () => {
   it("keeps the carousel and safe zone constants in range", () => {
