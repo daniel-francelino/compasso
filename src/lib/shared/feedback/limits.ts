@@ -1,5 +1,3 @@
-export const FEEDBACK_SNOOZE_DAYS = 3;
-export const FEEDBACK_MAX_SNOOZES = 3;
 export const FEEDBACK_TEXT_MAX = 1000;
 export const FEEDBACK_ATTENTION_SCORE = 2;
 export const FEEDBACK_PAGE_SIZE = 12;

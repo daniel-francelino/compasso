@@ -10,7 +10,7 @@ export type FeedbackDraft = {
   improvement: string;
 };
 
-export const emptyFeedbackDraft: FeedbackDraft = {
+const emptyFeedbackDraft: FeedbackDraft = {
   scores: {
     [FeedbackQuestion.Overall]: 0,
     [FeedbackQuestion.Quality]: 0,
