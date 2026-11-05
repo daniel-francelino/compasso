@@ -24,7 +24,7 @@ export function EmojiPopover({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-11 shrink-0 [&_svg]:size-6"
+          className="size-11 shrink-0 transition-[transform,opacity] hover:bg-transparent hover:text-foreground hover:opacity-60 active:scale-90 [&_svg]:size-6"
           aria-label="Inserir emoji"
           disabled={disabled}
         >

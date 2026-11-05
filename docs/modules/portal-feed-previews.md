@@ -83,8 +83,7 @@ Instagram does not use the browser's native video controls. The rules below are 
 | Behavior | Rule |
 |---|---|
 | Start | Plays **muted** by itself while at least 60 % of the frame is visible; pauses when it leaves the screen. With `prefers-reduced-motion` it does not start by itself and shows a play icon |
-| Loop | Feed video (also inside a carousel) and Reel loop. If the browser does not loop by itself, the end of the file explicitly restarts it from the start (decided 2026-11-04: a finished video must never stay black). A Story does not loop: it moves to the next file |
-| Resume | After a new URL replaces an expired one, the video resumes at the second where it stopped, except when that point is within half a second of the end (it then starts over). The first frame is requested with `#t=0.001` so a paused video shows it instead of a black frame |
+| Loop | Feed video and Reel loop. A Story does not loop: it moves to the next file |
 | Tap | A tap on a feed video or Reel toggles pause; a centered play icon fades in while paused. A Story uses the tap zones (back, forward) and hold-to-pause |
 | Sound | A round mute button: bottom-right on a feed video, top-right on a Reel, in the header on a Story. It starts muted and remembers the choice for that post |
 | Progress | Feed video: none. Reel: a thin line at the bottom edge that can be dragged (an accessible slider "Posição do vídeo"). Story: the top segments |

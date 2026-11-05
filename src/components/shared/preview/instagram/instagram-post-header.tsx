@@ -54,7 +54,7 @@ export function InstagramPostHeader({
               type="button"
               variant="ghost"
               size="icon"
-              className="[&_svg]:size-6"
+              className="transition-[transform,opacity] hover:bg-transparent hover:text-foreground hover:opacity-60 active:scale-90 [&_svg]:size-6"
               aria-label="Mais opções"
             >
               <Ellipsis aria-hidden="true" />

@@ -58,7 +58,7 @@ export function FeedActions({
           <Button
             type="button"
             variant="ghost"
-            className="min-h-11 gap-1.5 px-2 transition-transform active:scale-90 [&_svg]:size-6 disabled:opacity-100"
+            className="min-h-11 gap-1.5 px-2 transition-[transform,opacity] hover:bg-transparent hover:text-foreground hover:opacity-60 active:scale-90 [&_svg]:size-6 disabled:opacity-100 disabled:hover:opacity-100"
             aria-pressed={approved}
             disabled={!canDecide || decision.busy}
             onClick={() => setConfirming(true)}
@@ -73,7 +73,7 @@ export function FeedActions({
         <Button
           type="button"
           variant="ghost"
-          className="min-h-11 gap-1.5 px-2 transition-transform active:scale-90 [&_svg]:size-6"
+          className="min-h-11 gap-1.5 px-2 transition-[transform,opacity] hover:bg-transparent hover:text-foreground hover:opacity-60 active:scale-90 [&_svg]:size-6"
           aria-label={`Comentários (${request.commentCount})`}
           onClick={() => {
             nudge();
@@ -89,7 +89,7 @@ export function FeedActions({
             title="Solicitar alteração"
             type="button"
             variant="ghost"
-            className="min-h-11 gap-1.5 px-2 transition-transform active:scale-90 [&_svg]:size-6"
+            className="min-h-11 gap-1.5 px-2 transition-[transform,opacity] hover:bg-transparent hover:text-foreground hover:opacity-60 active:scale-90 [&_svg]:size-6"
             disabled={decision.busy}
             onClick={askChanges}
           >
