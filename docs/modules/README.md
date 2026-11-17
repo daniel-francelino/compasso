@@ -19,6 +19,8 @@ Functional specification of the modules of Aura Creative, written before impleme
 | Client Portal | `portal` | External experience: pending items, calendar, approval, comments | [portal.md](portal.md) |
 | Portal feed previews | `shared` | How each Instagram format (image, carousel, video, Reel, Story) is drawn in the portal feed | [portal-feed-previews.md](portal-feed-previews.md) |
 | Client feedback | `portal` (answer) + `marketing` (cards) + `shared` (rules) | Monthly survey the client answers in the portal feed and the card view where the manager reads it | [feedback.md](feedback.md) |
+| Image editor (proposal) | `shared` | Canva-style design editor: reverse engineering, feasibility and proposed design | [image-editor.md](image-editor.md) |
+| Video editor (proposal) | `shared` | CapCut-style timeline editor: reverse engineering, feasibility and proposed design | [video-editor.md](video-editor.md) |
 | Organization and settings | `shared` | Organization data, defaults, users, roles, invitations | [organization-settings.md](organization-settings.md) |
 | Audit | `shared` | Business audit trail and its screen | [audit.md](audit.md) |
 

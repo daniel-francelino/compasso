@@ -178,6 +178,35 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Respondidos / Sem resposta | Feedbacks tabs | Answers received / contacts who did not answer, postponed or dismissed |
 | Dispensou este mês | Cards | The contact dismissed the survey of the month |
 
+## 4d. Image editor
+
+| Term (pt-BR) | Where | Meaning |
+|---|---|---|
+| Designs | Marketing menu, list | The images made in the editor; one "design" is one editable image of a brand |
+| Novo design | List | Create a design (name, brand, format) |
+| Formato | List, creation | The page size preset: "Feed quadrado (1080 × 1080)", "Feed retrato (1080 × 1350)", "Story ou Reel (1080 × 1920)" |
+| Texto / Imagem / Retângulo / Elipse | Editor toolbar, layers | The element kinds |
+| Camadas | Editor | The list of the elements of the page, the top one first |
+| Trazer para frente / Enviar para trás | Layers | Move an element one position up or down in the stack |
+| Bloquear / Desbloquear | Layers | A locked element cannot be moved or changed on the canvas |
+| Salvar versão | Editor | Freeze the current state as a numbered version that never changes |
+| Salvando… / Rascunho salvo / Alterações não salvas / Não foi salvo | Editor | State of the automatic saving of the draft |
+| Alterado em outra aba / Recarregar design | Editor | The draft was saved elsewhere (`conflict`); autosave stops, the work stays on screen until the person reloads |
+| Cor de fundo | Editor, page properties | Off means a transparent page (shown as a checkerboard) |
+| Espelhar na horizontal / Espelhar na vertical | Editor, image properties | Flip an image |
+| Somente leitura | Editor | Shown without `design.update`, for a design in the trash and below 768 px |
+| Páginas / Nova página / Duplicar página | Editor | The pages of a design (a carousel has up to 10) |
+| Linha | Editor toolbar | A straight line element |
+| Agrupar / Desagrupar | Editor | Join the selected elements so they move together / separate them |
+| Propriedades / Marca | Editor side panel | The tab with the settings of the selection / the brand kit (logo, colors, fonts of the brand) |
+| Zoom / Foco | Image properties | Enlarge the image inside its frame (the crop) and choose the visible part |
+| Brilho / Contraste / Sombra / Texto alternativo | Image and text properties | Simple filters, the text shadow and the description of an image for screen readers |
+| Versões / Restaurar no rascunho | Editor | The saved versions / copy one of them into the draft (the version itself never changes) |
+| Exportar | Editor | Create PNG or JPEG files of every page in the media library |
+| Modelos / Modelo da marca / Modelo | List, editor, "Novo design" | Designs marked as templates of a brand; a new design can start from one |
+| Redimensionar | List | Create a copy of a design in another format; the source stays as it is |
+| Mover para a lixeira / Restaurar | List | Archive a design / bring it back (nothing is deleted) |
+
 ## 5. Adding a term
 
 Add the row here, use it in the screen, and if it names a status or enum value also update [../reference/enums.md](../reference/enums.md). `review` checks new strings against this glossary.

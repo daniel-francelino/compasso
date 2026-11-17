@@ -161,6 +161,14 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `feedback_not_open` | invalid | "A pesquisa deste mês não está aberta." | portal_feedback_submit, portal_feedback_snooze, portal_feedback_decline |
 | `feedback_already_answered` | conflict | "Você já respondeu ou dispensou a pesquisa deste mês." | feedback_responses_guard, portal_feedback_submit, portal_feedback_snooze, portal_feedback_decline |
 
+### Image editor
+
+| Code | Category | Message (pt-BR) | Raised by |
+|---|---|---|---|
+| `design_too_large` | invalid | "Este design ficou grande demais. Remova alguns elementos para salvar." | design_assert_document |
+| `design_trashed` | conflict | "Este design está na lixeira. Restaure para editar." | design_lock |
+| `design_version_immutable` | denied | "Versões salvas de um design não podem ser alteradas." | design_versions_immutable |
+
 ## 3. Rules
 
 1. SQL raises only codes from this table; TypeScript maps unknown database errors to `unknown` and logs them.

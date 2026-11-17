@@ -72,6 +72,8 @@ import { Route as AdminAppmarketingMarketingClientsNewRouteImport } from './rout
 import { Route as AdminAppmarketingMarketingContentIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/content/index'
 import { Route as AdminAppmarketingMarketingContentItemIdRouteImport } from './routes/admin/_app/(marketing)/marketing/content/$itemId'
 import { Route as AdminAppmarketingMarketingContentNewRouteImport } from './routes/admin/_app/(marketing)/marketing/content/new'
+import { Route as AdminAppmarketingMarketingDesignsIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/designs/index'
+import { Route as AdminAppmarketingMarketingDesignsDesignIdRouteImport } from './routes/admin/_app/(marketing)/marketing/designs/$designId'
 import { Route as AdminAppmarketingMarketingFeedbackIndexRouteImport } from './routes/admin/_app/(marketing)/marketing/feedback/index'
 import { Route as AdminAppmarketingMarketingInstagramCallbackRouteImport } from './routes/admin/_app/(marketing)/marketing/instagram/callback'
 import { Route as PortalAppBrandsBrandIdApprovalsRequestIdRouteImport } from './routes/portal/_app/brands/$brandId/approvals/$requestId'
@@ -435,6 +437,18 @@ const AdminAppmarketingMarketingContentNewRoute =
     path: '/marketing/content/new',
     getParentRoute: () => AdminAppRoute,
   } as any)
+const AdminAppmarketingMarketingDesignsIndexRoute =
+  AdminAppmarketingMarketingDesignsIndexRouteImport.update({
+    id: '/(marketing)/marketing/designs/',
+    path: '/marketing/designs/',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
+const AdminAppmarketingMarketingDesignsDesignIdRoute =
+  AdminAppmarketingMarketingDesignsDesignIdRouteImport.update({
+    id: '/(marketing)/marketing/designs/$designId',
+    path: '/marketing/designs/$designId',
+    getParentRoute: () => AdminAppRoute,
+  } as any)
 const AdminAppmarketingMarketingFeedbackIndexRoute =
   AdminAppmarketingMarketingFeedbackIndexRouteImport.update({
     id: '/(marketing)/marketing/feedback/',
@@ -587,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
   '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
   '/admin/marketing/content/new': typeof AdminAppmarketingMarketingContentNewRoute
+  '/admin/marketing/designs/$designId': typeof AdminAppmarketingMarketingDesignsDesignIdRoute
   '/admin/marketing/instagram/callback': typeof AdminAppmarketingMarketingInstagramCallbackRoute
   '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   '/portal/brands/$brandId/metrics/$reportId': typeof PortalAppBrandsBrandIdMetricsReportIdRoute
@@ -595,6 +610,7 @@ export interface FileRoutesByFullPath {
   '/admin/marketing/calendar/': typeof AdminAppmarketingMarketingCalendarIndexRoute
   '/admin/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/marketing/content/': typeof AdminAppmarketingMarketingContentIndexRoute
+  '/admin/marketing/designs/': typeof AdminAppmarketingMarketingDesignsIndexRoute
   '/admin/marketing/feedback/': typeof AdminAppmarketingMarketingFeedbackIndexRoute
   '/portal/brands/$brandId/metrics/': typeof PortalAppBrandsBrandIdMetricsIndexRoute
   '/admin/marketing/brands/$brandId/calendar': typeof AdminAppmarketingMarketingBrandsBrandIdCalendarRoute
@@ -664,6 +680,7 @@ export interface FileRoutesByTo {
   '/admin/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
   '/admin/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
   '/admin/marketing/content/new': typeof AdminAppmarketingMarketingContentNewRoute
+  '/admin/marketing/designs/$designId': typeof AdminAppmarketingMarketingDesignsDesignIdRoute
   '/admin/marketing/instagram/callback': typeof AdminAppmarketingMarketingInstagramCallbackRoute
   '/portal/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   '/portal/brands/$brandId/metrics/$reportId': typeof PortalAppBrandsBrandIdMetricsReportIdRoute
@@ -672,6 +689,7 @@ export interface FileRoutesByTo {
   '/admin/marketing/calendar': typeof AdminAppmarketingMarketingCalendarIndexRoute
   '/admin/marketing/clients': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/marketing/content': typeof AdminAppmarketingMarketingContentIndexRoute
+  '/admin/marketing/designs': typeof AdminAppmarketingMarketingDesignsIndexRoute
   '/admin/marketing/feedback': typeof AdminAppmarketingMarketingFeedbackIndexRoute
   '/portal/brands/$brandId/metrics': typeof PortalAppBrandsBrandIdMetricsIndexRoute
   '/admin/marketing/brands/$brandId/calendar': typeof AdminAppmarketingMarketingBrandsBrandIdCalendarRoute
@@ -745,6 +763,7 @@ export interface FileRoutesById {
   '/admin/_app/(marketing)/marketing/clients/new': typeof AdminAppmarketingMarketingClientsNewRoute
   '/admin/_app/(marketing)/marketing/content/$itemId': typeof AdminAppmarketingMarketingContentItemIdRoute
   '/admin/_app/(marketing)/marketing/content/new': typeof AdminAppmarketingMarketingContentNewRoute
+  '/admin/_app/(marketing)/marketing/designs/$designId': typeof AdminAppmarketingMarketingDesignsDesignIdRoute
   '/admin/_app/(marketing)/marketing/instagram/callback': typeof AdminAppmarketingMarketingInstagramCallbackRoute
   '/portal/_app/brands/$brandId/approvals/$requestId': typeof PortalAppBrandsBrandIdApprovalsRequestIdRoute
   '/portal/_app/brands/$brandId/metrics/$reportId': typeof PortalAppBrandsBrandIdMetricsReportIdRoute
@@ -753,6 +772,7 @@ export interface FileRoutesById {
   '/admin/_app/(marketing)/marketing/calendar/': typeof AdminAppmarketingMarketingCalendarIndexRoute
   '/admin/_app/(marketing)/marketing/clients/': typeof AdminAppmarketingMarketingClientsIndexRoute
   '/admin/_app/(marketing)/marketing/content/': typeof AdminAppmarketingMarketingContentIndexRoute
+  '/admin/_app/(marketing)/marketing/designs/': typeof AdminAppmarketingMarketingDesignsIndexRoute
   '/admin/_app/(marketing)/marketing/feedback/': typeof AdminAppmarketingMarketingFeedbackIndexRoute
   '/portal/_app/brands/$brandId/metrics/': typeof PortalAppBrandsBrandIdMetricsIndexRoute
   '/admin/_app/(marketing)/marketing/brands/$brandId/calendar': typeof AdminAppmarketingMarketingBrandsBrandIdCalendarRoute
@@ -827,6 +847,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/clients/new'
     | '/admin/marketing/content/$itemId'
     | '/admin/marketing/content/new'
+    | '/admin/marketing/designs/$designId'
     | '/admin/marketing/instagram/callback'
     | '/portal/brands/$brandId/approvals/$requestId'
     | '/portal/brands/$brandId/metrics/$reportId'
@@ -835,6 +856,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/calendar/'
     | '/admin/marketing/clients/'
     | '/admin/marketing/content/'
+    | '/admin/marketing/designs/'
     | '/admin/marketing/feedback/'
     | '/portal/brands/$brandId/metrics/'
     | '/admin/marketing/brands/$brandId/calendar'
@@ -904,6 +926,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/clients/new'
     | '/admin/marketing/content/$itemId'
     | '/admin/marketing/content/new'
+    | '/admin/marketing/designs/$designId'
     | '/admin/marketing/instagram/callback'
     | '/portal/brands/$brandId/approvals/$requestId'
     | '/portal/brands/$brandId/metrics/$reportId'
@@ -912,6 +935,7 @@ export interface FileRouteTypes {
     | '/admin/marketing/calendar'
     | '/admin/marketing/clients'
     | '/admin/marketing/content'
+    | '/admin/marketing/designs'
     | '/admin/marketing/feedback'
     | '/portal/brands/$brandId/metrics'
     | '/admin/marketing/brands/$brandId/calendar'
@@ -984,6 +1008,7 @@ export interface FileRouteTypes {
     | '/admin/_app/(marketing)/marketing/clients/new'
     | '/admin/_app/(marketing)/marketing/content/$itemId'
     | '/admin/_app/(marketing)/marketing/content/new'
+    | '/admin/_app/(marketing)/marketing/designs/$designId'
     | '/admin/_app/(marketing)/marketing/instagram/callback'
     | '/portal/_app/brands/$brandId/approvals/$requestId'
     | '/portal/_app/brands/$brandId/metrics/$reportId'
@@ -992,6 +1017,7 @@ export interface FileRouteTypes {
     | '/admin/_app/(marketing)/marketing/calendar/'
     | '/admin/_app/(marketing)/marketing/clients/'
     | '/admin/_app/(marketing)/marketing/content/'
+    | '/admin/_app/(marketing)/marketing/designs/'
     | '/admin/_app/(marketing)/marketing/feedback/'
     | '/portal/_app/brands/$brandId/metrics/'
     | '/admin/_app/(marketing)/marketing/brands/$brandId/calendar'
@@ -1471,6 +1497,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAppmarketingMarketingContentNewRouteImport
       parentRoute: typeof AdminAppRoute
     }
+    '/admin/_app/(marketing)/marketing/designs/': {
+      id: '/admin/_app/(marketing)/marketing/designs/'
+      path: '/marketing/designs'
+      fullPath: '/admin/marketing/designs/'
+      preLoaderRoute: typeof AdminAppmarketingMarketingDesignsIndexRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
+    '/admin/_app/(marketing)/marketing/designs/$designId': {
+      id: '/admin/_app/(marketing)/marketing/designs/$designId'
+      path: '/marketing/designs/$designId'
+      fullPath: '/admin/marketing/designs/$designId'
+      preLoaderRoute: typeof AdminAppmarketingMarketingDesignsDesignIdRouteImport
+      parentRoute: typeof AdminAppRoute
+    }
     '/admin/_app/(marketing)/marketing/feedback/': {
       id: '/admin/_app/(marketing)/marketing/feedback/'
       path: '/marketing/feedback'
@@ -1656,12 +1696,14 @@ interface AdminAppRouteChildren {
   AdminAppmarketingMarketingClientsNewRoute: typeof AdminAppmarketingMarketingClientsNewRoute
   AdminAppmarketingMarketingContentItemIdRoute: typeof AdminAppmarketingMarketingContentItemIdRoute
   AdminAppmarketingMarketingContentNewRoute: typeof AdminAppmarketingMarketingContentNewRoute
+  AdminAppmarketingMarketingDesignsDesignIdRoute: typeof AdminAppmarketingMarketingDesignsDesignIdRoute
   AdminAppmarketingMarketingInstagramCallbackRoute: typeof AdminAppmarketingMarketingInstagramCallbackRoute
   AdminAppcmsSitePagesIndexRoute: typeof AdminAppcmsSitePagesIndexRoute
   AdminAppmarketingMarketingBrandsIndexRoute: typeof AdminAppmarketingMarketingBrandsIndexRoute
   AdminAppmarketingMarketingCalendarIndexRoute: typeof AdminAppmarketingMarketingCalendarIndexRoute
   AdminAppmarketingMarketingClientsIndexRoute: typeof AdminAppmarketingMarketingClientsIndexRoute
   AdminAppmarketingMarketingContentIndexRoute: typeof AdminAppmarketingMarketingContentIndexRoute
+  AdminAppmarketingMarketingDesignsIndexRoute: typeof AdminAppmarketingMarketingDesignsIndexRoute
   AdminAppmarketingMarketingFeedbackIndexRoute: typeof AdminAppmarketingMarketingFeedbackIndexRoute
 }
 
@@ -1709,6 +1751,8 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
     AdminAppmarketingMarketingContentItemIdRoute,
   AdminAppmarketingMarketingContentNewRoute:
     AdminAppmarketingMarketingContentNewRoute,
+  AdminAppmarketingMarketingDesignsDesignIdRoute:
+    AdminAppmarketingMarketingDesignsDesignIdRoute,
   AdminAppmarketingMarketingInstagramCallbackRoute:
     AdminAppmarketingMarketingInstagramCallbackRoute,
   AdminAppcmsSitePagesIndexRoute: AdminAppcmsSitePagesIndexRoute,
@@ -1720,6 +1764,8 @@ const AdminAppRouteChildren: AdminAppRouteChildren = {
     AdminAppmarketingMarketingClientsIndexRoute,
   AdminAppmarketingMarketingContentIndexRoute:
     AdminAppmarketingMarketingContentIndexRoute,
+  AdminAppmarketingMarketingDesignsIndexRoute:
+    AdminAppmarketingMarketingDesignsIndexRoute,
   AdminAppmarketingMarketingFeedbackIndexRoute:
     AdminAppmarketingMarketingFeedbackIndexRoute,
 }

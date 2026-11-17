@@ -128,6 +128,15 @@ export const AuditAction = {
     Answered: "feedback.answered",
     Declined: "feedback.declined",
   },
+  Design: {
+    Created: "design.created",
+    VersionSaved: "design.version_saved",
+    Trashed: "design.trashed",
+    Restored: "design.restored",
+    Exported: "design.exported",
+    VersionRestored: "design.version_restored",
+    TemplateChanged: "design.template_changed",
+  },
   Audit: {
     Exported: "audit.exported",
   },

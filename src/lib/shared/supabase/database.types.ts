@@ -1406,6 +1406,189 @@ export type Database = {
           },
         ]
       }
+      design_exports: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          design_id: string
+          format: string
+          id: string
+          media_asset_id: string
+          media_version_id: string
+          page_no: number
+          scale: number
+          version_no: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          design_id: string
+          format: string
+          id?: string
+          media_asset_id: string
+          media_version_id: string
+          page_no: number
+          scale: number
+          version_no: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          design_id?: string
+          format?: string
+          id?: string
+          media_asset_id?: string
+          media_version_id?: string
+          page_no?: number
+          scale?: number
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_exports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_exports_design_id_brand_id_fkey"
+            columns: ["design_id", "brand_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id", "brand_id"]
+          },
+          {
+            foreignKeyName: "design_exports_design_id_version_no_fkey"
+            columns: ["design_id", "version_no"]
+            isOneToOne: false
+            referencedRelation: "design_versions"
+            referencedColumns: ["design_id", "version_no"]
+          },
+          {
+            foreignKeyName: "design_exports_media_asset_id_fkey"
+            columns: ["media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_exports_media_version_id_fkey"
+            columns: ["media_version_id"]
+            isOneToOne: false
+            referencedRelation: "media_versions"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      design_versions: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          design_id: string
+          document: Json
+          id: string
+          version_no: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          design_id: string
+          document: Json
+          id?: string
+          version_no: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          design_id?: string
+          document?: Json
+          id?: string
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_versions_design_id_brand_id_fkey"
+            columns: ["design_id", "brand_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id", "brand_id"]
+          }
+        ]
+      }
+      designs: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          current_version_no: number
+          draft_document: Json
+          id: string
+          is_template: boolean
+          name: string
+          preset: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          current_version_no?: number
+          draft_document: Json
+          id?: string
+          is_template?: boolean
+          name: string
+          preset: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_version_no?: number
+          draft_document?: Json
+          id?: string
+          is_template?: boolean
+          name?: string
+          preset?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "designs_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "designs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       email_outbox: {
         Row: {
           attempts: number
@@ -3321,6 +3504,38 @@ export type Database = {
         Returns: Json
       }
       dashboard_status_counts: { Args: { p_brands?: string[] | null}; Returns: Json }
+      design_create: {
+        Args: { p_brand: string | null; p_name: string | null; p_preset: string | null; p_document?: Json | null }
+        Returns: Json
+      }
+      design_record_export: {
+        Args: { p_design: string | null; p_version_no: number | null; p_page_no: number | null; p_format: string | null; p_scale: number | null; p_media_version: string | null }
+        Returns: Json
+      }
+      design_rename: {
+        Args: { p_design: string | null; p_name: string | null; p_expected_version: number | null }
+        Returns: Json
+      }
+      design_restore_version: {
+        Args: { p_design: string | null; p_version_no: number | null; p_expected_version: number | null }
+        Returns: Json
+      }
+      design_save_draft: {
+        Args: { p_design: string | null; p_document: Json | null; p_expected_version: number | null }
+        Returns: Json
+      }
+      design_save_version: {
+        Args: { p_design: string | null; p_expected_version: number | null }
+        Returns: Json
+      }
+      design_set_template: {
+        Args: { p_design: string | null; p_template: boolean | null; p_expected_version: number | null }
+        Returns: Json
+      }
+      design_set_trashed: {
+        Args: { p_design: string | null; p_trashed: boolean | null }
+        Returns: Json
+      }
       editorial_transition_allowed: {
         Args: { p_from: string | null, p_to: string | null}
         Returns: boolean

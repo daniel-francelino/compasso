@@ -104,6 +104,8 @@ const checkValues = (table, column, constant, file, definedIn = table) => {
 checkValues("profiles", "status", "ProfileStatus", "src/lib/shared/enums.ts");
 checkValues("media_shares", "status", "MediaShareStatus", "src/lib/shared/enums.ts");
 checkValues("feedback_responses", "status", "FeedbackStatus", "src/lib/shared/enums.ts");
+checkValues("designs", "preset", "DesignPreset", "src/lib/shared/design/types.ts");
+checkValues("design_exports", "format", "DesignExportFormat", "src/lib/shared/design/types.ts");
 checkValues("profiles", "kind", "ProfileKind", "src/lib/shared/enums.ts");
 checkValues("audit_events", "actor_kind", "AuditActorKind", "src/lib/shared/enums.ts");
 checkValues(
@@ -160,5 +162,5 @@ if (problems.length > 0) {
   process.exit(1);
 }
 console.log(
-  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 29 CHECK lists.`,
+  `check:consistency OK: ${tsActions.size} actions, ${raised.size} raised error codes, ${tsAudit.size} audit actions, 31 CHECK lists.`,
 );

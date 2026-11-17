@@ -75,6 +75,15 @@ export const QueryKey = {
     list: (filters: Filters) => ["feedback", "list", filters] as const,
     summary: (filters: Filters) => ["feedback", "summary", filters] as const,
   },
+  Design: {
+    all: () => ["design"] as const,
+    lists: () => ["design", "list"] as const,
+    list: (filters: Filters) => ["design", "list", filters] as const,
+    detail: (id: string) => ["design", "detail", id] as const,
+    versions: (id: string) => ["design", "versions", id] as const,
+    exports: (id: string) => ["design", "exports", id] as const,
+    brandKit: (brandId: string) => ["design", "brand-kit", brandId] as const,
+  },
   Approvals: {
     all: () => ["approvals"] as const,
     detail: (id: string) => ["approvals", "detail", id] as const,

@@ -13,6 +13,7 @@ import {
   ListTree,
   Mail,
   Palette,
+  PenTool,
   Quote,
   Search,
   ScrollText,
@@ -107,6 +108,7 @@ export const navGroups: NavGroup[] = [
         to: AppRoute.Calendar,
         action: Action.Calendar.View,
       },
+      { title: "Designs", icon: PenTool, to: AppRoute.Designs, action: Action.Design.View },
     ],
   },
   {

@@ -302,6 +302,25 @@ The client side (`portal_feedback_*`) is in section 5. Manager side:
 | `feedback_summary(p_brand, p_period)` | `getFeedbackSummary` | `feedback.view` + brand link | — | — | `invalid_input`, `not_found` |
 | `feedback_policy_enabled`, `feedback_policy_open_day`, `feedback_brand_has_work`, `feedback_brand_asked`, `feedback_period_for`, `feedback_member_eligible`, `feedback_expected`, `feedback_score`, `feedback_text`, `feedback_lock_row`; trigger `feedback_responses_guard` | — | internal | — | — | `feedback_not_open`, `feedback_already_answered`, `invalid_input` |
 
+## 9d. Image editor (module: image-editor)
+
+Server functions in `lib/shared/design/design.functions.ts`. The list and the detail read the tables with the caller's client (RLS).
+
+| SQL function | Server function | Act. | Audit | Notif. | Errors |
+|---|---|---|---|---|---|
+| — (select on `designs`) | `listDesigns`, `getDesign` | `design.view` + brand link | — | — | `not_found` |
+| `design_create(p_brand, p_name, p_preset, p_document)` (`p_document` optional) | `createDesign` | `design.create` + brand link | `design.created` | — | `denied`, `not_found`, `invalid_input`, `design_too_large` |
+| `design_save_draft(p_design, p_document, p_expected_version)` | `saveDesignDraft` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_too_large`, `design_trashed` |
+| `design_rename(p_design, p_name, p_expected_version)` | `renameDesign` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_trashed` |
+| `design_save_version(p_design, p_expected_version)` (also writes the `design_version` media usages) | `saveDesignVersion` | `design.update` + brand link | `design.version_saved` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
+| — (select on `design_versions`, `design_exports`) | `listDesignVersions`, `listDesignExports` | `design.view` + brand link | — | — | `not_found` |
+| `design_restore_version(p_design, p_version_no, p_expected_version)` | `restoreDesignVersion` | `design.update` + brand link | `design.version_restored` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
+| `design_set_template(p_design, p_template, p_expected_version)` | `setDesignTemplate` | `design.update` + brand link | `design.template_changed` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
+| `design_record_export(p_design, p_version_no, p_page_no, p_format, p_scale, p_media_version)` | `recordDesignExport` | `design.update` + brand link | `design.exported` | — | `denied`, `not_found`, `invalid_input` |
+| — (select on `brands`) | `getDesignBrandKit` | `design.view` + brand link | — | — | `not_found` |
+| `design_set_trashed(p_design, p_trashed)` | `setDesignTrashed` | `design.delete` + brand link | `design.trashed`, `design.restored` | — | `denied`, `not_found` |
+| `design_assert_document`, `design_lock`, `design_upgrade_document`; trigger `design_versions_immutable` | — | internal | — | — | `invalid_input`, `design_too_large`, `design_trashed`, `design_version_immutable` |
+
 ## 10. Rules
 
 1. A server function calls **at most one** write RPC per user action (atomicity lives in SQL).

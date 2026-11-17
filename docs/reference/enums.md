@@ -65,6 +65,15 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 | `FeedbackStatus` | `snoozed`, `answered`, `declined` | `feedback_responses.status` | (internal) | feedback |
 | `FeedbackQuestion`, `FeedbackPromptState`, `FeedbackListStatus`, `FeedbackCardState`, `FeedbackScoreTone` | TypeScript only (no column): see `src/lib/shared/feedback/types.ts`. Prompt states `none`, `due`, `banner`; list status `answered`, `pending`; card state `answered`, `not_opened`, `snoozed`, `declined`; tone `attention`, `neutral`, `positive` | — | Questions in `src/lib/shared/feedback/questions.ts`; tones "Precisa de atenção", "Dentro do esperado", "Positivo" | feedback |
 
+## 2d. Image editor
+
+| TS constant | Values | DB column ✔ | pt-BR labels | Owner |
+|---|---|---|---|---|
+| `DesignPreset` | `feed_square`, `feed_portrait`, `story` | `designs.preset` | "Feed quadrado (1080 × 1080)", "Feed retrato (1080 × 1350)", "Story ou Reel (1080 × 1920)" | image-editor |
+| `DesignElementKind`, `DesignFont`, `DesignTextAlign`, `DesignStatusFilter` | TypeScript only (no column; the first three live inside the document JSON): see `src/lib/shared/design/types.ts`. Kinds `text`, `image`, `rect`, `ellipse`, `line`; fonts `dm_sans`, `cormorant`, `montserrat`, `playfair_display`, `poppins`, `lora`, `bebas_neue`, `inter`; alignment `left`, `center`, `right`; list filter `active`, `templates`, `trash` | — | Kinds "Texto", "Imagem", "Retângulo", "Elipse", "Linha"; fonts "DM Sans", "Cormorant Garamond", "Montserrat", "Playfair Display", "Poppins", "Lora", "Bebas Neue", "Inter"; alignment "À esquerda", "Centralizado", "À direita"; filter "Ativos", "Modelos", "Lixeira" | image-editor |
+| `DesignExportFormat` | `png`, `jpeg` | `design_exports.format` | "PNG", "JPEG" | image-editor |
+| `DesignSaveState`, `LayerMove` | TypeScript only, `src/lib/shared/design/types.ts`. Autosave state `saved`, `pending`, `saving`, `conflict`, `failed`; layer move `up`, `down`, `top`, `bottom` | — | Save state "Rascunho salvo", "Alterações não salvas", "Salvando…", "Alterado em outra aba", "Não foi salvo"; layer moves "Trazer para frente", "Enviar para trás" | image-editor |
+
 ## 3. Media
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
@@ -76,7 +85,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 | `PublicShareState` | `ok`, `not_found`, `revoked`, `unavailable`, `expired`, `locked`, `exhausted`, `password_required`, `wrong_password`, `download_disabled` | answer of the public share functions | see `publicShareStateMessages` | media-library |
 | `MediaVersionStatus` | `pending`, `processing`, `available`, `failed` | `media_versions.status` | "Enviando", "Processando", "Disponível", "Falhou" | media-library |
 | `UploadSessionStatus` | `open`, `confirmed`, `expired`, `failed` | `media_upload_sessions.status` | — (internal) | media-library |
-| `MediaUsageType` | `content_revision`, `site_page_revision`, `case_study`, `brand_identity`, `publication_evidence`, `profile_avatar` | `media_usages.usage_type` | "Revisão de conteúdo", "Página do site", "Case", "Identidade da marca", "Evidência de publicação", "Foto de perfil" | media-library |
+| `MediaUsageType` | `content_revision`, `site_page_revision`, `case_study`, `brand_identity`, `publication_evidence`, `profile_avatar`, `design_version` | `media_usages.usage_type` | "Revisão de conteúdo", "Página do site", "Case", "Identidade da marca", "Evidência de publicação", "Foto de perfil", "Versão de design" | media-library |
 | `MediaKind` | `image`, `video`, `document` (derived from MIME; not stored) | — | "Imagem", "Vídeo", "Documento" | media-library |
 
 ## 4. Site and CMS

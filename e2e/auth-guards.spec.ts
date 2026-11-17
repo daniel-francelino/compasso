@@ -23,6 +23,7 @@ test("the login form validates on the client before calling the server", async (
 for (const path of [
   "/admin/marketing/clients",
   "/admin/marketing/brands",
+  "/admin/marketing/designs",
   "/admin/settings/users",
   "/admin/settings/roles",
   "/admin/settings/audit",

@@ -19,6 +19,7 @@
 | `publish_attempts` | instagram-publishing | yes | `content.view` + `can_access_brand` (read); written only by service functions |
 | `channel_metric_daily`, `channel_audience_snapshot`, `channel_media_index`, `content_channel_metrics`, `metric_marks`, `metric_reports` | metrics | yes | `metrics.view` + `can_access_brand` (read); external users read only through `portal_metrics_*` |
 | `feedback_responses` | feedback | yes | `feedback.view` + `can_access_brand` (read); **no policy for external roles**: they use `portal_feedback_*` only |
+| `designs`, `design_versions` | image-editor | yes | `design.view` + `can_access_brand` (read); written only by the `design_*` functions; **no policy for external roles** and no `portal_*` function |
 | `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
 | `content_types`, `content_item_types` | content | yes | `content.view` (read; the catalog is per organization) and `content.view` + `can_access_brand` through the item (links); written only by `content_type_save`, `content_type_set_archived` (`content.manage_types`) and `content_item_save`; **no policy for external roles** |
 | `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
@@ -260,6 +261,18 @@ Migration `20261105100000_feedback.sql`. Rules: [../modules/feedback.md](../modu
 **`feedback_responses`** — one row per contact, brand and month, created on the first interaction (snooze, decline or send): `brand_id`, `respondent_id` (composite foreign key `(brand_id, respondent_id)` to `brand_members`), `period_month` (`date`, always the first day of the evaluated month, `unique (brand_id, respondent_id, period_month)`), `status` (`FeedbackStatus`), `snoozed_until`, `snooze_count` (0 to 3), `score_overall`, `score_quality`, `score_communication`, `score_deadlines`, `score_results` (1 to 5, null when not rated; only `score_overall` is required when `answered`), `highlight`, `improvement` (1 to 1000 characters or null), `form_version`, `timezone` (the brand's IANA zone at the time of sending), `answered_at`. CHECKs: scores, texts and `answered_at` are null unless `answered`; `snoozed_until` only while `snoozed`. Trigger `feedback_responses_guard`: an `answered` or `declined` row cannot be updated or deleted (`feedback_already_answered`). RLS enabled; read policy for `feedback.view` and `can_access_brand`; `revoke all` from clients, `select` only for `authenticated`; written only by `security definer` functions.
 
 **Policy group** `policies.feedback` in `organization_settings`: `enabled` (default true) and `openDay` (1 to 28, default 1).
+
+## 4d. Image editor (designs)
+
+Migrations `20261116100000_design.sql` (phase 1) and `20261117100000_design_phases_2_3.sql` (pages, exports, usages, restore, templates). Rules: [../modules/image-editor.md](../modules/image-editor.md).
+
+**`designs`** — one row per design: `brand_id` (foreign key to `brands`), `name` (1 to 120 characters), `preset` (`DesignPreset`), `draft_document` (`jsonb` object, the working copy written by autosave; shape in the module document, section 5.2), `current_version_no` (`int`, 0 while no version was saved), `is_template` (`boolean`, default false: a template of the brand, "Modelo da marca"), `version` (optimistic locking), `trashed_at`, `created_by`, `created_at`, `updated_at` (trigger). `unique (id, brand_id)`. Indexes `(brand_id, updated_at desc)` and a trigram-free `lower(name)` index for the search.
+
+**`design_versions`** — immutable saved states: `design_id` + `brand_id` (composite foreign key to `designs (id, brand_id)`), `version_no` (`unique (design_id, version_no)`), `document` (`jsonb`), `created_by`, `created_at`. Trigger `design_versions_immutable` refuses every update and delete (`design_version_immutable`).
+
+**`design_exports`** — one row per exported page: `design_id` + `brand_id` (composite foreign key to `designs (id, brand_id)`), `version_no` (the saved version exported; composite foreign key to `design_versions (design_id, version_no)`), `page_no` (1 to 10), `format` (`DesignExportFormat`: `png`, `jpeg`), `scale` (1 or 2), `media_asset_id` (foreign key to `media_assets`), `media_version_id` (foreign key to `media_versions`, unique), `created_by`, `created_at`. Index `(design_id, page_no, created_at desc)`.
+
+The three tables: RLS on, one `select` policy (`design.view` and `can_access_brand(brand_id)`), `select` granted to `authenticated` only, no insert, update or delete grant (writes go through the `security definer` functions). Saved versions register their images in `media_usages` with the type `design_version` (`usage_ref_id` = `design_versions.id`).
 
 ## 5. Content, versions, comments and approvals
 
@@ -562,7 +575,7 @@ create table media_collection_items (
 create table media_usages (
   id uuid primary key default gen_random_uuid(),
   media_version_id uuid not null references media_versions(id) on delete restrict,
-  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity','publication_evidence','profile_avatar')),
+  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity','publication_evidence','profile_avatar','design_version')),
   usage_ref_id uuid not null,
   alt_text text,
   created_at timestamptz not null default now(),

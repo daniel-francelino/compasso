@@ -30,6 +30,12 @@ export const Action = {
     View: "feedback.view",
     Answer: "feedback.answer",
   },
+  Design: {
+    View: "design.view",
+    Create: "design.create",
+    Update: "design.update",
+    Delete: "design.delete",
+  },
   Content: {
     View: "content.view",
     Create: "content.create",

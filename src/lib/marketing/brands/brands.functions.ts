@@ -24,9 +24,8 @@ import {
   saveBrandSchema,
   setBrandLogoSchema,
   setMemberSchema,
-  visualIdentitySchema,
-  type VisualIdentity,
 } from "@/lib/marketing/brands/schemas";
+import { type VisualIdentity, visualIdentitySchema } from "@/lib/shared/brands/visual-identity";
 
 export type BrandRow = {
   id: string;

@@ -388,6 +388,18 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Conflict,
     message: "Você já respondeu ou dispensou a pesquisa deste mês.",
   },
+  design_too_large: {
+    category: ErrorCode.Invalid,
+    message: "Este design ficou grande demais. Remova alguns elementos para salvar.",
+  },
+  design_trashed: {
+    category: ErrorCode.Conflict,
+    message: "Este design está na lixeira. Restaure para editar.",
+  },
+  design_version_immutable: {
+    category: ErrorCode.Denied,
+    message: "Versões salvas de um design não podem ser alteradas.",
+  },
   report_empty: {
     category: ErrorCode.Invalid,
     message: "Escolha ao menos um bloco para o relatório.",

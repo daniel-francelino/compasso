@@ -90,6 +90,13 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Organization.Updated]: "Dados da organização alterados",
   [AuditAction.Feedback.Answered]: "Feedback mensal respondido pelo cliente",
   [AuditAction.Feedback.Declined]: "Feedback mensal dispensado pelo cliente",
+  [AuditAction.Design.Created]: "Design criado",
+  [AuditAction.Design.VersionSaved]: "Versão do design salva",
+  [AuditAction.Design.Trashed]: "Design movido para a lixeira",
+  [AuditAction.Design.Restored]: "Design restaurado",
+  [AuditAction.Design.Exported]: "Design exportado para a biblioteca",
+  [AuditAction.Design.VersionRestored]: "Versão do design restaurada no rascunho",
+  [AuditAction.Design.TemplateChanged]: "Design marcado ou desmarcado como modelo",
   [AuditAction.Audit.Exported]: "Auditoria exportada",
 };
 
@@ -105,6 +112,7 @@ export const auditDomains: { value: string; label: string }[] = [
   { value: "metric_mark", label: "Marcas de métricas" },
   { value: "metrics_report", label: "Relatórios de resultados" },
   { value: "feedback", label: "Feedback de clientes" },
+  { value: "design", label: "Designs" },
   { value: "variant", label: "Versões por canal (histórico)" },
   { value: "comment", label: "Comentários" },
   { value: "approval", label: "Aprovações" },

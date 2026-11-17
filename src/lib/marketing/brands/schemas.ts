@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { BrandMemberStatus, Platform, ProfileKind } from "@/lib/shared/enums";
+import { visualIdentitySchema } from "@/lib/shared/brands/visual-identity";
 import { listRequestSchema } from "@/lib/shared/list-search";
 
 export const BrandStatusFilter = { Active: "active", Archived: "archived" } as const;
@@ -8,22 +9,6 @@ export const listBrandsSchema = listRequestSchema.extend({
   clientId: z.string().uuid().optional(),
   platform: z.nativeEnum(Platform).optional(),
 });
-
-export const visualIdentitySchema = z.object({
-  colors: z
-    .array(
-      z.object({
-        name: z.string().trim().min(1).max(40),
-        hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-      }),
-    )
-    .max(12)
-    .default([]),
-  fonts: z.array(z.string().trim().min(1).max(60)).max(8).default([]),
-  guidelinesUrl: z.union([z.literal(""), z.string().url().startsWith("https://")]).default(""),
-});
-
-export type VisualIdentity = z.infer<typeof visualIdentitySchema>;
 
 export const saveBrandSchema = z.object({
   id: z.string().uuid().optional(),

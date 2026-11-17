@@ -1,0 +1,170 @@
+import { useState } from "react";
+import {
+  type ElementBasePatch,
+  type ElementPatch,
+  type ImagePatch,
+  type LinePatch,
+  type ShapePatch,
+  type TextPatch,
+  addElement,
+  addPage,
+  canAddElements,
+  canAddPage,
+  duplicateElements,
+  duplicatePage,
+  emptyPage,
+  expandSelection,
+  findPage,
+  groupElements,
+  moveLayer,
+  movePage,
+  patchElement,
+  patchElements,
+  patchImage,
+  patchLine,
+  patchShape,
+  patchText,
+  removeElements,
+  removePage,
+  setBackground,
+  ungroupElements,
+  updatePage,
+} from "@/lib/shared/design/document";
+import {
+  type History,
+  historyOf,
+  pushHistory,
+  redoHistory,
+  undoHistory,
+} from "@/lib/shared/design/history";
+import type { DesignDocument, DesignElement, DesignPage } from "@/lib/shared/design/schemas";
+import { DESIGN_LIMITS, type LayerMove } from "@/lib/shared/design/types";
+
+const newId = () => crypto.randomUUID();
+
+const toggle = (page: DesignPage, current: readonly string[], id: string): string[] => {
+  const group = expandSelection(page, [id]);
+  return current.includes(id)
+    ? current.filter((item) => !group.includes(item))
+    : expandSelection(page, [...current, id]);
+};
+
+export const useDesignEditor = (initial: DesignDocument) => {
+  const [history, setHistory] = useState<History<DesignDocument>>(() => historyOf(initial));
+  const [pageId, setPageId] = useState(() => initial.pages[0]?.id ?? "");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const document = history.present;
+  const fallback = document.pages[0] ?? emptyPage("page-1");
+  const page = findPage(document, pageId) ?? fallback;
+  const currentPageId = page.id;
+  const selected = page.elements.filter((element) => selectedIds.includes(element.id));
+  const single = selected.length === 1 ? selected[0] : undefined;
+
+  const change = (update: (current: DesignDocument) => DesignDocument, mergeKey?: string) =>
+    setHistory((current) =>
+      pushHistory(current, update(current.present), DESIGN_LIMITS.history, mergeKey ?? null),
+    );
+
+  const changePage = (update: (current: DesignPage) => DesignPage, mergeKey?: string) =>
+    change((current) => updatePage(current, currentPageId, update), mergeKey);
+
+  const select = (id: string | null, additive = false) => {
+    if (id === null) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds((current) =>
+      additive ? toggle(page, current, id) : expandSelection(page, [id]),
+    );
+  };
+
+  const add = (element: DesignElement): boolean => {
+    if (!canAddElements(document)) return false;
+    changePage((current) => addElement(current, element));
+    setSelectedIds([element.id]);
+    return true;
+  };
+
+  const remove = (ids: readonly string[]) => {
+    changePage((current) => removeElements(current, ids));
+    setSelectedIds((current) => current.filter((id) => !ids.includes(id)));
+  };
+
+  const duplicate = (ids: readonly string[]) => {
+    if (!canAddElements(document, ids.length)) return;
+    const result = duplicateElements(page, ids, newId);
+    changePage(() => result.page);
+    setSelectedIds(result.ids);
+  };
+
+  const goToPage = (id: string) => {
+    setPageId(id);
+    setSelectedIds([]);
+  };
+
+  return {
+    document,
+    page,
+    pageId: currentPageId,
+    selected,
+    single,
+    selectedIds: selected.map((element) => element.id),
+    select,
+    selectMany: (ids: string[]) => setSelectedIds(expandSelection(page, ids)),
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
+    undo: () => setHistory(undoHistory),
+    redo: () => setHistory(redoHistory),
+    newId,
+    add,
+    remove,
+    duplicate,
+    canAdd: (count = 1) => canAddElements(document, count),
+    move: (id: string, move: LayerMove) => changePage((current) => moveLayer(current, id, move)),
+    patch: (id: string, patch: ElementBasePatch, mergeKey?: string) =>
+      changePage((current) => patchElement(current, id, patch), mergeKey),
+    patchMany: (patches: readonly ElementPatch[], mergeKey?: string) =>
+      changePage((current) => patchElements(current, patches), mergeKey),
+    patchText: (id: string, patch: TextPatch, mergeKey?: string) =>
+      changePage((current) => patchText(current, id, patch), mergeKey),
+    patchImage: (id: string, patch: ImagePatch, mergeKey?: string) =>
+      changePage((current) => patchImage(current, id, patch), mergeKey),
+    patchShape: (id: string, patch: ShapePatch, mergeKey?: string) =>
+      changePage((current) => patchShape(current, id, patch), mergeKey),
+    patchLine: (id: string, patch: LinePatch, mergeKey?: string) =>
+      changePage((current) => patchLine(current, id, patch), mergeKey),
+    setBackground: (background: string | null, mergeKey?: string) =>
+      changePage((current) => setBackground(current, background), mergeKey),
+    group: () => changePage((current) => groupElements(current, selectedIds, newId())),
+    ungroup: () => changePage((current) => ungroupElements(current, selectedIds)),
+    measure: (id: string, height: number) =>
+      setHistory((current) => ({
+        ...current,
+        present: {
+          ...current.present,
+          pages: current.present.pages.map((item) => patchElement(item, id, { height })),
+        },
+      })),
+    canAddPage: canAddPage(document),
+    goToPage,
+    addPage: () => {
+      const id = newId();
+      change((current) => addPage(current, currentPageId, emptyPage(id)));
+      goToPage(id);
+    },
+    duplicatePage: () => {
+      const id = newId();
+      change((current) => duplicatePage(current, currentPageId, id, newId));
+      goToPage(id);
+    },
+    removePage: () => {
+      const index = document.pages.findIndex((item) => item.id === currentPageId);
+      const neighbour = document.pages[index === 0 ? 1 : index - 1];
+      change((current) => removePage(current, currentPageId));
+      if (neighbour !== undefined) goToPage(neighbour.id);
+    },
+    movePage: (delta: -1 | 1) => change((current) => movePage(current, currentPageId, delta)),
+  };
+};
+
+export type DesignEditor = ReturnType<typeof useDesignEditor>;

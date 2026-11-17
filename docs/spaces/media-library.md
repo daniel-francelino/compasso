@@ -8,7 +8,9 @@ Upload, organize, find and reuse images, videos and documents without repeating 
 
 Included: standalone library, upload, preview, search, tags, collections, contextual selection, usages, versions and a "where it is used" view, explicit publishing of public derivatives for the site.
 
-Not included in the MVP: advanced image/video editing, AI image generation, automatic import by URL, synchronization with external services, video transcoding, upload by clients (decision pending), sharing by link with a password.
+**Editing is not part of the library (decided 2026-11-16).** The library stays storage. Image editing lives in its own module, the image editor ([../modules/image-editor.md](../modules/image-editor.md)), which reads library files through `MediaPicker` and signed URLs and will write its exported images through the normal upload path. A design (the editable source) is a JSON document in the database, never an uploaded file, so the rule of section 7 about editable design files stands.
+
+Not included in the MVP: video editing ([../modules/video-editor.md](../modules/video-editor.md) is only a proposal), AI image generation, automatic import by URL, synchronization with external services, video transcoding, upload by clients (decision pending), sharing by link with a password.
 
 ## 2. File, version and usage
 

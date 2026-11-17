@@ -88,6 +88,13 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `metrics_report.withdrawn` | `metrics_report` | `metrics_report_withdraw` |
 | `feedback.answered` | `feedback_response` | `portal_feedback_submit` (metadata: the month and the overall score; never the comments) |
 | `feedback.declined` | `feedback_response` | `portal_feedback_decline` (metadata: the month) |
+| `design.created` | `design` | `design_create` (metadata: the preset) |
+| `design.version_saved` | `design` | `design_save_version` (metadata: the version number) |
+| `design.trashed` | `design` | `design_set_trashed` |
+| `design.restored` | `design` | `design_set_trashed` |
+| `design.exported` | `design` | `design_record_export` (metadata: the version number, the page number and the format) |
+| `design.version_restored` | `design` | `design_restore_version` (metadata: the version number) |
+| `design.template_changed` | `design` | `design_set_template` (metadata: the new flag) |
 | `content_channel.cancelled` | `content_channel` | `content_channel_cancel` |
 | `calendar_note.created` | `calendar_note` | `calendar_note_save` (metadata: `kind`, `client_visible`) |
 | `calendar_note.updated` | `calendar_note` | `calendar_note_save` |
