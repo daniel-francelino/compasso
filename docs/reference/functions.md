@@ -308,7 +308,7 @@ Server functions in `lib/shared/design/design.functions.ts`. The list and the de
 
 | SQL function | Server function | Act. | Audit | Notif. | Errors |
 |---|---|---|---|---|---|
-| — (select on `designs`) | `listDesigns`, `getDesign` | `design.view` + brand link | — | — | `not_found` |
+| — (select on `designs`; `listDesigns` also reads `design_exports` for the thumbnail of page 1) | `listDesigns`, `getDesign` | `design.view` + brand link | — | — | `not_found` |
 | `design_create(p_brand, p_name, p_preset, p_document)` (`p_document` optional) | `createDesign` | `design.create` + brand link | `design.created` | — | `denied`, `not_found`, `invalid_input`, `design_too_large` |
 | `design_save_draft(p_design, p_document, p_expected_version)` | `saveDesignDraft` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_too_large`, `design_trashed` |
 | `design_rename(p_design, p_name, p_expected_version)` | `renameDesign` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_trashed` |

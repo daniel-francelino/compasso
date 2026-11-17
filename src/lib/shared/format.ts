@@ -123,3 +123,10 @@ export function formatSocialTime(value: Instant, now: Instant = nowDate()): stri
   const pattern = sameYear ? "d 'de' MMM" : "d 'de' MMM 'de' yyyy";
   return format(toDate(value), pattern, { locale: DATE_LOCALE });
 }
+
+export function formatEdited(value: Instant, now: Instant = nowDate()): string {
+  const elapsed = msBetween(value, now);
+  if (elapsed < MINUTE_MS) return "Editado agora";
+  const relative = formatSocialTime(value, now);
+  return elapsed < SOCIAL_MAX_WEEKS * WEEK_MS ? `Editado há ${relative}` : `Editado em ${relative}`;
+}

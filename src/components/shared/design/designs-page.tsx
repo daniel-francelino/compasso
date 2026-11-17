@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Link, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import {
   CircleCheck,
   Eye,
@@ -13,21 +13,20 @@ import {
 import { useState } from "react";
 import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
-import {
-  type DataTableAction,
-  type DataTableColumn,
-  DataTable,
-} from "@/components/shared/admin/data-table";
 import { ListFilters } from "@/components/shared/admin/list-filters";
-import { ListToolbar } from "@/components/shared/admin/list-toolbar";
 import { PageHeader } from "@/components/shared/admin/page-header";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
+import type { DesignCardAction } from "@/components/shared/design/design-card";
+import { DesignCardGrid } from "@/components/shared/design/design-card-grid";
+import { DesignGalleryHero } from "@/components/shared/design/design-gallery-hero";
+import { DesignQuickCreate } from "@/components/shared/design/design-quick-create";
 import { NewDesignDialog } from "@/components/shared/design/new-design-dialog";
 import { ResizeDesignDialog } from "@/components/shared/design/resize-design-dialog";
 import { Button } from "@/components/shared/ui/button";
 import { useBrandOptions } from "@/hooks/shared/use-brand-options";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { useServerAction } from "@/hooks/shared/use-server-action";
+import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
@@ -36,16 +35,18 @@ import {
   listDesigns,
   setDesignTrashed,
 } from "@/lib/shared/design/design.functions";
-import {
-  DESIGN_PAGE_SIZE,
-  DESIGN_PRESET_LABEL,
-  DesignStatusFilter,
-} from "@/lib/shared/design/types";
-import { formatDate } from "@/lib/shared/format";
+import { DESIGN_PAGE_SIZE, DesignPreset, DesignStatusFilter } from "@/lib/shared/design/types";
+import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const ALL = "all";
+
+const gridTitle: Record<DesignStatusFilter, string> = {
+  [DesignStatusFilter.Active]: "Continue criando",
+  [DesignStatusFilter.Templates]: "Modelos da marca",
+  [DesignStatusFilter.Trash]: "Lixeira",
+};
 
 const emptyTitle: Record<DesignStatusFilter, string> = {
   [DesignStatusFilter.Active]: "Nenhum design ainda",
@@ -54,7 +55,7 @@ const emptyTitle: Record<DesignStatusFilter, string> = {
 };
 
 const emptyDescription: Record<DesignStatusFilter, string> = {
-  [DesignStatusFilter.Active]: "Crie o primeiro design a partir de um formato do Instagram.",
+  [DesignStatusFilter.Active]: "Crie o primeiro design escolhendo um formato do Instagram acima.",
   [DesignStatusFilter.Templates]:
     'Abra um design e ligue "Modelo da marca" para usá-lo como ponto de partida de novos designs.',
   [DesignStatusFilter.Trash]:
@@ -71,7 +72,7 @@ export function DesignsPage() {
   const auth = useAuth();
   const router = useRouter();
   const { run, busy } = useServerAction();
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<DesignPreset | null>(null);
   const [trashing, setTrashing] = useState<DesignRow | null>(null);
   const [resizing, setResizing] = useState<DesignRow | null>(null);
   const list = useListState<string>(DesignStatusFilter.Active);
@@ -79,6 +80,7 @@ export function DesignsPage() {
     Object.values(DesignStatusFilter).find((value) => value === list.status) ??
     DesignStatusFilter.Active;
   const brands = useBrandOptions();
+  const canCreate = can(auth, Action.Design.Create);
   const request = {
     search: list.debouncedSearch,
     page: list.page,
@@ -90,6 +92,11 @@ export function DesignsPage() {
     queryFn: async () => unwrapResult(await listDesigns({ data: request })),
     placeholderData: keepPreviousData,
   });
+  const rows = query.data?.rows ?? [];
+  const thumbs = useSignedUrls(
+    rows.flatMap((row) => (row.thumbVersionId === null ? [] : [row.thumbVersionId])),
+    MediaVariant.Thumb,
+  );
 
   const open = (row: DesignRow) =>
     void router.navigate({
@@ -97,33 +104,9 @@ export function DesignsPage() {
       params: { designId: row.id },
     });
 
-  const columns: DataTableColumn<DesignRow>[] = [
-    {
-      id: "name",
-      label: "Design",
-      cell: (row) =>
-        row.trashed ? (
-          <span className="font-medium">{row.name}</span>
-        ) : (
-          <Link
-            to="/admin/marketing/designs/$designId"
-            params={{ designId: row.id }}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {row.name}
-          </Link>
-        ),
-    },
-    { id: "brand", label: "Marca", cell: (row) => row.brandName },
-    { id: "template", label: "Modelo", cell: (row) => (row.isTemplate ? "Sim" : "—") },
-    { id: "preset", label: "Formato", cell: (row) => DESIGN_PRESET_LABEL[row.preset] },
-    { id: "versions", label: "Versões salvas", cell: (row) => row.savedVersions },
-    { id: "updated", label: "Última alteração", cell: (row) => formatDate(row.updatedAt) },
-  ];
-
-  const actionsFor = (row: DesignRow): DataTableAction<DesignRow>[] => [
+  const actionsFor = (row: DesignRow): DesignCardAction[] => [
     ...(row.trashed ? [] : [{ id: "open", label: "Abrir design", icon: Eye, onSelect: open }]),
-    ...(!row.trashed && can(auth, Action.Design.Create)
+    ...(!row.trashed && canCreate
       ? [{ id: "resize", label: "Redimensionar", icon: Scaling, onSelect: setResizing }]
       : []),
     ...(can(auth, Action.Design.Delete)
@@ -140,28 +123,27 @@ export function DesignsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         title="Designs"
         description="Imagens das marcas criadas no editor: posts de feed, slides e stories."
         breadcrumbs={[{ label: "Designs" }]}
         actions={
-          can(auth, Action.Design.Create) ? (
-            <Button onClick={() => setCreating(true)}>
+          canCreate ? (
+            <Button onClick={() => setCreating(DesignPreset.FeedPortrait)}>
               <Plus aria-hidden="true" />
               Novo design
             </Button>
           ) : null
         }
       />
-      <ListToolbar
+      <DesignGalleryHero
+        tabs={tabs}
+        status={status}
+        onStatusChange={list.setStatus}
         search={list.search}
         onSearchChange={list.setSearch}
-        searchLabel="Buscar por nome"
-        statusOptions={tabs}
-        status={list.status}
-        onStatusChange={list.setStatus}
-        extra={
+        filters={
           <ListFilters
             groups={[
               {
@@ -177,19 +159,26 @@ export function DesignsPage() {
             ]}
           />
         }
-      />
-      <DataTable
-        caption="Designs"
-        rows={query.data?.rows ?? []}
-        columns={columns}
-        rowKey={(row) => row.id}
-        rowLabel={(row) => row.name}
-        actionsMenu
-        actions={actionsFor}
+      >
+        <DesignQuickCreate
+          canCreate={canCreate}
+          onCreate={setCreating}
+          onTemplates={() => list.setStatus(DesignStatusFilter.Templates)}
+        />
+      </DesignGalleryHero>
+      <DesignCardGrid
+        title={gridTitle[status]}
+        rows={rows}
+        total={query.data?.total ?? 0}
+        page={list.page}
+        pageSize={DESIGN_PAGE_SIZE}
         loading={query.isPending}
         refreshing={query.isFetching}
         error={query.error?.message ?? null}
         onRetry={() => void query.refetch()}
+        onPageChange={list.setPage}
+        thumbUrls={thumbs.data}
+        actionsFor={actionsFor}
         empty={
           <SearchableEmptyState
             icon={PenTool}
@@ -199,20 +188,15 @@ export function DesignsPage() {
             emptyDescription={emptyDescription[status]}
           />
         }
-        pagination={{
-          page: list.page,
-          pageSize: DESIGN_PAGE_SIZE,
-          total: query.data?.total ?? 0,
-          onPageChange: list.setPage,
-        }}
       />
-      {creating ? (
+      {creating === null ? null : (
         <NewDesignDialog
-          open={creating}
-          onOpenChange={setCreating}
+          open
+          onOpenChange={(value) => !value && setCreating(null)}
           defaultBrandId={list.filters.brand}
+          defaultPreset={creating}
         />
-      ) : null}
+      )}
       {resizing === null ? null : (
         <ResizeDesignDialog
           source={resizing}

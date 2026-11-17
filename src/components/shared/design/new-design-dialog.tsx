@@ -37,17 +37,19 @@ export function NewDesignDialog({
   open,
   onOpenChange,
   defaultBrandId,
+  defaultPreset = DesignPreset.FeedPortrait,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultBrandId: string | undefined;
+  defaultPreset?: DesignPresetValue;
 }) {
   const navigate = useNavigate();
   const brands = useBrandOptions(open);
   const { errors, error, busy, send } = useFormSubmit();
   const [name, setName] = useState("");
   const [brandId, setBrandId] = useState(defaultBrandId ?? "");
-  const [preset, setPreset] = useState<DesignPresetValue>(DesignPreset.FeedPortrait);
+  const [preset, setPreset] = useState<DesignPresetValue>(defaultPreset);
   const [templateId, setTemplateId] = useState(NO_TEMPLATE);
   const templatesRequest = { search: "", page: 1, status: DesignStatusFilter.Templates, brandId };
   const templates = useQuery({

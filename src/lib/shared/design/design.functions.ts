@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
-import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
+import { type Caller, requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { visualIdentitySchema } from "@/lib/shared/brands/visual-identity";
 import {
   type DesignDocument,
@@ -46,6 +46,7 @@ export type DesignRow = {
   isTemplate: boolean;
   trashed: boolean;
   updatedAt: string;
+  thumbVersionId: string | null;
 };
 
 export type DesignDetail = DesignRow & {
@@ -125,7 +126,34 @@ const toRow = (row: z.infer<typeof rowSchema>): DesignRow => ({
   isTemplate: row.is_template,
   trashed: row.trashed_at !== null,
   updatedAt: row.updated_at,
+  thumbVersionId: null,
 });
+
+const thumbRowSchema = z.object({
+  design_id: z.string().uuid(),
+  media_version_id: z.string().uuid(),
+});
+
+const firstPageThumbs = async (
+  supabase: Caller["supabase"],
+  ids: readonly string[],
+): Promise<Result<{ thumbs: Map<string, string> }>> => {
+  if (ids.length === 0) return { ok: true, thumbs: new Map() };
+  const { data, error } = await supabase
+    .from("design_exports")
+    .select("design_id, media_version_id")
+    .in("design_id", [...ids])
+    .eq("page_no", 1)
+    .order("created_at", { ascending: false });
+  if (error) return fail(error);
+  const parsed = parseOutput(z.object({ rows: z.array(thumbRowSchema) }), { rows: data ?? [] });
+  if (!parsed.ok) return parsed;
+  const thumbs = new Map<string, string>();
+  for (const row of parsed.rows) {
+    if (!thumbs.has(row.design_id)) thumbs.set(row.design_id, row.media_version_id);
+  }
+  return { ok: true, thumbs };
+};
 
 const ROW_COLUMNS =
   "id, name, brand_id, preset, current_version_no, is_template, trashed_at, updated_at, brand:brands(name, timezone)";
@@ -155,9 +183,18 @@ export const listDesigns = createServerFn({ method: "GET" })
     if (error) return fail(error);
     const parsed = parseOutput(z.object({ rows: z.array(rowSchema) }), { rows: rows ?? [] });
     if (!parsed.ok) return parsed;
+    const thumbs = await firstPageThumbs(
+      caller.supabase,
+      parsed.rows.map((row) => row.id),
+    );
+    if (!thumbs.ok) return thumbs;
+    const withThumbs = parsed.rows.map((row) => ({
+      ...toRow(row),
+      thumbVersionId: thumbs.thumbs.get(row.id) ?? null,
+    }));
     return {
       ok: true,
-      ...pageOf(parsed.rows.map(toRow), count ?? 0, {
+      ...pageOf(withThumbs, count ?? 0, {
         page: data.page,
         pageSize: DESIGN_PAGE_SIZE,
       }),

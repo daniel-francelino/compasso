@@ -206,6 +206,9 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Modelos / Modelo da marca / Modelo | List, editor, "Novo design" | Designs marked as templates of a brand; a new design can start from one |
 | Redimensionar | List | Create a copy of a design in another format; the source stays as it is |
 | Mover para a lixeira / Restaurar | List | Archive a design / bring it back (nothing is deleted) |
+| O que vamos criar hoje? / Buscar designs pelo nome | List (hero) | The heading and the search field of the design gallery |
+| Continue criando / Modelos da marca | List | Title of the gallery in the tabs "Ativos" and "Modelos" |
+| Editado há … / Editado em … | List card | When the design last changed ("Editado há 9 h", "Editado em 3 de nov.") |
 
 ## 4e. Video editor
 

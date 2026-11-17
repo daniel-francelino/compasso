@@ -79,6 +79,12 @@ export const DESIGN_PRESET_LABEL: Record<DesignPreset, string> = {
   [DesignPreset.Story]: "Story ou Reel (1080 × 1920)",
 };
 
+export const DESIGN_PRESET_SHORT_LABEL: Record<DesignPreset, string> = {
+  [DesignPreset.FeedSquare]: "Feed 1:1",
+  [DesignPreset.FeedPortrait]: "Feed 4:5",
+  [DesignPreset.Story]: "Story 9:16",
+};
+
 export const DESIGN_ELEMENT_LABEL: Record<DesignElementKind, string> = {
   [DesignElementKind.Text]: "Texto",
   [DesignElementKind.Image]: "Imagem",
