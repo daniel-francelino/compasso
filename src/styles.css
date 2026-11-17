@@ -233,6 +233,14 @@
     @apply bg-background font-sans text-base text-foreground antialiased;
   }
 
+  :where(button, [role="button"], summary, select):not(:disabled, [aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  :where(label:has(input[type="checkbox"], input[type="radio"], [role="switch"])) {
+    cursor: pointer;
+  }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--orchid) transparent;

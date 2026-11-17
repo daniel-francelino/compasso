@@ -92,6 +92,7 @@ Rules:
 
 - A button in loading state is **disabled** (no double submit), keeps its width and, if the operation fails, the filled-in data.
 - Touch targets: with `pointer: coarse` controls rise to **44 px** (`pointer-coarse:h-11`).
+- Clickable controls show the pointer cursor (`cursor: pointer` on enabled `button`, `[role="button"]`, `summary` and `label` of a checkbox, radio or switch, set once in the base layer of `styles.css`; Tailwind v4 no longer does it). Disabled controls keep the default cursor.
 - Focus is never removed without a replacement.
 - Error text explains what to do, in Brazilian Portuguese, without internal codes.
 

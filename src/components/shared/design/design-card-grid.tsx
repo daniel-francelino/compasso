@@ -1,10 +1,10 @@
 import { CircleAlert, RefreshCw } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { EmptyState } from "@/components/shared/admin/empty-state";
-import { PaginationBar } from "@/components/shared/admin/pagination-bar";
 import { type DesignCardAction, DesignCard } from "@/components/shared/design/design-card";
 import { Button } from "@/components/shared/ui/button";
 import { Skeleton } from "@/components/shared/ui/skeleton";
+import { useInView } from "@/hooks/shared/use-in-view";
 import type { DesignRow } from "@/lib/shared/design/design.functions";
 
 const GRID =
@@ -15,13 +15,13 @@ export function DesignCardGrid({
   title,
   rows,
   total,
-  page,
-  pageSize,
   loading,
   refreshing,
   error,
   onRetry,
-  onPageChange,
+  hasMore,
+  loadingMore,
+  onLoadMore,
   thumbUrls,
   actionsFor,
   empty,
@@ -29,17 +29,24 @@ export function DesignCardGrid({
   title: string;
   rows: DesignRow[];
   total: number;
-  page: number;
-  pageSize: number;
   loading: boolean;
   refreshing: boolean;
   error: string | null;
   onRetry: () => void;
-  onPageChange: (page: number) => void;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
   thumbUrls: Record<string, string> | undefined;
   actionsFor: (row: DesignRow) => DesignCardAction[];
   empty: ReactNode;
 }) {
+  const sentinel = useInView<HTMLDivElement>(0);
+  const shouldLoad = sentinel.inView && hasMore && !loadingMore && error === null;
+
+  useEffect(() => {
+    if (shouldLoad) onLoadMore();
+  }, [shouldLoad, onLoadMore]);
+
   return (
     <section aria-labelledby="design-grid-title" aria-busy={loading || refreshing}>
       <div className="mb-4 flex items-end justify-between gap-3">
@@ -89,15 +96,22 @@ export function DesignCardGrid({
           ))}
         </ul>
       ) : null}
-      {!loading && total > 0 ? (
-        <div className="mt-6">
-          <PaginationBar
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            onPageChange={onPageChange}
-            disabled={refreshing}
-          />
+      {loadingMore ? (
+        <ul className={`${GRID} mt-6`} aria-label="Carregando mais designs">
+          {Array.from({ length: 5 }, (_, index) => (
+            <li key={index} className="space-y-2">
+              <Skeleton className="aspect-4/3 w-full rounded-xl" />
+              <Skeleton className="h-4 w-3/4" />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <div ref={sentinel.ref} aria-hidden="true" className="h-px" />
+      {hasMore && !loading && !loadingMore ? (
+        <div className="mt-4 flex justify-center">
+          <Button type="button" variant="outline" onClick={onLoadMore}>
+            Carregar mais
+          </Button>
         </div>
       ) : null}
     </section>

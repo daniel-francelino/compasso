@@ -11,7 +11,6 @@ export function DesignGalleryHero({
   onStatusChange,
   search,
   onSearchChange,
-  filters,
   children,
 }: {
   tabs: readonly GalleryTab[];
@@ -19,7 +18,6 @@ export function DesignGalleryHero({
   onStatusChange: (status: string) => void;
   search: string;
   onSearchChange: (search: string) => void;
-  filters: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -59,7 +57,6 @@ export function DesignGalleryHero({
             </button>
           );
         })}
-        {filters}
       </div>
       <div className="relative mx-auto mt-6 max-w-3xl">
         <Label htmlFor="design-gallery-search" className="sr-only">

@@ -183,7 +183,6 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Term (pt-BR) | Where | Meaning |
 |---|---|---|
 | Designs | Marketing menu, list | The images made in the editor; one "design" is one editable image of a brand |
-| Novo design | List | Create a design (name, brand, format) |
 | Formato | List, creation | The page size preset: "Feed quadrado (1080 × 1080)", "Feed retrato (1080 × 1350)", "Story ou Reel (1080 × 1920)" |
 | Texto / Imagem / Retângulo / Elipse | Editor toolbar, layers | The element kinds |
 | Camadas | Editor | The list of the elements of the page, the top one first |
@@ -212,11 +211,14 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Brilho / Contraste / Sombra / Texto alternativo | Image and text properties | Simple filters, the text shadow and the description of an image for screen readers |
 | Versões / Restaurar no rascunho | Editor | The saved versions / copy one of them into the draft (the version itself never changes) |
 | Exportar | Editor | Create PNG or JPEG files of every page in the media library |
-| Modelos / Modelo da marca / Modelo | List, editor, "Novo design" | Designs marked as templates of a brand; a new design can start from one |
+| Modelos / Modelo da marca / Modelo | List, editor, "Usar modelo" | Designs marked as templates of a brand; a new design can start from one |
 | Redimensionar | List | Create a copy of a design in another format; the source stays as it is |
 | Mover para a lixeira / Restaurar | List | Archive a design / bring it back (nothing is deleted) |
 | O que vamos criar hoje? / Buscar designs pelo nome | List (hero) | The heading and the search field of the design gallery |
 | Continue criando / Modelos da marca | List | Title of the gallery in the tabs "Ativos" and "Modelos" |
+| Design sem título | List, editor | Name of a design created from a format circle until the person renames it |
+| Usar modelo | List (template card) | Create a new design as a copy of the template and open it |
+| Carregar mais | List | Load the next designs (keyboard alternative to the infinite scroll) |
 | Editado há … / Editado em … | List card | When the design last changed ("Editado há 9 h", "Editado em 3 de nov.") |
 
 ## 4e. Video editor

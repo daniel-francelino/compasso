@@ -17,21 +17,24 @@ function Circle({
   label,
   description,
   circle,
+  disabledReason,
   onClick,
 }: {
   icon: typeof Square;
   label: string;
   description: string;
   circle: string;
+  disabledReason?: string | undefined;
   onClick: () => void;
 }) {
   return (
     <li className="shrink-0">
       <button
         type="button"
-        title={description}
+        title={disabledReason ?? description}
+        disabled={disabledReason !== undefined}
         onClick={onClick}
-        className="group flex w-24 flex-col items-center gap-2 rounded-xl p-1 text-center focus-visible:outline-2 focus-visible:outline-ring"
+        className="group disabled:opacity-50 flex w-24 flex-col items-center gap-2 rounded-xl p-1 text-center focus-visible:outline-2 focus-visible:outline-ring"
       >
         <span
           className={cn(
@@ -49,10 +52,12 @@ function Circle({
 
 export function DesignQuickCreate({
   canCreate,
+  disabledReason,
   onCreate,
   onTemplates,
 }: {
   canCreate: boolean;
+  disabledReason: string | undefined;
   onCreate: (preset: DesignPreset) => void;
   onTemplates: () => void;
 }) {
@@ -72,8 +77,9 @@ export function DesignQuickCreate({
                 key={preset}
                 icon={PRESET_VIEW[preset].icon}
                 label={PRESET_VIEW[preset].label}
-                description={`Novo design: ${DESIGN_PRESET_LABEL[preset]}`}
+                description={`Criar e abrir: ${DESIGN_PRESET_LABEL[preset]}`}
                 circle={PRESET_VIEW[preset].circle}
+                disabledReason={disabledReason}
                 onClick={() => onCreate(preset)}
               />
             ))

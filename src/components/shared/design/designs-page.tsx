@@ -1,29 +1,24 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import {
   CircleCheck,
+  Copy,
   Eye,
   LayoutTemplate,
   PenTool,
-  Plus,
   Scaling,
   Trash2,
   Undo2,
 } from "lucide-react";
-import { useState } from "react";
-import { brandSelectOptions } from "@/components/shared/admin/brand-select-options";
+import { useCallback, useState } from "react";
 import { ConfirmDialog } from "@/components/shared/admin/confirm-dialog";
-import { ListFilters } from "@/components/shared/admin/list-filters";
-import { PageHeader } from "@/components/shared/admin/page-header";
 import { SearchableEmptyState } from "@/components/shared/admin/searchable-empty-state";
 import type { DesignCardAction } from "@/components/shared/design/design-card";
 import { DesignCardGrid } from "@/components/shared/design/design-card-grid";
 import { DesignGalleryHero } from "@/components/shared/design/design-gallery-hero";
 import { DesignQuickCreate } from "@/components/shared/design/design-quick-create";
-import { NewDesignDialog } from "@/components/shared/design/new-design-dialog";
 import { ResizeDesignDialog } from "@/components/shared/design/resize-design-dialog";
-import { Button } from "@/components/shared/ui/button";
-import { useBrandOptions } from "@/hooks/shared/use-brand-options";
+import { useCreateDesign } from "@/hooks/shared/design/use-create-design";
 import { useListState } from "@/hooks/shared/use-list-state";
 import { useServerAction } from "@/hooks/shared/use-server-action";
 import { useSignedUrls } from "@/hooks/shared/use-signed-urls";
@@ -35,12 +30,10 @@ import {
   listDesigns,
   setDesignTrashed,
 } from "@/lib/shared/design/design.functions";
-import { DESIGN_PAGE_SIZE, DesignPreset, DesignStatusFilter } from "@/lib/shared/design/types";
+import { DESIGN_PAGE_SIZE, DesignStatusFilter } from "@/lib/shared/design/types";
 import { MediaVariant } from "@/lib/shared/media/schemas";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
-
-const ALL = "all";
 
 const gridTitle: Record<DesignStatusFilter, string> = {
   [DesignStatusFilter.Active]: "Continue criando",
@@ -72,31 +65,31 @@ export function DesignsPage() {
   const auth = useAuth();
   const router = useRouter();
   const { run, busy } = useServerAction();
-  const [creating, setCreating] = useState<DesignPreset | null>(null);
   const [trashing, setTrashing] = useState<DesignRow | null>(null);
   const [resizing, setResizing] = useState<DesignRow | null>(null);
   const list = useListState<string>(DesignStatusFilter.Active);
   const status =
     Object.values(DesignStatusFilter).find((value) => value === list.status) ??
     DesignStatusFilter.Active;
-  const brands = useBrandOptions();
   const canCreate = can(auth, Action.Design.Create);
-  const request = {
-    search: list.debouncedSearch,
-    page: list.page,
-    status,
-    ...(list.filters.brand ? { brandId: list.filters.brand } : {}),
-  };
-  const query = useQuery({
+  const creator = useCreateDesign(canCreate);
+  const request = { search: list.debouncedSearch, status };
+  const query = useInfiniteQuery({
     queryKey: QueryKey.Design.list(request),
-    queryFn: async () => unwrapResult(await listDesigns({ data: request })),
+    queryFn: async ({ pageParam }) =>
+      unwrapResult(await listDesigns({ data: { ...request, page: pageParam } })),
+    initialPageParam: 1,
+    getNextPageParam: (last, pages) =>
+      pages.length * DESIGN_PAGE_SIZE < last.total ? pages.length + 1 : undefined,
     placeholderData: keepPreviousData,
   });
-  const rows = query.data?.rows ?? [];
+  const rows = query.data?.pages.flatMap((page) => page.rows) ?? [];
   const thumbs = useSignedUrls(
     rows.flatMap((row) => (row.thumbVersionId === null ? [] : [row.thumbVersionId])),
     MediaVariant.Thumb,
   );
+  const { fetchNextPage } = query;
+  const loadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
 
   const open = (row: DesignRow) =>
     void router.navigate({
@@ -106,6 +99,16 @@ export function DesignsPage() {
 
   const actionsFor = (row: DesignRow): DesignCardAction[] => [
     ...(row.trashed ? [] : [{ id: "open", label: "Abrir design", icon: Eye, onSelect: open }]),
+    ...(row.isTemplate && !row.trashed && canCreate
+      ? [
+          {
+            id: "use",
+            label: "Usar modelo",
+            icon: Copy,
+            onSelect: (template: DesignRow) => void creator.fromTemplate(template),
+          },
+        ]
+      : []),
     ...(!row.trashed && canCreate
       ? [{ id: "resize", label: "Redimensionar", icon: Scaling, onSelect: setResizing }]
       : []),
@@ -124,59 +127,34 @@ export function DesignsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Designs"
-        description="Imagens das marcas criadas no editor: posts de feed, slides e stories."
-        breadcrumbs={[{ label: "Designs" }]}
-        actions={
-          canCreate ? (
-            <Button onClick={() => setCreating(DesignPreset.FeedPortrait)}>
-              <Plus aria-hidden="true" />
-              Novo design
-            </Button>
-          ) : null
-        }
-      />
       <DesignGalleryHero
         tabs={tabs}
         status={status}
         onStatusChange={list.setStatus}
         search={list.search}
         onSearchChange={list.setSearch}
-        filters={
-          <ListFilters
-            groups={[
-              {
-                id: "brand",
-                label: "Marca",
-                value: list.filters.brand ?? ALL,
-                defaultValue: ALL,
-                emptyText: brands.data?.length === 0 ? "Nenhuma marca cadastrada" : undefined,
-                options: brandSelectOptions(brands.data, "Todas as marcas", ALL),
-                onChange: (value) =>
-                  void list.setFilter("brand", value === ALL ? undefined : value),
-              },
-            ]}
-          />
-        }
       >
         <DesignQuickCreate
           canCreate={canCreate}
-          onCreate={setCreating}
+          disabledReason={
+            creator.noBrand ??
+            (creator.loadingBrands ? "Carregando marcas…" : creator.busy ? "Criando…" : undefined)
+          }
+          onCreate={(preset) => void creator.fromPreset(preset)}
           onTemplates={() => list.setStatus(DesignStatusFilter.Templates)}
         />
       </DesignGalleryHero>
       <DesignCardGrid
         title={gridTitle[status]}
         rows={rows}
-        total={query.data?.total ?? 0}
-        page={list.page}
-        pageSize={DESIGN_PAGE_SIZE}
+        total={query.data?.pages[0]?.total ?? 0}
         loading={query.isPending}
         refreshing={query.isFetching}
         error={query.error?.message ?? null}
         onRetry={() => void query.refetch()}
-        onPageChange={list.setPage}
+        hasMore={query.hasNextPage}
+        loadingMore={query.isFetchingNextPage}
+        onLoadMore={loadMore}
         thumbUrls={thumbs.data}
         actionsFor={actionsFor}
         empty={
@@ -189,14 +167,6 @@ export function DesignsPage() {
           />
         }
       />
-      {creating === null ? null : (
-        <NewDesignDialog
-          open
-          onOpenChange={(value) => !value && setCreating(null)}
-          defaultBrandId={list.filters.brand}
-          defaultPreset={creating}
-        />
-      )}
       {resizing === null ? null : (
         <ResizeDesignDialog
           source={resizing}

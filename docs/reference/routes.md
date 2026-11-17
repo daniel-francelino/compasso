@@ -69,9 +69,9 @@ Reserved first segments (cannot be page slugs): `admin`, `portal`, `api`, `asset
 | `/admin/marketing/brands/$brandId/identity` | `brands.view` (edit: `brands.update`) | brands |
 | `/admin/marketing/brands/$brandId/settings` | `brands.update` | brands |
 | `/admin/marketing/feedback` | `feedback.view` | feedback (cards; search params `status` = `answered` or `pending`, `brand`, `period` = `YYYY-MM`, `attention` = `1`, `page`) |
-| `/admin/marketing/designs` | `design.view` | image-editor (list; search params `q`, `status` = `active` or `trash`, `brand`, `page`) |
+| `/admin/marketing/designs` | `design.view` | image-editor (list; search params `q`, `status` = `active`, `templates` or `trash`; infinite scroll, no page param) |
 | `/admin/marketing/designs/$designId` | `design.view` (edit: `design.update`) | image-editor (editor) |
-| `/admin/marketing/videos` | `video.view` | video-editor (list; search params `q`, `status` = `active` or `trash`, `brand`, `page`) |
+| `/admin/marketing/videos` | `video.view` | video-editor (list; search params `q`, `status` = `active`, `templates` or `trash`; infinite scroll, no page param) |
 | `/admin/marketing/videos/$projectId` | `video.view` (edit: `video.update`) | video-editor (editor) |
 | `/admin/marketing/content` | `content.view` | content (all authorized brands) |
 | `/admin/marketing/content/$itemId` | `content.view` | content |
