@@ -56,6 +56,41 @@ export const LayerMove = {
 } as const;
 export type LayerMove = ValueOf<typeof LayerMove>;
 
+export const DesignTool = {
+  Move: "move",
+  Text: "text",
+  Rect: "rect",
+  Ellipse: "ellipse",
+  Line: "line",
+  Hand: "hand",
+  Zoom: "zoom",
+} as const;
+export type DesignTool = ValueOf<typeof DesignTool>;
+
+export const DesignAlign = {
+  Left: "left",
+  CenterX: "center_x",
+  Right: "right",
+  Top: "top",
+  CenterY: "center_y",
+  Bottom: "bottom",
+} as const;
+export type DesignAlign = ValueOf<typeof DesignAlign>;
+
+export const DesignDistribute = {
+  Horizontal: "horizontal",
+  Vertical: "vertical",
+} as const;
+export type DesignDistribute = ValueOf<typeof DesignDistribute>;
+
+export const DesignPanel = {
+  Transform: "transform",
+  Properties: "properties",
+  Layers: "layers",
+  Brand: "brand",
+} as const;
+export type DesignPanel = ValueOf<typeof DesignPanel>;
+
 export const DesignSaveState = {
   Saved: "saved",
   Pending: "pending",
@@ -112,6 +147,49 @@ export const DESIGN_ALIGN_LABEL: Record<DesignTextAlign, string> = {
   [DesignTextAlign.Right]: "À direita",
 };
 
+export const DESIGN_TOOL_LABEL: Record<DesignTool, string> = {
+  [DesignTool.Move]: "Mover",
+  [DesignTool.Text]: "Texto",
+  [DesignTool.Rect]: "Retângulo",
+  [DesignTool.Ellipse]: "Elipse",
+  [DesignTool.Line]: "Linha",
+  [DesignTool.Hand]: "Mão",
+  [DesignTool.Zoom]: "Zoom",
+};
+
+export const DESIGN_TOOL_KEY: Record<DesignTool, string> = {
+  [DesignTool.Move]: "v",
+  [DesignTool.Text]: "t",
+  [DesignTool.Rect]: "r",
+  [DesignTool.Ellipse]: "e",
+  [DesignTool.Line]: "l",
+  [DesignTool.Hand]: "h",
+  [DesignTool.Zoom]: "z",
+};
+
+export const DESIGN_IMAGE_KEY = "i";
+
+export const DESIGN_ALIGN_ACTION_LABEL: Record<DesignAlign, string> = {
+  [DesignAlign.Left]: "Alinhar à esquerda",
+  [DesignAlign.CenterX]: "Centralizar na horizontal",
+  [DesignAlign.Right]: "Alinhar à direita",
+  [DesignAlign.Top]: "Alinhar ao topo",
+  [DesignAlign.CenterY]: "Centralizar na vertical",
+  [DesignAlign.Bottom]: "Alinhar à base",
+};
+
+export const DESIGN_DISTRIBUTE_LABEL: Record<DesignDistribute, string> = {
+  [DesignDistribute.Horizontal]: "Distribuir na horizontal",
+  [DesignDistribute.Vertical]: "Distribuir na vertical",
+};
+
+export const DESIGN_PANEL_LABEL: Record<DesignPanel, string> = {
+  [DesignPanel.Transform]: "Transformar",
+  [DesignPanel.Properties]: "Propriedades",
+  [DesignPanel.Layers]: "Camadas",
+  [DesignPanel.Brand]: "Marca",
+};
+
 export const DESIGN_EXPORT_FORMAT_LABEL: Record<DesignExportFormat, string> = {
   [DesignExportFormat.Png]: "PNG",
   [DesignExportFormat.Jpeg]: "JPEG",
@@ -152,6 +230,13 @@ export const DESIGN_LIMITS = {
   duplicateOffset: 24,
   snapScreenPx: 6,
   jpegQuality: 0.92,
+  minViewZoom: 0.1,
+  maxViewZoom: 8,
+  wheelZoomSpeed: 0.0015,
+  viewPadding: 48,
+  drawMinScreenPx: 6,
+  rulerSize: 24,
+  rulerMinStepPx: 60,
 } as const;
 
 export const DESIGN_PAGE_SIZE = 20;

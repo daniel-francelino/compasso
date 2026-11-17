@@ -4,6 +4,7 @@ import type { AudioClip, VideoDocument } from "@/lib/shared/video/schemas";
 import { type TextRaster, textRasterKey } from "@/lib/shared/video/text-raster";
 import { activeAt, fadeLevel, mainStarts } from "@/lib/shared/video/timeline";
 import { VideoClipKind } from "@/lib/shared/video/types";
+import { type ValueStore, createValueStore } from "@/lib/shared/value-store";
 
 export type PreviewAssets = {
   videoOf: (clipId: string) => HTMLVideoElement | undefined;
@@ -126,28 +127,9 @@ export const isTimingActive = (timing: MediaTiming, timeMs: number): boolean =>
 export const sourceSeconds = (timing: MediaTiming, timeMs: number): number =>
   (timing.sourceInMs + timeMs - timing.startMs) / 1000;
 
-export type Clock = {
-  get: () => number;
-  set: (timeMs: number) => void;
-  subscribe: (listener: () => void) => () => void;
-};
+export type Clock = ValueStore<number>;
 
-export const createClock = (): Clock => {
-  let value = 0;
-  const listeners = new Set<() => void>();
-  return {
-    get: () => value,
-    set: (timeMs) => {
-      if (timeMs === value) return;
-      value = timeMs;
-      for (const listener of listeners) listener();
-    },
-    subscribe: (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-  };
-};
+export const createClock = (): Clock => createValueStore(0);
 
 const MAX_PREVIEW_HEIGHT = 520;
 

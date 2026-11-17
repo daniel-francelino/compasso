@@ -1,31 +1,35 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FormSwitch } from "lost-ui/forms/form-switch";
 import { Alert, AlertDescription } from "lost-ui/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "lost-ui/ui/tabs";
-import { PageHeader } from "@/components/shared/admin/page-header";
 import { DesignBrandPanel } from "@/components/shared/design/design-brand-panel";
+import { DesignContextBar } from "@/components/shared/design/design-context-bar";
 import { DesignExportDialog } from "@/components/shared/design/design-export-dialog";
 import { DesignLayersPanel } from "@/components/shared/design/design-layers-panel";
-import { DesignNameField } from "@/components/shared/design/design-name-field";
-import { DesignPagesStrip } from "@/components/shared/design/design-pages-strip";
+import { DesignPanelDock } from "@/components/shared/design/design-panel-dock";
 import { DesignPropertiesPanel } from "@/components/shared/design/design-properties-panel";
-import { DesignSaveStatus } from "@/components/shared/design/design-save-status";
-import { DesignToolbar } from "@/components/shared/design/design-toolbar";
+import { DesignStatusBar } from "@/components/shared/design/design-status-bar";
+import { DesignToolRail } from "@/components/shared/design/design-tool-rail";
+import { DesignTopBar } from "@/components/shared/design/design-top-bar";
+import { DesignTransformPanel } from "@/components/shared/design/design-transform-panel";
 import { DesignVersionsDialog } from "@/components/shared/design/design-versions-dialog";
+import { DesignViewport } from "@/components/shared/design/design-viewport";
+import { MediaPicker } from "@/components/shared/media/media-picker";
 import { Button } from "@/components/shared/ui/button";
-import { Skeleton } from "@/components/shared/ui/skeleton";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/shared/ui/sheet";
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
 import { useDesignAutosave } from "@/hooks/shared/design/use-design-autosave";
 import { useDesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { useDesignShortcuts } from "@/hooks/shared/design/use-design-shortcuts";
+import { useDesignTool } from "@/hooks/shared/design/use-design-tool";
+import { useDesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import { useIsMobile } from "@/hooks/shared/use-mobile";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { type CanvasChrome, readCanvasChrome } from "@/lib/shared/design/browser";
+import { type DrawTool, drawnElement } from "@/lib/shared/design/arrange";
+import { type CanvasChrome, imageNaturalSize, readCanvasChrome } from "@/lib/shared/design/browser";
 import {
   type DesignDetail,
   getDesignBrandKit,
@@ -34,49 +38,22 @@ import {
   saveDesignVersion,
   setDesignTemplate,
 } from "@/lib/shared/design/design.functions";
-import { brandFontsOf } from "@/lib/shared/design/document";
+import { brandFontsOf, createImage } from "@/lib/shared/design/document";
 import {
   DESIGN_PRESET_LABEL,
   DESIGN_PRESET_SIZE,
+  DesignPanel,
   DesignSaveState,
+  DesignTool,
 } from "@/lib/shared/design/types";
+import type { Point } from "@/lib/shared/design/viewport";
+import { MediaScope } from "@/lib/shared/enums";
+import { MediaKind } from "@/lib/shared/media/limits";
 import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
-import { AppRoute } from "@/lib/shared/routes";
 
-const DesignCanvas = lazy(() => import("@/components/shared/design/design-canvas"));
-
-const CHECKER = {
-  backgroundImage: "repeating-conic-gradient(var(--line) 0% 25%, var(--surface) 0% 50%)",
-  backgroundSize: "24px 24px",
-};
-const MAX_VIEWPORT_SHARE = 0.7;
-const PanelTab = { Properties: "properties", Layers: "layers", Brand: "brand" } as const;
-
-const useFitScale = (page: { width: number; height: number }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0);
-
-  useEffect(() => {
-    const node = ref.current;
-    if (node === null) return undefined;
-    const measure = () => {
-      const byWidth = node.clientWidth / page.width;
-      const byHeight = (window.innerHeight * MAX_VIEWPORT_SHARE) / page.height;
-      setScale(Math.max(0.05, Math.min(1, byWidth, byHeight)));
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    window.addEventListener("resize", measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", measure);
-    };
-  }, [page.width, page.height]);
-
-  return { ref, scale };
-};
+const IMAGE_KINDS = [MediaKind.Image] as const;
+const FULL = "O design chegou ao limite de elementos. Remova algum para adicionar outro.";
 
 export function DesignWorkspace({
   design,
@@ -99,7 +76,8 @@ export function DesignWorkspace({
   });
   const assets = useDesignAssets(editor.document);
   const size = DESIGN_PRESET_SIZE[design.preset];
-  const fit = useFitScale(size);
+  const viewport = useDesignViewport(size);
+  const tool = useDesignTool();
   const kit = useQuery({
     queryKey: QueryKey.Design.brandKit(design.brandId),
     queryFn: async () =>
@@ -111,12 +89,24 @@ export function DesignWorkspace({
   const [savingVersion, setSavingVersion] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [panelsOpen, setPanelsOpen] = useState(false);
+  const [picking, setPicking] = useState(false);
   const conflict = autosave.state === DesignSaveState.Conflict;
   const canEdit = editable && !conflict;
+  const full = editor.canAdd() ? undefined : FULL;
   const swatches = (kit.data?.colors ?? []).map((color) => color.hex);
   const brandFonts = brandFontsOf(kit.data?.fonts ?? []);
+  const pageNumber = editor.document.pages.findIndex((page) => page.id === editor.pageId) + 1;
 
-  useDesignShortcuts(editor, canEdit);
+  useDesignShortcuts({
+    editor,
+    tool,
+    viewport,
+    editable: canEdit,
+    onImage: () => {
+      if (full === undefined) setPicking(true);
+    },
+  });
   useEffect(() => setChrome(readCanvasChrome()), []);
 
   const refreshList = () => queryClient.invalidateQueries({ queryKey: QueryKey.Design.lists() });
@@ -166,16 +156,78 @@ export function DesignWorkspace({
     void refreshList();
   };
 
+  const draw = (drawTool: DrawTool, start: Point, end: Point | null, shift: boolean) => {
+    tool.reset();
+    if (chrome === null) return;
+    const element = drawnElement({
+      tool: drawTool,
+      id: editor.newId(),
+      preset: design.preset,
+      palette: chrome,
+      start,
+      end,
+      shift,
+    });
+    if (!editor.add(element)) {
+      toast.error(FULL);
+      return;
+    }
+    if (drawTool === DesignTool.Text) tool.editText(element.id);
+  };
+
+  const addImage = async (versionId: string) => {
+    const natural = await imageNaturalSize(versionId);
+    if (!editor.add(createImage(editor.newId(), design.preset, versionId, natural))) {
+      toast.error(FULL);
+    }
+  };
+
+  const panels = {
+    [DesignPanel.Transform]: <DesignTransformPanel editor={editor} editable={canEdit} />,
+    [DesignPanel.Properties]: (
+      <DesignPropertiesPanel
+        editor={editor}
+        chrome={chrome}
+        editable={canEdit}
+        swatches={swatches}
+        brandFonts={brandFonts}
+      />
+    ),
+    [DesignPanel.Layers]: <DesignLayersPanel editor={editor} editable={canEdit} />,
+    [DesignPanel.Brand]: (
+      <DesignBrandPanel
+        editor={editor}
+        kit={kit.data}
+        loading={kit.isPending}
+        preset={design.preset}
+        brandFonts={brandFonts}
+        editable={canEdit}
+      />
+    ),
+  };
+
   return (
-    <div className="space-y-4">
-      <PageHeader
-        title={name}
-        description={`${design.brandName} · ${DESIGN_PRESET_LABEL[design.preset]}`}
-        breadcrumbs={[{ label: "Designs", to: AppRoute.Designs }, { label: name }]}
-        actions={editable ? <DesignSaveStatus state={autosave.state} /> : null}
+    <div className="flex h-dvh flex-col bg-background">
+      <DesignTopBar
+        editor={editor}
+        name={name}
+        meta={`${design.brandName} · ${DESIGN_PRESET_LABEL[design.preset]}`}
+        editable={editable}
+        canEdit={canEdit}
+        canExport={canExport}
+        isTemplate={isTemplate}
+        saveState={autosave.state}
+        savingVersion={savingVersion}
+        showSaveState={editable}
+        onRename={rename}
+        onTemplate={(value) => void toggleTemplate(value)}
+        onVersions={() => setVersionsOpen(true)}
+        onSaveVersion={() => void saveVersion()}
+        onExport={() => setExportOpen(true)}
+        onPanels={() => setPanelsOpen(true)}
       />
       {design.trashed ? (
-        <Alert>
+        <Alert className="rounded-none border-x-0 border-t-0">
           <AlertDescription>
             Este design está na lixeira e só pode ser visto. Restaure na lista de designs para
             editar.
@@ -183,7 +235,7 @@ export function DesignWorkspace({
         </Alert>
       ) : null}
       {isMobile && !design.trashed ? (
-        <Alert>
+        <Alert className="rounded-none border-x-0 border-t-0">
           <AlertDescription>
             A edição de designs está disponível no tablet e no computador. Aqui você só pode ver o
             design.
@@ -191,7 +243,7 @@ export function DesignWorkspace({
         </Alert>
       ) : null}
       {conflict ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">
           <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
             <span>
               Este design foi alterado em outra aba ou por outra pessoa. As suas últimas alterações
@@ -205,105 +257,59 @@ export function DesignWorkspace({
         </Alert>
       ) : null}
       {autosave.state === DesignSaveState.Failed && autosave.message !== null ? (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">
           <AlertDescription>{autosave.message}</AlertDescription>
         </Alert>
       ) : null}
-      {isMobile ? null : (
-        <div className="flex flex-wrap items-center gap-4">
-          <DesignNameField name={name} disabled={!canEdit} onRename={rename} />
-          <FormSwitch
-            name="isTemplate"
-            label="Modelo da marca"
-            value={isTemplate}
-            disabled={!canEdit}
-            onValueChange={(value) => void toggleTemplate(value)}
+      {canEdit ? <DesignContextBar editor={editor} tool={tool.active} size={size} /> : null}
+      <div className="flex min-h-0 flex-1">
+        {canEdit ? (
+          <DesignToolRail
+            tool={tool.active}
+            onTool={tool.setTool}
+            onImage={() => setPicking(true)}
+            full={full}
           />
-        </div>
-      )}
-      {isMobile ? null : (
-        <DesignToolbar
+        ) : null}
+        <DesignViewport
+          viewport={viewport}
+          tool={tool}
           editor={editor}
-          preset={design.preset}
-          brandId={design.brandId}
+          size={size}
+          images={assets.images}
           chrome={chrome}
+          fontsVersion={assets.fontsVersion}
           editable={canEdit}
-          canExport={canExport}
-          savingVersion={savingVersion}
-          onSaveVersion={() => void saveVersion()}
-          onVersions={() => setVersionsOpen(true)}
-          onExport={() => setExportOpen(true)}
+          label={`Página ${pageNumber} do design ${name}`}
+          onDraw={draw}
         />
-      )}
-      <DesignPagesStrip editor={editor} editable={canEdit} />
-      <div className="flex flex-col gap-4 lg:flex-row">
-        <div ref={fit.ref} className="min-w-0 flex-1">
-          <div
-            className="mx-auto w-fit overflow-hidden rounded-md border shadow-sm"
-            style={CHECKER}
-          >
-            {chrome === null || fit.scale === 0 ? (
-              <Skeleton className="h-96 w-72" />
-            ) : (
-              <Suspense fallback={<Skeleton className="h-96 w-72" />}>
-                <DesignCanvas
-                  page={editor.page}
-                  size={size}
-                  scale={fit.scale}
-                  selectedIds={editor.selectedIds}
-                  images={assets.images}
-                  chrome={chrome}
-                  fontsVersion={assets.fontsVersion}
-                  editable={canEdit}
-                  label={`Página ${editor.document.pages.findIndex((page) => page.id === editor.pageId) + 1} do design ${name}`}
-                  onSelect={editor.select}
-                  onCommit={editor.patchMany}
-                  onMeasure={editor.measure}
-                />
-              </Suspense>
-            )}
-          </div>
-          {canEdit ? (
-            <p className="mt-2 text-center text-xs text-muted-foreground">
-              Shift+clique seleciona vários · Setas movem (Shift para 10 px) · Delete exclui ·
-              Ctrl+D duplica · Ctrl+G agrupa · Esc limpa a seleção
-            </p>
-          ) : null}
-        </div>
-        {isMobile ? null : (
-          <aside className="w-full shrink-0 rounded-lg border bg-card p-4 lg:w-80">
-            <Tabs defaultValue={PanelTab.Properties}>
-              <TabsList className="w-full">
-                <TabsTrigger value={PanelTab.Properties}>Propriedades</TabsTrigger>
-                <TabsTrigger value={PanelTab.Layers}>Camadas</TabsTrigger>
-                <TabsTrigger value={PanelTab.Brand}>Marca</TabsTrigger>
-              </TabsList>
-              <TabsContent value={PanelTab.Properties} className="mt-4">
-                <DesignPropertiesPanel
-                  editor={editor}
-                  chrome={chrome}
-                  editable={canEdit}
-                  swatches={swatches}
-                  brandFonts={brandFonts}
-                />
-              </TabsContent>
-              <TabsContent value={PanelTab.Layers} className="mt-4">
-                <DesignLayersPanel editor={editor} editable={canEdit} />
-              </TabsContent>
-              <TabsContent value={PanelTab.Brand} className="mt-4">
-                <DesignBrandPanel
-                  editor={editor}
-                  kit={kit.data}
-                  loading={kit.isPending}
-                  preset={design.preset}
-                  brandFonts={brandFonts}
-                  editable={canEdit}
-                />
-              </TabsContent>
-            </Tabs>
-          </aside>
-        )}
+        <aside
+          aria-label="Painéis"
+          className="hidden w-80 shrink-0 overflow-y-auto border-l bg-card xl:block"
+        >
+          {panelsOpen ? null : <DesignPanelDock panels={panels} />}
+        </aside>
       </div>
+      <DesignStatusBar editor={editor} viewport={viewport} editable={canEdit} size={size} />
+      <Sheet open={panelsOpen} onOpenChange={setPanelsOpen}>
+        <SheetContent side="right" className="w-80 overflow-y-auto p-0 sm:max-w-80">
+          <SheetHeader className="px-4 pt-4">
+            <SheetTitle>Painéis</SheetTitle>
+          </SheetHeader>
+          <DesignPanelDock panels={panels} />
+        </SheetContent>
+      </Sheet>
+      <MediaPicker
+        open={picking}
+        onOpenChange={setPicking}
+        scope={MediaScope.Brand}
+        brandId={design.brandId}
+        kinds={IMAGE_KINDS}
+        onConfirm={(picked) => {
+          const first = picked[0];
+          if (first !== undefined) void addImage(first.versionId);
+        }}
+      />
       <DesignVersionsDialog
         open={versionsOpen}
         onOpenChange={setVersionsOpen}

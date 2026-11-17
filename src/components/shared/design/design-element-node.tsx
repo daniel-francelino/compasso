@@ -22,6 +22,7 @@ export type NodeEvents = {
   onDragMove: (id: string, node: Konva.Node) => void;
   onDragEnd: () => void;
   onMeasure: (id: string, height: number) => void;
+  onEdit: (id: string) => void;
 };
 
 type NodeProps = {
@@ -30,6 +31,7 @@ type NodeProps = {
   chrome: CanvasChrome;
   fontsVersion: number;
   interactive: boolean;
+  hidden?: boolean;
   events: NodeEvents;
 };
 
@@ -225,8 +227,12 @@ export function DesignElementNode({
   chrome,
   fontsVersion,
   interactive,
+  hidden = false,
   events,
 }: NodeProps) {
+  const edit = () => {
+    if (element.kind === DesignElementKind.Text && !element.locked) events.onEdit(element.id);
+  };
   const movable = interactive && !element.locked;
   const halfWidth = element.width / 2;
   const halfHeight = element.height / 2;
@@ -242,11 +248,13 @@ export function DesignElementNode({
       width={element.width}
       height={element.height}
       rotation={element.rotation}
-      opacity={element.opacity}
+      opacity={hidden ? 0 : element.opacity}
       draggable={movable}
       listening={interactive}
       onMouseDown={(event) => events.onPointer(element.id, event.evt.shiftKey)}
       onTap={() => events.onPointer(element.id, false)}
+      onDblClick={edit}
+      onDblTap={edit}
       onDragStart={() => events.onDragStart(element.id)}
       onDragMove={(event) => events.onDragMove(element.id, event.target)}
       onDragEnd={events.onDragEnd}

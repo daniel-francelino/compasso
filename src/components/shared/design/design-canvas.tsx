@@ -1,7 +1,12 @@
 import type Konva from "konva";
 import { useEffect, useRef, useState } from "react";
-import { Layer, Line, Rect, Stage, Transformer } from "react-konva";
+import { Group, Layer, Line, Rect, Stage, Transformer } from "react-konva";
+import { DesignDraftShape } from "@/components/shared/design/design-draft-shape";
 import { DesignElementNode, type NodeEvents } from "@/components/shared/design/design-element-node";
+import {
+  type GestureCallbacks,
+  useCanvasGestures,
+} from "@/hooks/shared/design/use-canvas-gestures";
 import type { LoadedImages } from "@/hooks/shared/design/use-design-assets";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
 import {
@@ -12,7 +17,13 @@ import {
   snapTargets,
 } from "@/lib/shared/design/document";
 import type { DesignElement, DesignPage } from "@/lib/shared/design/schemas";
-import { DESIGN_LIMITS, DesignElementKind, type PageSize } from "@/lib/shared/design/types";
+import {
+  DESIGN_LIMITS,
+  DesignElementKind,
+  DesignTool,
+  type PageSize,
+} from "@/lib/shared/design/types";
+import type { Viewport } from "@/lib/shared/design/viewport";
 
 const ROTATION_SNAPS = [0, 45, 90, 135, 180, 225, 270, 315];
 const SIDE_ANCHORS = ["middle-left", "middle-right"];
@@ -56,7 +67,13 @@ const patchOf = (element: DesignElement, node: Konva.Node): ElementPatch => {
   };
 };
 
-export type DesignCanvasProps = {
+export type CanvasView = { viewport: Viewport; width: number; height: number };
+
+export type DesignCanvasProps = GestureCallbacks & {
+  view?: CanvasView;
+  tool?: DesignTool;
+  editingTextId?: string | null;
+  onEditText?: (id: string) => void;
   page: DesignPage;
   size: PageSize;
   scale: number;
@@ -67,16 +84,19 @@ export type DesignCanvasProps = {
   editable: boolean;
   interactive?: boolean;
   label: string;
-  onSelect?: (id: string | null, additive: boolean) => void;
   onCommit?: (patches: ElementPatch[], mergeKey: string) => void;
   onMeasure?: (id: string, height: number) => void;
   onStage?: (stage: Konva.Stage | null) => void;
 };
 
 export default function DesignCanvas({
+  view,
+  tool = DesignTool.Move,
+  editingTextId = null,
+  onEditText,
   page,
   size,
-  scale,
+  scale: exportScale,
   selectedIds,
   images,
   chrome,
@@ -88,7 +108,14 @@ export default function DesignCanvas({
   onCommit,
   onMeasure,
   onStage,
+  ...gestureCallbacks
 }: DesignCanvasProps) {
+  const scale = view?.viewport.zoom ?? exportScale;
+  const moving = tool === DesignTool.Move;
+  const gestures = useCanvasGestures(tool, scale, {
+    ...gestureCallbacks,
+    ...(onSelect === undefined ? {} : { onSelect }),
+  });
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
   const session = useRef<DragSession | null>(null);
@@ -173,6 +200,7 @@ export default function DesignCanvas({
       commit(patches, current.key);
     },
     onMeasure: (id, height) => onMeasure?.(id, height),
+    onEdit: (id) => onEditText?.(id),
   };
 
   const handleTransformEnd = () => {
@@ -186,23 +214,33 @@ export default function DesignCanvas({
     commit(patches, `transform:${crypto.randomUUID()}`);
   };
 
-  const handleStagePointer = (event: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
-    if (event.target === event.target.getStage() || event.target.name() === "page") {
-      onSelect?.(null, false);
-    }
-  };
+  const elements = page.elements.map((element) => (
+    <DesignElementNode
+      key={element.id}
+      element={element}
+      image={
+        element.kind === DesignElementKind.Image ? images.get(element.mediaVersionId) : undefined
+      }
+      chrome={chrome}
+      fontsVersion={fontsVersion}
+      interactive={interactive && moving}
+      hidden={element.id === editingTextId}
+      events={events}
+    />
+  ));
 
   return (
     <Stage
       ref={stageRef}
-      width={Math.round(size.width * scale)}
-      height={Math.round(size.height * scale)}
+      width={view?.width ?? Math.round(size.width * scale)}
+      height={view?.height ?? Math.round(size.height * scale)}
+      x={view?.viewport.x ?? 0}
+      y={view?.viewport.y ?? 0}
       scaleX={scale}
       scaleY={scale}
-      onMouseDown={handleStagePointer}
-      onTouchStart={handleStagePointer}
       role="img"
       aria-label={label}
+      {...(view === undefined || !interactive ? {} : gestures.handlers)}
     >
       <Layer>
         <Rect
@@ -211,24 +249,17 @@ export default function DesignCanvas({
           height={size.height}
           {...(page.background === null ? {} : { fill: page.background })}
         />
-        {page.elements.map((element) => (
-          <DesignElementNode
-            key={element.id}
-            element={element}
-            image={
-              element.kind === DesignElementKind.Image
-                ? images.get(element.mediaVersionId)
-                : undefined
-            }
-            chrome={chrome}
-            fontsVersion={fontsVersion}
-            interactive={interactive}
-            events={events}
-          />
-        ))}
+        {view === undefined ? (
+          elements
+        ) : (
+          <Group clipX={0} clipY={0} clipWidth={size.width} clipHeight={size.height}>
+            {elements}
+          </Group>
+        )}
         {interactive ? (
           <Transformer
             ref={transformerRef}
+            listening={moving}
             rotateEnabled={movable.length > 0}
             enabledAnchors={onlyText ? SIDE_ANCHORS : ALL_ANCHORS}
             keepRatio={movable.some((element) => element.kind === DesignElementKind.Image)}
@@ -264,6 +295,9 @@ export default function DesignCanvas({
               dash={[6 / scale, 4 / scale]}
             />
           ))}
+          {gestures.draft === null ? null : (
+            <DesignDraftShape draft={gestures.draft} scale={scale} color={chrome.accent} />
+          )}
         </Layer>
       ) : null}
     </Stage>

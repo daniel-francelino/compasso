@@ -165,9 +165,9 @@ Archive instead of delete (GOLD-8): "Mover para a lixeira" sets `trashed_at` and
 `components/shared/design/`, `lib/shared/design/` (schemas, server functions, document operations, presets and fonts) and `hooks/shared/design/`. Routes (in the Marketing group, because `/admin/design` is already the development page of the design system): `/admin/marketing/designs` (list) and `/admin/marketing/designs/$designId` (editor), both guarded by `design.view`. Menu entry "Designs" in the "Produção" group of `nav-config.ts`.
 
 - **List ("Designs"):** a card gallery in the layout of section 5.6 (decided 2026-11-17, replaces the table): search by name, tabs "Ativos", "Modelos" and "Lixeira", brand filter, server pagination; primary action "Novo design" (name, brand, format, optional "Modelo" of that brand). Card actions: open, "Redimensionar" (a copy in another format), move to the trash or restore.
-- **Editor:** a toolbar (add text, image, rectangle, ellipse, line; group and ungroup; undo, redo; "Versões", "Salvar versão", "Exportar"), the pages strip ("Páginas": select, add, duplicate, move, delete), the canvas scaled to the available space with snap guides to the page edges and center and to the other elements, and a side panel with three tabs: "Propriedades" (the selection, or the page when nothing is selected), "Camadas" and "Marca" (the brand kit). The draft is saved by itself about 2 seconds after the last change, with the saving state always visible; a `conflict` stops the autosave and asks to reload, keeping the work on screen. The name and the "Modelo da marca" switch are in the header.
-- **Selection:** click selects, Shift+click adds or removes, a click on a grouped element selects the group; the transform handles cover the whole selection.
-- **Keyboard:** arrows move the selection by 1 px (10 px with Shift), Delete removes, Ctrl+Z and Ctrl+Shift+Z (or Ctrl+Y) undo and redo, Ctrl+D duplicates, Ctrl+G groups, Ctrl+Shift+G ungroups, Escape clears the selection. The layers list is the accessible alternative to the canvas: every element can be selected (Shift for several), reordered, locked and removed from it with buttons (UI-8); images carry an alternative text.
+- **Editor:** a full-screen workspace in the layout of section 5.7 (decided 2026-11-17, replaces the toolbar, the header and the tabbed side panel of the first delivery). The draft is saved by itself about 2 seconds after the last change, with the saving state always visible; a `conflict` stops the autosave and asks to reload, keeping the work on screen.
+- **Selection:** click selects, Shift+click adds or removes, a click on a grouped element selects the group, dragging on an empty area selects by area (marquee); the transform handles cover the whole selection.
+- **Keyboard:** the shortcuts of section 5.7. The layers list is the accessible alternative to the canvas: every element can be selected (Shift for several), reordered, locked and removed from it with buttons (UI-8); images carry an alternative text.
 - **Phone:** below 768 px the editor shows a read-only message; editing is for tablet and desktop (decided 2026-11-16, an exception to UI-7 for this screen only).
 - **Without `design.update`**, or for a design in the trash, the editor opens read-only. "Exportar" also needs `media.upload`.
 
@@ -192,6 +192,34 @@ Mapping to Aura (`components/shared/design/designs-page.tsx` and small parts nex
 Grid: 2 columns at 360 px, 3 from `sm`, 4 from `lg`, 5 from `xl`, 6 from `2xl`. States (UI-2): a skeleton of the same cards, error with "Tentar de novo", empty and no-results (`SearchableEmptyState`). Data: `listDesigns` also returns `thumbVersionId` (the latest `design_exports` row with `page_no = 1` of each design of the page, one extra select on the table, no migration). A live preview of never-exported drafts was rejected for now: it would load every draft document and its images on the list (up to 20 Konva stages); it stays a possible later step.
 
 Implementation steps (task D-08): (1) this section and the glossary; (2) `thumbVersionId` in `listDesigns`; (3) `design-gallery-hero.tsx` (band, tabs, search), `design-quick-create.tsx`, `design-card.tsx` (tile, placeholder, meta, menu), `design-card-grid.tsx` (grid, skeleton); (4) `designs-page.tsx` composes them and keeps the dialogs; `NewDesignDialog` accepts an initial format; (5) lint, typecheck, build, the existing E2E guard.
+
+### 5.7 Layout of the editor (decided 2026-11-17)
+
+Reverse engineering of the workspace of desktop image editors (Photoshop, Affinity; public behavior only, from screenshots): a **vertical tool rail** on the left with exclusive tools and one-letter shortcuts, an **options bar** above the canvas that shows what the active tool or the selection can do, a **pasteboard** (a neutral area larger than the document) with zoom and pan, **docked panels** stacked on the right (transform, properties, layers) and a **status bar** with the size, the cursor position and the zoom. Only the structure is reused: no name, icon set, color scheme or wording of those products. Their pixel features (brushes, pixel selection, masks, adjustment layers, blend modes, Bézier pen) stay **out** (section 4.3): the editor stays a layout editor of section 5.2.
+
+Layout (route with `staticData.fullScreen`, the same mechanism as the site preview: no admin sidebar, no `PageHeader`):
+
+| Area | Content |
+|---|---|
+| Top bar | "Voltar para designs" (link), the name (editable), brand · format, "Modelo da marca", the saving state, undo and redo, "Versões", "Salvar versão" and **"Exportar" at the top right** (primary action). Below `xl`, a "Painéis" button opens the docked panels in a sheet |
+| Alerts | Trash, read-only on a phone, `conflict` and save failure, under the top bar |
+| Tool rail (`DesignTool`) | "Mover" (V), "Texto" (T), "Retângulo" (R), "Elipse" (E), "Linha" (L), "Mão" (H), "Zoom" (Z), and "Imagem" (I), which opens the media picker (an action, not a mode). Each button has a tooltip with its shortcut and `aria-pressed`. Hidden when the design is read-only |
+| Options bar | With a selection: its name, align left / center / right / top / middle / bottom (`DesignAlign`; one element or one group aligns to the page, more align to the selection), distribute horizontally or vertically (`DesignDistribute`, three or more), bring to front, send to back, group or ungroup, lock, duplicate, delete. Without a selection, a hint for the active tool |
+| Viewport | Pasteboard with the page centered and a soft shadow; transparent pages show the checkerboard inside the page only; content outside the page is clipped (it is not exported). Rulers in document pixels on the top and left with the cursor position marked |
+| Docked panels (`DesignPanel`) | Collapsible sections stacked in one scrolling column: "Transformar" (X, Y, width, height, rotation, "Manter proporção"; for several elements it edits the bounding box: moving moves all, resizing scales all, rotation is disabled), "Propriedades" (opacity and the properties of the kind, or the page when nothing is selected), "Camadas", "Marca". Which sections are open is kept per browser (`StoredKey.DesignPanels`) |
+| Status bar | The pages ("Páginas": select, add, duplicate, move, delete), the page size, the cursor position, the zoom (minus, percentage, plus, "Ajustar à tela", "100%") and "Atalhos" (the list of shortcuts) |
+
+Tools and gestures:
+
+- **Drawing:** with "Texto", "Retângulo", "Elipse" or "Linha", dragging on the canvas creates the element in that box (a line goes from the start point to the end point; Shift keeps a square, a circle or a 45° step); a click without dragging creates the default size centered on the click. Then the tool goes back to "Mover". A new text opens for typing at once.
+- **Text on the canvas:** a double click on a text (or creating one) edits it in place over the canvas with the same font, size, color, alignment and rotation; clicking outside or Ctrl+Enter applies, Escape cancels; an emptied text is removed. The text field of "Propriedades" stays.
+- **Zoom and pan:** zoom from 10% to 800%, centered on the cursor (Ctrl or ⌘ + wheel, the "Zoom" tool: click zooms in, Alt+click zooms out) or on the view (Ctrl+= / Ctrl+-, the status bar); "Ajustar à tela" (Ctrl+0) and "100%" (Ctrl+1). Pan with the wheel (Shift for horizontal), the "Mão" tool, holding Space, or the middle button. Zoom and pan never create an undo step and never mark the draft as changed.
+- **Shortcuts:** V, T, R, E, L, I, H, Z select the tools; Space holds the hand; arrows move the selection by 1 px (10 px with Shift); Delete removes; Ctrl+A selects every unlocked element of the page; Ctrl+Z and Ctrl+Shift+Z (or Ctrl+Y) undo and redo; Ctrl+D duplicates; Ctrl+G groups; Ctrl+Shift+G ungroups; Escape leaves the text editing, then returns to "Mover", then clears the selection. One-letter shortcuts are ignored while typing in a field.
+- **Read-only** (no `design.update`, trash, phone): no rail and no options bar; zoom, pan and the panels in read-only mode still work.
+
+Exceptions to the base rules, for this screen only: **UI-6** (the primary action "Exportar" is at the top right of the editor's own top bar, not of a `PageHeader`, and the breadcrumb is replaced by "Voltar para designs"); **UI-7** as already decided (editing from 768 px). The UI stays in the light theme with the existing palette tokens (pasteboard `muted`, panels `card`); a dark workspace would need new tokens with verified contrast in `color-palette.md` first and was not chosen.
+
+Not in this delivery (later, each needs its own decision): user guides dragged from the rulers (they would be stored in the document, which means a version 3 and a migration), a history panel (the undo stack has no names for its steps), resizable panel widths (`react-resizable-panels`, the peer of the `lost-ui` `Resizable`, is not installed), pinch zoom on touch screens.
 
 ## 6. Risks
 
@@ -234,6 +262,13 @@ Implementation steps (task D-08): (1) this section and the glossary; (2) `thumbV
 6. Templates are designs marked "Modelo da marca" (`is_template`); "Redimensionar" creates a new design (a copy), it never changes the source.
 7. "Attach to a content item" uses the existing picker of the content editor: the export says where the files are and does not change a content draft by itself.
 
+## 8c. Decisions (2026-11-17, editor layout)
+
+1. The editor takes the workspace layout of section 5.7 (tool rail, options bar, pasteboard with zoom and pan, docked panels, status bar) in full screen.
+2. UI-6 exception for this screen: "Exportar" at the top right of the editor's top bar; "Voltar para designs" instead of the breadcrumb.
+3. Light theme with the existing tokens; no dark workspace.
+4. Pixel-editing features stay out (section 4.3); guides stored in the document, a history panel and resizable panels are later.
+
 ## 9. Acceptance criteria
 
 - Create a design from a preset, add text and an image from the library, move, resize and undo with the keyboard and the mouse.
@@ -246,6 +281,11 @@ Implementation steps (task D-08): (1) this section and the glossary; (2) `thumbV
 - An image used by a saved version cannot be deleted from the library.
 - Restoring version 1 brings its content back into the draft; version 1 itself is unchanged.
 - A template of brand A is offered only when creating a design of brand A; "Redimensionar" keeps the source design unchanged.
+- The editor opens in full screen with the whole page visible ("Ajustar à tela"); zooming to 400% around the cursor and panning keep the point under the cursor fixed and do not mark the draft as changed.
+- Dragging with "Retângulo" creates a rectangle of that box; a click creates the default size; dragging with "Linha" creates a line between the two points; the tool goes back to "Mover".
+- A double click on a text edits it on the canvas; Escape cancels; clicking outside applies with one undo step.
+- Selecting three elements and "Distribuir na horizontal" leaves equal gaps; one element "Centralizar na horizontal" centers it on the page.
+- Changing the width in "Transformar" with two elements selected scales both.
 
 ## Implementation status
 

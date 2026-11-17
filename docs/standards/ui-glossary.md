@@ -198,7 +198,16 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Páginas / Nova página / Duplicar página | Editor | The pages of a design (a carousel has up to 10) |
 | Linha | Editor toolbar | A straight line element |
 | Agrupar / Desagrupar | Editor | Join the selected elements so they move together / separate them |
-| Propriedades / Marca | Editor side panel | The tab with the settings of the selection / the brand kit (logo, colors, fonts of the brand) |
+| Propriedades / Marca | Editor docked panels | The section with the settings of the selection / the brand kit (logo, colors, fonts of the brand) |
+| Transformar / Manter proporção | Editor docked panels | Position, size and rotation of the selection in pixels / change width and height together |
+| Painéis | Editor top bar (below `xl`) | Open the docked panels in a sheet |
+| Voltar para designs | Editor top bar | Leave the full-screen editor for the list |
+| Mover / Mão / Zoom (ferramentas) | Editor tool rail | Select and move elements / pan the view / zoom in on a click (Alt zooms out) |
+| Alinhar à esquerda / Centralizar na horizontal / Alinhar à direita / Alinhar ao topo / Centralizar na vertical / Alinhar à base | Editor options bar | Align the selection (one element or group: to the page) |
+| Distribuir na horizontal / Distribuir na vertical | Editor options bar | Equal gaps between three or more elements |
+| Trazer para a frente / Enviar para trás de tudo | Editor options bar | Put the element on top of / below every other one |
+| Ajustar à tela / 100% / Aumentar zoom / Diminuir zoom | Editor status bar | Zoom of the view (never changes the design) |
+| Atalhos | Editor status bar | The list of keyboard shortcuts |
 | Zoom / Foco | Image properties | Enlarge the image inside its frame (the crop) and choose the visible part |
 | Brilho / Contraste / Sombra / Texto alternativo | Image and text properties | Simple filters, the text shadow and the description of an image for screen readers |
 | Versões / Restaurar no rascunho | Editor | The saved versions / copy one of them into the draft (the version itself never changes) |

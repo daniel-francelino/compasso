@@ -33,6 +33,12 @@ export const isTypingTarget = (target: EventTarget | null): boolean => {
   return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 };
 
+const CONTROLS =
+  "button, a[href], summary, [role='button'], [role='switch'], [role='checkbox'], [role='tab'], [role='menuitem'], [role='option']";
+
+export const isControlTarget = (target: EventTarget | null): boolean =>
+  target instanceof HTMLElement && target.closest(CONTROLS) !== null;
+
 export const imageNaturalSize = async (versionId: string): Promise<PageSize | null> => {
   const result = await signMediaUrls({
     data: { versionIds: [versionId], variant: MediaVariant.Display },

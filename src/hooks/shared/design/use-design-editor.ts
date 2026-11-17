@@ -1,9 +1,16 @@
 import { useState } from "react";
 import {
+  alignElements,
+  distributeElements,
+  selectAll,
+  transformSelection,
+} from "@/lib/shared/design/arrange";
+import {
   type ElementBasePatch,
   type ElementPatch,
   type ImagePatch,
   type LinePatch,
+  type Box,
   type ShapePatch,
   type TextPatch,
   addElement,
@@ -38,7 +45,13 @@ import {
   undoHistory,
 } from "@/lib/shared/design/history";
 import type { DesignDocument, DesignElement, DesignPage } from "@/lib/shared/design/schemas";
-import { DESIGN_LIMITS, type LayerMove } from "@/lib/shared/design/types";
+import {
+  DESIGN_LIMITS,
+  type DesignAlign,
+  type DesignDistribute,
+  type LayerMove,
+  type PageSize,
+} from "@/lib/shared/design/types";
 
 const newId = () => crypto.randomUUID();
 
@@ -111,6 +124,13 @@ export const useDesignEditor = (initial: DesignDocument) => {
     selectedIds: selected.map((element) => element.id),
     select,
     selectMany: (ids: string[]) => setSelectedIds(expandSelection(page, ids)),
+    selectAll: () => setSelectedIds(selectAll(page)),
+    align: (align: DesignAlign, size: PageSize) =>
+      changePage((current) => alignElements(current, selectedIds, align, size)),
+    distribute: (axis: DesignDistribute) =>
+      changePage((current) => distributeElements(current, selectedIds, axis)),
+    transformSelection: (box: Box, mergeKey?: string) =>
+      changePage((current) => transformSelection(current, selectedIds, box), mergeKey),
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     undo: () => setHistory(undoHistory),

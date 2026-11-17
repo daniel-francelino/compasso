@@ -5,6 +5,7 @@ import { requireAction } from "@/lib/shared/auth/guards";
 
 export const Route = createFileRoute("/admin/_app/(marketing)/marketing/designs/$designId")({
   beforeLoad: ({ context }) => requireAction(context, Action.Design.View),
+  staticData: { fullScreen: true },
   component: DesignRoute,
 });
 
