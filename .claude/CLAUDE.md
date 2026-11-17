@@ -14,7 +14,9 @@ Priorities, in order:
 6. Evidence-based performance.
 7. Token and resource efficiency.
 
-Follow existing project architecture, conventions, and business rules. Never assume a specific technology stack.
+**Precedence:** `AGENTS.md` and `docs/standards/base.md` (imported by the root `CLAUDE.md`) prevail over this file. Where this file and those documents disagree (document locations, naming, doc creation, audits), follow them. This file only adds the working method (Caveman principles, agents, workflow commands).
+
+Stack of this project: TanStack Start (React 19, Vite, TanStack Router/Query), Supabase (Postgres, Auth, RLS), Cloudflare R2, Vercel, shared UI from `lost-ui`. Follow existing architecture, conventions and business rules; do not bring patterns from other stacks (Vue, Nuxt, Pinia).
 
 ## 1. Core Principles — Caveman
 
@@ -41,7 +43,7 @@ Agents are defined in `.claude/agents/`. The main Claude Code session coordinate
 
 - **Leadership:** `product-owner` (requirements, priorities, backlog, roadmap); `product-researcher` (market, competitors, opportunities); `tech-lead` (complex planning, coordination, delivery).
 - **Engineering:** `business-analyst` (business rules, workflows); `software-architect` (architecture, significant design decisions); `developer` (implementation, refactoring); `code-reviewer` (independent code review); `test-designer` (scenarios, acceptance criteria); `test-engineer` (test implementation and execution); `test-reviewer` (independent test quality review).
-- **Specialists:** `security-analyst`, `financial-auditor`, `data-integrity-auditor`, `reporting-analyst`, `performance-engineer`, `geo-specialist`, `marketing-strategist`, `seo-specialist`, `customer-success-specialist`, `ux-ui-designer` (layout and refactor plans; skill `ui-ux-pro-max`; `/design-plan`), `design-review` (reviews a running screen in a browser; `/design-review`).
+- **Specialists:** `security-analyst`, `data-integrity-auditor`, `reporting-analyst`, `performance-engineer`, `geo-specialist`, `marketing-strategist`, `seo-specialist`, `standards-reviewer` (conformance with `docs/standards/base.md`; `/check-standards`), `ux-ui-designer` (layout and refactor plans on `lost-ui` and the token palette; skill `ui-ux-pro-max`; `/design-plan`), `design-review` (reviews a running screen in a browser; `/design-review`).
 
 Delegation rules:
 
@@ -72,7 +74,7 @@ Research findings are not automatically approved requirements. Significant produ
 
 ## 4. Graphify — Codebase Intelligence
 
-Graphify provides a local knowledge graph at `graphify-out/`.
+Graphify provides a local knowledge graph at `graphify-out/` (not generated yet in this repository; run `/graphify` to build it before relying on it).
 
 - **Skill:** `.claude/skills/graphify/SKILL.md`. **Command:** `/graphify`. When the user explicitly invokes `/graphify`, follow the installed Graphify skill before performing other work. Do not duplicate its instructions here.
 
@@ -109,12 +111,11 @@ Source code and verified documentation remain authoritative. Inferred graph rela
 - Avoid unnecessary dependencies, abstractions, and unrelated refactoring.
 - Preserve existing contracts unless changes are authorized.
 
-**Business and financial integrity:**
+**Business and data integrity:**
 
 - Never invent business rules.
-- For critical calculations, verify formulas, rounding, transaction states, reversals, and affected modules.
+- For critical calculations (dates and time zones, quotas, metrics), verify formulas, rounding and affected modules.
 - Preserve historical correctness and auditability.
-- Do not confuse revenue, received cash, and profit.
 
 **Security:**
 
@@ -146,7 +147,7 @@ Store durable findings in project documentation rather than relying exclusively 
 
 ## 7. Documentation
 
-Follow existing documentation conventions. Default directories when no convention exists: product `docs/product/`; business `docs/business/`; architecture `docs/architecture/`; engineering `docs/engineering/`; testing `docs/testing/`; code reviews `docs/reviews/code/`; security `docs/security/`; financial audits `docs/financial/audits/`; data integrity `docs/data-integrity/audits/`; reporting `docs/reporting/audits/`; performance `docs/performance/audits/`.
+Documentation follows `docs/standards/base.md` sections 8.2 and 8.3 (DOC-1 to DOC-7): English kebab-case files, one document per area, never an overlapping document. Reports from agents (security, data integrity, performance, reporting, SEO, code review) are **audit documents**: one file per topic in `docs/audits/<topic>.md`, updated in place, using the template in base.md 8.3 and listed in `docs/README.md`. Do not create per-domain directories (`docs/security/`, `docs/reviews/`, `docs/financial/`, `docs/product/`, `docs/features/`). Product, module and spec content goes into the existing `docs/modules/*.md`, `docs/spaces/*.md` or `docs/foundations/*.md`. Design plans are answered in chat; saving one needs a new topic confirmed by the person (DOC-3).
 
 Create documentation only when necessary or explicitly requested. Do not duplicate existing reports. Preserve finding identifiers and distinguish verified evidence from hypotheses.
 

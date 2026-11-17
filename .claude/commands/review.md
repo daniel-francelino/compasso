@@ -18,7 +18,7 @@ description: Perform independent code and behavior review, prioritizing evidence
 
 ## Workflow
 1. Inspect exact change scope and its requirements. Check Git status without changing it.
-2. Prefer `code-reviewer` as primary specialist; include `security-analyst`, `data-integrity-auditor`, `financial-auditor`, `performance-engineer`, `business-analyst`, or `test-reviewer` only for relevant risks.
+2. Prefer `code-reviewer` as primary specialist; include `security-analyst`, `data-integrity-auditor`, `performance-engineer`, `business-analyst`, or `test-reviewer` only for relevant risks.
 3. Parallelize independent read-only reviews when valuable. Main session deduplicates findings and reconciles conflicting conclusions.
 4. Focus on correctness, regressions, business invariants, security, maintainability, architecture, test adequacy, and performance where relevant.
 5. For each actionable finding, provide severity, exact file/line or symbol, evidence, impact, and proposed fix. Avoid invented issues and style-only noise.

@@ -14,20 +14,20 @@ description: Run a risk-based, read-only audit of code, business processes, secu
 - If an agent/skill is unavailable, say so and use the smallest safe fallback.
 
 ## Inputs
-`$ARGUMENTS` — audit target and optionally domains (`security`, `financial`, `data`, `business`, `reporting`, `performance`, `seo`, `geo`, `marketing`, `customer-success`, `full`). If no target is supplied, ask for it. `full` means broad scoping, not automatic exhaustive scans.
+`$ARGUMENTS` — audit target and optionally domains (`security`, `data`, `business`, `reporting`, `performance`, `seo`, `geo`, `marketing`, `standards`, `full`). If no target is supplied, ask for it. `full` means broad scoping, not automatic exhaustive scans.
 
 ## Workflow
 1. Define audit objective, systems in scope, period/environment (if relevant), risk tolerance, and evidence availability. Identify what is out of scope.
 2. Select specialists based on domain:
    - `security-analyst`: authorization, exposure, dependencies, secrets.
-   - `financial-auditor`: calculations, balances, reconciliation, payment flows.
    - `data-integrity-auditor`: invariants, relationships, migrations, concurrency.
    - `business-analyst`: process rules, cross-module consistency.
    - `reporting-analyst`: metric definitions, aggregation, reporting accuracy.
    - `performance-engineer`: profiling, budgets, bottlenecks.
    - `seo-specialist` / `geo-specialist`: search and AI-discovery readiness.
-   - `marketing-strategist` / `customer-success-specialist`: funnel, retention, experience.
+   - `marketing-strategist`: positioning, funnel, public-site messaging.
    - `software-architect`: architectural/systemic risks.
+   - `standards-reviewer`: conformance with docs/standards/base.md (domain `standards`).
 3. Create a risk-ranked audit checklist and inspect available evidence. Use safe, read-only commands; no destructive probes, external scans, or production access without explicit authorization.
 4. Where useful, run independent read-only specialists in parallel and consolidate findings in the main session.
 5. Separate **confirmed findings** from **potential risks** and **not assessed**. For every confirmed finding, provide evidence, severity, affected asset/process, impact, and remediation.

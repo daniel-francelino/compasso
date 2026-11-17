@@ -23,7 +23,7 @@ description: Discover an existing codebase, feature, bug, or business workflow b
    - `business-analyst`: workflows, rules, cross-module behavior.
    - `software-architect`: boundaries, components, dependencies, integrations.
    - `product-researcher`: user needs, alternatives, evidence gaps; external research only if authorized/available.
-   - `data-integrity-auditor`, `financial-auditor`, `reporting-analyst`: when those domains are actually involved.
+   - `data-integrity-auditor`, `reporting-analyst`: when those domains are actually involved.
    - `security-analyst`, `performance-engineer`: only when material risks are present.
 4. Produce an evidence-backed map of the current behavior and its gaps. Cite repository paths and symbols; label hypotheses.
 5. Identify unknowns, constraints, risks, existing tests, and candidate next steps. **Do not implement or select a final solution.**

@@ -23,3 +23,7 @@ test-results
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+.claude/scheduled_tasks.lock
+.design-audit/
+graphify-out/cache/

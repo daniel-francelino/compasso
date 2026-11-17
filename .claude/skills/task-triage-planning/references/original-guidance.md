@@ -103,7 +103,7 @@ Responsibilities:
 - Tenant isolation.
 - Sensitive data protection.
 ### Financial Auditor
-Agent: `financial-auditor`
+Agent: not installed in this project (no financial module)
 Responsibilities:
 - Financial calculations.
 - Payments.

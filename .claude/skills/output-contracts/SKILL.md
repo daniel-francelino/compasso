@@ -5,7 +5,7 @@ description: "On-demand Caveman-inspired output contracts rules for Claude Code.
 
 # Command handoff contracts
 
-Store artifacts only when the task spans sessions or user requests documentation. Prefer existing project conventions and paths; recommended `docs/features/<slug>/` (not created automatically).
+Store artifacts only when the task spans sessions or user requests documentation. Prefer existing project conventions and paths; record durable output only where `docs/standards/base.md` allows (module docs, or `docs/audits/<topic>.md`); never create `docs/features/`.
 
 Every handoff, when applicable, contains:
 - `Goal`: observable outcome.

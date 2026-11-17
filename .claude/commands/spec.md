@@ -18,7 +18,7 @@ description: Define requirements and acceptance criteria for a feature using evi
 
 ## Workflow
 1. Read existing discovery notes, issue details, project rules, and related code. For unfamiliar or ambiguous current behavior, run the `/discover` workflow first (or request it).
-2. Use `product-owner` for outcomes, priorities, scope, and acceptance criteria; `business-analyst` for business rules; `product-researcher` only when research is required; `customer-success-specialist` when onboarding/support/adoption is affected.
+2. Use `product-owner` for outcomes, priorities, scope, and acceptance criteria; `business-analyst` for business rules; `product-researcher` only when research is required.
 3. Invite `software-architect` or `security-analyst` only to surface feasibility, constraints, and non-functional requirements, not to prematurely implement.
 4. Define goals, users, in-scope/out-of-scope, scenarios, invariants, dependencies, non-functional requirements, risks, and measurable acceptance criteria.
 5. Identify unresolved decisions and ask for confirmation when they materially change the specification.

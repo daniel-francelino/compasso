@@ -12,7 +12,7 @@ description: "On-demand Caveman-inspired delegation policy rules for Claude Code
 - Ask each specialist for findings and evidence, not copied full logs or entire files.
 
 Routing examples (conditional, not mandatory):
-- Requirements: `business-analyst`, `product-owner`; domain risk: `financial-auditor`, `data-integrity-auditor`.
+- Requirements: `business-analyst`, `product-owner`; domain risk: `data-integrity-auditor`, `security-analyst`.
 - Architecture: `software-architect`, `tech-lead` (advisory).
 - Implementation: `developer`; performance only if measured risk: `performance-engineer`.
 - Tests: `test-designer` for nontrivial scenarios; `test-engineer` to execute; `test-reviewer` when independent assertion review adds value.

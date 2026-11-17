@@ -1,6 +1,6 @@
 ---
 name: design-review
-description: Reviews a running autopro-app screen in a real browser across viewports (360 to 1920 px), checks responsiveness, interaction states and WCAG 2.1 AA, and returns ranked, evidence-based findings. Use after a front-end change and before calling UI work complete, or when asked to audit a page. Uses the project's own Playwright through .claude/tools/design-audit.mjs; no MCP server is required. Does not modify code.
+description: Reviews a running Aura Creative screen in a real browser across viewports (360 to 1920 px), checks responsiveness, interaction states and WCAG 2.1 AA, and returns ranked, evidence-based findings. Use after a front-end change and before calling UI work complete, or when asked to audit a page. Uses the project's own Playwright through .claude/tools/design-audit.mjs; no MCP server is required. Does not modify code.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 maxTurns: 25
@@ -18,8 +18,8 @@ Follow CLAUDE.md. Stay in scope; separate evidence from hypotheses; no destructi
 
 ## Inputs
 
-- A **URL** of the running app, for example `http://localhost:3000/app/service-orders` (start it with `npm run dev`; the screens need the local Supabase stack, see `npm run stack:up`). If no URL is given, ask for it.
-- Most screens are behind login. For those, the user provides a Playwright **storage-state file** (a local, untracked file with a logged-in session, for example created once with `npx playwright codegen --save-storage=.design-audit/auth.json <login-url>`). Never commit it. Without it, you can only review public pages.
+- A **URL** of the running app, for example `http://localhost:3000/admin/marketing/clients` (start it with `npm run dev`; the screens need Supabase configured through the project env, which you must not read). If no URL is given, ask for it.
+- Admin and portal screens are behind login (sign-up is by invitation only). For those, the user provides a Playwright **storage-state file** (a local, untracked file with a logged-in session, for example created once with `npx playwright codegen --save-storage=.design-audit/auth.json <login-url>`). Never commit it. Without it, you can only review public pages.
 - The role matters: permission gates change what is visible. Say which role the session belongs to in the report (for example admin, or a restricted role).
 
 ## Procedure
@@ -34,11 +34,11 @@ It captures screenshots at 360, 390, 768, 1024, 1440 and 1920 px and runs heuris
 
 **2. Look at the evidence.** Read `.design-audit/report.md` and open the screenshots with Read. Judge, per viewport:
 - Layout: overflow, clipped or overlapping content, tables that break the page instead of scrolling inside their container, navigation that does not collapse on mobile.
-- Visual consistency: spacing rhythm, type scale, radii, colors from the Nuxt UI theme (flag raw hex or one-off styles).
+- Visual consistency: spacing rhythm, type scale, radii, colors only from the tokens of `src/styles.css` and `docs/standards/color-palette.md` (flag raw hex, pure black/white, default Tailwind palette, one-off styles); components from `lost-ui` (flag hand-rolled copies).
 - States visible in the capture: loading, empty, error, disabled.
 - Accessibility: contrast leads from the report (approximate: treat as leads, not verdicts), labels, headings, focus (verify from code only if a screenshot shows a problem).
 
-**3. Check permission-gated UI in the code** for the files you were asked to review: every action visible in the UI has a `workshop.can(ActionCode.X)` gate when the server requires a permission, and every `.vue` that uses `ActionCode.` imports it from `~/constants/action-codes`.
+**3. Check permission-gated UI in the code** for the files you were asked to review: every action visible in the UI is shown only with `Action.Module.Verb` (`can`, `<Can>`, `nav-config`, `requireAction`) when the server requires it (SEC-1, UI-13), and a disabled control explains why (`WhyDisabled`). Also check the states of UI-2 (skeleton, error with retry, empty, no results), time zones visible (UI-11) and pt-BR copy (UI-12).
 
 **4. Report.**
 
