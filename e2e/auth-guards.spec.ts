@@ -24,6 +24,7 @@ for (const path of [
   "/admin/marketing/clients",
   "/admin/marketing/brands",
   "/admin/marketing/designs",
+  "/admin/marketing/videos",
   "/admin/settings/users",
   "/admin/settings/roles",
   "/admin/settings/audit",

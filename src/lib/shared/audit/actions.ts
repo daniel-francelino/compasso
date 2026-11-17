@@ -137,6 +137,13 @@ export const AuditAction = {
     VersionRestored: "design.version_restored",
     TemplateChanged: "design.template_changed",
   },
+  Video: {
+    Created: "video.created",
+    VersionSaved: "video.version_saved",
+    Trashed: "video.trashed",
+    Restored: "video.restored",
+    Exported: "video.exported",
+  },
   Audit: {
     Exported: "audit.exported",
   },

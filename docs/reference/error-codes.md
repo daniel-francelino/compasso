@@ -169,6 +169,16 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `design_trashed` | conflict | "Este design está na lixeira. Restaure para editar." | design_lock |
 | `design_version_immutable` | denied | "Versões salvas de um design não podem ser alteradas." | design_versions_immutable |
 
+### Video editor
+
+| Code | Category | Message (pt-BR) | Raised by |
+|---|---|---|---|
+| `video_too_long` | invalid | "O vídeo passou de 90 segundos. Encurte ou remova clipes para salvar." | video_assert_document |
+| `video_too_large` | invalid | "Este projeto tem clipes demais. Remova alguns para salvar." | video_assert_document |
+| `video_empty` | invalid | "Adicione pelo menos um clipe antes de exportar." | video_project_save_version |
+| `video_trashed` | conflict | "Este vídeo está na lixeira. Restaure para editar." | video_project_lock, video_project_record_export |
+| `video_version_immutable` | denied | "Versões salvas de um vídeo não podem ser alteradas." | video_project_versions_immutable |
+
 ## 3. Rules
 
 1. SQL raises only codes from this table; TypeScript maps unknown database errors to `unknown` and logs them.

@@ -400,6 +400,26 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Denied,
     message: "Versões salvas de um design não podem ser alteradas.",
   },
+  video_too_long: {
+    category: ErrorCode.Invalid,
+    message: "O vídeo passou de 90 segundos. Encurte ou remova clipes para salvar.",
+  },
+  video_too_large: {
+    category: ErrorCode.Invalid,
+    message: "Este projeto tem clipes demais. Remova alguns para salvar.",
+  },
+  video_empty: {
+    category: ErrorCode.Invalid,
+    message: "Adicione pelo menos um clipe antes de exportar.",
+  },
+  video_trashed: {
+    category: ErrorCode.Conflict,
+    message: "Este vídeo está na lixeira. Restaure para editar.",
+  },
+  video_version_immutable: {
+    category: ErrorCode.Denied,
+    message: "Versões salvas de um vídeo não podem ser alteradas.",
+  },
   report_empty: {
     category: ErrorCode.Invalid,
     message: "Escolha ao menos um bloco para o relatório.",

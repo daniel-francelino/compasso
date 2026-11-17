@@ -106,6 +106,7 @@ checkValues("media_shares", "status", "MediaShareStatus", "src/lib/shared/enums.
 checkValues("feedback_responses", "status", "FeedbackStatus", "src/lib/shared/enums.ts");
 checkValues("designs", "preset", "DesignPreset", "src/lib/shared/design/types.ts");
 checkValues("design_exports", "format", "DesignExportFormat", "src/lib/shared/design/types.ts");
+checkValues("video_projects", "preset", "DesignPreset", "src/lib/shared/design/types.ts");
 checkValues("profiles", "kind", "ProfileKind", "src/lib/shared/enums.ts");
 checkValues("audit_events", "actor_kind", "AuditActorKind", "src/lib/shared/enums.ts");
 checkValues(

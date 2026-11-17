@@ -74,6 +74,15 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 | `DesignExportFormat` | `png`, `jpeg` | `design_exports.format` | "PNG", "JPEG" | image-editor |
 | `DesignSaveState`, `LayerMove` | TypeScript only, `src/lib/shared/design/types.ts`. Autosave state `saved`, `pending`, `saving`, `conflict`, `failed`; layer move `up`, `down`, `top`, `bottom` | — | Save state "Rascunho salvo", "Alterações não salvas", "Salvando…", "Alterado em outra aba", "Não foi salvo"; layer moves "Trazer para frente", "Enviar para trás" | image-editor |
 
+## 2e. Video editor
+
+| TS constant | Values | DB column ✔ | pt-BR labels | Owner |
+|---|---|---|---|---|
+| `DesignPreset` (reused) | `feed_square`, `feed_portrait`, `story` | `video_projects.preset` | the labels of section 2d | video-editor |
+| `VideoClipKind`, `VideoFit`, `VideoTrack`, `VideoTrimEdge`, `VideoStatusFilter` | TypeScript only (no column; the first two live inside the document JSON): see `src/lib/shared/video/types.ts`. Clip kind `video`, `image`; fit `cover`, `contain`; track `main`, `overlay`, `text`, `audio`; trim edge `start`, `end`; list filter `active`, `trash` | — | Kinds "Vídeo", "Imagem"; fit "Preencher", "Ajustar"; tracks "Principal", "Sobreposição", "Texto", "Música"; filter "Ativos", "Lixeira" | video-editor |
+| `ExportMessage` | TypeScript only, `src/lib/shared/video/export-protocol.ts`: messages between the editor and the export worker, `start`, `cancel`, `progress`, `done`, `failed`, `cancelled` | — | — | video-editor |
+| `VideoExportStage` | TypeScript only, `src/lib/shared/video/types.ts`: `preparing`, `rendering`, `uploading`, `done`, `failed`, `cancelled` | — | "Preparando…", "Gerando o vídeo…", "Enviando para a biblioteca…", "Vídeo exportado", "Não foi possível exportar", "Exportação cancelada" | video-editor |
+
 ## 3. Media
 
 | TS constant | Values | DB column ✔ | pt-BR labels | Owner |
@@ -85,7 +94,7 @@ Transition map (`EditorialTransitions`, in `lib/shared/editorial`): `planning �
 | `PublicShareState` | `ok`, `not_found`, `revoked`, `unavailable`, `expired`, `locked`, `exhausted`, `password_required`, `wrong_password`, `download_disabled` | answer of the public share functions | see `publicShareStateMessages` | media-library |
 | `MediaVersionStatus` | `pending`, `processing`, `available`, `failed` | `media_versions.status` | "Enviando", "Processando", "Disponível", "Falhou" | media-library |
 | `UploadSessionStatus` | `open`, `confirmed`, `expired`, `failed` | `media_upload_sessions.status` | — (internal) | media-library |
-| `MediaUsageType` | `content_revision`, `site_page_revision`, `case_study`, `brand_identity`, `publication_evidence`, `profile_avatar`, `design_version` | `media_usages.usage_type` | "Revisão de conteúdo", "Página do site", "Case", "Identidade da marca", "Evidência de publicação", "Foto de perfil", "Versão de design" | media-library |
+| `MediaUsageType` | `content_revision`, `site_page_revision`, `case_study`, `brand_identity`, `publication_evidence`, `profile_avatar`, `design_version`, `video_project_version` | `media_usages.usage_type` | "Revisão de conteúdo", "Página do site", "Case", "Identidade da marca", "Evidência de publicação", "Foto de perfil", "Versão de design", "Versão de vídeo" | media-library |
 | `MediaKind` | `image`, `video`, `document` (derived from MIME; not stored) | — | "Imagem", "Vídeo", "Documento" | media-library |
 
 ## 4. Site and CMS

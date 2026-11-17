@@ -27,6 +27,7 @@ export const AppRoute = {
   Content: "/admin/marketing/content",
   Feedback: "/admin/marketing/feedback",
   Designs: "/admin/marketing/designs",
+  Videos: "/admin/marketing/videos",
   Calendar: "/admin/marketing/calendar",
   InstagramCallback: "/admin/marketing/instagram/callback",
   Site: "/admin/site",

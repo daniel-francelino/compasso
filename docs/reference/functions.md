@@ -321,6 +321,22 @@ Server functions in `lib/shared/design/design.functions.ts`. The list and the de
 | `design_set_trashed(p_design, p_trashed)` | `setDesignTrashed` | `design.delete` + brand link | `design.trashed`, `design.restored` | — | `denied`, `not_found` |
 | `design_assert_document`, `design_lock`, `design_upgrade_document`; trigger `design_versions_immutable` | — | internal | — | — | `invalid_input`, `design_too_large`, `design_trashed`, `design_version_immutable` |
 
+## 9e. Video editor (module: video-editor)
+
+Server functions in `lib/shared/video/video.functions.ts`. The list and the detail read the tables with the caller's client (RLS).
+
+| SQL function | Server function | Act. | Audit | Notif. | Errors |
+|---|---|---|---|---|---|
+| — (select on `video_projects`) | `listVideoProjects`, `getVideoProject` | `video.view` + brand link | — | — | `not_found` |
+| `video_project_create(p_brand, p_name, p_preset, p_document)` | `createVideoProject` | `video.create` + brand link | `video.created` | — | `denied`, `not_found`, `invalid_input`, `video_too_long`, `video_too_large` |
+| `video_project_save_draft(p_project, p_document, p_expected_version)` | `saveVideoProjectDraft` | `video.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `video_too_long`, `video_too_large`, `video_trashed` |
+| `video_project_rename(p_project, p_name, p_expected_version)` | `renameVideoProject` | `video.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `video_trashed` |
+| `video_project_save_version(p_project, p_expected_version)` (also writes the `video_project_version` media usages) | `saveVideoProjectVersion` | `video.update` + brand link | `video.version_saved` | — | `denied`, `not_found`, `conflict`, `video_empty`, `video_trashed` |
+| — (select on `video_exports`) | `listVideoExports` | `video.view` + brand link | — | — | `not_found` |
+| `video_project_record_export(p_project, p_version_no, p_media_version)` | `recordVideoExport` | `video.update` + brand link | `video.exported` | — | `denied`, `not_found`, `invalid_input`, `video_trashed` |
+| `video_project_set_trashed(p_project, p_trashed)` | `setVideoProjectTrashed` | `video.delete` + brand link | `video.trashed`, `video.restored` | — | `denied`, `not_found` |
+| `video_assert_document`, `video_project_lock`; trigger `video_project_versions_immutable` | — | internal | — | — | `invalid_input`, `video_too_long`, `video_too_large`, `video_trashed`, `video_version_immutable` |
+
 ## 10. Rules
 
 1. A server function calls **at most one** write RPC per user action (atomicity lives in SQL).

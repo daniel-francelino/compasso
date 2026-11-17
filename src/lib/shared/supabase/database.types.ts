@@ -1478,10 +1478,10 @@ export type Database = {
           {
             foreignKeyName: "design_exports_media_version_id_fkey"
             columns: ["media_version_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "media_versions"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       design_versions: {
@@ -1526,7 +1526,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "designs"
             referencedColumns: ["id", "brand_id"]
-          }
+          },
         ]
       }
       designs: {
@@ -1586,7 +1586,7 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          }
+          },
         ]
       }
       email_outbox: {
@@ -3308,6 +3308,180 @@ export type Database = {
           },
         ]
       }
+      video_exports: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          media_asset_id: string
+          media_version_id: string
+          project_id: string
+          version_no: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          media_asset_id: string
+          media_version_id: string
+          project_id: string
+          version_no: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          media_asset_id?: string
+          media_version_id?: string
+          project_id?: string
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_exports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_exports_media_asset_id_fkey"
+            columns: ["media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_exports_media_version_id_fkey"
+            columns: ["media_version_id"]
+            isOneToOne: true
+            referencedRelation: "media_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_exports_project_id_brand_id_fkey"
+            columns: ["project_id", "brand_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id", "brand_id"]
+          },
+          {
+            foreignKeyName: "video_exports_project_id_version_no_fkey"
+            columns: ["project_id", "version_no"]
+            isOneToOne: false
+            referencedRelation: "video_project_versions"
+            referencedColumns: ["project_id", "version_no"]
+          },
+        ]
+      }
+      video_project_versions: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          document: Json
+          duration_ms: number
+          id: string
+          project_id: string
+          version_no: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          document: Json
+          duration_ms: number
+          id?: string
+          project_id: string
+          version_no: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          document?: Json
+          duration_ms?: number
+          id?: string
+          project_id?: string
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_project_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_project_versions_project_id_brand_id_fkey"
+            columns: ["project_id", "brand_id"]
+            isOneToOne: false
+            referencedRelation: "video_projects"
+            referencedColumns: ["id", "brand_id"]
+          },
+        ]
+      }
+      video_projects: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          current_version_no: number
+          draft_document: Json
+          id: string
+          name: string
+          preset: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          current_version_no?: number
+          draft_document: Json
+          id?: string
+          name: string
+          preset: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_version_no?: number
+          draft_document?: Json
+          id?: string
+          name?: string
+          preset?: string
+          trashed_at?: string | null
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_projects_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -3504,40 +3678,72 @@ export type Database = {
         Returns: Json
       }
       dashboard_status_counts: { Args: { p_brands?: string[] | null}; Returns: Json }
+      design_assert_document: {
+        Args: { p_brand: string | null, p_document: Json | null}
+        Returns: undefined
+      }
       design_create: {
-        Args: { p_brand: string | null; p_name: string | null; p_preset: string | null; p_document?: Json | null }
+        Args: {          p_brand: string | null,          p_document?: Json | null,          p_name: string | null,          p_preset: string | null}
         Returns: Json
       }
+      design_lock: {
+        Args: { p_design: string | null, p_expected_version: number | null}
+        Returns: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          current_version_no: number
+          draft_document: Json
+          id: string
+          is_template: boolean
+          name: string
+          preset: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "designs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       design_record_export: {
-        Args: { p_design: string | null; p_version_no: number | null; p_page_no: number | null; p_format: string | null; p_scale: number | null; p_media_version: string | null }
+        Args: {          p_design: string | null,          p_format: string | null,          p_media_version: string | null,          p_page_no: number | null,          p_scale: number | null,          p_version_no: number | null}
         Returns: Json
       }
       design_rename: {
-        Args: { p_design: string | null; p_name: string | null; p_expected_version: number | null }
+        Args: { p_design: string | null, p_expected_version: number | null, p_name: string | null}
         Returns: Json
       }
       design_restore_version: {
-        Args: { p_design: string | null; p_version_no: number | null; p_expected_version: number | null }
+        Args: {          p_design: string | null,          p_expected_version: number | null,          p_version_no: number | null}
         Returns: Json
       }
       design_save_draft: {
-        Args: { p_design: string | null; p_document: Json | null; p_expected_version: number | null }
+        Args: { p_design: string | null, p_document: Json | null, p_expected_version: number | null}
         Returns: Json
       }
       design_save_version: {
-        Args: { p_design: string | null; p_expected_version: number | null }
+        Args: { p_design: string | null, p_expected_version: number | null}
         Returns: Json
       }
       design_set_template: {
-        Args: { p_design: string | null; p_template: boolean | null; p_expected_version: number | null }
+        Args: {          p_design: string | null,          p_expected_version: number | null,          p_template: boolean | null}
         Returns: Json
       }
       design_set_trashed: {
-        Args: { p_design: string | null; p_trashed: boolean | null }
+        Args: { p_design: string | null, p_trashed: boolean | null}
         Returns: Json
       }
+      design_upgrade_document: { Args: { p_document: Json | null}; Returns: Json }
       editorial_transition_allowed: {
         Args: { p_from: string | null, p_to: string | null}
+        Returns: boolean
+      }
+      feedback_brand_asked: {
+        Args: { p_brand: string | null, p_period: string | null}
         Returns: boolean
       }
       feedback_brand_has_work: {
@@ -4017,6 +4223,56 @@ export type Database = {
       user_can_work_on_brand: {
         Args: { p_brand: string | null, p_user: string | null}
         Returns: boolean
+      }
+      video_assert_document: {
+        Args: { p_brand: string | null, p_document: Json | null}
+        Returns: number
+      }
+      video_project_create: {
+        Args: {          p_brand: string | null,          p_document: Json | null,          p_name: string | null,          p_preset: string | null}
+        Returns: Json
+      }
+      video_project_lock: {
+        Args: { p_expected_version: number | null, p_project: string | null}
+        Returns: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          current_version_no: number
+          draft_document: Json
+          id: string
+          name: string
+          preset: string
+          trashed_at: string | null
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_projects"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      video_project_record_export: {
+        Args: {          p_media_version: string | null,          p_project: string | null,          p_version_no: number | null}
+        Returns: Json
+      }
+      video_project_rename: {
+        Args: { p_expected_version: number | null, p_name: string | null, p_project: string | null}
+        Returns: Json
+      }
+      video_project_save_draft: {
+        Args: {          p_document: Json | null,          p_expected_version: number | null,          p_project: string | null}
+        Returns: Json
+      }
+      video_project_save_version: {
+        Args: { p_expected_version: number | null, p_project: string | null}
+        Returns: Json
+      }
+      video_project_set_trashed: {
+        Args: { p_project: string | null, p_trashed: boolean | null}
+        Returns: Json
       }
     }
     Enums: {

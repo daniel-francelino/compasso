@@ -97,6 +97,11 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Design.Exported]: "Design exportado para a biblioteca",
   [AuditAction.Design.VersionRestored]: "Versão do design restaurada no rascunho",
   [AuditAction.Design.TemplateChanged]: "Design marcado ou desmarcado como modelo",
+  [AuditAction.Video.Created]: "Projeto de vídeo criado",
+  [AuditAction.Video.VersionSaved]: "Versão do vídeo salva",
+  [AuditAction.Video.Trashed]: "Projeto de vídeo movido para a lixeira",
+  [AuditAction.Video.Restored]: "Projeto de vídeo restaurado",
+  [AuditAction.Video.Exported]: "Vídeo exportado para a biblioteca",
   [AuditAction.Audit.Exported]: "Auditoria exportada",
 };
 
@@ -113,6 +118,7 @@ export const auditDomains: { value: string; label: string }[] = [
   { value: "metrics_report", label: "Relatórios de resultados" },
   { value: "feedback", label: "Feedback de clientes" },
   { value: "design", label: "Designs" },
+  { value: "video_project", label: "Vídeos" },
   { value: "variant", label: "Versões por canal (histórico)" },
   { value: "comment", label: "Comentários" },
   { value: "approval", label: "Aprovações" },

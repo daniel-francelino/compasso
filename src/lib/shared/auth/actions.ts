@@ -36,6 +36,12 @@ export const Action = {
     Update: "design.update",
     Delete: "design.delete",
   },
+  Video: {
+    View: "video.view",
+    Create: "video.create",
+    Update: "video.update",
+    Delete: "video.delete",
+  },
   Content: {
     View: "content.view",
     Create: "content.create",

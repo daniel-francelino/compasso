@@ -166,17 +166,30 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 
 ## Phase D — Image editor (designs)
 
-> Approved 2026-11-16: [modules/image-editor.md](modules/image-editor.md). The spike of its phase 0 was skipped by decision. The video editor ([modules/video-editor.md](modules/video-editor.md)) stays a proposal and has no task.
+> Approved 2026-11-16: [modules/image-editor.md](modules/image-editor.md). The spike of its phase 0 was skipped by decision. The video editor has its own phase VE below.
 
 | ID | Task | Read | Done when | Status |
 |---|---|---|---|---|
 | D-01 | Documents first: the decision in the media library, the module document, every registry (tables, functions, routes, enums, error codes, actions, audit actions, glossary) | image-editor, base.md 9.1 | `check:docs` passes | done (2026-11-16) |
-| D-02 | Migration `design` (tables, RLS, immutability trigger, actions and role seeds, audit actions, the `design_*` functions) and pgTAP `31_design` | image-editor 5.3, data-model 4d, functions 9d | `db:verify` and `check:consistency` pass | done on PGlite (2026-11-17): `20261116100000_design.sql`, pgTAP `31_design` (30 assertions); not applied to the linked project, `db:types` pending |
+| D-02 | Migration `design` (tables, RLS, immutability trigger, actions and role seeds, audit actions, the `design_*` functions) and pgTAP `31_design` | image-editor 5.3, data-model 4d, functions 9d | `db:verify` and `check:consistency` pass | done on PGlite (2026-11-17): `20261116100000_design.sql`, pgTAP `31_design` (30 assertions); applied to the linked project (Compasso) on 2026-11-17, types regenerated from it |
 | D-03 | Server side: `lib/shared/design` (types, presets, document schema and operations with Vitest, server functions), `Action`, `AuditAction`, `errors.ts`, keys | image-editor 5.2 | typecheck, lint and Vitest pass | done (2026-11-17): typecheck, lint and Vitest (15 cases in `document.test.ts`) pass |
 | D-04 | Screens: the list `/admin/marketing/designs` and the editor (Konva canvas, toolbar, properties, layers, undo/redo, autosave, save version), menu item | image-editor 5.5 | acceptance criteria of section 9 that do not need the export | done in code (2026-11-17), not seen in a browser with a signed-in user; acceptance criteria not exercised |
-| D-05 | Export PNG/JPEG to the media library and attach to a content; `design_exports`; `media_usages` for referenced images; restore a saved version | image-editor 5.4, 8b | the exported file passes `confirmUpload` and equals the screen | done in code (2026-11-17): migration `20261117100000_design_phases_2_3.sql`, pgTAP `32_design_phases` (24 assertions), export, versions and restore in the editor; the export was not run in a browser, so the file was never compared with the screen |
+| D-05 | Export PNG/JPEG to the media library and attach to a content; `design_exports`; `media_usages` for referenced images; restore a saved version | image-editor 5.4, 8b | the exported file passes `confirmUpload` and equals the screen | done in code (2026-11-17): migration `20261117100000_design_phases_2_3.sql`, pgTAP `32_design_phases` (24 assertions), applied to the linked project (Compasso) on 2026-11-17; export, versions and restore in the editor; the export was not run in a browser, so the file was never compared with the screen |
 | D-06 | Brand kit (logos, colors, fonts self-hosted), several pages, multi-selection, snap guides, line and group | image-editor 4.1 | — | done in code (2026-11-17): pages, multi-selection, snap guides, line, groups, crop and filters, shadow, alternative text, brand panel, eight self-hosted fonts; not seen in a browser |
 | D-07 | Templates per brand, resize presets, browser pass at tablet and desktop, keyboard, one Playwright flow | image-editor 4.2, base.md 10 | `/check-standards` clean | partly done (2026-11-17): templates and resize in code; Playwright covers only the guard of the list route; the browser pass at tablet and desktop with a session and `/check-standards` were not run |
+
+## Phase VE — Video editor
+
+> Approved 2026-11-17: [modules/video-editor.md](modules/video-editor.md). The spike of its phase 0 was skipped by decision; browser-only rendering, 90 s cap, Chromium first, desktop only, Mediabunny.
+
+| ID | Task | Read | Done when | Status |
+|---|---|---|---|---|
+| VE-01 | Documents first: the decision in the media library, the module document, every registry (tables, functions, routes, enums, error codes, actions, audit actions, glossary, stack) | video-editor, base.md 9.1 | `check:docs` passes | done (2026-11-17) |
+| VE-02 | Migration `video_editor` (tables, RLS, immutability trigger, usage type, actions and role seeds, audit actions, the `video_project_*` functions) and pgTAP `33_video_editor` | video-editor 5.3, data-model 4e, functions 9e | `db:verify` and `check:consistency` pass | done on PGlite (2026-11-17): `20261117200000_video_editor.sql`, pgTAP `33_video_editor` (34 assertions); **not applied** to the linked project |
+| VE-03 | Server side and pure logic: `lib/shared/video` (types, schemas, timeline operations with Vitest, server functions), `Action`, `AuditAction`, `errors.ts`, keys; generic draft autosave shared with the designs | video-editor 5.2 | typecheck, lint and Vitest pass | done (2026-11-17): typecheck, lint and Vitest (21 cases in `timeline.test.ts`) pass |
+| VE-04 | Screens: list `/admin/marketing/videos`, the editor (player, timeline, properties, clip list, keyboard, autosave), menu item | video-editor 5.5 | acceptance criteria of section 9 that do not need the export | done in code (2026-11-17), not seen in a browser with a signed-in user; acceptance criteria not exercised |
+| VE-05 | Export: worker (decode, composite, H.264/AAC, MP4), audio mix, upload, `video_exports`, progress and cancel | video-editor 5.4 | the exported MP4 passes `confirmUpload` and plays | done in code (2026-11-17): worker, audio mix, upload and record; **never run in a browser**, so no MP4 was produced yet |
+| VE-06 | Browser pass on the team's machines (the skipped spike), keyboard, one Playwright flow | base.md 10 | `/check-standards` clean | todo |
 
 ## Phase 6 — Hardening and launch
 

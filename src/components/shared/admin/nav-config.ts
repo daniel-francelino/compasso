@@ -4,6 +4,7 @@ import {
   Building2,
   Briefcase,
   CalendarDays,
+  Clapperboard,
   FileText,
   Globe,
   History,
@@ -109,6 +110,7 @@ export const navGroups: NavGroup[] = [
         action: Action.Calendar.View,
       },
       { title: "Designs", icon: PenTool, to: AppRoute.Designs, action: Action.Design.View },
+      { title: "Vídeos", icon: Clapperboard, to: AppRoute.Videos, action: Action.Video.View },
     ],
   },
   {

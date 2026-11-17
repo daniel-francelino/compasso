@@ -86,6 +86,7 @@
     "konva": "^10.9.1",
     "lost-ui": "npm:@danielsoaresf/lost-ui@^0.3.0",
     "lucide-react": "^0.575.0",
+    "mediabunny": "^1.66.0",
     "motion": "^14.6.0",
     "react": "^19.3.1",
     "react-day-picker": "^9.14.0",

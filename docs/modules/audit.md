@@ -95,6 +95,11 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `design.exported` | `design` | `design_record_export` (metadata: the version number, the page number and the format) |
 | `design.version_restored` | `design` | `design_restore_version` (metadata: the version number) |
 | `design.template_changed` | `design` | `design_set_template` (metadata: the new flag) |
+| `video.created` | `video_project` | `video_project_create` (metadata: the preset) |
+| `video.version_saved` | `video_project` | `video_project_save_version` (metadata: the version number and the duration in ms) |
+| `video.trashed` | `video_project` | `video_project_set_trashed` |
+| `video.restored` | `video_project` | `video_project_set_trashed` |
+| `video.exported` | `video_project` | `video_project_record_export` (metadata: the version number) |
 | `content_channel.cancelled` | `content_channel` | `content_channel_cancel` |
 | `calendar_note.created` | `calendar_note` | `calendar_note_save` (metadata: `kind`, `client_visible`) |
 | `calendar_note.updated` | `calendar_note` | `calendar_note_save` |

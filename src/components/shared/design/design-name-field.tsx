@@ -7,10 +7,14 @@ export function DesignNameField({
   name,
   disabled,
   onRename,
+  label = "Nome do design",
+  inputId = "design-name",
 }: {
   name: string;
   disabled: boolean;
   onRename: (name: string) => Promise<boolean>;
+  label?: string;
+  inputId?: string;
 }) {
   const [value, setValue] = useState(name);
   const [saving, setSaving] = useState(false);
@@ -31,11 +35,11 @@ export function DesignNameField({
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
-      <Label htmlFor="design-name" className="sr-only">
-        Nome do design
+      <Label htmlFor={inputId} className="sr-only">
+        {label}
       </Label>
       <Input
-        id="design-name"
+        id={inputId}
         value={value}
         maxLength={DESIGN_LIMITS.nameMax}
         disabled={disabled || saving}

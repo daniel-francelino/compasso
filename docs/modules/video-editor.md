@@ -1,6 +1,6 @@
-# Module — Video editor (proposal)
+# Module — Video editor
 
-> **Status: proposal, not decided, no code.** Reverse engineering of CapCut and a feasibility analysis for a timeline video editor inside Aura Creative ("Editor de Vídeo" in the UI). Every name in section 5 is a **proposed name**: none is in [../reference/](../reference/README.md) yet and none may be used in code until the proposal is approved and registered (GOLD-4). The sister document for images is [image-editor.md](image-editor.md); this one reuses its document model and storage decisions. UI copy is Brazilian Portuguese; everything else is English.
+> **Status: approved on 2026-11-17 with the spike of phase 0 skipped by decision; MVP delivered in code on 2026-11-17, not yet used in a browser, see "Implementation status".** Reverse engineering of CapCut, the feasibility analysis and the specification of the timeline video editor inside Aura Creative (menu "Vídeos"). The names of section 5 are in the registries ([../reference/](../reference/README.md)). The sister document for images is [image-editor.md](image-editor.md); this one reuses its presets, fonts, history and storage decisions. UI copy is Brazilian Portuguese; everything else is English.
 
 ## 1. Goal and verdict
 
@@ -12,9 +12,9 @@ Let the team assemble short vertical or square videos (Reels, Stories, feed vide
 | Can it be **CapCut itself** (effects, transitions library, keyframes, auto-captions, AI, templates, 4K multi-track)? | **No.** CapCut is a C++ engine compiled to WebAssembly by a large team. Not realistic here. |
 | Can it run on the **server** (Vercel)? | **No.** The architecture says "no FFmpeg on Vercel" ([../technical-architecture-v0.1.md](../technical-architecture-v0.1.md) section 11.4) and functions have time, memory and body limits. Server rendering would need a **new component** (a render worker), which is a larger decision (section 3, V4). |
 | Does it fit the rules? | Yes for a browser-only editor, with **four decisions** to change first (section 3, V1 to V4). |
-| Estimated size (one developer, estimate not a measurement) | MVP of section 4.1: about 10 to 14 weeks, after a 2-week technical spike that decides whether to continue. |
+| Estimated size (one developer, estimate not a measurement) | MVP of section 4.1: about 10 to 14 weeks. The 2-week spike was skipped by decision (2026-11-17), so in-browser export on the team's machines is unmeasured. |
 
-Recommended path: do the **spike first** (section 7, phase 0). If decoding, compositing and exporting a 30-second 1080×1920 clip works acceptably on the team's real machines and browsers, build the MVP in the browser on WebCodecs. If it does not, stop; the fallback is not a weaker editor but **not building it** and linking to an external tool.
+Path taken (2026-11-17): the MVP was built directly in the browser on WebCodecs through Mediabunny, without the spike. The first use on the team's real machines plays the role of the spike: if exporting a 60-second 1080×1920 video is too slow or fails there, the fallback stays **not offering export** and linking to an external tool, not a weaker editor.
 
 ## 2. Reverse engineering of CapCut
 
@@ -58,123 +58,181 @@ Effect and transition libraries, keyframe animation, speech-to-text captions, AI
 
 ## 3. Fit with this project
 
-| ID | Rule or decision | Effect on this proposal | Resolution |
+| ID | Rule or decision | Effect | Resolution (decided 2026-11-17) |
 |---|---|---|---|
-| V1 | [../spaces/media-library.md](../spaces/media-library.md) section 1: "Not included in the MVP: advanced image/video editing … video transcoding" | The editor is both | **GOLD-3: change the document first** (base.md 9.1), same wording as D1 in [image-editor.md](image-editor.md). The library stays storage; the editor reads and writes through it |
-| V2 | Media library section 7: video up to **100 MiB**, single `PUT`, URL valid about 10 minutes; [../audits/media-video-upload.md](../audits/media-video-upload.md) F11 (large uploads not measured) | Source clips fit; an exported 1080p video of 60 seconds is typically 20 to 60 MiB, inside the limit, but long projects are not | Keep 100 MiB for the MVP; cap project duration (suggestion: 90 s) so the export stays under it; **multipart upload** (already planned in phase 6) becomes a prerequisite for anything longer |
-| V3 | Media library: "the codec is **not** verified, no transcoding"; Instagram needs MP4 | The editor **is** the first place that produces a controlled codec | Export H.264 + AAC in MP4 so the result always passes the Instagram adapter. Imported clips may be HEVC (iPhone) that the browser cannot decode (audit F1): the editor must say so and refuse that clip, not fail silently |
-| V4 | ADR-14 and architecture 11.4: "no FFmpeg on Vercel"; Vercel functions have limited time, memory and body size | Server rendering is excluded by the current architecture | **The editor renders in the browser only.** A server render worker (a container on a separate service) would be a new ADR with cost, secrets and queue design; not proposed here |
-| — | ADR-13: "persistent queue only in the automatic-publishing phase" | Not needed while rendering is client-side | Fits |
-| — | GOLD-8, immutable versions | Fits | A saved project is an immutable version; the exported MP4 is an immutable media version; an approved revision keeps pointing to the media version |
-| — | SEC-7 uploads | Fits | The export goes through the normal `requestUpload` / `confirmUpload`; the server checks the container signature as it does for every video |
-| — | SEC-8, SEC-12 | Fits | No HTML from users; project JSON holds ids and numbers, no personal data beyond what text layers contain |
-| — | UI-7 and UI-8 | A timeline editor is not usable at 360 px; a timeline is hard to make accessible | **Desktop only** (decision to record); keyboard shortcuts for play, split, nudge, delete; a clip list as the accessible alternative; reduced-motion respected |
-| — | Spaces and `lost-ui` | Same as the image editor | Module in `shared/video-editor`; panels and forms from `lost-ui`; the timeline is app-specific unless the library owner wants it |
-| — | CODE-7, 600-line limit | Editors grow fast | Split by feature (timeline, player, export, tools) from the first commit |
+| V1 | [../spaces/media-library.md](../spaces/media-library.md) section 1 excluded video editing | The editor is video editing | **Changed first** (base.md 9.1): the library stays storage; video editing lives in this module, which reads and writes through the library |
+| V2 | Media library section 7: video up to **100 MiB**, single `PUT`, URL valid about 10 minutes; [../audits/media-video-upload.md](../audits/media-video-upload.md) F11 (large uploads not measured) | A long export would not fit | A project lasts **at most 90 seconds** (`video_too_long`) and is exported at 6 Mbit/s video + 128 kbit/s audio (about 70 MiB at 90 s); a file above 100 MiB is refused before the upload. Multipart upload is a prerequisite for anything longer |
+| V3 | Media library: "the codec is **not** verified, no transcoding"; Instagram needs MP4 | The editor is the first place that produces a controlled codec | Export H.264 + AAC in MP4. A clip the browser cannot decode (HEVC from an iPhone, audit F1) is **refused when it is added**, with a clear message; nothing is transcoded |
+| V4 | ADR-14 and architecture 11.4: "no FFmpeg on Vercel" | Server rendering is excluded | **The editor renders in the browser only.** A server render worker would be a separate ADR |
+| — | ADR-13: persistent queue only for automatic publishing | Not needed: rendering is client-side | Fits |
+| — | GOLD-8, immutable versions | Fits | Exporting saves an immutable project version first; the exported MP4 is an immutable media version; an approved revision keeps pointing to the media version |
+| — | SEC-7 uploads | Fits | The export goes through `sendUpload` (`requestUpload` → PUT → `confirmUpload`); the server checks the container signature as for every video |
+| — | SEC-8, SEC-12 | Fits | No HTML from users; text is drawn on a canvas; the project JSON holds ids, numbers and the text of the text clips |
+| — | UI-7 and UI-8 | A timeline is not usable at 360 px | **Desktop only** (decided 2026-11-17, an exception to UI-7 for this screen): below 1024 px the editor is read-only with a message. Keyboard shortcuts for every timeline action and a clip list as the accessible alternative |
+| — | Supported browsers | WebCodecs support differs between browsers | **Chromium first** (Chrome, Edge), written on the screen. Export is enabled only when the browser can encode H.264 and AAC; editing and preview work wherever the `<video>` element plays the files |
+| — | Audio files | The library accepts images, videos and PDFs only | **The music track uses the sound of a library video** (an MP4 or MOV with the song). Adding audio types to the library is a separate decision (SEC-7 allowlist, signatures, kind) |
+| — | Spaces and `lost-ui` | Same as the image editor | Module in `shared` (`shared/video`); panels and dialogs from the kit; the timeline is app-specific |
+| — | CODE-7, 600-line limit | Editors grow fast | Split by feature (timeline, player, export, properties) from the first commit |
 
-## 4. Proposed scope
+## 4. Scope
 
-### 4.1 MVP (only after the spike passes)
+### 4.1 MVP (delivered in code)
 
-- One project = one canvas preset (9:16, 4:5, 1:1) at 30 fps, **up to 90 seconds**.
-- Tracks: one main video track, one overlay track (image or logo), one text track, one audio track.
-- Clips from the media library (MP4/MOV/WebM the browser can decode) and images; trim, split, delete, move, reorder, snap; position, scale and opacity of overlays; volume.
-- Text layers with a start and an end, a curated font list shared with the image editor, one style per layer.
-- Optional fade in/out.
+- One project = one format preset (the presets of the image editor: 1:1 1080×1080, 4:5 1080×1350, 9:16 1080×1920) at 30 fps, **up to 90 seconds**.
+- Four tracks: **main** (videos and still images played one after the other, without gaps), **overlay** (images such as a logo, at a time and position), **text** and **audio** (the sound of a library video, used as music).
+- Main clips: trim the start and the end, split at the playhead, delete, move left or right, fit "Preencher" (cover) or "Ajustar" (contain, on the project background color), volume of the clip's own sound.
+- Overlay and text clips: start and duration on the timeline (drag or fields), position and size, opacity (overlay); text with the eight fonts of the image editor, size, bold, italic, color, alignment and an optional background box.
+- Audio clips: start, trim, volume, fade in and fade out.
+- Project fade in and fade out (picture to the background color and sound to silence).
 - Play, pause, scrub, frame step; undo/redo; draft autosave with `version`.
-- Export: MP4 (H.264 + AAC), 1080 px on the long side, 30 fps; progress, cancel, and the result attached to a content item.
+- Export: MP4 (H.264 + AAC), the preset size, 30 fps; progress, cancel, and the result in the media library, ready to attach to a content item through the content editor's picker.
 
 ### 4.2 Later
 
-Cross-fade transitions, speed, crop/mask, voice-over recording, per-brand templates, proxies for large clips, multipart upload, subtitle import (SRT), reuse of image-editor designs as overlays.
+Cross-fade transitions, speed, crop and mask, voice-over recording, audio files in the library, a list of saved versions with restore, per-brand templates, proxies for large clips, multipart upload, subtitle import (SRT), reuse of image-editor designs as overlays, drag of overlays on the player.
 
 ### 4.3 Out
 
 Effects and filters library, keyframes, AI and auto-captions, 4K, multi-camera, collaboration, a music catalog, a server render worker.
 
-## 5. Proposed technical design
+## 5. Technical design
 
 ### 5.1 Building blocks
 
-| Concern | Proposal | Notes |
-|---|---|---|
-| Decode | WebCodecs `VideoDecoder`, fed by a demuxer | Hardware accelerated; confirm browser support (section 6) |
-| Container read/write | **Mediabunny** (TypeScript library for reading, writing and converting media with WebCodecs) | Recommended over ffmpeg.wasm; its own published benchmarks show it far ahead, but those are the vendor's numbers: re-measure in the spike. Check license and maintenance before adding (CODE-12) |
-| Composite | A 2D canvas first; WebGL only if the spike shows 2D is too slow | Konva is **not** used for the video frame; the timeline UI is plain React |
-| Encode | WebCodecs `VideoEncoder` (H.264) and `AudioEncoder` (AAC) | Fallback to ffmpeg.wasm only if a target browser lacks AAC or H.264 encoding, accepting it is slow and CPU-heavy |
-| Audio | Web Audio API for preview mixing; offline mixing for export | The audio clock drives playback |
-| Heavy work | A Web Worker (and `OffscreenCanvas`) so decoding and encoding never block the UI | Required, not optional |
-| Timeline UI | React components, virtualized ruler and clips with `@tanstack/react-virtual`, drag with `@dnd-kit` (both already installed) | Keyboard-first operations |
-
-### 5.2 Document model (proposed)
-
-Same principles as [image-editor.md](image-editor.md) section 5.2: JSON validated by zod, closed set of clip and track kinds, assets by media version id, operations with undo/redo, immutable saved versions. Time is stored as **integer milliseconds** (never floats, never `Date`); frame positions are derived from the project fps.
-
-### 5.3 Data (proposed names, not registered)
-
-| Proposed | Purpose |
+| Concern | Implementation |
 |---|---|
-| `video_projects` | One row per project: brand, name, preset, fps, `current_version_id`, `version`, `trashed_at`. Composite foreign keys with the brand |
-| `video_project_versions` | **Immutable** saved states: `document` (jsonb, size-capped), duration, author |
-| `video_exports` | Link between a project version and the media version it produced |
-| Actions | `video.view`, `video.create`, `video.update`, `video.delete`; export also requires `media.upload` |
-| Audit | `video.created`, `video.exported`, `video.deleted` through `audit_write` |
-| Error codes | `video_project_invalid`, `video_too_long`, `video_codec_unsupported`, `video_export_failed` |
-| Server functions | `saveVideoProjectVersion`, `listVideoProjects`, `getVideoProject`, `exportVideoProject` (records the link; bytes use the media upload path) |
+| Container read and write, decode, encode | **Mediabunny** ^1.66.0 (MPL-2.0, TypeScript, maintained; added 2026-11-17): `Input` + `UrlSource` + `CanvasSink` to decode the original files, `Output` + `Mp4OutputFormat` + `CanvasSource` (H.264) + `AudioSampleSource` (AAC) to encode and mux. ffmpeg.wasm is not used |
+| Preview | A 2D canvas drawn on every animation frame from hidden `<video>` elements (main clips) and `<audio>` elements (audio clips) kept in sync with the playhead; the elements play the sound in the preview |
+| Composite | `composeFrame` in `lib/shared/video/compose.ts`, the same function for the preview and the export: main frame (cover or contain) → overlays → texts → project fade |
+| Text | Every text clip is rasterized on the main thread (after its font loads) into a bitmap; the preview and the export draw the same bitmap, so they agree |
+| Export | A module Web Worker (`export.worker.ts`) decodes, composites and encodes on an `OffscreenCanvas`; the main thread prepares the image and text bitmaps and the mixed audio, then uploads the result |
+| Audio mix | `OfflineAudioContext` on the main thread (Web Audio is not available in workers): each source's sound is decoded, placed, trimmed, faded and mixed to 48 kHz stereo; the worker encodes it to AAC |
+| Timeline UI | Plain React with pointer events (move and trim with snapping to the playhead and to clip edges); `@dnd-kit` was not needed |
+| Fonts, presets, history, autosave | Reused from the image editor: `DesignFont` and `loadDesignFont`, `DesignPreset` and its sizes, `history.ts`, and the draft autosave, now generic (`useDraftAutosave`) and used by both editors |
 
-All with RLS combining the action and the brand scope, nothing for external users, and no `portal_*` function exposing a project; the portal only sees the exported media of a revision.
+### 5.2 Document model
+
+The project JSON is the source of truth, validated by zod on the server (SEC-6, `videoDocumentSchema` in `lib/shared/video/schemas.ts`) and checked again by `video_assert_document` in SQL. Time is stored as **integer milliseconds**; frame positions are derived from 30 fps. Assets are referenced by media version id, never by signed URL (DATA-15).
+
+Shape (version 1): `{ version: 1, background, fadeInMs, fadeOutMs, main[], overlays[], texts[], audio[] }`.
+
+- `background`: `#rrggbb`, shown behind a contained clip and in the fades. `fadeInMs`, `fadeOutMs`: 0 to 3000.
+- **Main clip** (`main`, played in array order without gaps): `id`, `kind` (`VideoClipKind`: `video` or `image`), `mediaVersionId` (a video or an image of the same brand, matching the kind), `durationMs` (100 to 90000), `sourceInMs` (where the clip starts in its source; 0 for an image), `volume` (0 to 1; 0 for an image), `fit` (`VideoFit`: `cover` or `contain`).
+- **Overlay clip** (`overlays`): `id`, `mediaVersionId` (an image of the same brand), `startMs`, `durationMs`, `x`, `y`, `width`, `height` (pixels of the project size), `opacity` (0 to 1). Array order is the stacking order.
+- **Text clip** (`texts`): `id`, `text` (up to 500 characters; an empty text draws nothing), `startMs`, `durationMs`, `x`, `y`, `width`, `font` (`DesignFont`), `fontSize` (12 to 300), `bold`, `italic`, `color`, `align` (`DesignTextAlign`), `background` (`#rrggbb` or `null`: a box behind the text). Texts are drawn above the overlays.
+- **Audio clip** (`audio`): `id`, `mediaVersionId` (a **video** of the same brand whose sound is used), `startMs`, `durationMs`, `sourceInMs`, `volume` (0 to 1), `fadeInMs`, `fadeOutMs` (0 to 10000 each).
+
+The **duration** of a project is the largest of the sum of the main clips and the end (`startMs + durationMs`) of every other clip; it must be at most 90000 ms (`video_too_long`). Limits: 50 main clips, 20 overlays, 30 texts, 5 audio clips, 256 KiB (`video_too_large`). Colors inside a document are user data (UI-9 is about the application's interface); the default colors of a new project and a new text are read from the palette tokens at run time.
+
+### 5.3 Data
+
+| Name | Purpose |
+|---|---|
+| `video_projects` | One row per project: `brand_id`, `name` (1 to 120), `preset` (`DesignPreset`), `draft_document` (jsonb, written by autosave), `current_version_no` (0 when none), `version` (optimistic locking, DATA-5), `trashed_at`, `created_by`. `unique (id, brand_id)` |
+| `video_project_versions` | **Immutable** saved states: `project_id` + `brand_id` (composite foreign key, DATA-3), `version_no`, `document`, `duration_ms`, `created_by`. A trigger refuses update and delete (`video_version_immutable`, DATA-6) |
+| `video_exports` | One row per export: `project_id` + `brand_id` (composite foreign key), `version_no` (the saved version exported), `media_asset_id`, `media_version_id` (unique), `created_by`, `created_at`. Written only by `video_project_record_export` |
+| `media_usages` | New usage type `video_project_version` (`usage_ref_id` = the `video_project_versions.id`): every video and image a saved version references, so the library counts it as used and refuses to delete it |
+| Actions | `video.view` (requires `brands.view`), `video.create`, `video.update`, `video.delete` (each requires `video.view`). Choosing a clip also needs `media.view`; exporting also needs `media.upload` (the upload checks it). Starting roles: `manager` has the four; `collaborator` has view, create and update |
+| Audit | `video.created` (metadata: the preset), `video.version_saved` (metadata: version number and duration), `video.trashed`, `video.restored`, `video.exported` (metadata: version number), all through `audit_write` (entity `video_project`). Autosave of the draft is not audited |
+| Error codes | `video_too_long`, `video_too_large`, `video_empty` (saving a version of a project without clips), `video_trashed`, `video_version_immutable`; a stale `version` answers the shared `conflict`; a bad shape, a file of another brand or of the wrong kind, or an export file that does not match answers `invalid_input` |
+| SQL functions | `video_project_create(p_brand, p_name, p_preset, p_document)` (the empty document built by the client, so its default colors come from the palette tokens), `video_project_save_draft`, `video_project_rename`, `video_project_save_version` (also writes the usages), `video_project_set_trashed`, `video_project_record_export`; internal `video_assert_document` (returns the duration), `video_project_lock`; trigger `video_project_versions_immutable` |
+| Server functions | `listVideoProjects`, `getVideoProject`, `createVideoProject`, `saveVideoProjectDraft`, `renameVideoProject`, `saveVideoProjectVersion`, `setVideoProjectTrashed`, `listVideoExports`, `recordVideoExport`, all in `lib/shared/video/video.functions.ts` |
+
+The tables follow base.md 5.5: RLS with `video.view` and `can_access_brand`, writes only through the functions, no policy for external users, and no `portal_*` function exposes a project (the portal only sees the exported media of a revision). Archive instead of delete (GOLD-8): "Mover para a lixeira" sets `trashed_at` and needs `video.delete`; a trashed project cannot be edited (`video_trashed`) until it is restored.
 
 ### 5.4 Flow
 
-1. Create a project from a preset; choose clips through `MediaPicker`. The editor works on the **display or proxy copy** where one exists and on the original only to export.
-2. Edit; autosave with `version`; conflicts keep the work.
-3. Export in a worker: decode → composite → encode → mux; the progress bar is real; closing the tab cancels (warn with the existing unsaved/uploading prompt).
-4. Upload the MP4 through the upload tray (`UploadTrayProvider`) as a normal file; attach to the content item; the revision freezes the media version.
+1. "Novo vídeo": name, brand and format. The editor opens with empty tracks.
+2. Add clips through `MediaPicker` (videos and images of the project's brand). Before a video is added, the browser probes it with Mediabunny: a file whose video cannot be decoded is refused with "Este vídeo usa um formato que o navegador não consegue abrir…"; its duration limits the trim.
+3. Edit; the draft is saved about 2 seconds after the last change with `version`; a conflict stops the autosave and keeps the work on screen until the person reloads.
+4. "Exportar": saves a version (`video_project_save_version`), loads the fonts and the original files, rasterizes texts and images, mixes the audio, then the worker renders every frame and encodes the MP4 with a real progress bar and "Cancelar". The file is uploaded through `sendUpload` as a normal video of the brand and linked with `video_project_record_export`. A failed upload can be retried without rendering again while the dialog is open. Leaving the page during the export asks for confirmation.
+5. The exported video is attached to a content item through the existing picker of the content editor. A content revision freezes the **media version**, not the project (GOLD-8).
+
+### 5.5 Placement and screens
+
+`components/shared/video/`, `lib/shared/video/`, `hooks/shared/video/`. Routes in the Marketing group: `/admin/marketing/videos` (list) and `/admin/marketing/videos/$projectId` (editor), both guarded by `video.view`. Menu entry "Vídeos" in the "Produção" group of `nav-config.ts`, next to "Designs".
+
+- **List ("Vídeos"):** search by name, tabs "Ativos" and "Lixeira", brand filter, server pagination; columns name, brand, format, saved versions and last change; primary action "Novo vídeo". Row actions: open, move to the trash or restore.
+- **Editor:** header with the name, the saving state and "Exportar"; a toolbar ("Clipe", "Imagem", "Texto", "Música", "Dividir", "Excluir", undo, redo); the player (canvas at the preset ratio, play/pause, previous and next frame, time); a side panel with "Propriedades" (the selected clip, or the project: background color and fades) and "Clipes" (every clip of every track as a list of buttons with its time range, the accessible alternative to the timeline, with "Mover para a esquerda/direita" for main clips); the timeline (ruler, four tracks, playhead, zoom).
+- **Timeline:** click the ruler to move the playhead; drag a clip to move it (overlay, text and audio tracks; main clips are reordered with the buttons or the keyboard); drag the edges to trim; edges snap to the playhead and to other clips. Each clip is a focusable button.
+- **Keyboard:** Space plays or pauses, Left and Right move the playhead one frame (one second with Shift) or, with a clip selected, nudge it, S splits at the playhead, Delete removes, Home and End go to the start and the end, Ctrl+Z and Ctrl+Shift+Z (or Ctrl+Y) undo and redo, Escape clears the selection.
+- **Read-only:** without `video.update`, for a project in the trash and below 1024 px. "Exportar" also needs `media.upload` and a browser that encodes H.264 and AAC.
 
 ## 6. Risks
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| **Browser support** of WebCodecs (video and especially audio encoding; Safari and Firefox differ and change quickly) | The editor works for some people only | Verify the real support matrix **at spike time** on caniuse and on the team's machines; declare supported browsers (Chromium first); detect and show a clear message |
-| HEVC and uncommon codecs from phones (audit F1) | A clip cannot be decoded | Probe with `VideoDecoder.isConfigSupported`; refuse with a clear message; do not transcode |
-| Performance and memory (a long timeline decodes a lot) | Tab freezes or crashes | 90 s cap, one or two decoders alive at a time, proxies later, worker-based pipeline, measure in the spike |
-| Frame accuracy and A/V sync | Audio drifts from the picture | Audio is the master clock; integer-millisecond model; test with variable-frame-rate phone videos |
-| Export on a weak machine | Takes minutes or fails | Progress and cancel; document minimum hardware; no promise of speed |
-| Output larger than 100 MiB or upload failing | Export is lost (audit F11) | Duration cap; keep the exported blob in memory until the upload is confirmed; multipart upload as a prerequisite for longer videos |
-| Music and font licensing | Legal exposure | User uploads only; no catalog; curated open-license fonts |
-| Effort underestimated | Weeks lost | Phase 0 spike with a go/no-go before any migration or route is created |
-| Maintenance cost | A niche editor needs continuing care as browsers change | Accept explicitly, or do not build |
+| **Browser support** of WebCodecs (Safari and Firefox differ and change) | The export works for some people only | Chromium first, written on the screen; `canEncodeVideo('avc')` and `canEncodeAudio('aac')` are checked before "Exportar" is enabled |
+| HEVC and uncommon codecs from phones (audit F1) | A clip cannot be decoded | Probed when added; refused with a clear message; no transcoding |
+| Performance and memory | Tab freezes or crashes | 90 s cap; one decoder alive at a time in the export; work in a worker; **not measured** (the spike was skipped) |
+| Preview sync | The preview uses media elements and a wall clock, so a slow machine may drift a little | Elements are re-seeked when they drift more than 150 ms; the export is frame-exact and does not depend on the preview |
+| CORS of the private bucket | The canvas cannot read the frames ("tainted") | Same `GET` CORS rule the image editor needs ([../spaces/r2-storage.md](../spaces/r2-storage.md) section 6) |
+| Output larger than 100 MiB or upload failing | Export lost (audit F11) | Duration cap and fixed bitrate; size checked before upload; the file stays in memory for a retry while the dialog is open |
+| Music and font licensing | Legal exposure | User uploads only; curated open-license fonts |
+| Maintenance cost | Browsers change | Accepted on 2026-11-17 |
 
-## 7. Phases (estimates, to be re-estimated after the spike)
+## 7. Phases
 
-| Phase | Content | Estimate |
+| Phase | Content | Status |
 |---|---|---|
-| 0 | Decisions V1 to V4 recorded. **Spike** in a throwaway branch: decode two clips, composite text and a logo, export 30 s of 1080×1920 H.264/AAC in a worker on the team's machines and browsers. Go/no-go written in this document | 2 weeks |
-| 1 | Document model, timeline UI, player, undo/redo, save/load, migration and pgTAP | 4 to 5 weeks |
-| 2 | Export pipeline in a worker, upload and attach to content, progress and cancel | 3 to 4 weeks |
-| 3 | Accessibility pass, keyboard shortcuts, browser matrix, tests, polish | 2 to 3 weeks |
+| 0 | Decisions V1 to V4 recorded; spike | Decisions recorded 2026-11-17; spike skipped by decision |
+| 1 | Document model, timeline UI, player, undo/redo, save/load, migration and pgTAP | Delivered in code 2026-11-17 |
+| 2 | Export pipeline in a worker, upload and record, progress and cancel | Delivered in code 2026-11-17 |
+| 3 | Accessibility pass, browser matrix, tests on the team's machines | Not done |
 
-## 8. Decisions needed (open)
+## 8. Decisions (2026-11-17)
 
-1. Approve the change to media-library section 1 (V1)? Recommendation: yes, only together with a passed spike.
-2. Browser-only rendering (V4)? Recommendation: yes; a render worker is a separate proposal.
-3. Duration cap of 90 s and 100 MiB until multipart upload exists (V2)? Recommendation: yes.
-4. Supported browsers (Chromium only at first)? Recommendation: yes, written in the screen.
-5. Desktop only? Recommendation: yes.
-6. Is the effort worth it compared with linking to an external editor and importing the result through the library? **Recommendation: decide after the spike, with its measurements.**
+1. The media library document was changed (V1): video editing lives in this module.
+2. Rendering happens in the browser only (V4); a render worker would be a separate proposal.
+3. A project lasts at most 90 s and the export stays under the 100 MiB upload limit until multipart upload exists (V2).
+4. Chromium is the supported browser at first, written on the screen.
+5. The editor is desktop only (below 1024 px it is read-only).
+6. The 2-week spike was skipped; the MVP was built directly.
+7. Mediabunny is the media library (MPL-2.0), added as a dependency.
+8. The music track uses the sound of a library video until audio files are accepted by the library (separate decision).
+9. The presets, fonts, history and autosave of the image editor are reused, not copied (GOLD-2).
+10. `manager` and `collaborator` view, create and update projects; only `manager` moves them to the trash.
 
-## 9. Acceptance criteria (for when it is built)
+## 9. Acceptance criteria
 
-- Build a 30 s project from three library clips, a logo and a text layer; play it without desync; split and trim with mouse and keyboard.
-- Export an MP4 that plays in the browser, in the OS player and that the Instagram adapter accepts (`media_ready`).
+- Build a 30 s project from three library clips, a logo and a text layer; play it without visible desync; split and trim with mouse and keyboard.
+- Export an MP4 that plays in the browser and in the OS player, and that the Instagram adapter accepts (`media_ready`).
 - A clip the browser cannot decode is refused with a clear message at the moment it is added.
-- Closing the tab during export warns; cancelling leaves no media record behind; a failed upload can be retried without re-rendering while the tab is open.
+- Leaving the page during export asks for confirmation; cancelling leaves no media record behind; a failed upload can be retried without rendering again while the dialog is open.
 - The exported file attached to an approved revision does not change when the project is edited later.
 - Isolation per brand and action per base.md 5.6; an external user reaches no project.
-- Usable on desktop; below the supported width a clear message; a clip list reachable by keyboard.
+- Usable on desktop; below 1024 px a clear read-only message; every clip reachable by keyboard from the clip list.
 
 ## Implementation status
 
-Not started. This document is a proposal written on 2026-11-16. No code, migration or registry entry exists. Nothing was tested or measured: the viability of in-browser export on the team's machines is **the** open question and is answered only by the phase 0 spike. Statements about CapCut come from one vendor case study plus inference; the library performance claims are the vendors' own.
+**MVP delivered in code on 2026-11-17** (tasks VE-01 to VE-05 of [../implementation-plan.md](../implementation-plan.md)). The documents and registries were written first, then the code. **Nothing was used in a browser with a signed-in user**, so no MP4 has been exported yet: the in-browser export, which the skipped spike was meant to measure, is unverified.
+
+Migration and tests:
+
+- `20261117200000_video_editor.sql`: the four `video.*` actions and their role seeds, usage type `video_project_version`, tables `video_projects`, `video_project_versions`, `video_exports` (RLS, `select` only, composite foreign keys), trigger `video_project_versions_immutable`, `video_assert_document` (shape, brand and kind of every file, duration, limits), `video_project_lock`, `video_project_create`, `video_project_save_draft`, `video_project_rename`, `video_project_save_version` (writes the usages), `video_project_set_trashed`, `video_project_record_export` (an available `video/mp4` of the same brand uploaded by the caller), `audit_write` with the five `video.*` actions.
+- pgTAP `33_video_editor.test.sql` (34 assertions: creation, names and presets, unlinked brand, empty version, conflict, file of another brand, wrong kinds, minimum clip, document version, background, 90 s limit, size limit, rename, saved version and its duration, usages, export rules, collaborator cannot trash, immutability, audit, trash, brand isolation, external user, `anon`); `01_auth_roles_profiles.test.sql` now counts 63 actions.
+
+Code:
+
+- `src/lib/shared/video/`: `types.ts`, `schemas.ts`, `timeline.ts` (pure operations: starts, duration, split, trim, move, reorder, active clips, fades, snapping), `timeline.test.ts` (21 Vitest cases), `labels.ts`, `compose.ts` (the frame compositor shared by preview and export), `text-raster.ts`, `preview.ts`, `probe.ts` (decodability and duration with Mediabunny, export support check), `audio-mix.ts` (`OfflineAudioContext`), `export-protocol.ts`, `export.worker.ts` (decode with `CanvasSink`, composite on `OffscreenCanvas`, H.264 with `CanvasSource`, AAC with `AudioSampleSource`, MP4 with `fastStart: "in-memory"`), `video.functions.ts` (9 server functions).
+- `src/hooks/shared/video/`: `use-video-editor.ts` (history and selection), `use-video-sources.ts` (signed URLs refreshed every 4 minutes), `use-video-playback.ts` (canvas preview, hidden media elements kept in sync, clock), `use-video-adders.ts`, `use-video-shortcuts.ts`, `use-video-export.ts`, `use-is-desktop.ts`; `src/hooks/shared/use-draft-autosave.ts` (generic, shared with the designs).
+- `src/components/shared/video/`: `videos-page.tsx`, `new-video-dialog.tsx`, `video-editor-page.tsx`, `video-workspace.tsx`, `video-toolbar.tsx`, `video-player.tsx`, `video-timeline.tsx`, `video-timeline-clip.tsx`, `video-properties-panel.tsx`, `video-text-properties.tsx`, `video-timing-fields.tsx`, `video-clip-list.tsx`, `video-export-dialog.tsx`.
+- Routes `src/routes/admin/_app/(marketing)/marketing/videos/` (`index.tsx`, `$projectId.tsx`), menu item "Vídeos", `Action.Video`, `AuditAction.Video` and labels (audit domain "Vídeos"), `QueryKey.Video`, `AppRoute.Videos`, five error codes in `errors.ts`, `check:consistency` (`video_projects.preset`), `routeTree.gen.ts`, `e2e/auth-guards.spec.ts` (the list route without a session). Dependency: `mediabunny` ^1.66.0 (MPL-2.0, last published 2026-11-13, one maintainer).
+- `database.types.ts`: the blocks of the three tables and eight functions were produced by the offline generator (`npm run db:types:offline`) and inserted into the file generated from the linked project, because the migration is not applied there yet. Regenerate it with `node scripts/db-types.mjs --linked` after `db push`.
+
+Validation performed (2026-11-17): `npm run db:verify` (1243 assertions, 0 failures, PGlite), `npm run check:consistency`, `npm run check:docs`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run test` (357 tests), `npx vite build` (the worker is emitted as its own chunk of about 580 kB, loaded only when exporting), `npx playwright test e2e/auth-guards.spec.ts` (the new videos route redirects without a session; the older login-form test failed once and passed on the rerun, the same flakiness recorded in [image-editor.md](image-editor.md)).
+
+**Not tested:** none of the acceptance criteria of section 9. In particular, never exercised in a browser: creating a project, adding clips and the HEVC refusal, the preview and its sync, the timeline drag, trim and snapping, split, the clip list and the keyboard, autosave and the conflict between two tabs, and **the whole export** (fetching the originals, the audio mix, the worker, H.264/AAC encoding, the size check, the upload, the record, cancel and retry, the time it takes on the team's machines). The MP4 was never checked against the Instagram adapter. `supabase test db` on Docker was not run.
+
+The migration was **not applied** to the linked project (Compasso, production); applying it is a separate decision (`npx supabase db push`), after which the types should be regenerated.
+
+Known gaps and pending items:
+
+- The preview reads frames from `<video>` elements and the export from `CanvasSink`; both need the CORS `GET` rule of the private bucket ([../spaces/r2-storage.md](../spaces/r2-storage.md) section 6), the same rule the image editor needs. Without it the preview stays on the background color and the export fails while preparing.
+- The export downloads every source file whole into memory before rendering (also to decode their sound); with several large originals this can use a lot of memory. Not measured.
+- The music track takes the sound of a library video; audio files in the library need their own decision (section 3).
+- Overlays and texts are positioned with numeric fields; dragging them on the player is "later" (section 4.2). There is no list of saved versions yet; every export saves one.
+- A clip whose source file was deleted after it was added shows the background color; nothing warns about it yet.
+- `lost-ui` has no timeline component; the timeline stays in the app (CLAUDE.md item 10). No request was filed.
 
 Sources: [web.dev: CapCut case study](https://web.dev/case-studies/capcut), [Mediabunny](https://mediabunny.dev/), [Mediabunny introduction](https://mediabunny.dev/guide/introduction).

@@ -20,6 +20,7 @@
 | `channel_metric_daily`, `channel_audience_snapshot`, `channel_media_index`, `content_channel_metrics`, `metric_marks`, `metric_reports` | metrics | yes | `metrics.view` + `can_access_brand` (read); external users read only through `portal_metrics_*` |
 | `feedback_responses` | feedback | yes | `feedback.view` + `can_access_brand` (read); **no policy for external roles**: they use `portal_feedback_*` only |
 | `designs`, `design_versions` | image-editor | yes | `design.view` + `can_access_brand` (read); written only by the `design_*` functions; **no policy for external roles** and no `portal_*` function |
+| `video_projects`, `video_project_versions`, `video_exports` | video-editor | yes | `video.view` + `can_access_brand` (read); written only by the `video_project_*` functions; **no policy for external roles** and no `portal_*` function |
 | `content_items`, `content_channels`, `content_revisions`, `content_revision_media`, `comments` | content | yes | `content.view`/`approvals.view` + `can_access_brand`; **no policy for external roles** |
 | `content_types`, `content_item_types` | content | yes | `content.view` (read; the catalog is per organization) and `content.view` + `can_access_brand` through the item (links); written only by `content_type_save`, `content_type_set_archived` (`content.manage_types`) and `content_item_save`; **no policy for external roles** |
 | `calendar_notes` | calendar | yes | `calendar.view` + `can_access_brand`; **no policy for external roles** |
@@ -273,6 +274,18 @@ Migrations `20261116100000_design.sql` (phase 1) and `20261117100000_design_phas
 **`design_exports`** — one row per exported page: `design_id` + `brand_id` (composite foreign key to `designs (id, brand_id)`), `version_no` (the saved version exported; composite foreign key to `design_versions (design_id, version_no)`), `page_no` (1 to 10), `format` (`DesignExportFormat`: `png`, `jpeg`), `scale` (1 or 2), `media_asset_id` (foreign key to `media_assets`), `media_version_id` (foreign key to `media_versions`, unique), `created_by`, `created_at`. Index `(design_id, page_no, created_at desc)`.
 
 The three tables: RLS on, one `select` policy (`design.view` and `can_access_brand(brand_id)`), `select` granted to `authenticated` only, no insert, update or delete grant (writes go through the `security definer` functions). Saved versions register their images in `media_usages` with the type `design_version` (`usage_ref_id` = `design_versions.id`).
+
+## 4e. Video editor (video projects)
+
+Migration `20261117200000_video_editor.sql`. Rules: [../modules/video-editor.md](../modules/video-editor.md).
+
+**`video_projects`** — one row per project: `brand_id` (foreign key to `brands`), `name` (1 to 120 characters), `preset` (`DesignPreset`, the same three formats as the designs), `draft_document` (`jsonb` object, the working copy written by autosave; shape in the module document, section 5.2), `current_version_no` (`int`, 0 while no version was saved), `version` (optimistic locking), `trashed_at`, `created_by`, `created_at`, `updated_at` (trigger). `unique (id, brand_id)`. Indexes `(brand_id, updated_at desc)` and `lower(name)`.
+
+**`video_project_versions`** — immutable saved states: `project_id` + `brand_id` (composite foreign key to `video_projects (id, brand_id)`), `version_no` (`unique (project_id, version_no)`), `document` (`jsonb`), `duration_ms` (1 to 90000), `created_by`, `created_at`. Trigger `video_project_versions_immutable` refuses every update and delete (`video_version_immutable`).
+
+**`video_exports`** — one row per exported file: `project_id` + `brand_id` (composite foreign key to `video_projects (id, brand_id)`), `version_no` (composite foreign key to `video_project_versions (project_id, version_no)`), `media_asset_id` (foreign key to `media_assets`), `media_version_id` (foreign key to `media_versions`, unique), `created_by`, `created_at`. Index `(project_id, created_at desc)`.
+
+The three tables: RLS on, one `select` policy (`video.view` and `can_access_brand(brand_id)`), `select` granted to `authenticated` only, no insert, update or delete grant (writes go through the `security definer` functions). Saved versions register their videos and images in `media_usages` with the type `video_project_version` (`usage_ref_id` = `video_project_versions.id`).
 
 ## 5. Content, versions, comments and approvals
 
@@ -575,7 +588,7 @@ create table media_collection_items (
 create table media_usages (
   id uuid primary key default gen_random_uuid(),
   media_version_id uuid not null references media_versions(id) on delete restrict,
-  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity','publication_evidence','profile_avatar','design_version')),
+  usage_type text not null check (usage_type in ('content_revision','site_page_revision','case_study','brand_identity','publication_evidence','profile_avatar','design_version','video_project_version')),
   usage_ref_id uuid not null,
   alt_text text,
   created_at timestamptz not null default now(),

@@ -207,6 +207,24 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Redimensionar | List | Create a copy of a design in another format; the source stays as it is |
 | Mover para a lixeira / Restaurar | List | Archive a design / bring it back (nothing is deleted) |
 
+## 4e. Video editor
+
+| Term (pt-BR) | Where | Meaning |
+|---|---|---|
+| Vídeos | Marketing menu, list | The video projects edited in the platform; one project is one editable video of a brand |
+| Novo vídeo | List | Create a project (name, brand, format) |
+| Clipe / Imagem / Texto / Música | Editor toolbar | Add a video or still image to the main track / an image over the video / a text / the sound of a library video |
+| Principal / Sobreposição / Texto / Música | Timeline | The four tracks |
+| Dividir | Editor | Cut the selected clip (or the main clip under the playhead) in two at the playhead |
+| Preencher / Ajustar | Clip properties | Fill the frame (cropping) / show the whole clip on the background color |
+| Volume / Aparecer / Desaparecer | Clip and project properties | Sound level / fade in / fade out |
+| Início / Duração / Início no arquivo | Clip properties | Where the clip starts on the timeline / how long it lasts / which point of the file it starts from |
+| Clipes | Editor side panel | Every clip of every track as a list; the keyboard alternative to the timeline |
+| Mover para a esquerda / Mover para a direita | Clip list | Change the order of a main clip |
+| Exportar / Cancelar / Tentar enviar de novo | Editor | Create the MP4 in the media library / stop the export / upload again the file already generated |
+| Somente leitura | Editor | Shown without `video.update`, for a project in the trash and below 1024 px |
+| Mover para a lixeira / Restaurar | List | Archive a project / bring it back (nothing is deleted) |
+
 ## 5. Adding a term
 
 Add the row here, use it in the screen, and if it names a status or enum value also update [../reference/enums.md](../reference/enums.md). `review` checks new strings against this glossary.

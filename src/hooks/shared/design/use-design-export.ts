@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type Konva from "konva";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { newItem, sendUpload } from "@/hooks/shared/use-media-upload";
+import { fileSlug } from "@/lib/shared/file-name";
 import { logError } from "@/lib/shared/logger";
 import { recordDesignExport } from "@/lib/shared/design/design.functions";
 import { DESIGN_EXPORT_MIME, DESIGN_LIMITS, DesignExportFormat } from "@/lib/shared/design/types";
@@ -32,15 +33,6 @@ type Options = {
 
 const RENDER_FAILED =
   "Não foi possível gerar a imagem. Confira se o armazenamento permite a leitura das imagens (CORS) e tente de novo.";
-
-const slug = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60) || "design";
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -79,9 +71,13 @@ export const useDesignExport = (options: Options) => {
     const { designId, designName, brandId, previousAssets, reuseAssets } = latest.current;
     const pageNo = current.index + 1;
     const extension = current.format === DesignExportFormat.Png ? "png" : "jpg";
-    const file = new File([blob], `${slug(designName)}-pagina-${pageNo}.${extension}`, {
-      type: DESIGN_EXPORT_MIME[current.format],
-    });
+    const file = new File(
+      [blob],
+      `${fileSlug(designName, "design")}-pagina-${pageNo}.${extension}`,
+      {
+        type: DESIGN_EXPORT_MIME[current.format],
+      },
+    );
     const previous = reuseAssets ? previousAssets.get(pageNo) : undefined;
     const target = { scope: MediaScope.Brand, brandId };
     const first = await sendUpload(newItem(file), { ...target, assetId: previous });

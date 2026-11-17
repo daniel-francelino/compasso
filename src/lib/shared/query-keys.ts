@@ -84,6 +84,13 @@ export const QueryKey = {
     exports: (id: string) => ["design", "exports", id] as const,
     brandKit: (brandId: string) => ["design", "brand-kit", brandId] as const,
   },
+  Video: {
+    all: () => ["video"] as const,
+    list: (filters: Filters) => ["video", "list", filters] as const,
+    detail: (id: string) => ["video", "detail", id] as const,
+    exports: (id: string) => ["video", "exports", id] as const,
+    sources: (ids: string) => ["video", "sources", ids] as const,
+  },
   Approvals: {
     all: () => ["approvals"] as const,
     detail: (id: string) => ["approvals", "detail", id] as const,
