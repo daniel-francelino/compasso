@@ -20,6 +20,7 @@ import {
   rectMask,
   shrinkMask,
 } from "@/lib/shared/design/raster/selection";
+import { DesignTool } from "@/lib/shared/design/types";
 import type { ValueOf } from "@/lib/shared/utils";
 
 export const MarqueeShape = {
@@ -48,6 +49,14 @@ export const SELECTION_LIMITS = {
   polygonCloseScreenPx: 8,
   lassoStepScreenPx: 2,
 } as const;
+
+export const SELECTION_TOOLS: readonly DesignTool[] = [
+  DesignTool.Marquee,
+  DesignTool.Lasso,
+  DesignTool.Wand,
+];
+
+export const isSelectionTool = (tool: DesignTool): boolean => SELECTION_TOOLS.includes(tool);
 
 export const SELECTION_STEP_LABEL = "Seleção";
 export const SELECTION_TRUNCATED_NOTICE =

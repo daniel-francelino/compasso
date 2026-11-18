@@ -19,7 +19,6 @@ import {
   layerToPageBuffer,
   marqueeRect,
   modeFromModifiers,
-  normalizeMask,
   selectAllMask,
   selectionForLayer,
   shapeMask,
@@ -306,6 +305,3 @@ export const useDesignSelection = ({
     layerMask,
   };
 };
-
-export const hasSelection = (selection: SelectionController): boolean =>
-  normalizeMask(selection.mask) !== null;
