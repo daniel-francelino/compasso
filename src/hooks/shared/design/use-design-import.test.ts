@@ -140,6 +140,23 @@ describe("createImportRun", () => {
     expect(onBusy).toHaveBeenLastCalledWith(false);
   });
 
+  it("is silent for the cancelled marker even when cancel() was never called", async () => {
+    read.mockResolvedValue(IMPORT_CANCELLED);
+    const { run, placer, onBusy } = setup();
+    await run.open();
+    expect(toastMock.error).not.toHaveBeenCalled();
+    expect(toastMock.success).not.toHaveBeenCalled();
+    expect(placer.image).not.toHaveBeenCalled();
+    expect(onBusy).toHaveBeenLastCalledWith(false);
+  });
+
+  it("treats a different object with the cancelled text as an ordinary failure (identity contract)", async () => {
+    read.mockResolvedValue(invalid(DESIGN_IMPORT_MESSAGE.cancelled));
+    const { run } = setup();
+    await run.open();
+    expect(toastMock.error).toHaveBeenCalledTimes(1);
+  });
+
   it("does not place a result that arrives after cancel", async () => {
     const gate = deferred<unknown>();
     read.mockReturnValue(gate.promise);

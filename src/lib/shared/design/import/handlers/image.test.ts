@@ -13,6 +13,7 @@ const { readDesignFile } = await import("@/lib/shared/design/import/read-file");
 const { DesignImportFormat, DesignImportKind, DesignImportNoteKind } =
   await import("@/lib/shared/design/import/types");
 const { DESIGN_LIMITS, DesignElementKind } = await import("@/lib/shared/design/types");
+const { rasterBytes } = await import("@/lib/shared/design/raster-store");
 
 const MIB = 1024 * 1024;
 
@@ -80,6 +81,54 @@ describe("pre-decode checks (no real decoder runs in the node test environment)"
     const result = await decodeImage(DesignImportFormat.Png, inputOf("a.png", bytes));
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.imageTooLarge(65535, 65535));
     expect(createImageBitmapSpy).not.toHaveBeenCalled();
+  });
+
+  it("side limit alone: 16385 x 100 is refused (about 6 MB, well under the byte budget) and 16384 x 100 passes", async () => {
+    expect(rasterBytes(16385, 100)).toBeLessThan(DESIGN_LIMITS.rasterBudgetBytes);
+    const over = await decodeImage(DesignImportFormat.Png, inputOf("a.png", pngBytes(16385, 100)));
+    expect(messageOf(over)).toBe(DESIGN_IMPORT_MESSAGE.imageTooLarge(16385, 100));
+    expect(createImageBitmapSpy).not.toHaveBeenCalled();
+    stubDecode(4096, 25);
+    const ok = await decodeImage(DesignImportFormat.Png, inputOf("a.png", pngBytes(16384, 100)));
+    expect(ok.ok).toBe(true);
+  });
+
+  it("byte budget alone: sides within the limit, refused only when 4 * width * height passes the budget", () => {
+    const maxSide = DESIGN_IMPORT_LIMITS.maxLayerSide;
+    const budgetPixels = DESIGN_LIMITS.rasterBudgetBytes / 4;
+    const height = Math.floor(budgetPixels / maxSide);
+    expect(maxSide * height * 4).toBe(DESIGN_LIMITS.rasterBudgetBytes);
+    const planOf = (width: number, tall: number, used = 0) =>
+      planImage(
+        {
+          width,
+          height: tall,
+          orientation: 1,
+          orientationKnown: true,
+          animated: false,
+        },
+        used,
+      );
+    expect(planOf(maxSide, height).ok).toBe(true);
+    expect(messageOf(planOf(maxSide, height + 1))).toBe(
+      DESIGN_IMPORT_MESSAGE.imageTooLarge(maxSide, height + 1),
+    );
+  });
+
+  it("budget boundary with the store: fits exactly at the remaining budget and refuses one pixel more", () => {
+    const side = 1024;
+    const bytes = rasterBytes(side, side);
+    const header = {
+      width: side,
+      height: side,
+      orientation: 1,
+      orientationKnown: true,
+      animated: false,
+    };
+    expect(planImage(header, DESIGN_LIMITS.rasterBudgetBytes - bytes).ok).toBe(true);
+    expect(messageOf(planImage(header, DESIGN_LIMITS.rasterBudgetBytes - bytes + 1))).toBe(
+      DESIGN_IMPORT_MESSAGE.memory,
+    );
   });
 
   it("refuses 4096 x 4096 when the store already holds 480 MiB, before decoding", async () => {
@@ -283,6 +332,34 @@ describe("decodeImage", () => {
       signal: controller.signal,
     });
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.cancelled);
+  });
+
+  it("gives up after the time budget when createImageBitmap never settles", async () => {
+    vi.useFakeTimers();
+    createImageBitmapSpy.mockReturnValue(new Promise(() => undefined));
+    const pending = decodeImage(DesignImportFormat.Png, inputOf("a.png", pngBytes(100, 100)));
+    await vi.advanceTimersByTimeAsync(DESIGN_IMPORT_LIMITS.workerTimeoutMs - 1);
+    let settled = false;
+    void pending.then(() => {
+      settled = true;
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(messageOf(await pending)).toBe(DESIGN_IMPORT_MESSAGE.timedOut);
+    vi.useRealTimers();
+  });
+
+  it("cancels an in-flight createImageBitmap when the signal aborts", async () => {
+    createImageBitmapSpy.mockReturnValue(new Promise(() => undefined));
+    const controller = new AbortController();
+    const pending = decodeImage(DesignImportFormat.Png, {
+      ...inputOf("a.png", pngBytes(100, 100)),
+      signal: controller.signal,
+    });
+    await vi.waitFor(() => expect(createImageBitmapSpy).toHaveBeenCalledTimes(1));
+    controller.abort();
+    expect(messageOf(await pending)).toBe(DESIGN_IMPORT_MESSAGE.cancelled);
   });
 
   it("falls back to a document canvas when OffscreenCanvas is unavailable", async () => {

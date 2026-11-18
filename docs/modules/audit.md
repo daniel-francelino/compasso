@@ -93,6 +93,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `design.trashed` | `design` | `design_set_trashed` |
 | `design.restored` | `design` | `design_set_trashed` |
 | `design.hidden_purged` | `design` | `design_purge_hidden_versions` (metadata: number of versions queued for purge) |
+| `design.import_recorded` | `design` | `design_record_import` (metadata: the source format and the layer count; never file text) |
 | `design.exported` | `design` | `design_record_export` (metadata: the version number, the page number and the format) |
 | `design.version_restored` | `design` | `design_restore_version` (metadata: the version number) |
 | `design.template_changed` | `design` | `design_set_template` (metadata: the new flag) |

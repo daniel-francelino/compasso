@@ -73,15 +73,44 @@ describe("planPsd byte budget", () => {
     );
   });
 
-  it("refuses a width times height product above the safe integer range", () => {
+  it("compares exactly at the safe integer edge (layer plus crop = 8 bytes per pixel)", () => {
+    const half = 2 ** 25;
+    const wide = limits({
+      maxLayerSide: Number.MAX_SAFE_INTEGER,
+      remainingBytes: Number.MAX_SAFE_INTEGER,
+    });
+    const exactlyOver = psdOf([pixelLayer(0, 0, half, half)], half);
+    expect(failureOf(planPsd(exactlyOver, wide))).toBe(DesignImportFailure.Memory);
+    const justUnder = psdOf([pixelLayer(0, 0, half, half - 1)], half);
+    expect(planPsd(justUnder, wide).ok).toBe(true);
+  });
+
+  it("refuses products far above the safe integer range without a pass-through", () => {
     const side = 94906267;
     expect(side * side * 4).toBeGreaterThan(Number.MAX_SAFE_INTEGER);
-    const huge = psdOf([pixelLayer(0, 0, side, side)]);
     const wide = limits({ maxLayerSide: Number.MAX_SAFE_INTEGER });
+    const huge = psdOf([pixelLayer(0, 0, side, side)]);
     expect(failureOf(planPsd(huge, wide))).toBe(DesignImportFailure.Memory);
     const full = psdOf([pixelLayer(0, 0, 0xffffffff, 0xffffffff)]);
     expect(failureOf(planPsd(full, wide))).toBe(DesignImportFailure.Memory);
     expect(failureOf(planPsd(full, limits()))).toBe(DesignImportFailure.LayerTooLarge);
+  });
+
+  it.each([
+    ["NaN", Number.NaN],
+    ["Infinity", Number.POSITIVE_INFINITY],
+    ["a fractional value", 8.5],
+    ["a value above the safe integer range", 2 ** 60],
+  ])("refuses a layer whose right edge is %s as too large", (_name, right) => {
+    const layer = pixelLayer(0, 0, 8, 8, { right });
+    expect(failureOf(planPsd(psdOf([layer]), limits()))).toBe(DesignImportFailure.LayerTooLarge);
+  });
+
+  it("skips a layer whose right edge is left of its left edge", () => {
+    const layer = pixelLayer(20, 0, 8, 8, { right: 10 });
+    const result = planPsd(psdOf([layer]), limits());
+    expect(result.ok && result.plan.decodeCount).toBe(0);
+    expect(result.ok && result.plan.plannedBytes).toBe(0);
   });
 
   it("refuses layers by side at the exact boundary", () => {
@@ -116,16 +145,18 @@ describe("planPsd byte budget", () => {
     );
   });
 
-  it("charges five decode channels plus the converted copy for CMYK and the depth factor", () => {
+  it.each([
+    ["RGB 8-bit", 3, 8, 8],
+    ["RGB 16-bit", 3, 16, 12],
+    ["RGB 32-bit", 3, 32, 20],
+    ["CMYK 8-bit", 4, 8, 13],
+    ["CMYK 16-bit", 4, 16, 22],
+  ])("charges %s exactly (%i bytes per pixel in the plan)", (_name, mode, bits, perPixel) => {
     const side = 1024;
-    const rgb = side * side * 4;
-    const cmyk: Layer = { ...pixelLayer(0, 0, side, side), rawData: raw(4, 8) };
-    expect(failureOf(planPsd(psdOf([cmyk]), limits({ remainingBytes: rgb * 2 })))).toBe(
-      DesignImportFailure.Memory,
-    );
-    expect(planPsd(psdOf([cmyk]), limits({ remainingBytes: Math.ceil(rgb * 3.25) })).ok).toBe(true);
-    const deep: Layer = { ...pixelLayer(0, 0, side, side), rawData: raw(3, 16) };
-    expect(failureOf(planPsd(psdOf([deep]), limits({ remainingBytes: rgb })))).toBe(
+    const layer: Layer = { ...pixelLayer(0, 0, side, side), rawData: raw(mode, bits) };
+    const need = side * side * perPixel;
+    expect(planPsd(psdOf([layer]), limits({ remainingBytes: need })).ok).toBe(true);
+    expect(failureOf(planPsd(psdOf([layer]), limits({ remainingBytes: need - 1 })))).toBe(
       DesignImportFailure.Memory,
     );
   });

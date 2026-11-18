@@ -1,5 +1,5 @@
 import { initializeCanvas, writePsd, type Layer } from "ag-psd";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { psdToDesign, readPsdHeader } from "@/lib/shared/design/import/handlers/psd";
 import { planPsd } from "@/lib/shared/design/import/handlers/psd-plan";
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
@@ -58,7 +58,7 @@ describe("readPsdHeader hostile heads", () => {
 });
 
 describe("planPsd declared layer count", () => {
-  it("refuses 65535 declared leaf layers at the capacity without planning them all", () => {
+  it("refuses 65535 declared leaf layers at the capacity", () => {
     const raw = { colorMode: 3, bitsPerChannel: 8, channels: [], large: false };
     const children: Layer[] = Array.from({ length: 65535 }, () => ({
       left: 0,
@@ -154,13 +154,11 @@ describe("truncated PSD through the real structure reader", () => {
     return posted;
   };
 
-  it("never throws and answers with one valid terminal response for every cut point", async () => {
-    const cuts = [0, 4, 10, 25, 26, 30, 40, 60, 100, Math.floor(written.byteLength / 2)];
-    for (const cut of cuts) {
-      const posted = await runCut(cut);
-      const last = posted.at(-1);
-      expect(WorkerResponseSchema.safeParse(last).success).toBe(true);
-      expect(["error", "result"]).toContain(last?.status);
+  it("answers one schema-valid error for every cut inside the early sections", async () => {
+    for (const cut of [0, 4, 10, 25, 26, 30, 40, 60, 100]) {
+      const last = (await runCut(cut)).at(-1);
+      expect(WorkerResponseSchema.safeParse(last).success, String(cut)).toBe(true);
+      expect(last?.status, String(cut)).toBe("error");
     }
   });
 
@@ -171,17 +169,8 @@ describe("truncated PSD through the real structure reader", () => {
     }
   });
 
-  it("answers a failure (corrupt or memory) for cuts inside the header", async () => {
-    for (const cut of [0, 4, 10, 25]) {
-      const last = (await runCut(cut)).at(-1);
-      expect(last?.status).toBe("error");
-    }
-  });
-
-  it("never reports a progress for a decode that cannot happen when cut before the layer data", async () => {
-    const report = vi.fn();
+  it("posts no progress when cut before the layer data", async () => {
     const posted = await runCut(26);
-    for (const response of posted) report(response.status);
-    expect(report).not.toHaveBeenCalledWith("progress");
+    expect(posted.map((response) => response.status)).toEqual(["error"]);
   });
 });

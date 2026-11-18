@@ -25,4 +25,26 @@ describe("IMPORT_HANDLERS", () => {
       IMPORT_HANDLERS.flatMap((handler) => handler.extensions.map((extension) => `.${extension}`)),
     );
   });
+
+  it("has the documented extensions, limits and run location per format", () => {
+    const MIB = 1024 * 1024;
+    const table = IMPORT_HANDLERS.map((handler) => [
+      handler.format,
+      [...handler.extensions],
+      handler.maxBytes,
+      handler.runsIn,
+    ]);
+    expect(table).toEqual([
+      ["psd", ["psd"], 100 * MIB, "worker"],
+      ["ai", ["ai"], 100 * MIB, "main"],
+      ["pdf", ["pdf"], 100 * MIB, "main"],
+      ["png", ["png"], 50 * MIB, "main"],
+      ["jpeg", ["jpg", "jpeg"], 50 * MIB, "main"],
+      ["webp", ["webp"], 50 * MIB, "main"],
+    ]);
+  });
+
+  it("offers exactly the documented picker accept list", () => {
+    expect(DESIGN_IMPORT_ACCEPT).toBe(".psd,.ai,.pdf,.png,.jpg,.jpeg,.webp");
+  });
 });

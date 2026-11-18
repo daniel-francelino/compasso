@@ -139,6 +139,8 @@ describe("startImportJob", () => {
     expect(worker.terminated).toBe(1);
     expect(logError).not.toHaveBeenCalled();
     worker.emit({ id, status: WorkerStatus.Result, document: goodDocument() });
+    expect(worker.terminated).toBe(1);
+    expect(logError).not.toHaveBeenCalled();
   });
 
   it("cancel after the result was delivered is a no-op", async () => {
@@ -168,12 +170,18 @@ describe("startImportJob", () => {
       const job = startImportJob(input());
       await vi.advanceTimersByTimeAsync(0);
       const worker = lastWorker();
-      worker[channel]?.(new Event("error"));
+      worker[channel]?.(
+        Object.assign(new Event("error"), {
+          message: "private-name leaked in message",
+          filename: "https://x.test/private-name.psd",
+        }),
+      );
       expect(await message(job)).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
       expect(worker.terminated).toBe(1);
     }
     const calls = JSON.stringify(vi.mocked(logError).mock.calls);
     expect(calls).not.toContain("private-name");
+    expect(calls).not.toContain("leaked");
     expect(vi.mocked(logError)).toHaveBeenCalledTimes(2);
   });
 

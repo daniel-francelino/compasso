@@ -4,7 +4,9 @@ import { SNIFF_HEAD_BYTES } from "@/lib/shared/design/import/sniff";
 import { invalid } from "@/lib/shared/server-utils";
 
 vi.mock("pdfjs-dist/build/pdf.worker.min.mjs?url", () => ({ default: "worker.js" }));
-vi.mock("pdfjs-dist", () => ({ GlobalWorkerOptions: {}, getDocument: vi.fn() }));
+const getDocument = vi.hoisted(() => vi.fn());
+
+vi.mock("pdfjs-dist", () => ({ GlobalWorkerOptions: {}, getDocument }));
 
 const { aiHandler } = await import("@/lib/shared/design/import/handlers/ai");
 const { pdfHandler } = await import("@/lib/shared/design/import/handlers/pdf");
@@ -54,5 +56,27 @@ describe("aiHandler", () => {
       usedBytes: 0,
     });
     expect(result).toEqual(invalid(DESIGN_IMPORT_MESSAGE.aiNotPdf));
+  });
+
+  it("maps a hostile PDF that pdf.js rejects to the render message, destroys the task and does not throw", async () => {
+    const destroy = vi.fn(() => Promise.resolve());
+    const rejected = Promise.reject(new Error("hostile"));
+    rejected.catch(() => undefined);
+    getDocument.mockReturnValue({ promise: rejected, destroy });
+    const bytes = bytesOf("%PDF-1.7 /OpenAction << /S /JavaScript /JS (app.alert(1)) >>");
+    const result = await aiHandler.decode({
+      file: new File([new Uint8Array(bytes)], "evil.ai"),
+      bytes,
+      newId: () => "id",
+      capacityElements: 200,
+      usedBytes: 0,
+    });
+    expect(result).toEqual(invalid(DESIGN_IMPORT_MESSAGE.aiRender));
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses empty and unrelated heads", () => {
+    expect(aiHandler.sniff(new Uint8Array())).toBe(false);
+    expect(aiHandler.sniff(bytesOf("GIF89a not postscript"))).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   DESIGN_IMPORT_CANCEL_LABEL,
@@ -11,57 +12,64 @@ import {
 } from "@/lib/shared/design/import/messages";
 import { DesignImportNoteKind } from "@/lib/shared/design/import/types";
 
-const GLOSSARY = readFileSync(
-  decodeURIComponent(
-    new URL("../../../../../docs/standards/ui-glossary.md", import.meta.url).pathname.replace(
-      /^\/([A-Za-z]:)/,
-      "$1",
-    ),
-  ),
+const GLOSSARY_LINES = readFileSync(
+  fileURLToPath(new URL("../../../../../docs/standards/ui-glossary.md", import.meta.url)),
   "utf8",
-);
+).split(String.fromCharCode(10));
 
-const countPlaceholder = (sentence: string): string => sentence.replace(/\b7\b/, "%n");
+const rowStarting = (firstCell: string): string => {
+  const row = GLOSSARY_LINES.find((line) => line.startsWith(`| ${firstCell}`));
+  if (row === undefined) throw new Error(`glossary row not found: ${firstCell}`);
+  return row;
+};
 
-describe("import copy against docs/standards/ui-glossary.md", () => {
-  it("lists every fixed refusal text of DESIGN_IMPORT_MESSAGE", () => {
+const SENTINEL = 7777;
+
+const asTemplate = (sentence: string): string => sentence.replaceAll(String(SENTINEL), "%n");
+
+describe("import copy against the rows of docs/standards/ui-glossary.md", () => {
+  const refusals = rowStarting("Recusas da importa");
+  const notes = rowStarting("Observa");
+
+  it("lists every fixed refusal text of DESIGN_IMPORT_MESSAGE in the refusals row", () => {
     const fixed = Object.entries(DESIGN_IMPORT_MESSAGE).flatMap(([key, value]) =>
       typeof value === "string" ? [[key, value] as const] : [],
     );
     expect(fixed.length).toBeGreaterThan(10);
     const missing = fixed
       .filter(([, text]) => text !== DESIGN_IMPORT_MESSAGE.cancelled)
-      .filter(([, text]) => !GLOSSARY.includes(text))
+      .filter(([, text]) => !refusals.includes(text))
       .map(([key]) => key);
     expect(missing).toEqual([]);
   });
 
-  it("lists the labels, the progress text and the permission reason", () => {
-    for (const text of [
-      DESIGN_IMPORT_LABEL,
-      DESIGN_IMPORT_PROGRESS,
-      DESIGN_IMPORT_CANCEL_LABEL,
-      IMPORT_UPLOAD_REASON,
-    ]) {
-      expect(GLOSSARY, text).toContain(text);
-    }
+  it("lists the permission reason in the refusals row", () => {
+    expect(refusals).toContain(IMPORT_UPLOAD_REASON);
   });
 
-  it("lists every note kind with its sentence", () => {
-    for (const kind of Object.values(DesignImportNoteKind)) {
-      expect(GLOSSARY, kind).toContain(`\`${kind}\``);
-      const sentence = countPlaceholder(DESIGN_IMPORT_NOTE_SENTENCE[kind](7)).replace(
-        "(1 camadas)",
-        "(%n camadas)",
-      );
-      const normalized = sentence.replace("7 camadas", "%n camadas");
-      expect(GLOSSARY, kind).toContain(normalized);
-    }
+  it("lists the menu label and the progress and cancel labels in their rows", () => {
+    expect(rowStarting("Importar")).toContain(DESIGN_IMPORT_LABEL);
+    const progress = rowStarting("Importando arquivo");
+    expect(progress).toContain(DESIGN_IMPORT_PROGRESS);
+    expect(progress).toContain(DESIGN_IMPORT_CANCEL_LABEL);
   });
 
-  it("lists the done toast for every format", () => {
+  it("lists the done toast for every format in the progress row", () => {
+    const progress = rowStarting("Importando arquivo");
     for (const label of Object.values(DESIGN_IMPORT_FORMAT_LABEL)) {
-      expect(GLOSSARY).toContain(`"${label} importado."`);
+      expect(progress).toContain(`"${label} importado."`);
     }
+  });
+
+  it("lists every note kind with its sentence in the notes row", () => {
+    for (const kind of Object.values(DesignImportNoteKind)) {
+      expect(notes, kind).toContain(`\`${kind}\``);
+      expect(notes, kind).toContain(asTemplate(DESIGN_IMPORT_NOTE_SENTENCE[kind](SENTINEL)));
+    }
+  });
+
+  it("lists no note kind that the code does not have", () => {
+    const listed = [...notes.matchAll(/`([a-z_]+)`/g)].map((match) => match[1]);
+    expect([...listed].sort()).toEqual(Object.values(DesignImportNoteKind).sort());
   });
 });

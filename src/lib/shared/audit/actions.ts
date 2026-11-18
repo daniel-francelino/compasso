@@ -138,6 +138,7 @@ export const AuditAction = {
     VersionRestored: "design.version_restored",
     TemplateChanged: "design.template_changed",
     HiddenPurged: "design.hidden_purged",
+    ImportRecorded: "design.import_recorded",
   },
   Video: {
     Created: "video.created",

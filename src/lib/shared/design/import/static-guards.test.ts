@@ -1,52 +1,45 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const ROOT = new URL("../../../../../", import.meta.url);
-const rootPath = (path: string): string =>
-  join(ROOT.pathname.replace(/^\/([A-Za-z]:)/, "$1"), path);
-const decoded = (path: string): string => decodeURIComponent(rootPath(path));
-
-const filesUnder = (directory: string): string[] =>
-  readdirSync(decoded(directory), { withFileTypes: true, recursive: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name));
-
-const read = (absolute: string): string => readFileSync(absolute, "utf8");
+const REPO_ROOT = fileURLToPath(new URL("../../../../../", import.meta.url));
+const IMPORT_DIR = join(REPO_ROOT, "src/lib/shared/design/import");
+const HOOK_DIR = join(REPO_ROOT, "src/hooks/shared/design");
+const HOOK_FILES = ["use-design-import.ts", "use-import-place.ts"];
 
 const isTestOrFixture = (path: string): boolean =>
   /\.test\.ts$/.test(path) || /fixtures\.ts$/.test(path);
 
-const DESIGN_DIRS = [
-  "src/lib/shared/design",
-  "src/hooks/shared/design",
-  "src/components/shared/design",
-];
+const SOURCES = new Map<string, string>(
+  readdirSync(IMPORT_DIR, { withFileTypes: true, recursive: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".ts"))
+    .map((entry) => join(entry.parentPath, entry.name))
+    .filter((path) => !isTestOrFixture(path))
+    .map((path) => [relative(IMPORT_DIR, path).replaceAll("\\", "/"), readFileSync(path, "utf8")]),
+);
 
-const SOURCES = DESIGN_DIRS.flatMap((directory) => filesUnder(directory));
+const HOOKS = new Map<string, string>(
+  HOOK_FILES.map((name) => [name, readFileSync(join(HOOK_DIR, name), "utf8")]),
+);
 
-const designSources = (): string[] => SOURCES;
+const source = (name: string): string => {
+  const text = SOURCES.get(name);
+  if (text === undefined) throw new Error(`missing import source ${name}`);
+  return text;
+};
 
-const IMPORT_DIR = "src/lib/shared/design/import";
-const importSources = (): string[] =>
-  filesUnder(IMPORT_DIR).filter((path) => path.endsWith(".ts") && !isTestOrFixture(path));
-
-const nameOf = (absolute: string): string =>
-  relative(decoded(IMPORT_DIR), absolute).replaceAll("\\", "/");
+const namesWhere = (check: (text: string) => boolean): string[] =>
+  [...SOURCES].filter(([, text]) => check(text)).map(([name]) => name);
 
 describe("static guards on the import module", () => {
-  it("has no psdMemoryBytes anywhere in src", () => {
-    const offenders = designSources()
-      .filter((path) => /\.(ts|tsx)$/.test(path))
-      .filter((path) => read(path).includes("psdMemoryBytes"))
-      .filter((path) => !path.endsWith("static-guards.test.ts"));
-    expect(offenders).toEqual([]);
+  it("has no psdMemoryBytes in the import module or the generic hooks", () => {
+    expect(namesWhere((text) => text.includes("psdMemoryBytes"))).toEqual([]);
+    for (const [name, text] of HOOKS) expect(text, name).not.toContain("psdMemoryBytes");
   });
 
   it("budgets PSD decoding with DESIGN_LIMITS.rasterBudgetBytes", () => {
-    expect(read(decoded(`${IMPORT_DIR}/worker/psd-runner.ts`))).toContain(
-      "DESIGN_LIMITS.rasterBudgetBytes",
-    );
+    expect(source("worker/psd-runner.ts")).toContain("DESIGN_LIMITS.rasterBudgetBytes");
   });
 
   it("keeps DOM globals and React out of the worker side files", () => {
@@ -60,46 +53,38 @@ describe("static guards on the import module", () => {
       "handlers/psd-plan.ts",
     ];
     for (const name of workerSide) {
-      const source = read(decoded(`${IMPORT_DIR}/${name}`));
-      expect(source, name).not.toMatch(
+      const text = source(name);
+      expect(text, name).not.toMatch(
         /globalThis\.document|\bdocument\.(createElement|body|head|querySelector|getElementById|documentElement)/,
       );
-      expect(source, name).not.toMatch(/\bwindow\b/);
-      expect(source, name).not.toMatch(/from "react"/);
-      expect(source, name).not.toMatch(/@\/(hooks|components)\//);
-      expect(source, name).not.toMatch(/\blocalStorage\b|\bnavigator\b/);
+      expect(text, name).not.toMatch(/\b(window|self)\b/);
+      expect(text, name).not.toMatch(/from "react"/);
+      expect(text, name).not.toMatch(/@\/(hooks|components)\//);
+      expect(text, name).not.toMatch(/\blocalStorage\b|\bnavigator\b/);
     }
   });
 
   it("does not import hooks, components or React in any import source", () => {
-    for (const path of importSources()) {
-      const source = read(path);
-      expect(source, nameOf(path)).not.toMatch(/from "react"/);
-      expect(source, nameOf(path)).not.toMatch(/@\/(hooks|components)\//);
+    for (const [name, text] of SOURCES) {
+      expect(text, name).not.toMatch(/from "react"/);
+      expect(text, name).not.toMatch(/@\/(hooks|components)\//);
     }
   });
 
   it("has one PDF marker finder: the %PDF- literal lives only in sniff.ts", () => {
-    const owners = importSources()
-      .filter((path) => read(path).includes("%PDF-"))
-      .map(nameOf);
-    expect(owners).toEqual(["sniff.ts"]);
+    expect(namesWhere((text) => text.includes("%PDF-"))).toEqual(["sniff.ts"]);
   });
 
   it("has one render implementation shared by the ai and pdf handlers", () => {
     for (const name of ["handlers/ai.ts", "handlers/pdf.ts"]) {
-      expect(read(decoded(`${IMPORT_DIR}/${name}`))).toContain("renderPdfPageDesign");
+      expect(source(name)).toContain("renderPdfPageDesign");
     }
-    const callers = importSources().filter((path) => read(path).includes("getDocument("));
-    expect(callers.map(nameOf)).toEqual(["render-pdf-page.ts"]);
+    expect(namesWhere((text) => text.includes("getDocument("))).toEqual(["render-pdf-page.ts"]);
   });
 
-  it("defines DESIGN_IMPORT_MESSAGE exactly once in src", () => {
-    const owners = designSources()
-      .filter((path) => /\.(ts|tsx)$/.test(path) && !isTestOrFixture(path))
-      .filter((path) => /export const DESIGN_IMPORT_MESSAGE\s*=/.test(read(path)));
-    expect(owners.map((path) => relative(decoded("src"), path).replaceAll("\\", "/"))).toEqual([
-      "lib/shared/design/import/messages.ts",
+  it("defines DESIGN_IMPORT_MESSAGE exactly once, in messages.ts", () => {
+    expect(namesWhere((text) => /export const DESIGN_IMPORT_MESSAGE\s*=/.test(text))).toEqual([
+      "messages.ts",
     ]);
   });
 
@@ -110,25 +95,23 @@ describe("static guards on the import module", () => {
       "src/lib/shared/design/ai-import.ts",
       "src/lib/shared/design/psd-import.ts",
     ]) {
-      expect(existsSync(decoded(removed)), removed).toBe(false);
+      expect(existsSync(join(REPO_ROOT, removed)), removed).toBe(false);
     }
   });
 
   it("runs pdf.js and the main-thread canvas only outside the worker files", () => {
-    const offenders = importSources()
-      .filter((path) => nameOf(path).startsWith("worker/"))
-      .filter((path) => /pdfjs-dist|OffscreenCanvas|createImageBitmap/.test(read(path)))
-      .map(nameOf);
-    expect(offenders).toEqual([]);
+    const offenders = namesWhere((text) =>
+      /pdfjs-dist|OffscreenCanvas|createImageBitmap/.test(text),
+    );
+    expect(offenders.filter((name) => name.startsWith("worker/"))).toEqual([]);
   });
 });
 
 describe("static guards on the orchestrator hooks (read only)", () => {
-  it("names no format in the generic hooks", () => {
-    for (const name of ["use-design-import.ts", "use-import-place.ts"]) {
-      const path = decoded(`src/hooks/shared/design/${name}`);
-      if (!existsSync(path)) continue;
-      expect(read(path), name).not.toMatch(/\b(psd|pdf|png|jpe?g|webp)\b/i);
+  it("names no format in the generic hooks and fails if a hook file is renamed", () => {
+    expect([...HOOKS.keys()]).toEqual(HOOK_FILES);
+    for (const [name, text] of HOOKS) {
+      expect(text, name).not.toMatch(/(?<![a-z])(psd|pdf|png|jpe?g|webp)(?![a-z])/i);
     }
   });
 });

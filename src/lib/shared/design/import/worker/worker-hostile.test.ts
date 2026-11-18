@@ -150,4 +150,21 @@ describe("worker client hostile cases", () => {
     expect(!outcome.ok && outcome.message).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
     expect(JSON.stringify(vi.mocked(logError).mock.calls)).not.toContain(SECRET);
   });
+
+  it("never logs the message or filename carried by an error event", async () => {
+    for (const channel of ["onerror", "onmessageerror"] as const) {
+      const { job, worker } = await started();
+      worker[channel]?.(
+        Object.assign(new Event("error"), {
+          message: `boom ${SECRET}`,
+          filename: `https://x.test/${SECRET}.js`,
+          error: new Error(SECRET),
+        }),
+      );
+      const outcome = await job.result;
+      expect(!outcome.ok && outcome.message).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
+    }
+    expect(JSON.stringify(vi.mocked(logError).mock.calls)).not.toContain(SECRET);
+    expect(vi.mocked(logError)).toHaveBeenCalledTimes(2);
+  });
 });

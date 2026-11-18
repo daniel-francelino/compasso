@@ -169,10 +169,9 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `design_too_large` | invalid | "Este design ficou grande demais. Remova alguns elementos para salvar." | design_assert_document |
 | `design_trashed` | conflict | "Este design está na lixeira. Restaure para editar." | design_lock |
 | `design_version_immutable` | denied | "Versões salvas de um design não podem ser alteradas." | design_versions_immutable |
+| `design_import_metadata_too_large` | invalid | "Os metadados desta importação ficaram grandes demais para salvar." | design_record_import |
 
 The file import (editor, client-side) adds **no code**: its refusals are `invalid` results with the pt-BR texts of `DESIGN_IMPORT_MESSAGE`, one catalog at `src/lib/shared/design/import/messages.ts` (listed in [../standards/ui-glossary.md](../standards/ui-glossary.md), rows "Importar…" and "Recusas da importação"); nothing is raised in SQL.
-
-Reserved, not registered: `design_import_metadata_too_large` is registered here only in Phase 1, in the same change as its migration (image-editor 8h.5).
 
 ### Video editor
 

@@ -401,6 +401,10 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Conflict,
     message: "Este design está na lixeira. Restaure para editar.",
   },
+  design_import_metadata_too_large: {
+    category: ErrorCode.Invalid,
+    message: "Os metadados desta importação ficaram grandes demais para salvar.",
+  },
   design_version_immutable: {
     category: ErrorCode.Denied,
     message: "Versões salvas de um design não podem ser alteradas.",
