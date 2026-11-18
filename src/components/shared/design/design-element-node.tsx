@@ -177,11 +177,15 @@ function RasterBody({
   element: RasterElement;
   canvas: HTMLCanvasElement | null | undefined;
 }) {
+  const ref = useRef<Konva.Image>(null);
+  useEffect(() => {
+    ref.current?.getLayer()?.batchDraw();
+  });
   return (
     <>
       <Rect width={element.width} height={element.height} fill="transparent" />
       {canvas === null || canvas === undefined ? null : (
-        <KonvaImage image={canvas} width={element.width} height={element.height} />
+        <KonvaImage ref={ref} image={canvas} width={element.width} height={element.height} />
       )}
     </>
   );

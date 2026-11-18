@@ -21,8 +21,8 @@ export const useBrushOptions = () => {
   const [byTool, setByTool] = useState<ByTool>(INITIAL);
   const [sample, setSample] = useState<PaintSampleMode>(PaintSampleMode.Layer);
 
-  const adjustByKey = (tool: BrushTool, key: string, shift: boolean): boolean => {
-    const next = adjustBrushByKey(byTool[tool], key, shift);
+  const adjustByKey = (tool: BrushTool, key: string, shift: boolean, code: string): boolean => {
+    const next = adjustBrushByKey(byTool[tool], key, shift, code);
     if (next === null) return false;
     setByTool((current) => ({ ...current, [tool]: next }));
     return true;

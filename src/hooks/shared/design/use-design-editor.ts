@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   alignElements,
   distributeElements,
@@ -38,7 +38,7 @@ import {
   ungroupElements,
   updatePage,
 } from "@/lib/shared/design/document";
-import { retargetHistory } from "@/lib/shared/design/pixel-persist";
+import { type PixelsVersionEntry, retargetHistory } from "@/lib/shared/design/pixel-persist";
 import { replaceElement } from "@/lib/shared/design/rasterize";
 import { moveLayerTo } from "@/lib/shared/design/layers";
 import { type History, historyOf, pushHistory } from "@/lib/shared/design/history";
@@ -73,7 +73,11 @@ const toggle = (page: DesignPage, current: readonly string[], id: string): strin
     : expandSelection(page, [...current, id]);
 };
 
-const NO_PIXELS: PixelSteps = { undo: () => undefined, redo: () => undefined };
+const NO_PIXELS: PixelSteps = {
+  undo: () => undefined,
+  redo: () => undefined,
+  busy: () => false,
+};
 
 export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO_PIXELS) => {
   const [history, setHistoryState] = useState<History<DesignDocument>>(() => historyOf(initial));
@@ -90,6 +94,10 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
   const [pageId, setPageId] = useState(() => initial.pages[0]?.id ?? "");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const document = history.present;
+  const historyDocuments = useMemo(
+    () => [...history.past, history.present, ...history.future],
+    [history],
+  );
   const fallback = document.pages[0] ?? emptyPage("page-1");
   const page = findPage(document, pageId) ?? fallback;
   const currentPageId = page.id;
@@ -140,6 +148,7 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
 
   return {
     document,
+    historyDocuments,
     page,
     pageId: currentPageId,
     selected,
@@ -156,19 +165,23 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
       changePage((current) => transformSelection(current, selectedIds, box), mergeKey),
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
-    undo: () => setHistory(undoTimeline(latest.current, pixels)),
-    redo: () => setHistory(redoTimeline(latest.current, pixels)),
-    markPixelStep: (label: string) =>
+    undo: () => {
+      if (!pixels.busy()) setHistory(undoTimeline(latest.current, pixels));
+    },
+    redo: () => {
+      if (!pixels.busy()) setHistory(redoTimeline(latest.current, pixels));
+    },
+    markPixelStep: (label: string, stepId: string) =>
       setHistory((current) =>
-        pushHistory(current, markPixelStep(current.present, label), DESIGN_LIMITS.history),
+        pushHistory(current, markPixelStep(current.present, label, stepId), DESIGN_LIMITS.history),
       ),
     steps: timelineSteps(history),
     newId,
     add,
     addRaster: (size: PageSize): boolean => add(createRasterLayer(newId(), page, size)),
     remove,
-    setPixelsVersion: (id: string, versionId: string) =>
-      setHistory((current) => retargetHistory(current, id, versionId)),
+    setPixelsVersions: (entries: readonly PixelsVersionEntry[]) =>
+      setHistory((current) => retargetHistory(current, entries)),
     replaceWithRaster: (replacedId: string, element: RasterElement) => {
       changePage((current) => replaceElement(current, replacedId, element));
       setSelectedIds([element.id]);

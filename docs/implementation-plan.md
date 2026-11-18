@@ -187,9 +187,17 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 | D-15 | P3 UI shell: menu bar, tabbed panel dock, layers panel v2, tool groups and per-tool options bar | image-editor 7b | lint, typecheck, build pass | done 2026-11-18 (not seen in a browser) |
 | D-16 | P4 document version 3 migration and pgTAP (local only, not pushed) | image-editor 7b, 8e item 11 | `db:verify` and check:consistency pass | done (2026-11-18, local only) |
 | D-17 | P5 raster layers, brush, eraser, colors, pixel flush and pixel history | image-editor 7b | Vitest, lint, typecheck, build pass | part A done (2026-11-18: document v3 in code, RasterStore, rendering, export, "Nova camada"); part B1 done (2026-11-18: brush, eraser, eyedropper, colors, brush cursor, pixel undo/redo in one timeline; session-only); part B2 done (2026-11-18: hidden pixel files through the media upload path, flush triggers, rasterize image, hidden filter in `listMedia`; no round trip with the real database exercised) |
-| D-18 | P6 selections, masks, fill, gradient, eyedropper, adjustment layers | image-editor 7b | Vitest, lint, typecheck, build pass | open |
-| D-19 | P7 filters, clone stamp, free transform, History panel | image-editor 7b | Vitest, lint, typecheck, build pass | open |
-| D-20 | P8 hardening, review and honest Implementation status | image-editor 7b | /check-standards clean | open |
+| D-18 | P6 selections, masks, fill, gradient, eyedropper, adjustment layers | image-editor 7b | superseded by D-22 to D-25 | superseded |
+| D-19 | P7 filters, clone stamp, free transform, History panel | image-editor 7b | superseded by D-24 to D-26 | superseded |
+| D-20 | Final hardening, review and honest Implementation status | image-editor 7b, [audit](audits/image-editor.md) | /check-standards clean | open |
+| D-21 | P6 hardening (R1 to R6, R8 to R12, S1 to S4, S8, S9), migration local first | image-editor 7b | Vitest, db:verify, lint, typecheck | in progress (P6a client done 2026-11-18; P6b, P6c remain) |
+| D-22 | P7 selections | image-editor 7b | wand, ants, painting limited by selection | open |
+| D-23 | P8 fill, gradient, adjustment layers, Ajustes panel, clipping, thumbnails | image-editor 7b | curves layer shows in export | open |
+| D-24 | P9 free transform, crop, History jump, copy and paste | image-editor 7b | Ctrl+T commit is one undo step | open |
+| D-25 | P10 masks | image-editor 7b | mask hides in composite and export | open |
+| D-26 | P11 filters, clone stamp, dodge/burn, pressure, shift-line | image-editor 7b | blur on 4096 within budget | open |
+
+> Open decisions (recommended answers): ABNT2 alternatives for `[ ] { }` (add them); raster paint gating (`Media.Upload` too); hidden asset sharing and publishing (forbid). See [modules/image-editor.md](modules/image-editor.md) 8f.
 
 ## Phase VE — Video editor
 

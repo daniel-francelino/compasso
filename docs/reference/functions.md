@@ -171,11 +171,11 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 
 | SQL function | Server function / route | Act. | Audit | Errors |
 |---|---|---|---|---|
-| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null, p_hidden default false)` (`p_hidden` true marks a layer file of the image editor as hidden from the library: brand scope, new asset only, needs `design.update` too; a given `p_asset` creates a new version and needs `media.update`; accepts the MIME types of [../spaces/media-library.md](../spaces/media-library.md) section 7) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `storage_unavailable` |
+| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null, p_hidden default false)` (`p_hidden` true marks a layer file of the image editor as hidden from the library: brand scope, needs `design.update` too; with `p_asset`, a hidden asset created by the caller gets a new version with `design.update` only (no `media.update`), any other case still needs `media.update`; refuses with `hidden_limit_reached` at 300 live hidden versions per user and brand; default quota 10240 MB; accepts the MIME types of [../spaces/media-library.md](../spaces/media-library.md) section 7) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `hidden_limit_reached`, `storage_unavailable` |
 | `media_confirm_upload(p_version, p_checksum, p_width, p_height, p_duration, p_derivative_bytes default 0)` | `confirmUpload` (stat → range read → validates → calls the RPC) | `media.upload` | — | `upload_size_mismatch`, `upload_content_mismatch`, `upload_video_invalid`, `upload_not_received`, `media_not_available` |
 | `media_update(p_asset jsonb)` | `updateMedia` | `media.update` | — | `conflict` |
-| `media_set_trashed(p_asset, p_trashed)` | `trashMedia` | `media.delete` | — | `media_in_use` (when archiving a used file is restricted) |
-| `media_delete_permanently(p_asset)` | `deleteMediaPermanently` | `media.delete` | `media.deleted_permanently` | `media_in_use` |
+| `media_set_trashed(p_asset, p_trashed)` | `trashMedia` | `media.delete` | `media.hidden_removed` (hidden assets only) | — | `media_in_use` (also a hidden asset still referenced by a design draft of the brand) |
+| `media_delete_permanently(p_asset)` | `deleteMediaPermanently` | `media.delete` | `media.deleted_permanently`, `media.hidden_removed` (hidden assets only) | `media_in_use` (also a hidden asset still referenced by a design draft of the brand) |
 | `media_replace_version(p_asset, p_version)` | `replaceMediaVersion` | `media.update` + `media.upload` | `media.version_replaced` | `conflict` |
 | `media_publish_derivative(p_version)` | `publishMedia` | `media.publish` | `media.published` | `media_not_available` |
 | `media_withdraw_derivative(p_version)` | `withdrawMedia` | `media.publish` | `media.unpublished` | `media_in_use` |
@@ -188,7 +188,7 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `media_expire_sessions()` (service role only; returns the keys of abandoned uploads) | cron route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |
 | `media_storage_keys()` | `checkStorage` ("Verificar com o bucket": compares the bucket listing with the keys) | `media.delete` | — | `storage_unavailable` |
 | `media_policy_mb(p_name, p_default)`, `media_version_in_use(p_version)`, `media_assert_asset_access(p_asset)`, `can_view_media_asset(p_asset)` | — | internal helpers (`media_version_in_use` is redefined by the content migration to include `content_revision_media`) | — | — |
-| — | `listMedia` (excludes hidden assets), `getMedia`, `listCollections` | `media.view` | — | `not_found` |
+| — | `listMedia` (excludes hidden assets), `getMedia` (not filtered by design: `hidden` is a display flag), `listCollections` | `media.view` | — | `not_found` |
 | — | `signMediaUrls` (authorizes then signs) | `media.view` (+ brand link) or portal | — | `denied`, `storage_unavailable` |
 | — | server route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |
 
@@ -313,6 +313,7 @@ Server functions in `lib/shared/design/design.functions.ts`. The list and the de
 | `design_save_draft(p_design, p_document, p_expected_version)` | `saveDesignDraft` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_too_large`, `design_trashed` |
 | `design_rename(p_design, p_name, p_expected_version)` | `renameDesign` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_trashed` |
 | `design_save_version(p_design, p_expected_version)` (also writes the `design_version` media usages: images, raster pixel files and mask files) | `saveDesignVersion` | `design.update` + brand link | `design.version_saved` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
+| `design_purge_hidden_versions(p_design)` (queues for purge, through `purge_requested_at`, the unreferenced hidden versions of the layer files of the draft, keeping the version in the draft, the current one, any with a `media_usages` row and the 2 most recent per asset; the storage job removes the files) | — (client call pending) | `design.update` + brand link | `design.hidden_purged` | — | `denied`, `not_found` |
 | — (select on `design_versions`, `design_exports`) | `listDesignVersions`, `listDesignExports` | `design.view` + brand link | — | — | `not_found` |
 | `design_restore_version(p_design, p_version_no, p_expected_version)` | `restoreDesignVersion` | `design.update` + brand link | `design.version_restored` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
 | `design_set_template(p_design, p_template, p_expected_version)` | `setDesignTemplate` | `design.update` + brand link | `design.template_changed` | — | `denied`, `not_found`, `conflict`, `design_trashed` |

@@ -31,12 +31,17 @@ export const withPixelsVersion = (
   return changed ? inheritPixelStep(document, { ...document, pages }) : document;
 };
 
+export type PixelsVersionEntry = { id: string; versionId: string };
+
 export const retargetHistory = (
   history: History<DesignDocument>,
-  id: string,
-  versionId: string,
+  entries: readonly PixelsVersionEntry[],
 ): History<DesignDocument> => {
-  const retarget = (document: DesignDocument) => withPixelsVersion(document, id, versionId);
+  const retarget = (document: DesignDocument) =>
+    entries.reduce(
+      (current, entry) => withPixelsVersion(current, entry.id, entry.versionId),
+      document,
+    );
   return {
     ...history,
     past: history.past.map(retarget),
@@ -69,4 +74,16 @@ export const claimPixelOwners = (document: DesignDocument, owners: Map<string, s
   }
 };
 
-export const pixelFileName = (id: string): string => `camada-${id.slice(0, 8)}.png`;
+export const pixelFileName = (id: string, suffix: string): string =>
+  `camada-${id.slice(0, 8)}-${suffix}.png`;
+
+export const layersDueForFlush = (
+  ids: readonly string[],
+  lastSentAt: ReadonlyMap<string, number>,
+  now: number,
+  minGapMs: number,
+): string[] =>
+  ids.filter((id) => {
+    const last = lastSentAt.get(id);
+    return last === undefined || now - last >= minGapMs;
+  });

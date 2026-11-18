@@ -99,10 +99,14 @@ Hypotheses are marked.
 
 | ID | Status |
 |---|---|
-| S1 to S9 | open |
-| R1 to R18 | open |
+| S1, S2 | client part fixed (2026-11-18, not seen in a browser); SQL part open |
+| S3 to S9 | open |
+| R1, R5, R6, R7, R9, R10, R12, R13, R16, R18 | fixed (2026-11-18, not seen in a browser) |
+| R8, R14 | deferred (no schema field for the asset id; cursor ellipse) |
+| R2, R3, R4, R11 | fixed (2026-11-18, not seen in a browser) |
+| R15, R17 | open |
 | C1, C2, C4, C5 | fixed in this change (documents) |
-| C3 | open |
+| C3 | fixed (2026-11-18, not seen in a browser) |
 
 ## 6. Limits of this audit
 

@@ -220,6 +220,11 @@ const catalog: Record<string, CatalogEntry> = {
     category: ErrorCode.Invalid,
     message: "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite.",
   },
+  hidden_limit_reached: {
+    category: ErrorCode.Invalid,
+    message:
+      "Este design acumulou arquivos de camada demais. Salve uma versão e tente de novo em instantes.",
+  },
   share_invalid: {
     category: ErrorCode.Invalid,
     message: "Confira os dados do link: nome, mensagem e limite de downloads.",

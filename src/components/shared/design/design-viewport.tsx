@@ -79,7 +79,9 @@ export function DesignViewport({
   const rulerSize = rulers ? DESIGN_LIMITS.rulerSize : 0;
   const restricted = isDrawTool(tool.active) || isPaintTool(tool.active);
   const active = editable || !restricted ? tool.active : DesignTool.Move;
-  const brushDiameter = editable && view !== null ? paint.cursorDiameter(active, view.zoom) : null;
+  const cursorTool = editable ? tool.tool : active;
+  const brushDiameter =
+    editable && view !== null ? paint.cursorDiameter(cursorTool, view.zoom) : null;
   const editing = editor.page.elements.find(
     (element) => element.id === tool.editingTextId && element.kind === DesignElementKind.Text,
   );

@@ -4,9 +4,10 @@ import type { BrushController } from "@/hooks/shared/design/use-brush-options";
 import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { PixelHistorySession } from "@/hooks/shared/design/use-pixel-history";
-import { isRasterStackKind, resolveInheritance, rgbToHex } from "@/lib/shared/design/document";
+import { resolveInheritance, rgbToHex } from "@/lib/shared/design/document";
 import {
   PAINT_REASON,
+  PAINT_UPLOAD_REASON,
   PaintSampleMode,
   cursorDiameterPx,
   docToLayerPoint,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/shared/design/paint";
 import { SampleSize, sampleColor } from "@/lib/shared/design/raster/fill";
 import type { Point, RgbaColor } from "@/lib/shared/design/raster/pixel-buffer";
-import { renderStack, sampleCanvas } from "@/lib/shared/design/raster-canvas";
+import { sampleCompositeAt } from "@/lib/shared/design/raster-canvas";
 import type { RasterElement } from "@/lib/shared/design/schemas";
 import { type StrokeSession, createStrokeSession } from "@/lib/shared/design/stroke-session";
 import {
@@ -26,6 +27,11 @@ import {
   DesignTool,
   type PageSize,
 } from "@/lib/shared/design/types";
+
+const paintReason = (canPaint: boolean, layerReady: boolean): string | undefined => {
+  if (!canPaint) return PAINT_UPLOAD_REASON;
+  return layerReady ? undefined : PAINT_REASON;
+};
 
 type Active = { session: StrokeSession; id: string; placement: RasterElement; label: string };
 
@@ -50,6 +56,7 @@ export const useDesignPaint = ({
   colors,
   brush,
   size,
+  canPaint,
 }: {
   tool: DesignTool;
   editor: DesignEditor;
@@ -58,14 +65,16 @@ export const useDesignPaint = ({
   colors: DesignColors;
   brush: BrushController;
   size: PageSize;
+  canPaint: boolean;
 }): DesignPaint => {
   const { store } = rasters;
   const active = useRef<Active | null>(null);
   const frame = useRef<number | null>(null);
   const single = editor.single;
   const raster = single?.kind === DesignElementKind.Raster ? single : null;
-  const target = raster !== null && !raster.locked && !raster.hidden ? raster : null;
-  const reason = isBrushTool(tool) && target === null ? PAINT_REASON : undefined;
+  const layerReady = raster !== null && !raster.locked && !raster.hidden;
+  const target = layerReady && canPaint ? raster : null;
+  const reason = isBrushTool(tool) ? paintReason(canPaint, layerReady) : undefined;
 
   const cancelFrame = () => {
     if (frame.current === null) return;
@@ -98,12 +107,8 @@ export const useDesignPaint = ({
   const sampleAll = (point: Point) => {
     const x = Math.floor(point.x);
     const y = Math.floor(point.y);
-    const layers = resolveInheritance(editor.page).filter((item) =>
-      isRasterStackKind(item.element),
-    );
-    const canvas = renderStack(layers, store, size);
-    if (canvas === null || x < 0 || y < 0 || x >= size.width || y >= size.height) return;
-    take(sampleCanvas(canvas, x, y));
+    if (x < 0 || y < 0 || x >= size.width || y >= size.height) return;
+    take(sampleCompositeAt(resolveInheritance(editor.page), store, x, y, SampleSize.Single));
   };
 
   const sample = (point: Point) =>
@@ -118,6 +123,7 @@ export const useDesignPaint = ({
     const erase = tool === DesignTool.Eraser;
     const session = createStrokeSession(buffer, toBrushParams(options, rgb, erase), options);
     active.current = { session, id: target.id, placement: target, label: DESIGN_TOOL_LABEL[tool] };
+    pixels.stroking.current = true;
     session.move([docToLayerPoint(target, point)]);
     schedule(target.id);
   };
@@ -145,13 +151,15 @@ export const useDesignPaint = ({
   const onPaintEnd = () => {
     const current = active.current;
     active.current = null;
+    pixels.stroking.current = false;
     if (current === null) return;
     cancelFrame();
     const patch = current.session.finish();
     store.markChanged(current.id);
     if (patch === null) return;
-    pixels.history.push(current.label, current.id, patch);
-    editor.markPixelStep(current.label);
+    const stepId = crypto.randomUUID();
+    pixels.history.push(current.label, current.id, patch, stepId);
+    editor.markPixelStep(current.label, stepId);
   };
 
   const cursorDiameter = (activeTool: DesignTool, zoom: number): number | null => {

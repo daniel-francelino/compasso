@@ -4,6 +4,7 @@ import { historyOf, pushHistory } from "@/lib/shared/design/history";
 import {
   claimPixelOwners,
   duplicatedPixelIds,
+  layersDueForFlush,
   pendingPixelIds,
   pixelFileName,
   retargetHistory,
@@ -43,7 +44,7 @@ describe("withPixelsVersion", () => {
   });
 
   it("keeps the pixel step marker", () => {
-    const marked = markPixelStep(documentWith("a"), "Pincel");
+    const marked = markPixelStep(documentWith("a"), "Pincel", "step-1");
     expect(isPixelStep(withPixelsVersion(marked, "a", VERSION))).toBe(true);
   });
 });
@@ -53,7 +54,7 @@ describe("retargetHistory", () => {
     const first = documentWith("a");
     const second = documentWith("a", "b");
     const history = pushHistory(historyOf(first), second, 50);
-    const next = retargetHistory(history, "a", VERSION);
+    const next = retargetHistory(history, [{ id: "a", versionId: VERSION }]);
     expect(next.past).toHaveLength(1);
     expect(next.future).toHaveLength(0);
     const present = next.present.pages[0]?.elements[0];
@@ -83,8 +84,17 @@ describe("duplicated pixels", () => {
   });
 });
 
+describe("layersDueForFlush", () => {
+  it("skips layers sent less than the minimum gap ago", () => {
+    const sent = new Map([["a", 10_000]]);
+    expect(layersDueForFlush(["a", "b"], sent, 20_000, 15_000)).toEqual(["b"]);
+    expect(layersDueForFlush(["a", "b"], sent, 25_000, 15_000)).toEqual(["a", "b"]);
+  });
+});
+
 describe("pixelFileName", () => {
-  it("builds a short png name", () => {
-    expect(pixelFileName("abcdef12-0000")).toBe("camada-abcdef12.png");
+  it("is unique per suffix", () => {
+    expect(pixelFileName("abcdef123456", "x1")).toBe("camada-abcdef12-x1.png");
+    expect(pixelFileName("abcdef123456", "x2")).not.toBe(pixelFileName("abcdef123456", "x1"));
   });
 });

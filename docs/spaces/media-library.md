@@ -179,6 +179,10 @@ Viewing an image already associated inside a record requires reading that record
 - Uploading a file never publishes it; a private file cannot become public by changing a visibility field.
 - Library and uploads work with their own permissions without granting editing of the origin modules.
 
+## Hidden assets (image editor)
+
+Assets with `hidden = true` are pixel and mask files of the image editor ([../modules/image-editor.md](../modules/image-editor.md)). `listMedia` excludes them; `getMedia` does not filter them, by design. `hidden` is a display flag only: RLS is unchanged and same-brand users can read them. They count in the organisation quota. Findings and the purge plan: [../audits/image-editor.md](../audits/image-editor.md).
+
 ## 14. Open decisions
 
 1. Do clients need to **upload files** (briefings, logos)? If yes: action `media.upload_external`, brand scope, a review status, never public (about one more week).

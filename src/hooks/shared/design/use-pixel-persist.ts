@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { newItem, sendUpload } from "@/hooks/shared/use-media-upload";
 import { useUnsavedChanges } from "@/hooks/shared/use-unsaved-changes";
-import { dbErrorMessage } from "@/lib/shared/auth/errors";
+import { ErrorCode, dbErrorMessage } from "@/lib/shared/auth/errors";
 import { logError } from "@/lib/shared/logger";
+import { nowMs } from "@/lib/shared/dates";
 import {
+  type PixelsVersionEntry,
   claimPixelOwners,
   duplicatedPixelIds,
+  layersDueForFlush,
   pendingPixelIds,
   pixelFileName,
 } from "@/lib/shared/design/pixel-persist";
@@ -24,7 +27,7 @@ type Options = {
   enabled: boolean;
   brandId: string;
   reuseAssets: boolean;
-  onSaved: (elementId: string, versionId: string) => void;
+  onSaved: (entries: PixelsVersionEntry[]) => void;
 };
 
 export const usePixelPersist = (options: Options) => {
@@ -34,12 +37,13 @@ export const usePixelPersist = (options: Options) => {
   const assets = useRef(new Map<string, string>());
   const owners = useRef(new Map<string, string>());
   const claimed = useRef(new Set<string>());
+  const lastSentAt = useRef(new Map<string, number>());
   const chain = useRef<Promise<boolean>>(Promise.resolve(true));
   const latest = useRef(options);
   latest.current = options;
 
-  const sendLayer = async (id: string): Promise<string | null> => {
-    const { brandId, reuseAssets, onSaved } = latest.current;
+  const sendLayer = async (id: string, saved: PixelsVersionEntry[]): Promise<string | null> => {
+    const { brandId, reuseAssets } = latest.current;
     const buffer = store.get(id);
     if (buffer === undefined) {
       store.clearDirty(id);
@@ -49,18 +53,22 @@ export const usePixelPersist = (options: Options) => {
       const startedAt = store.revisionOf(id);
       const blob = await bufferToPng(buffer);
       if (blob === null) return ENCODE_FAILED;
-      const file = new File([blob], pixelFileName(id), { type: "image/png" });
+      const file = new File([blob], pixelFileName(id, crypto.randomUUID().slice(0, 8)), {
+        type: "image/png",
+      });
       const known = reuseAssets ? assets.current.get(id) : undefined;
       const fresh = { scope: MediaScope.Brand, brandId, hidden: true };
       const first = await sendUpload(
         newItem(file),
         known === undefined ? fresh : { scope: MediaScope.Brand, brandId, assetId: known },
       );
-      const sent = first.ok || known === undefined ? first : await sendUpload(newItem(file), fresh);
+      const gone = !first.ok && first.code === ErrorCode.NotFound;
+      const sent = gone ? await sendUpload(newItem(file), fresh) : first;
       if (!sent.ok) return sent.message;
       assets.current.set(id, sent.assetId);
       owners.current.set(sent.versionId, id);
-      onSaved(id, sent.versionId);
+      lastSentAt.current.set(id, nowMs());
+      saved.push({ id, versionId: sent.versionId });
       if (store.revisionOf(id) === startedAt) store.clearDirty(id);
       return null;
     } catch (caught) {
@@ -69,21 +77,28 @@ export const usePixelPersist = (options: Options) => {
     }
   };
 
-  const runAll = async (): Promise<string | null> => {
-    for (const id of pendingPixelIds(latest.current.document, store.dirtyIds())) {
-      const first = await sendLayer(id);
-      const message = first === null ? null : await sendLayer(id);
-      if (message !== null) return message;
+  const runAll = async (idle: boolean): Promise<string | null> => {
+    const dirty = pendingPixelIds(latest.current.document, store.dirtyIds());
+    const ids = idle
+      ? layersDueForFlush(dirty, lastSentAt.current, nowMs(), DESIGN_LIMITS.pixelFlushMinGapMs)
+      : dirty;
+    const saved: PixelsVersionEntry[] = [];
+    let failure: string | null = null;
+    for (const id of ids) {
+      const first = await sendLayer(id, saved);
+      failure = first === null ? null : await sendLayer(id, saved);
+      if (failure !== null) break;
     }
-    return null;
+    if (saved.length > 0) latest.current.onSaved(saved);
+    return failure;
   };
 
-  const flush = (): Promise<boolean> => {
+  const flushWith = (idle: boolean): Promise<boolean> => {
     const next = chain.current.then(async () => {
       if (pendingPixelIds(latest.current.document, store.dirtyIds()).length === 0) return true;
       setUploading(true);
       setError(null);
-      const message = await runAll();
+      const message = await runAll(idle);
       setUploading(false);
       setError(message);
       return message === null;
@@ -92,8 +107,10 @@ export const usePixelPersist = (options: Options) => {
     return next;
   };
 
-  const flushRef = useRef(flush);
-  flushRef.current = flush;
+  const flush = (): Promise<boolean> => flushWith(false);
+
+  const flushRef = useRef(flushWith);
+  flushRef.current = flushWith;
 
   const pending = pendingPixelIds(document, store.dirtyIds()).length;
 
@@ -108,7 +125,7 @@ export const usePixelPersist = (options: Options) => {
 
   useEffect(() => {
     if (!enabled || pending === 0) return undefined;
-    const timer = window.setTimeout(() => void flushRef.current(), DESIGN_LIMITS.pixelFlushMs);
+    const timer = window.setTimeout(() => void flushRef.current(true), DESIGN_LIMITS.pixelFlushMs);
     return () => window.clearTimeout(timer);
   }, [enabled, pending, revision]);
 

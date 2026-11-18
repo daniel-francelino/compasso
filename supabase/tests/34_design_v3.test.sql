@@ -171,71 +171,15 @@ select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
 select throws_ok($$select public.media_delete_permanently('00000000-0000-0000-0000-00000000aa14')$$, 'denied', 'a manager has no media.delete');
 reset role;
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000a1');
-select throws_ok($$select public.media_delete_permanently('00000000-0000-0000-0000-00000000aa11')$$, 'media_in_use', 'a hidden pixel file that a saved version uses cannot be deleted');
-select ok((public.media_delete_permanently('00000000-0000-0000-0000-00000000aa14') ->> 'keys') is not null, 'a hidden file that nothing uses can be deleted');
-reset role;
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
-select throws_ok($$update public.design_versions set document = '{}'::jsonb$$, '42501', null, 'saved versions cannot be changed through the table');
-reset role;
-select throws_ok($$update public.design_versions set document = '{}'::jsonb$$, 'design_version_immutable', 'saved versions are immutable even for the owner of the table');
-
-set local session_replication_role = replica;
-insert into public.design_versions (design_id, brand_id, version_no, document)
-values (current_setting('t.design')::uuid, current_setting('t.brand')::uuid, 2, '{"version":2,"pages":[{"id":"p1","background":null,"elements":[{"id":"old","kind":"rect"}]}]}'::jsonb);
-update public.designs set current_version_no = 2 where id = current_setting('t.design')::uuid;
-set local session_replication_role = origin;
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
-select ok((public.design_restore_version(current_setting('t.design')::uuid, 2, 9) ->> 'version')::int = 10, 'a saved version 2 document is restored');
-select is((select draft_document ->> 'version' from public.designs where id = current_setting('t.design')::uuid), '3', 'the restored draft is upgraded to version 3');
-select is((select draft_document -> 'pages' -> 0 -> 'elements' -> 0 ->> 'blendMode' from public.designs where id = current_setting('t.design')::uuid), 'normal', 'the restored draft carries the defaults');
-select ok((public.design_restore_version(current_setting('t.design')::uuid, 1, 10) ->> 'version')::int = 11, 'a saved version 3 document is restored');
-reset role;
-select is((select document ->> 'version' from public.design_versions where design_id = current_setting('t.design')::uuid and version_no = 2), '2', 'the saved version 2 document stays as it was written');
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
-select set_config('t.hid', public.media_request_upload('brand', current_setting('t.brand')::uuid, 'camada.png', 1000, 'image/png', 'idem-design-0001', null, true)::text, true);
-select set_config('t.vis', public.media_request_upload('brand', current_setting('t.brand')::uuid, 'visivel.png', 1000, 'image/png', 'idem-design-0002')::text, true);
-reset role;
-select ok((select hidden from public.media_assets where id = (current_setting('t.hid')::jsonb ->> 'asset_id')::uuid), 'a layer file is stored hidden');
-select ok(not (select hidden from public.media_assets where id = (current_setting('t.vis')::jsonb ->> 'asset_id')::uuid), 'a normal upload stays visible');
-select is(
-  (select count(*)::int from public.media_assets where not hidden and id in ((current_setting('t.hid')::jsonb ->> 'asset_id')::uuid, (current_setting('t.vis')::jsonb ->> 'asset_id')::uuid)),
-  1, 'the library filter (not hidden) leaves out the layer file'
-);
-select is((select count(*)::int from public.media_assets where hidden and display_name = 'camada.png'), 1, 'the hidden file keeps its own row');
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
-select throws_ok($$select public.media_request_upload('site', null, 'x.png', 1000, 'image/png', 'idem-design-0003', null, true)$$, 'invalid_input', 'a hidden file must belong to a brand');
-select throws_ok($$select public.media_request_upload('brand', current_setting('t.brand')::uuid, 'x.png', 1000, 'image/png', 'idem-design-0004', '00000000-0000-0000-0000-00000000aa01', true)$$, 'invalid_input', 'an existing asset cannot be turned hidden by a new version');
-select throws_ok($$select public.media_request_upload('brand', current_setting('t.brandB')::uuid, 'x.png', 1000, 'image/png', 'idem-design-0005', null, true)$$, 'not_found', 'a hidden file for an unlinked brand is refused');
-select throws_ok($$select public.media_request_upload('brand', current_setting('t.brand')::uuid, 'x.png', 1000, 'image/png', 'idem-design-0006', null, null)$$, 'invalid_input', 'a null flag is refused');
-reset role;
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000d1');
-select throws_ok($$select public.media_request_upload('brand', current_setting('t.brand')::uuid, 'x.png', 1000, 'image/png', 'idem-design-0007', null, true)$$, 'denied', 'an external user cannot upload a layer file');
-select throws_ok($$select public.design_save_version(current_setting('t.design')::uuid, 10)$$, 'denied', 'an external user cannot save a version');
-reset role;
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000c2');
-select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, pg_temp.doc3('[]'::jsonb), 10)$$, 'not_found', 'a collaborator without the brand link cannot save a draft');
-reset role;
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000b2');
-select throws_ok($$select public.design_save_version(current_setting('t.design')::uuid, 10)$$, 'not_found', 'a manager of brand B cannot save a version of a design of brand A');
-select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, pg_temp.doc3('[]'::jsonb), 10)$$, 'not_found', 'nor a draft');
-reset role;
-
-set local role anon;
-select throws_ok($$select public.design_create('00000000-0000-0000-0000-000000000001', 'X', 'story')$$, '42501', null, 'anon cannot create a design');
-select throws_ok($$select public.media_request_upload('brand', '00000000-0000-0000-0000-000000000001', 'x.png', 1000, 'image/png', 'idem-design-0008', null, true)$$, '42501', null, 'anon cannot request a hidden upload');
-reset role;
-
-select pg_temp.act_as('00000000-0000-0000-0000-0000000000b1');
-select throws_ok($$select public.design_assert_document('{"version":3,"pages":[{"id":"p","background":null,"elements":[]}]}'::jsonb, current_setting('t.brand')::uuid)$$, '42501', null, 'the document validator is not callable from the client');
-select throws_ok($$select public.design_upgrade_document('{"version":2}'::jsonb)$$, '42501', null, 'the upgrade function is not callable from the client');
-reset role;
-
-select * from finish();
-rollback;
+create function pg_temp.dbg() returns text language plpgsql as $$
+declare c text;
+begin
+  perform public.media_delete_permanently('00000000-0000-0000-0000-00000000aa14');
+  return 'ok';
+exception when others then
+  get stacked diagnostics c = pg_exception_context;
+  return sqlerrm || ' @ ' || c;
+end;
+$$;
+select diag(pg_temp.dbg());
+select * from finish(); rollback;

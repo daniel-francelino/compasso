@@ -115,19 +115,22 @@ const toolKey = (event: KeyboardEvent, context: Context): boolean => {
   return true;
 };
 
+const isAltGraph = (event: KeyboardEvent): boolean =>
+  event.ctrlKey && event.altKey && !event.metaKey;
+
 const paintKey = (event: KeyboardEvent, { tool, colors, brush }: Context): boolean => {
-  if (event.altKey) return false;
+  if (event.altKey && !isAltGraph(event)) return false;
   const key = event.key.toLowerCase();
-  if (key === "x" && !event.shiftKey) {
+  if (key === "x" && !event.shiftKey && !event.repeat) {
     colors.swap();
     return true;
   }
-  if (key === "d" && !event.shiftKey) {
+  if (key === "d" && !event.shiftKey && !event.repeat) {
     colors.reset();
     return true;
   }
   if (!isBrushTool(tool.tool)) return false;
-  return brush.adjustByKey(tool.tool, event.key, event.shiftKey);
+  return brush.adjustByKey(tool.tool, event.key, event.shiftKey, event.code);
 };
 
 const selectionKey = (event: KeyboardEvent, editor: DesignEditor): boolean => {
@@ -169,7 +172,7 @@ export const useDesignShortcuts = (context: Context) => {
         current.tool.hold(true);
         return;
       }
-      const modifier = event.ctrlKey || event.metaKey;
+      const modifier = (event.ctrlKey && !isAltGraph(event)) || event.metaKey;
       const handled = modifier ? commandKey(event, current) : plainKey(event, current);
       if (handled) event.preventDefault();
     };

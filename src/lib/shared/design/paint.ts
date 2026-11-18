@@ -11,7 +11,7 @@ export type PaintSampleMode = ValueOf<typeof PaintSampleMode>;
 
 export const PAINT_SAMPLE_LABEL: Record<PaintSampleMode, string> = {
   [PaintSampleMode.Layer]: "Camada atual",
-  [PaintSampleMode.All]: "Todas as camadas",
+  [PaintSampleMode.All]: "Camadas de pixels",
 };
 
 export const PAINT_LIMITS = {
@@ -26,6 +26,9 @@ export const PAINT_LIMITS = {
 } as const;
 
 export const PAINT_REASON = "Selecione uma camada de pixels visível e desbloqueada para pintar.";
+
+export const PAINT_UPLOAD_REASON =
+  "Pintar exige permissão para enviar arquivos à biblioteca de mídia.";
 
 export type BrushTool = typeof DesignTool.Brush | typeof DesignTool.Eraser;
 
@@ -56,7 +59,7 @@ export const isPaintTool = (tool: DesignTool): boolean =>
 const clampTo = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));
 
-export const clampBrushOption = (key: BrushOptionKey, value: number): number =>
+const clampBrushOption = (key: BrushOptionKey, value: number): number =>
   key === "size"
     ? clampTo(Math.round(value), PAINT_LIMITS.minSize, PAINT_LIMITS.maxSize)
     : clampTo(Math.round(value), PAINT_LIMITS.minPercent, PAINT_LIMITS.maxPercent);
@@ -72,17 +75,30 @@ const DIGIT = /^[0-9]$/;
 const sizeStep = (size: number): number =>
   Math.max(1, Math.round(size * PAINT_LIMITS.sizeStepRatio));
 
+const DECREASE_KEYS: readonly string[] = ["[", "{", ",", "<"];
+const INCREASE_KEYS: readonly string[] = ["]", "}", ".", ">"];
+const HARDNESS_KEYS: readonly string[] = ["{", "}", "<", ">"];
+const DECREASE_CODE = "BracketLeft";
+const INCREASE_CODE = "BracketRight";
+
+const stepDirection = (key: string, code: string): number => {
+  if (DECREASE_KEYS.includes(key) || code === DECREASE_CODE) return -1;
+  if (INCREASE_KEYS.includes(key) || code === INCREASE_CODE) return 1;
+  return 0;
+};
+
 export const adjustBrushByKey = (
   options: BrushOptions,
   key: string,
   shift: boolean,
+  code = "",
 ): BrushOptions | null => {
   if (DIGIT.test(key)) {
     return withBrushOption(options, "opacity", key === "0" ? 100 : Number(key) * 10);
   }
-  const direction = key === "[" || key === "{" ? -1 : key === "]" || key === "}" ? 1 : 0;
+  const direction = stepDirection(key, code);
   if (direction === 0) return null;
-  const hardness = key === "{" || key === "}" || shift;
+  const hardness = HARDNESS_KEYS.includes(key) || shift;
   if (hardness) {
     return withBrushOption(
       options,
@@ -109,7 +125,7 @@ export const toBrushParams = (
 export const smoothingRadius = (options: BrushOptions): number =>
   (options.smoothing / 100) * PAINT_LIMITS.smoothingRadiusPx;
 
-export type RasterPlacement = {
+type RasterPlacement = {
   x: number;
   y: number;
   width: number;

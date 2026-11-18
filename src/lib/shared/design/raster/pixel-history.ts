@@ -23,6 +23,7 @@ export type TilePatch = {
 export type PixelPatch = { tiles: TilePatch[]; bytes: number };
 
 export type PixelHistoryStep = {
+  id: string;
   label: string;
   targetId: string;
   bytes: number;
@@ -32,9 +33,9 @@ export type PixelHistoryStep = {
 export type PixelHistoryOptions = { budgetBytes?: number; maxSteps?: number };
 
 export type PixelHistory = {
-  push: (label: string, targetId: string, patch: PixelPatch) => number;
-  undo: (resolve: (targetId: string) => PixelBuffer | null) => string | null;
-  redo: (resolve: (targetId: string) => PixelBuffer | null) => string | null;
+  push: (label: string, targetId: string, patch: PixelPatch, id?: string) => number;
+  undo: (resolve: (targetId: string) => PixelBuffer | null, id?: string) => string | null;
+  redo: (resolve: (targetId: string) => PixelBuffer | null, id?: string) => string | null;
   canUndo: () => boolean;
   canRedo: () => boolean;
   bytes: () => number;
@@ -76,7 +77,7 @@ export const revertPatch = (buffer: PixelBuffer, patch: PixelPatch): void => {
   for (const tile of patch.tiles) applyTile(buffer, { ...tile, data: tile.before });
 };
 
-type StoredStep = { label: string; targetId: string; patch: PixelPatch };
+type StoredStep = { id: string; label: string; targetId: string; patch: PixelPatch };
 
 export const createPixelHistory = (options: PixelHistoryOptions = {}): PixelHistory => {
   const budget = options.budgetBytes ?? DEFAULT_PIXEL_HISTORY_BUDGET_BYTES;
@@ -96,18 +97,18 @@ export const createPixelHistory = (options: PixelHistoryOptions = {}): PixelHist
     return evicted;
   };
 
-  const push = (label: string, targetId: string, patch: PixelPatch): number => {
+  const push = (label: string, targetId: string, patch: PixelPatch, id = ""): number => {
     for (const dropped of steps.slice(cursor)) total -= dropped.patch.bytes;
     steps = steps.slice(0, cursor);
-    steps.push({ label, targetId, patch });
+    steps.push({ id, label, targetId, patch });
     total += patch.bytes;
     cursor = steps.length;
     return evict();
   };
 
-  const undo = (resolve: (targetId: string) => PixelBuffer | null): string | null => {
+  const undo = (resolve: (targetId: string) => PixelBuffer | null, id?: string): string | null => {
     const step = steps[cursor - 1];
-    if (step === undefined) return null;
+    if (step === undefined || (id !== undefined && step.id !== id)) return null;
     const buffer = resolve(step.targetId);
     if (buffer === null) return null;
     revertPatch(buffer, step.patch);
@@ -115,9 +116,9 @@ export const createPixelHistory = (options: PixelHistoryOptions = {}): PixelHist
     return step.label;
   };
 
-  const redo = (resolve: (targetId: string) => PixelBuffer | null): string | null => {
+  const redo = (resolve: (targetId: string) => PixelBuffer | null, id?: string): string | null => {
     const step = steps[cursor];
-    if (step === undefined) return null;
+    if (step === undefined || (id !== undefined && step.id !== id)) return null;
     const buffer = resolve(step.targetId);
     if (buffer === null) return null;
     applyPatch(buffer, step.patch);
@@ -135,6 +136,7 @@ export const createPixelHistory = (options: PixelHistoryOptions = {}): PixelHist
     size: () => steps.length,
     steps: () =>
       steps.map((step, index) => ({
+        id: step.id,
         label: step.label,
         targetId: step.targetId,
         bytes: step.patch.bytes,

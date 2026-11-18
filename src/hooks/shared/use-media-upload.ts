@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { dbErrorMessage } from "@/lib/shared/auth/errors";
+import { type ErrorCode, dbErrorMessage } from "@/lib/shared/auth/errors";
 import type { MediaScope } from "@/lib/shared/enums";
 import { formatBytes } from "@/lib/shared/format";
 import { logError } from "@/lib/shared/logger";
@@ -83,7 +83,9 @@ export const newItem = (file: File): UploadItem => ({
   versionId: null,
 });
 
-type Outcome = { ok: true; assetId: string; versionId: string } | { ok: false; message: string };
+type Outcome =
+  | { ok: true; assetId: string; versionId: string }
+  | { ok: false; message: string; code?: ErrorCode };
 
 type Prepared = { thumb: Blob | null; display: Blob | null; video: VideoInfo | null };
 
@@ -179,7 +181,7 @@ export const sendUpload = async (
         idempotencyKey: item.id,
       },
     });
-    if (!planned.ok) return { ok: false, message: planned.message };
+    if (!planned.ok) return { ok: false, message: planned.message, code: planned.code };
     versionId = planned.versionId;
     return await transfer(planned, file, mime, prepared, onProgress);
   } catch (error) {

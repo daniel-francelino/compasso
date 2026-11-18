@@ -92,6 +92,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `design.version_saved` | `design` | `design_save_version` (metadata: the version number) |
 | `design.trashed` | `design` | `design_set_trashed` |
 | `design.restored` | `design` | `design_set_trashed` |
+| `design.hidden_purged` | `design` | `design_purge_hidden_versions` (metadata: number of versions queued for purge) |
 | `design.exported` | `design` | `design_record_export` (metadata: the version number, the page number and the format) |
 | `design.version_restored` | `design` | `design_restore_version` (metadata: the version number) |
 | `design.template_changed` | `design` | `design_set_template` (metadata: the new flag) |
@@ -125,6 +126,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `media.published` | `media_version` | `media_publish_derivative` |
 | `media.unpublished` | `media_version` | `media_withdraw_derivative` |
 | `media.deleted_permanently` | `media_asset` | `media_delete_permanently` |
+| `media.hidden_removed` | `media_asset` | `media_set_trashed` (trash) and `media_delete_permanently` when the asset is a hidden layer file of the image editor (metadata: `step`, versions) |
 | `media.version_replaced` | `media_asset` | `media_replace_version` |
 | `media.share_created` | `media_share` | `media_share_create` |
 | `media.share_revoked` | `media_share` | `media_share_revoke` |

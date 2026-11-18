@@ -26,9 +26,13 @@ function ColorChip({
           aria-label={`${label}: ${color ?? "indisponível"}`}
           title={label}
           disabled={color === null}
-          className={`absolute size-7 rounded border-2 border-border ${className}`}
-          style={color === null ? undefined : { backgroundColor: color }}
-        />
+          className={`absolute flex size-11 items-center justify-center ${className}`}
+        >
+          <span
+            className="size-7 rounded border-2 border-border"
+            style={color === null ? undefined : { backgroundColor: color }}
+          />
+        </button>
       </PopoverTrigger>
       <PopoverContent side="right" align="end" className="w-64">
         <FormColorPicker
@@ -55,7 +59,7 @@ export function DesignColorChips({
 }) {
   return (
     <div className="mt-auto flex flex-col items-center gap-1 pt-2">
-      <div className="relative size-11">
+      <div className="relative size-16">
         <ColorChip
           label="Cor de fundo"
           color={colors.background}

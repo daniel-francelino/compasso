@@ -103,6 +103,7 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `upload_link_expired` | unavailable | "O link de envio expirou. Tente enviar de novo." | browser upload (`sendUpload`) |
 | `upload_storage_refused` | unavailable | "O armazenamento recusou o arquivo. Tente de novo; se continuar, avise o suporte." | browser upload (`sendUpload`) |
 | `quota_exceeded` | invalid | "O espaço de armazenamento acabou. Libere espaço ou ajuste o limite." | `media_request_upload` |
+| `hidden_limit_reached` | invalid | "Este design acumulou arquivos de camada demais. Salve uma versão e tente de novo em instantes." | `media_request_upload` (hidden upload when the user already has 300 live hidden versions in the brand) |
 | `media_version_immutable` | denied | "Esta versão do arquivo não pode ser alterada." | media version trigger |
 | `avatar_invalid` | invalid | "A foto de perfil precisa ser uma imagem sua, disponível." | `profile_set_avatar` |
 | `logo_invalid` | invalid | "O logo precisa ser uma imagem disponível desta marca." | `brand_set_logo` |

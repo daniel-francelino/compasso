@@ -28,6 +28,7 @@ import { useDesignColors } from "@/hooks/shared/design/use-design-colors";
 import { useDesignPaint } from "@/hooks/shared/design/use-design-paint";
 import { usePixelHistory } from "@/hooks/shared/design/use-pixel-history";
 import { usePixelPersist } from "@/hooks/shared/design/use-pixel-persist";
+import { useRasterRelease } from "@/hooks/shared/design/use-raster-release";
 import { RASTER_MEMORY_MESSAGE, useRasterStore } from "@/hooks/shared/design/use-raster-store";
 import { useDesignAutosave } from "@/hooks/shared/design/use-design-autosave";
 import { useDesignEditor } from "@/hooks/shared/design/use-design-editor";
@@ -86,6 +87,7 @@ export function DesignWorkspace({
   const isMobile = useIsMobile();
   const editable = can(auth, Action.Design.Update) && !design.trashed && !isMobile;
   const canExport = can(auth, Action.Media.Upload);
+  const canPaint = canExport;
   const pixels = usePixelHistory();
   const editor = useDesignEditor(design.document, pixels.steps);
   const autosave = useDesignAutosave({
@@ -97,14 +99,15 @@ export function DesignWorkspace({
   const assets = useDesignAssets(editor.document);
   const rasters = useRasterStore(editor.document);
   pixels.bind(rasters.store);
+  useRasterRelease(rasters.store, editor.historyDocuments, pixels.history);
   const persist = usePixelPersist({
     store: rasters.store,
     revision: rasters.revision,
     document: editor.document,
-    enabled: editable && autosave.state !== DesignSaveState.Conflict,
+    enabled: editable && canPaint && autosave.state !== DesignSaveState.Conflict,
     brandId: design.brandId,
     reuseAssets: can(auth, Action.Media.Update),
-    onSaved: (id, versionId) => flushSync(() => editor.setPixelsVersion(id, versionId)),
+    onSaved: (entries) => flushSync(() => editor.setPixelsVersions(entries)),
   });
   const size = DESIGN_PRESET_SIZE[design.preset];
   const viewport = useDesignViewport(size);
@@ -142,6 +145,7 @@ export function DesignWorkspace({
     colors,
     brush,
     size,
+    canPaint,
   });
 
   useDesignShortcuts({

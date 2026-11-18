@@ -105,6 +105,7 @@ export const AuditAction = {
     VersionReplaced: "media.version_replaced",
     ShareCreated: "media.share_created",
     ShareRevoked: "media.share_revoked",
+    HiddenRemoved: "media.hidden_removed",
   },
   Site: {
     PagePublished: "site.page_published",
@@ -136,6 +137,7 @@ export const AuditAction = {
     Exported: "design.exported",
     VersionRestored: "design.version_restored",
     TemplateChanged: "design.template_changed",
+    HiddenPurged: "design.hidden_purged",
   },
   Video: {
     Created: "video.created",

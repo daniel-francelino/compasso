@@ -38,3 +38,24 @@ describe("raster store", () => {
     expect(listener.mock.calls.length).toBe(calls);
   });
 });
+
+describe("raster store derived bytes and ids", () => {
+  it("counts derived bytes in the budget and frees them on release", () => {
+    const store = createRasterStore();
+    store.ensure("a", 4, 2);
+    const base = store.usedBytes();
+    store.trackDerived("a", "canvas", 100);
+    store.trackDerived("a", "canvas", 60);
+    expect(store.usedBytes()).toBe(base + 60);
+    expect(store.ids()).toEqual(["a"]);
+    store.release("a");
+    expect(store.usedBytes()).toBe(0);
+    expect(store.ids()).toEqual([]);
+  });
+
+  it("ignores derived bytes of unknown layers", () => {
+    const store = createRasterStore();
+    store.trackDerived("missing", "canvas", 100);
+    expect(store.usedBytes()).toBe(0);
+  });
+});

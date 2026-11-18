@@ -28,6 +28,10 @@ describe("brush keys", () => {
     expect(adjustBrushByKey(base, "5", false)?.opacity).toBe(50);
     expect(adjustBrushByKey(base, "0", false)?.opacity).toBe(100);
     expect(adjustBrushByKey(base, "q", false)).toBeNull();
+    expect(adjustBrushByKey(base, ".", false)?.size).toBe(110);
+    expect(adjustBrushByKey(base, ",", false)?.size).toBe(90);
+    expect(adjustBrushByKey(base, "Dead", false, "BracketRight")?.size).toBe(110);
+    expect(adjustBrushByKey(base, "Dead", true, "BracketLeft")?.hardness).toBe(70);
   });
 
   it("clamps every option", () => {

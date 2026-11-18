@@ -15,13 +15,12 @@ import {
   type ElementPatch,
   type SnapTargets,
   boundsOf,
-  hasAdjustments,
-  isRasterStackKind,
   resolveInheritance,
   snapBox,
   snapTargets,
 } from "@/lib/shared/design/document";
 import { layerCanvas } from "@/lib/shared/design/raster-canvas";
+import { splitRasterRuns } from "@/lib/shared/design/raster-runs";
 import type { DesignElement, DesignPage } from "@/lib/shared/design/schemas";
 import {
   DESIGN_LIMITS,
@@ -223,21 +222,22 @@ export default function DesignCanvas({
   };
 
   const inherited = useMemo(() => resolveInheritance(page), [page]);
-  const stacked = hasAdjustments(page);
-  const firstStack = stacked ? inherited.findIndex((item) => isRasterStackKind(item.element)) : -1;
-  const stackLayers = useMemo(
-    () => inherited.filter((item) => isRasterStackKind(item.element)),
+  const adjustedRuns = useMemo(
+    () => splitRasterRuns(inherited).filter((run) => run.adjusted),
     [inherited],
+  );
+  const runAt = new Map(adjustedRuns.map((run) => [run.startIndex, run]));
+  const composited = new Set(
+    adjustedRuns.flatMap((run) => run.layers.map((layer) => layer.element.id)),
   );
 
   const elements = inherited.map((item, index) => {
     const element = { ...item.element, hidden: item.hidden, opacity: item.opacity };
     const isRaster = element.kind === DesignElementKind.Raster;
+    const run = runAt.get(index);
     return (
       <Fragment key={element.id}>
-        {index === firstStack ? (
-          <DesignRasterStack layers={stackLayers} rasters={rasters} size={size} />
-        ) : null}
+        {run === undefined ? null : <DesignRasterStack run={run} rasters={rasters} size={size} />}
         <DesignElementNode
           element={element}
           image={
@@ -245,11 +245,13 @@ export default function DesignCanvas({
               ? images.get(element.mediaVersionId)
               : undefined
           }
-          raster={isRaster && !stacked ? layerCanvas(rasters.store, element.id) : null}
+          raster={
+            isRaster && !composited.has(element.id) ? layerCanvas(rasters.store, element.id) : null
+          }
           chrome={chrome}
           fontsVersion={fontsVersion}
           interactive={interactive && moving}
-          hidden={element.id === editingTextId || (isRaster && stacked)}
+          hidden={element.id === editingTextId || composited.has(element.id)}
           events={events}
         />
       </Fragment>

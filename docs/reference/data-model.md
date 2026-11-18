@@ -265,6 +265,8 @@ Migration `20261105100000_feedback.sql`. Rules: [../modules/feedback.md](../modu
 
 ## 4d. Image editor (designs)
 
+Migration `20261118200000_design_hidden_storage.sql` (P6c, local only until the owner approves the push): no new table or column. Reuses `media_versions.purge_requested_at` to retire unreferenced hidden versions; new functions `design_purge_hidden_versions` and the private helper `media_hidden_in_draft` ([functions.md](functions.md)); `design_assert_media` also requires an `available` version and an asset not in the trash; the default quota in `media_request_upload` is 10240 MB again.
+
 Migration `20261118100000_design_document_v3.sql` (P4, document version 3, local only until the owner approves the push): column `media_assets.hidden` (`boolean not null default false`; true marks a layer pixel or mask file of the image editor, left out of the library listing; the default keeps every existing row visible), no new table. `designs.draft_document` and `design_versions.document` may hold version 2 or 3 (saved versions keep what was written).
 
 Migrations `20261116100000_design.sql` (phase 1) and `20261117100000_design_phases_2_3.sql` (pages, exports, usages, restore, templates). Rules: [../modules/image-editor.md](../modules/image-editor.md).
