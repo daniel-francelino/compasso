@@ -401,7 +401,7 @@ export const recordDesignImport = createServerFn({ method: "POST" })
     if (caller === null) return denied;
     const { data: raw, error } = await caller.supabase.rpc("design_record_import", {
       p_design: data.id,
-      p_metadata: { ...data.metadata, textRuns: [] },
+      p_metadata: data.metadata,
     });
     if (error) return fail(error);
     return parseOutput(idSchema, raw);

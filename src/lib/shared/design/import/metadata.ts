@@ -26,7 +26,9 @@ export const METADATA_LIMITS = {
   maxFonts: 100,
   fontName: 200,
   maxColors: 64,
-  jsonBytes: 1024 * 1024,
+  storedJsonBytes: 1024 * 1024,
+  jsonTextMargin: 64 * 1024,
+  jsonBytes: 1024 * 1024 - 64 * 1024,
   maxSide: 300_000,
   maxPageCount: 1_000_000,
   maxFontSize: 10_000,
@@ -141,7 +143,7 @@ const isConsistent = (value: Shape): boolean =>
       layer.index === position && (layer.parentIndex === null || layer.parentIndex < position),
   ) && value.textRuns.every((run) => run.layerIndex < value.layers.length);
 
-export const importedDesignMetadataSchema = z
+const metadataObject = z
   .object({
     version: z.literal(METADATA_LIMITS.version),
     source: z
@@ -161,11 +163,20 @@ export const importedDesignMetadataSchema = z
     colors: z.array(ColorSchema).max(METADATA_LIMITS.maxColors),
     truncation: TruncationSchema,
   })
-  .strict()
-  .refine(isConsistent, { message: "inconsistent-references" })
-  .refine((value) => jsonBytesOf(value) <= METADATA_LIMITS.jsonBytes, {
-    message: "metadata-too-large",
-  });
+  .strict();
+
+const withChecks = <T extends Shape, I>(schema: z.ZodType<T, z.ZodTypeDef, I>) =>
+  schema
+    .refine(isConsistent, { message: "inconsistent-references" })
+    .refine((value) => jsonBytesOf(value) <= METADATA_LIMITS.jsonBytes, {
+      message: "metadata-too-large",
+    });
+
+export const importedDesignMetadataSchema = withChecks(metadataObject);
+export const storedDesignMetadataSchema = withChecks(
+  metadataObject.extend({ textRuns: z.tuple([]) }),
+);
+export type StoredDesignMetadata = z.infer<typeof storedDesignMetadataSchema>;
 export type ImportedDesignMetadata = z.infer<typeof importedDesignMetadataSchema>;
 
 export type MetadataRgb = { r: number; g: number; b: number };
@@ -371,7 +382,7 @@ const assemble = (parts: MetadataParts) => {
 
 type Assembled = ReturnType<typeof assemble>;
 
-const withoutText = (value: Assembled): Assembled => ({
+export const withoutText = (value: ImportedDesignMetadata): StoredDesignMetadata => ({
   ...value,
   textRuns: [],
   truncation: {

@@ -320,6 +320,22 @@ describe("renderPdfPageDesign", () => {
     expect(result.design.notes).toEqual([{ kind: "first_page_only", count: 1 }]);
   });
 
+  it("attaches metadata with page count, unknown color mode and no file name", async () => {
+    setup({ numPages: 3 });
+    const result = await renderPdfPageDesign(
+      DesignImportFormat.Ai,
+      input("segredo.final.pdf"),
+      FAILURE,
+    );
+    if (!result.ok) throw new Error("expected success");
+    expect(result.design.metadata).toMatchObject({
+      source: { format: "ai", colorMode: "unknown", bitsPerChannel: null, pageCount: 3 },
+      layers: [],
+      textRuns: [],
+    });
+    expect(JSON.stringify(result.design.metadata)).not.toContain("segredo");
+  });
+
   it("cuts the name by code points so an emoji at position 80 stays whole", async () => {
     setup();
     const emoji = String.fromCodePoint(0x1f600);

@@ -31,6 +31,10 @@ describe("import copy against the rows of docs/standards/ui-glossary.md", () => 
   const refusals = rowStarting("Recusas da importa");
   const notes = rowStarting("Observa");
 
+  it("lists the metadata-not-saved toast in its own row", () => {
+    expect(rowStarting("Metadados n").includes(DESIGN_IMPORT_MESSAGE.metadataNotSaved)).toBe(true);
+  });
+
   it("lists every fixed refusal text of DESIGN_IMPORT_MESSAGE in the refusals row", () => {
     const fixed = Object.entries(DESIGN_IMPORT_MESSAGE).flatMap(([key, value]) =>
       typeof value === "string" ? [[key, value] as const] : [],
@@ -38,6 +42,7 @@ describe("import copy against the rows of docs/standards/ui-glossary.md", () => 
     expect(fixed.length).toBeGreaterThan(10);
     const missing = fixed
       .filter(([, text]) => text !== DESIGN_IMPORT_MESSAGE.cancelled)
+      .filter(([, text]) => text !== DESIGN_IMPORT_MESSAGE.metadataNotSaved)
       .filter(([, text]) => !refusals.includes(text))
       .map(([key]) => key);
     expect(missing).toEqual([]);

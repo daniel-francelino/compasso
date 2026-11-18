@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { psdToDesign, readPsdHeader } from "@/lib/shared/design/import/handlers/psd";
 import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
-import { DesignImportNoteKind } from "@/lib/shared/design/import/types";
+import { buildMetadata } from "@/lib/shared/design/import/metadata";
+import {
+  DesignImportColorMode,
+  DesignImportFormat,
+  DesignImportNoteKind,
+} from "@/lib/shared/design/import/types";
 import {
   counter,
   documentOf,
@@ -191,5 +196,24 @@ describe("psdToDesign", () => {
   it("takes a descriptor that survives structuredClone (no functions, no ids)", () => {
     const doc = documentOf([layerNode("A", square(0, 0, 10))]);
     expect(() => structuredClone(doc)).not.toThrow();
+  });
+});
+
+describe("psdToDesign metadata", () => {
+  it("passes the worker metadata through, and null does not fail the import", () => {
+    const nodes = [layerNode("a", square(0, 0, 10))];
+    const none = psdToDesign(documentOf(nodes), { newId: counter() });
+    expect(none.ok && none.design.metadata).toBeNull();
+    const metadata = buildMetadata({
+      source: {
+        format: DesignImportFormat.Psd,
+        colorMode: DesignImportColorMode.Rgb,
+        bitsPerChannel: 8,
+        pageCount: null,
+      },
+      dimensions: { sourceWidth: 200, sourceHeight: 200, pageWidth: 200, pageHeight: 200 },
+    });
+    const withIt = psdToDesign(documentOf(nodes, 200, { metadata }), { newId: counter() });
+    expect(withIt.ok && withIt.design.metadata).toBe(metadata);
   });
 });

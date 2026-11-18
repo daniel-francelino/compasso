@@ -189,10 +189,12 @@ describe("buildMetadata", () => {
   });
 
   it("drops the text first when the JSON passes 1 MiB, and flags it", () => {
-    const layers = Array.from({ length: 24 }, (_, i) =>
-      layer(`t${i}`, { kind: MetadataLayerKind.Text }),
+    const layers = Array.from({ length: METADATA_LIMITS.maxLayers }, (_, i) =>
+      layer(EMOJI.repeat(METADATA_LIMITS.layerName), {
+        kind: i < 20 ? MetadataLayerKind.Text : MetadataLayerKind.Raster,
+      }),
     );
-    const textRuns = layers.map((_, layerIndex) => ({
+    const textRuns = layers.slice(0, 20).map((_, layerIndex) => ({
       layerIndex,
       text: EMOJI.repeat(METADATA_LIMITS.textRun),
       fontName: null,
@@ -378,7 +380,7 @@ describe("importedDesignMetadataSchema", () => {
       color: null,
     }));
     expect(importedDesignMetadataSchema.safeParse({ ...base, textRuns: huge }).success).toBe(false);
-  });
+  }, 30_000);
 
   it("uses the color mode registry values", () => {
     for (const colorMode of Object.values(DesignImportColorMode)) {

@@ -229,6 +229,21 @@ describe("decodeImage", () => {
     expect([result.design.width, result.design.height]).toEqual([100, 100]);
   });
 
+  it("attaches metadata with dimensions, format and rgb, and no file name", async () => {
+    stubDecode(100, 100);
+    const result = await decodeImage(
+      DesignImportFormat.Png,
+      inputOf("Segredo Pessoal.png", pngBytes(100, 100)),
+    );
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.design.metadata).toMatchObject({
+      source: { format: "png", colorMode: "rgb", bitsPerChannel: null, pageCount: null },
+      dimensions: { sourceWidth: 100, sourceHeight: 100, pageWidth: 100, pageHeight: 100 },
+      layers: [],
+    });
+    expect(JSON.stringify(result.design.metadata)).not.toContain("Segredo");
+  });
+
   it("caps and sanitizes the layer name from the file name", async () => {
     stubDecode(100, 100);
     const bidi = String.fromCharCode(0x202e);

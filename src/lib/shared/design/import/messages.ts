@@ -65,6 +65,7 @@ export const DESIGN_IMPORT_MESSAGE = {
   layerTooLarge: "Uma camada do arquivo é grande demais para importar.",
   timedOut: "A leitura do arquivo demorou demais e foi interrompida.",
   cancelled: "Importação cancelada.",
+  metadataNotSaved: "Arquivo importado, mas os metadados dele não foram salvos.",
 } as const;
 
 export const DESIGN_IMPORT_NOTE_SENTENCE: Record<DesignImportNoteKind, (count: number) => string> =

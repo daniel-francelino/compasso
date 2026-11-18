@@ -12,7 +12,9 @@ const read = vi.hoisted(() => vi.fn());
 vi.mock("sonner", () => ({ toast: toastMock }));
 vi.mock("@/lib/shared/design/browser", () => ({ pickFile: pick }));
 vi.mock("@/lib/shared/design/import/read-file", () => ({ readDesignFile: read }));
-vi.mock("@/lib/shared/logger", () => ({ logError: vi.fn() }));
+const logErrorMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/shared/logger", () => ({ logError: logErrorMock }));
+vi.mock("@/lib/shared/design/design.functions", () => ({ recordDesignImport: vi.fn() }));
 vi.mock("@/hooks/shared/design/use-raster-store", () => ({ RASTER_MEMORY_MESSAGE: "memory" }));
 
 const { createImportRun } = await import("@/hooks/shared/design/use-design-import");
@@ -21,6 +23,8 @@ const { DESIGN_IMPORT_MESSAGE, IMPORT_CANCELLED, IMPORT_UPLOAD_REASON } =
 const { DESIGN_IMPORT_ACCEPT } = await import("@/lib/shared/design/import/registry");
 const { DesignImportFormat, DesignImportKind, DesignImportNoteKind } =
   await import("@/lib/shared/design/import/types");
+const { buildMetadata, withoutText } = await import("@/lib/shared/design/import/metadata");
+const { DesignImportColorMode } = await import("@/lib/shared/design/import/types");
 const { invalid } = await import("@/lib/shared/server-utils");
 const { DESIGN_LIMITS } = await import("@/lib/shared/design/types");
 
@@ -43,6 +47,23 @@ const deferred = <T>(): Deferred<T> => {
   return { promise, resolve };
 };
 
+const metadata = (() => {
+  const built = buildMetadata({
+    source: {
+      format: DesignImportFormat.Psd,
+      colorMode: DesignImportColorMode.Rgb,
+      bitsPerChannel: 8,
+      pageCount: null,
+    },
+    dimensions: { sourceWidth: 10, sourceHeight: 10, pageWidth: 10, pageHeight: 10 },
+  });
+  if (built === null) throw new Error("metadata expected");
+  return {
+    ...built,
+    textRuns: [{ layerIndex: 0, text: "x", fontName: null, fontSize: null, color: null }],
+  };
+})();
+
 const setup = (existing = 0, allowed = true) => {
   const placer = {
     document: vi.fn((..._args: unknown[]) => ({ ok: true as const, notes: [], metadata: null })),
@@ -53,6 +74,7 @@ const setup = (existing = 0, allowed = true) => {
     })),
   };
   const onBusy = vi.fn();
+  const record = vi.fn((..._args: unknown[]) => Promise.resolve({ ok: true as const }));
   const run = createImportRun({
     newId: () => "id",
     existingElements: () => existing,
@@ -60,9 +82,10 @@ const setup = (existing = 0, allowed = true) => {
     placer: () => placer,
     allowed: () => allowed,
     onBusy,
+    record: (value) => record(value),
   });
   const unmount = run.mount();
-  return { run, placer, onBusy, unmount };
+  return { run, placer, onBusy, unmount, record };
 };
 
 beforeEach(() => {
@@ -242,5 +265,73 @@ describe("permission", () => {
 
   it("has a reason text for a user without upload permission", () => {
     expect(IMPORT_UPLOAD_REASON).toContain("permissão");
+  });
+
+  describe("metadata record", () => {
+    const placeWith = (value: unknown) => ({ ok: true as const, notes: [], metadata: value });
+
+    it("records the metadata of a placed design without text runs and with consistent truncation", async () => {
+      read.mockResolvedValue({ ok: true, kind: DesignImportKind.Document, design });
+      const { run, placer, record } = setup();
+      placer.document.mockReturnValue(placeWith(metadata) as never);
+      await run.open();
+      expect(record).toHaveBeenCalledTimes(1);
+      expect(record).toHaveBeenCalledWith(withoutText(metadata));
+      expect(toastMock.error).not.toHaveBeenCalled();
+    });
+
+    it("skips the call when the metadata is null", async () => {
+      read.mockResolvedValue({ ok: true, kind: DesignImportKind.Image, design });
+      const { run, record } = setup();
+      await run.open();
+      expect(record).not.toHaveBeenCalled();
+    });
+
+    it("skips the call when the placement is refused", async () => {
+      read.mockResolvedValue({ ok: true, kind: DesignImportKind.Image, design });
+      const { run, placer, record } = setup();
+      placer.image.mockReturnValue(invalid("memory") as never);
+      await run.open();
+      expect(record).not.toHaveBeenCalled();
+    });
+
+    it("keeps the import and shows the registered toast when the save fails", async () => {
+      read.mockResolvedValue({ ok: true, kind: DesignImportKind.Document, design });
+      const { run, placer, record } = setup();
+      placer.document.mockReturnValue(placeWith(metadata) as never);
+      record.mockResolvedValue(invalid("server detail secret") as never);
+      await run.open();
+      await Promise.resolve();
+      expect(toastMock.success).toHaveBeenCalledTimes(1);
+      expect(toastMock.error).toHaveBeenCalledWith(DESIGN_IMPORT_MESSAGE.metadataNotSaved);
+      expect(logErrorMock).toHaveBeenCalledWith("import metadata not saved", expect.any(String));
+      expect(JSON.stringify(logErrorMock.mock.calls)).not.toContain("secret");
+    });
+
+    it("treats a rejected call like a failure and never throws", async () => {
+      read.mockResolvedValue({ ok: true, kind: DesignImportKind.Document, design });
+      const { run, placer, record } = setup();
+      placer.document.mockReturnValue(placeWith(metadata) as never);
+      record.mockRejectedValue(new TypeError("boom file text"));
+      await run.open();
+      await Promise.resolve();
+      expect(toastMock.error).toHaveBeenCalledWith(DESIGN_IMPORT_MESSAGE.metadataNotSaved);
+      expect(logErrorMock).toHaveBeenCalledWith("import metadata not saved", "TypeError");
+    });
+
+    it("does not block the import while the save is slow and ignores it after unmount", async () => {
+      read.mockResolvedValue({ ok: true, kind: DesignImportKind.Document, design });
+      const { run, placer, record, onBusy, unmount } = setup();
+      placer.document.mockReturnValue(placeWith(metadata) as never);
+      const slow = deferred<{ ok: false; code: string; message: string }>();
+      record.mockReturnValue(slow.promise as never);
+      await run.open();
+      expect(onBusy).toHaveBeenLastCalledWith(false);
+      unmount();
+      slow.resolve({ ok: false, code: "invalid", message: "x" });
+      await slow.promise;
+      await Promise.resolve();
+      expect(toastMock.error).not.toHaveBeenCalled();
+    });
   });
 });

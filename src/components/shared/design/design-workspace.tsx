@@ -189,7 +189,13 @@ export function DesignWorkspace({
     canPaint,
     editable: canEdit,
   });
-  const importer = useDesignImport({ editor, rasters, canPaint, preset: design.preset });
+  const importer = useDesignImport({
+    designId: design.id,
+    editor,
+    rasters,
+    canPaint,
+    preset: design.preset,
+  });
   const startTransform = () => {
     if (editor.transforming) return;
     tool.setTool(DesignTool.Move);

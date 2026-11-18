@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeImportName } from "@/lib/shared/design/import/sanitize";
+import { sanitizeImportName, sanitizeImportText } from "@/lib/shared/design/import/sanitize";
 
 const BIDI = String.fromCharCode(0x202e);
 const NUL = String.fromCharCode(0);
@@ -32,5 +32,35 @@ describe("sanitizeImportName", () => {
 
   it("returns an empty string for hidden-only input", () => {
     expect(sanitizeImportName(BIDI + NUL)).toBe("");
+  });
+});
+
+describe("sanitizer idempotence", () => {
+  const JOINER = String.fromCodePoint(0x200d);
+  const ACUTE = String.fromCodePoint(0x0301);
+  const samples = [
+    "e" + JOINER + ACUTE,
+    "  e" + JOINER + ACUTE + JOINER + ACUTE + "  ",
+    "a" + ZERO_WIDTH + ACUTE + EMOJI + NL + "b",
+    EMOJI.repeat(300) + ACUTE,
+    "x".repeat(79) + "e" + JOINER + ACUTE,
+  ];
+
+  it("returns a stable name for every sample (sanitize twice equals once)", () => {
+    for (const sample of samples) {
+      const once = sanitizeImportName(sample);
+      expect(sanitizeImportName(once)).toBe(once);
+    }
+  });
+
+  it("returns a stable text for every sample", () => {
+    for (const sample of samples) {
+      const once = sanitizeImportText(sample, 50);
+      expect(sanitizeImportText(once, 50)).toBe(once);
+    }
+  });
+
+  it("composes the mark that a removed format character separated", () => {
+    expect(sanitizeImportName("e" + JOINER + ACUTE)).toBe(String.fromCodePoint(0xe9));
   });
 });

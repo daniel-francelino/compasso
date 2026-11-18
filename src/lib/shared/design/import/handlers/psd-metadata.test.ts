@@ -24,9 +24,13 @@ const fixture = (children: Layer[], extra: Partial<Psd> = {}): Psd => ({
   ...extra,
 });
 
-const smartObject = (name: string): Layer => Object.assign({ name, ...rect }, { placedLayer: {} });
-const adjustment = (name: string): Layer =>
-  Object.assign({ name }, { adjustment: { type: "curves" } });
+const withField = <T extends object>(target: T, key: string, value: unknown): T => {
+  Object.defineProperty(target, key, { value, enumerable: true });
+  return target;
+};
+
+const smartObject = (name: string): Layer => withField({ name, ...rect }, "placedLayer", {});
+const adjustment = (name: string): Layer => withField({ name }, "adjustment", { type: "curves" });
 
 const mixed: Layer[] = [
   { name: "Fundo", ...rect, rawData: raw, opacity: 0.5, blendMode: "multiply" },
@@ -172,10 +176,11 @@ describe("extractPsdMetadata", () => {
   });
 
   it("stores nothing outside the schema: no image resources, thumbnails or annotations", () => {
-    const psd = Object.assign(fixture(mixed), {
-      imageResources: { xmpMetadata: "<x:xmpmeta/>", thumbnail: {} },
-      annotations: [{ type: "text" }],
-    });
+    const psd = withField(
+      withField(fixture(mixed), "imageResources", { xmpMetadata: "<x:xmpmeta/>", thumbnail: {} }),
+      "annotations",
+      [{ type: "text" }],
+    );
     const text = JSON.stringify(extractPsdMetadata(psd)).toLowerCase();
     for (const forbidden of ["xmp", "thumbnail", "annotation", "iptc", "icc", "exif", "gps"]) {
       expect(text).not.toContain(forbidden);

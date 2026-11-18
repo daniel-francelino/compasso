@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { importedDesignMetadataSchema } from "@/lib/shared/design/import/metadata";
+import { storedDesignMetadataSchema } from "@/lib/shared/design/import/metadata";
 import { adjustmentSchema } from "@/lib/shared/design/raster/adjustment-schemas";
 import {
   DESIGN_LIMITS,
@@ -314,5 +314,5 @@ export const recordDesignExportSchema = z.object({
 
 export const recordDesignImportSchema = z.object({
   id: designId,
-  metadata: importedDesignMetadataSchema,
+  metadata: storedDesignMetadataSchema,
 });

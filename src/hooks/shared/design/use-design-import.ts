@@ -7,6 +7,7 @@ import {
   useImportPlace,
 } from "@/hooks/shared/design/use-import-place";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
+import { recordDesignImport } from "@/lib/shared/design/design.functions";
 import { pickFile } from "@/lib/shared/design/browser";
 import {
   DESIGN_IMPORT_CANCEL_LABEL,
@@ -21,7 +22,12 @@ import { readDesignFile } from "@/lib/shared/design/import/read-file";
 import { DESIGN_IMPORT_ACCEPT } from "@/lib/shared/design/import/registry";
 import { DesignImportKind, type ImportKindResult } from "@/lib/shared/design/import/types";
 import { logError } from "@/lib/shared/logger";
-import type { Failure } from "@/lib/shared/server-utils";
+import {
+  type ImportedDesignMetadata,
+  type StoredDesignMetadata,
+  withoutText,
+} from "@/lib/shared/design/import/metadata";
+import type { Failure, Result } from "@/lib/shared/server-utils";
 import { DESIGN_LIMITS, type DesignPreset } from "@/lib/shared/design/types";
 
 export type DesignImporter = {
@@ -38,6 +44,7 @@ export type ImportRunDeps = {
   placer: () => ImportPlacer;
   allowed: () => boolean;
   onBusy: (busy: boolean) => void;
+  record: (metadata: StoredDesignMetadata) => Promise<Result>;
 };
 
 const place = (placer: ImportPlacer, result: ImportKindResult): ImportPlaced => {
@@ -57,6 +64,18 @@ export const createImportRun = (deps: ImportRunDeps) => {
   let running: AbortController | null = null;
   let disposed = false;
 
+  const recordMetadata = async (metadata: ImportedDesignMetadata): Promise<void> => {
+    try {
+      const saved = await deps.record(withoutText(metadata));
+      if (saved.ok || disposed) return;
+      logError("import metadata not saved", saved.code);
+      toast.error(DESIGN_IMPORT_MESSAGE.metadataNotSaved);
+    } catch (error) {
+      logError("import metadata not saved", error instanceof Error ? error.name : "unknown");
+      if (!disposed) toast.error(DESIGN_IMPORT_MESSAGE.metadataNotSaved);
+    }
+  };
+
   const finishRead = (controller: AbortController, result: ImportKindResult): void => {
     if (disposed || controller.signal.aborted) return;
     const placed = place(deps.placer(), result);
@@ -67,6 +86,7 @@ export const createImportRun = (deps: ImportRunDeps) => {
     toast.success(designImportDone(result.design.format), {
       description: describeImportNotes(placed.notes) || undefined,
     });
+    if (placed.metadata !== null) void recordMetadata(placed.metadata);
   };
 
   const reportRefusal = (failure: Failure): void => {
@@ -122,11 +142,13 @@ export const createImportRun = (deps: ImportRunDeps) => {
 };
 
 export const useDesignImport = ({
+  designId,
   editor,
   rasters,
   canPaint,
   preset,
 }: {
+  designId: string;
   editor: DesignEditor;
   rasters: RasterHandle;
   canPaint: boolean;
@@ -136,8 +158,8 @@ export const useDesignImport = ({
   const [busy, setBusy] = useState(false);
   const reason = canPaint ? undefined : IMPORT_UPLOAD_REASON;
   const placer = useImportPlace({ store, editor, preset });
-  const latest = useRef({ editor, placer, canPaint });
-  latest.current = { editor, placer, canPaint };
+  const latest = useRef({ designId, editor, placer, canPaint });
+  latest.current = { designId, editor, placer, canPaint };
   const [run] = useState(() =>
     createImportRun({
       newId: () => latest.current.editor.newId(),
@@ -146,6 +168,7 @@ export const useDesignImport = ({
       placer: () => latest.current.placer,
       allowed: () => latest.current.canPaint,
       onBusy: setBusy,
+      record: (metadata) => recordDesignImport({ data: { id: latest.current.designId, metadata } }),
     }),
   );
 

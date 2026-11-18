@@ -30,15 +30,17 @@ const unifyLineBreaks = (raw: string): string =>
     .split(CARRIAGE_RETURN)
     .join(NEWLINE);
 
-const cleanCodePoints = (raw: string, maxLength: number, keepNewline: boolean): string =>
-  Array.from(
-    cutCodePoints(keepNewline ? unifyLineBreaks(raw) : raw, maxLength * RAW_FACTOR).normalize(
-      "NFC",
-    ),
+const cleanCodePoints = (raw: string, maxLength: number, keepNewline: boolean): string => {
+  const filtered = Array.from(
+    cutCodePoints(keepNewline ? unifyLineBreaks(raw) : raw, maxLength * RAW_FACTOR),
   )
     .filter((character) => (keepNewline && character === NEWLINE) || !isUnsafe(character))
-    .slice(0, maxLength)
     .join("");
+  const composed = filtered.normalize("NFC");
+  return composed.length <= maxLength
+    ? composed
+    : Array.from(composed).slice(0, maxLength).join("");
+};
 
 export const sanitizeImportName = (
   raw: string,
