@@ -1,6 +1,6 @@
 # Requests to the lost-ui library
 
-> What Aura Creative needs from `lost-ui` (the shared component library, project `lost-ui`, package `@danielsoaresf/lost-ui`) and does not find there yet. Written so that someone can make the change in the library without reading this application. The rule of the project is to ask for what is missing instead of rebuilding it here ([../CLAUDE.md](../CLAUDE.md)). Each request says what the app does **today as a workaround**, so the workaround can be removed when the request is done. Update this document in place: change the status of a request, never create a second list.
+> What Aura Creative needs from `lost-ui` (the shared component library, project `lost-ui`, package `@danielsoaresf/lost-ui`) and does not find there yet. Written so that someone can make the change in the library without reading this application. The rule of the project is to ask for what is missing instead of rebuilding it here ([.claude/CLAUDE.md](../.claude/CLAUDE.md)). Each request says what the app does **today as a workaround**, so the workaround can be removed when the request is done. Update this document in place: change the status of a request, never create a second list.
 
 ## 1. Context
 

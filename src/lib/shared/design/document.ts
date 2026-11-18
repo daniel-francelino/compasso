@@ -415,6 +415,16 @@ export const addElement = (page: DesignPage, element: DesignElement): DesignPage
   elements: [...page.elements, element],
 });
 
+export const addImportedLayers = (
+  page: DesignPage,
+  elements: readonly DesignElement[],
+  size: PageSize | null,
+): DesignPage => ({
+  ...page,
+  ...(size === null ? {} : { width: size.width, height: size.height }),
+  elements: [...page.elements, ...elements],
+});
+
 export const removeElements = (page: DesignPage, ids: readonly string[]): DesignPage => {
   const parents = new Map(page.elements.map((element) => [element.id, element.parentId]));
   const surviving = (parentId: string | null): string | null => {

@@ -27,6 +27,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/share
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
 import { useBrushOptions } from "@/hooks/shared/design/use-brush-options";
 import { useDesignClipboard } from "@/hooks/shared/design/use-design-clipboard";
+import { useDesignImport } from "@/hooks/shared/design/use-design-import";
 import { useDesignCrop } from "@/hooks/shared/design/use-design-crop";
 import { useDesignColors } from "@/hooks/shared/design/use-design-colors";
 import { useDesignFilter } from "@/hooks/shared/design/use-design-filter";
@@ -188,6 +189,7 @@ export function DesignWorkspace({
     canPaint,
     editable: canEdit,
   });
+  const importer = useDesignImport({ editor, rasters, canPaint });
   const startTransform = () => {
     if (editor.transforming) return;
     tool.setTool(DesignTool.Move);
@@ -339,6 +341,7 @@ export function DesignWorkspace({
     onSaveVersion: () => void saveVersion(),
     onVersions: () => setVersionsOpen(true),
     onExport: () => setExportOpen(true),
+    importer,
     onAddLayer: (layerTool) => {
       if (isDrawTool(layerTool)) addLayer(layerTool);
     },

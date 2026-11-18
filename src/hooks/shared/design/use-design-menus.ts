@@ -1,5 +1,6 @@
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { ClipboardController } from "@/hooks/shared/design/use-design-clipboard";
+import type { DesignImporter } from "@/hooks/shared/design/use-design-import";
 import type { MaskController } from "@/hooks/shared/design/use-design-mask";
 import {
   LAYER_MASK_KIND_LABEL,
@@ -8,6 +9,7 @@ import {
   MASK_DISABLE_LABEL,
   MASK_ENABLE_LABEL,
 } from "@/lib/shared/design/layer-mask";
+import { DESIGN_IMPORT_LABEL } from "@/lib/shared/design/design-import";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
@@ -46,6 +48,7 @@ export type DesignMenuContext = {
   onSaveVersion: () => void;
   onVersions: () => void;
   onExport: () => void;
+  importer: DesignImporter;
   onAddLayer: (tool: DesignTool) => void;
   onAddRaster: () => void;
   onAddAdjustment: (type: AdjustmentType) => void;
@@ -78,6 +81,17 @@ const fileMenu = (c: DesignMenuContext): DesignMenu => ({
       ? [{ id: "save-version", label: "Salvar versão", onSelect: c.onSaveVersion }]
       : []),
     { id: "versions", label: "Versões", onSelect: c.onVersions },
+    ...(c.canEdit
+      ? [
+          {
+            id: "import-file",
+            label: DESIGN_IMPORT_LABEL,
+            separatorBefore: true,
+            disabledReason: c.importer.busy ? "Importando…" : c.importer.reason,
+            onSelect: c.importer.open,
+          },
+        ]
+      : []),
     ...(c.canEdit && c.canExport
       ? [{ id: "export", label: "Exportar", separatorBefore: true, onSelect: c.onExport }]
       : []),

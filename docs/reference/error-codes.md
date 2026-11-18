@@ -170,6 +170,8 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `design_trashed` | conflict | "Este design está na lixeira. Restaure para editar." | design_lock |
 | `design_version_immutable` | denied | "Versões salvas de um design não podem ser alteradas." | design_versions_immutable |
 
+The PSD and AI import (editor, client-side) adds **no code**: its refusals are `invalid` results with the pt-BR texts of `DESIGN_IMPORT_MESSAGE` (listed in [../standards/ui-glossary.md](../standards/ui-glossary.md), row "Importar PSD ou AI…"); nothing is raised in SQL.
+
 ### Video editor
 
 | Code | Category | Message (pt-BR) | Raised by |

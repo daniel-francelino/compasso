@@ -15,6 +15,7 @@ import {
   type ShapePatch,
   type TextPatch,
   addElement,
+  addImportedLayers,
   createRasterLayer,
   addPage,
   canAddElements,
@@ -247,6 +248,12 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
     newId,
     add,
     addRaster: (size: PageSize): boolean => add(createRasterLayer(newId(), page, size)),
+    addImported: (elements: readonly DesignElement[], size: PageSize | null, label: string) => {
+      if (!canAddElements(document, elements.length)) return false;
+      named(label, () => changePage((current) => addImportedLayers(current, elements, size)));
+      setSelectedIds([]);
+      return true;
+    },
     addAdjustment: (type: AdjustmentType, size: PageSize): boolean => {
       if (!canAddElements(document)) return false;
       const element = createAdjustmentLayer(newId(), type, size);
