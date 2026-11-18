@@ -126,7 +126,7 @@ describe("design document", () => {
         },
       ],
     });
-    expect(parsed.version).toBe(2);
+    expect(parsed.version).toBe(3);
     expect(parsed.pages).toHaveLength(1);
     expect(parsed.pages[0]?.elements[0]).toMatchObject({ groupId: null, zoom: 1, alt: "" });
   });
