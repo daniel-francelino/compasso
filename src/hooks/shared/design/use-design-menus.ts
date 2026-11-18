@@ -1,6 +1,8 @@
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
+import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import type { ImageElement } from "@/lib/shared/design/schemas";
+import { SELECTION_ADJUST_LABEL, SelectionAdjust } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_PANEL_LABEL,
   DesignElementKind,
@@ -36,6 +38,8 @@ export type DesignMenuContext = {
   onRasterize: (element: ImageElement) => void;
   onPanel: (panel: DesignPanel) => void;
   onShortcuts: () => void;
+  selection: SelectionController;
+  onAdjust: (kind: SelectionAdjust) => void;
 };
 
 const NO_SELECTION = "Selecione um elemento.";
@@ -216,6 +220,43 @@ const layerMenu = (c: DesignMenuContext): DesignMenu => {
   };
 };
 
+const NO_PIXEL_SELECTION = "Não há seleção de pixels.";
+
+const selectMenu = (c: DesignMenuContext): DesignMenu => {
+  const { selection } = c;
+  const none = selection.mask === null ? NO_PIXEL_SELECTION : undefined;
+  const adjust = (kind: SelectionAdjust, id: string) => ({
+    id,
+    label: `${SELECTION_ADJUST_LABEL[kind]}…`,
+    disabledReason: none,
+    onSelect: () => c.onAdjust(kind),
+  });
+  return {
+    id: "select",
+    label: "Selecionar",
+    items: [
+      { id: "select-pixels-all", label: "Todos", onSelect: selection.selectAll },
+      {
+        id: "deselect",
+        label: "Desmarcar",
+        shortcut: "Ctrl+D",
+        disabledReason: none,
+        onSelect: selection.deselect,
+      },
+      {
+        id: "invert",
+        label: "Inverter",
+        shortcut: "Ctrl+Shift+I",
+        disabledReason: none,
+        onSelect: selection.invert,
+      },
+      { ...adjust(SelectionAdjust.Feather, "feather"), separatorBefore: true },
+      adjust(SelectionAdjust.Expand, "expand"),
+      adjust(SelectionAdjust.Contract, "contract"),
+    ],
+  };
+};
+
 const helpMenu = (c: DesignMenuContext): DesignMenu => ({
   id: "help",
   label: "Ajuda",
@@ -224,7 +265,7 @@ const helpMenu = (c: DesignMenuContext): DesignMenu => ({
 
 export const designMenus = (context: DesignMenuContext): DesignMenu[] => [
   fileMenu(context),
-  ...(context.canEdit ? [editMenu(context)] : []),
+  ...(context.canEdit ? [editMenu(context), selectMenu(context)] : []),
   viewMenu(context),
   ...(context.canEdit ? [layerMenu(context)] : []),
   helpMenu(context),

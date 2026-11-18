@@ -137,6 +137,14 @@ export function DesignWorkspace({
 
   const colors = useDesignColors(chrome);
   const brush = useBrushOptions();
+  const selection = useDesignSelection({
+    tool: tool.active,
+    pageId: editor.pageId,
+    size,
+    editor,
+    rasters,
+    zoom: viewport.view?.zoom ?? 1,
+  });
   const paint = useDesignPaint({
     tool: tool.active,
     editor,
@@ -146,12 +154,25 @@ export function DesignWorkspace({
     brush,
     size,
     canPaint,
+    selection,
   });
+
+  const applyAdjust = (kind: SelectionAdjust, amount: number) => {
+    const actions = {
+      [SelectionAdjust.Feather]: selection.featherBy,
+      [SelectionAdjust.Expand]: selection.grow,
+      [SelectionAdjust.Contract]: selection.shrink,
+    };
+    actions[kind](amount);
+    setAdjust(null);
+  };
 
   useDesignShortcuts({
     editor,
     colors,
     brush,
+    selection,
+    paint,
     tool,
     viewport,
     editable: canEdit,

@@ -58,6 +58,19 @@ export const SELECTION_TOOLS: readonly DesignTool[] = [
 
 export const isSelectionTool = (tool: DesignTool): boolean => SELECTION_TOOLS.includes(tool);
 
+export const SelectionAdjust = {
+  Feather: "feather",
+  Expand: "expand",
+  Contract: "contract",
+} as const;
+export type SelectionAdjust = ValueOf<typeof SelectionAdjust>;
+
+export const SELECTION_ADJUST_LABEL: Record<SelectionAdjust, string> = {
+  [SelectionAdjust.Feather]: "Suavizar bordas",
+  [SelectionAdjust.Expand]: "Expandir",
+  [SelectionAdjust.Contract]: "Contrair",
+};
+
 export const SELECTION_STEP_LABEL = "Seleção";
 export const SELECTION_TRUNCATED_NOTICE =
   "A seleção é complexa demais para mostrar todo o contorno. Ela continua ativa.";

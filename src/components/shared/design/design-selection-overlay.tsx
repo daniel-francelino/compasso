@@ -1,21 +1,13 @@
 import type Konva from "konva";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Group, Line, Shape } from "react-konva";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
-import {
-  type Outline,
-  type SelectionMask,
-  maskOutline,
-} from "@/lib/shared/design/raster/selection";
+import type { Outline } from "@/lib/shared/design/raster/selection";
 import { MarqueeShape, type SelectionShape } from "@/lib/shared/design/selection-state";
 
 const DASH_SCREEN_PX = 5;
 const FRAME_MS = 120;
 const ELLIPSE_STEPS = 72;
-const NO_OUTLINE: Outline = { segments: [], truncated: false };
-
-export const useSelectionOutline = (mask: SelectionMask | null, revision: number): Outline =>
-  useMemo(() => (mask === null ? NO_OUTLINE : maskOutline(mask)), [mask, revision]);
 
 const draftPoints = (shape: SelectionShape): { points: number[]; closed: boolean } => {
   if (shape.kind === "polygon") {

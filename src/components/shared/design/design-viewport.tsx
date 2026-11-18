@@ -2,6 +2,9 @@ import { Suspense, lazy } from "react";
 import { checkerboard } from "@/components/shared/design/checkerboard";
 import { DesignBrushCursor } from "@/components/shared/design/design-brush-cursor";
 import { DesignRulers } from "@/components/shared/design/design-rulers";
+import { DesignSelectionOverlay } from "@/components/shared/design/design-selection-overlay";
+import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
+import { SELECTION_TRUNCATED_NOTICE, isSelectionTool } from "@/lib/shared/design/selection-state";
 import { DesignTextOverlay } from "@/components/shared/design/design-text-overlay";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { LoadedImages } from "@/hooks/shared/design/use-design-assets";
@@ -59,6 +62,7 @@ export function DesignViewport({
   label,
   rulers,
   paint,
+  selection,
   onDraw,
 }: {
   viewport: ViewportState;
@@ -73,11 +77,13 @@ export function DesignViewport({
   label: string;
   rulers: boolean;
   paint: DesignPaint;
+  selection: SelectionController;
   onDraw: (tool: DrawTool, start: Point, end: Point | null, shift: boolean) => void;
 }) {
   const view = viewport.view;
   const rulerSize = rulers ? DESIGN_LIMITS.rulerSize : 0;
-  const restricted = isDrawTool(tool.active) || isPaintTool(tool.active);
+  const restricted =
+    isDrawTool(tool.active) || isPaintTool(tool.active) || isSelectionTool(tool.active);
   const active = editable || !restricted ? tool.active : DesignTool.Move;
   const cursorTool = editable ? tool.tool : active;
   const brushDiameter =
@@ -162,11 +168,29 @@ export function DesignViewport({
                 onZoom={viewport.zoomBy}
                 onZoomStep={viewport.step}
                 onCursor={viewport.cursor.set}
-                {...(editable ? { onEditText: tool.editText, ...paint.callbacks } : {})}
+                overlay={
+                  <DesignSelectionOverlay
+                    outline={selection.outline}
+                    draft={editable ? selection.draft : null}
+                    chrome={chrome}
+                    scale={view.zoom}
+                  />
+                }
+                {...(editable
+                  ? { onEditText: tool.editText, ...paint.callbacks, ...selection.callbacks }
+                  : {})}
               />
             </Suspense>
           </div>
         )}
+        {selection.outline.truncated ? (
+          <p
+            role="status"
+            className="pointer-events-none absolute bottom-2 left-2 rounded-md border bg-card px-2 py-1 text-xs text-muted-foreground"
+          >
+            {SELECTION_TRUNCATED_NOTICE}
+          </p>
+        ) : null}
         {brushDiameter === null ? null : (
           <DesignBrushCursor viewport={viewport} diameter={brushDiameter} />
         )}

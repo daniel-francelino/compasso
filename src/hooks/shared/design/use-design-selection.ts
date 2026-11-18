@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import {
+  type Outline,
   type SelectionMask,
   SelectionCombine,
   featherMask,
   magicWand,
+  maskOutline,
 } from "@/lib/shared/design/raster/selection";
 import type { Point, Rect } from "@/lib/shared/design/raster/pixel-buffer";
 import {
@@ -32,6 +34,7 @@ export type PointerModifiers = { shift: boolean; alt: boolean };
 const WAND_NEEDS_LAYER = "Selecione uma camada de pixels para usar a varinha mágica.";
 const WAND_ANTI_ALIAS = 2;
 const CLICK_SCREEN_PX = 3;
+const NO_OUTLINE: Outline = { segments: [], truncated: false };
 
 type Drag = {
   start: Point;
@@ -53,6 +56,7 @@ export type SelectionCallbacks = {
 export type SelectionController = {
   mask: SelectionMask | null;
   revision: number;
+  outline: Outline;
   mode: SelectionCombine;
   setMode: (mode: SelectionCombine) => void;
   shape: MarqueeShape;
@@ -112,6 +116,10 @@ export const useDesignSelection = ({
   const polygonRef = useRef<Point[]>([]);
   const polygonMode = useRef<SelectionCombine>(SelectionCombine.Replace);
   const single = editor.single;
+  const outline = useMemo(
+    () => (held.mask === null ? NO_OUTLINE : maskOutline(held.mask)),
+    [held.mask],
+  );
 
   const setDrag = (next: Drag | null) => {
     dragRef.current = next;
@@ -274,6 +282,7 @@ export const useDesignSelection = ({
   return {
     mask: held.mask,
     revision: held.revision,
+    outline,
     mode,
     setMode,
     shape,

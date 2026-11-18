@@ -21,7 +21,7 @@ const FIELDS: readonly { key: BrushOptionKey; label: string; unit: string }[] = 
   { key: "smoothing", label: "Suavização", unit: "%" },
 ];
 
-function OptionField({
+export function OptionField({
   name,
   label,
   value,

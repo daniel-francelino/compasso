@@ -13,6 +13,7 @@ import { Divider, DesignSelectionTools } from "@/components/shared/design/design
 import { Button } from "@/components/shared/ui/button";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
+import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import { normalizeColor } from "@/lib/shared/design/document";
 import {
@@ -30,6 +31,7 @@ export type ToolOptionsProps = {
   viewport: DesignViewport;
   size: PageSize;
   paint: DesignPaint;
+  selection: SelectionController;
   tool: DesignTool;
 };
 
