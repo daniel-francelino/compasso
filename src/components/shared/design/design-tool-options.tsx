@@ -11,6 +11,7 @@ import {
 import { IconButton } from "@/components/shared/admin/icon-button";
 import { Divider, DesignSelectionTools } from "@/components/shared/design/design-selection-tools";
 import { Button } from "@/components/shared/ui/button";
+import type { CropController } from "@/hooks/shared/design/use-design-crop";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
@@ -32,6 +33,7 @@ export type ToolOptionsProps = {
   size: PageSize;
   paint: DesignPaint;
   selection: SelectionController;
+  crop: CropController;
   tool: DesignTool;
 };
 

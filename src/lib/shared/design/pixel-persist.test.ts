@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createRasterLayer } from "@/lib/shared/design/document";
+import { createRasterLayer, rasterPixelsIds } from "@/lib/shared/design/document";
 import { historyOf, pushHistory } from "@/lib/shared/design/history";
 import {
   claimPixelOwners,
@@ -7,6 +7,7 @@ import {
   layersDueForFlush,
   pendingPixelIds,
   pixelFileName,
+  pixelRefsOf,
   retargetHistory,
   withPixelsVersion,
 } from "@/lib/shared/design/pixel-persist";
@@ -96,5 +97,41 @@ describe("pixelFileName", () => {
   it("is unique per suffix", () => {
     expect(pixelFileName("abcdef123456", "x1")).toBe("camada-abcdef12-x1.png");
     expect(pixelFileName("abcdef123456", "x2")).not.toBe(pixelFileName("abcdef123456", "x1"));
+  });
+});
+
+const maskedDocument = (): DesignDocument => {
+  const base = documentWith("a");
+  const [layer] = base.pages[0]?.elements ?? [];
+  if (layer === undefined) return base;
+  const mask = { mediaVersionId: null, enabled: true, linked: true };
+  return { ...base, pages: [{ ...PAGE, elements: [{ ...layer, mask }] }] };
+};
+
+describe("layer mask pixels", () => {
+  it("lists the mask beside its layer and keeps dirty mask keys", () => {
+    const keys = pixelRefsOf(maskedDocument()).map((ref) => [ref.key, ref.mask]);
+    expect(keys).toEqual([
+      ["a", false],
+      ["a:mask", true],
+    ]);
+    expect(pendingPixelIds(maskedDocument(), ["a:mask", "gone:mask"])).toEqual(["a:mask"]);
+  });
+
+  it("retargets only the mask version for a mask key", () => {
+    const next = withPixelsVersion(maskedDocument(), "a:mask", VERSION);
+    const layer = next.pages[0]?.elements[0];
+    expect(layer?.mask?.mediaVersionId).toBe(VERSION);
+    expect(layer?.kind === "raster" ? layer.pixelsVersionId : "x").toBeNull();
+    expect(withPixelsVersion(next, "a:mask", VERSION)).toBe(next);
+  });
+
+  it("names mask files apart from layer files", () => {
+    expect(pixelFileName("abcdef123456:mask", "x1")).toBe("mascara-abcdef12-x1.png");
+  });
+
+  it("collects mask versions for signed urls", () => {
+    const next = withPixelsVersion(maskedDocument(), "a:mask", VERSION);
+    expect(rasterPixelsIds(next)).toEqual([VERSION]);
   });
 });

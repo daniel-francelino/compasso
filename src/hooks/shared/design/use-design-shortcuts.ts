@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { BrushController } from "@/hooks/shared/design/use-brush-options";
+import type { ClipboardController } from "@/hooks/shared/design/use-design-clipboard";
+import type { CropController } from "@/hooks/shared/design/use-design-crop";
 import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
@@ -47,7 +49,10 @@ type Context = {
   brush: BrushController;
   selection: SelectionController;
   paint: DesignPaint;
+  crop: CropController;
+  clipboard: ClipboardController;
   onImage: () => void;
+  onTransform: () => void;
 };
 
 const viewKey = (key: string, viewport: DesignViewport): boolean => {
@@ -111,11 +116,55 @@ const selectionCommand = (event: KeyboardEvent, context: Context): boolean => {
   return false;
 };
 
+const startTransform = ({ editor, onTransform }: Context): boolean => {
+  const layer = editor.single;
+  if (layer?.kind !== DesignElementKind.Raster || layer.locked || layer.hidden) return false;
+  onTransform();
+  return true;
+};
+
+const clipboardKey = (event: KeyboardEvent, context: Context): boolean => {
+  if (!context.editable) return false;
+  const { clipboard, selection, editor } = context;
+  const key = event.key.toLowerCase();
+  const viaLayer = key === DESIGN_DUPLICATE_KEY && (event.shiftKey || selection.mask !== null);
+  if (viaLayer && editor.single?.kind === DesignElementKind.Raster) {
+    (event.shiftKey ? clipboard.layerViaCut : clipboard.layerViaCopy)();
+    return true;
+  }
+  if (key === "t" && !event.shiftKey) return startTransform(context);
+  if (key === "v" && event.shiftKey) {
+    clipboard.paste(true);
+    return true;
+  }
+  if (event.shiftKey) return false;
+  if (key !== "c" && key !== "x") return false;
+  if (editor.single?.kind !== DesignElementKind.Raster) return false;
+  if (key === "c") clipboard.copy();
+  else clipboard.cut();
+  return true;
+};
+
 const commandKey = (event: KeyboardEvent, context: Context): boolean => {
+  if (context.editor.transforming) return false;
+  if (clipboardKey(event, context)) return true;
   if (viewKey(event.key, context.viewport)) return true;
   if (imageKey(event, context)) return true;
   if (selectionCommand(event, context)) return true;
   return context.editable && editKey(event, context.editor);
+};
+
+const modalKey = (event: KeyboardEvent, { editor, crop }: Context): boolean => {
+  const confirm = event.key === "Enter";
+  if (!confirm && event.key !== "Escape") return false;
+  const mode = editor.transforming
+    ? { commit: editor.commitTransform, cancel: editor.cancelTransform }
+    : crop.active
+      ? { commit: crop.commit, cancel: crop.cancel }
+      : null;
+  if (mode === null) return false;
+  (confirm ? mode.commit : mode.cancel)();
+  return true;
 };
 
 const escape = ({ editor, tool, selection }: Context): boolean => {
@@ -228,6 +277,8 @@ const selectionKey = (event: KeyboardEvent, editor: DesignEditor): boolean => {
 
 const plainKey = (event: KeyboardEvent, context: Context): boolean => {
   if (!context.editable) return false;
+  if (modalKey(event, context)) return true;
+  if (context.editor.transforming) return false;
   if (event.key === "Escape") return escape(context);
   return (
     clipKey(event, context) ||

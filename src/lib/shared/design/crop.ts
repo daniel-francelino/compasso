@@ -213,3 +213,14 @@ export const cropPage = (page: DesignPage, box: CropBox): DesignPage => ({
     y: clamp(element.y - box.y, -DESIGN_LIMITS.maxCoordinate, DESIGN_LIMITS.maxCoordinate),
   })),
 });
+
+export const fitRatio = (box: CropBox, ratio: number): CropBox => {
+  const width = Math.min(box.width, box.height * ratio);
+  const height = width / ratio;
+  return {
+    x: Math.round(box.x + (box.width - width) / 2),
+    y: Math.round(box.y + (box.height - height) / 2),
+    width: Math.round(width),
+    height: Math.round(height),
+  };
+};

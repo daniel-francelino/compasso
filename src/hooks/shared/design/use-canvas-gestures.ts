@@ -26,6 +26,9 @@ export type GestureCallbacks = {
   onSelectStart?: (point: Point, mods: PointerModifiers) => void;
   onSelectMove?: (point: Point, mods: PointerModifiers) => void;
   onSelectEnd?: () => void;
+  onCropStart?: (point: Point) => void;
+  onCropMove?: (point: Point) => void;
+  onCropEnd?: () => void;
 };
 
 type PointerEvent = Konva.KonvaEventObject<globalThis.PointerEvent>;
@@ -68,6 +71,7 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
   const pan = useRef<Pan | null>(null);
   const painting = useRef(false);
   const selecting = useRef(false);
+  const cropping = useRef(false);
 
   const setDraft = (next: CanvasDraft | null) => {
     draftRef.current = next;
@@ -95,6 +99,11 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
       callbacks.onPaintStart?.(doc);
       return;
     }
+    if (tool === DesignTool.Crop) {
+      cropping.current = true;
+      callbacks.onCropStart?.(doc);
+      return;
+    }
     if (isSelectionTool(tool)) {
       selecting.current = true;
       callbacks.onSelectStart?.(doc, modifiersOf(event));
@@ -113,6 +122,10 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
     callbacks.onCursor?.(doc);
     if (painting.current && stage !== null && doc !== null) {
       callbacks.onPaintMove?.(pointsOfCoalesced(event, stage, doc));
+      return;
+    }
+    if (cropping.current && doc !== null) {
+      callbacks.onCropMove?.(doc);
       return;
     }
     if (selecting.current && doc !== null) {
@@ -152,6 +165,10 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
     if (painting.current) {
       painting.current = false;
       callbacks.onPaintEnd?.();
+    }
+    if (cropping.current) {
+      cropping.current = false;
+      callbacks.onCropEnd?.();
     }
     if (selecting.current) {
       selecting.current = false;

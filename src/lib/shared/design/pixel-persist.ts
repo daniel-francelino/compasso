@@ -1,5 +1,12 @@
 import type { History } from "@/lib/shared/design/history";
 import type { DesignDocument, DesignElement, RasterElement } from "@/lib/shared/design/schemas";
+import {
+  isMaskKey,
+  isMaskable,
+  maskKey,
+  maskPixelSize,
+  ownerIdOfKey,
+} from "@/lib/shared/design/layer-mask";
 import { inheritPixelStep } from "@/lib/shared/design/timeline";
 import { DesignElementKind } from "@/lib/shared/design/types";
 
@@ -9,23 +16,70 @@ const isRaster = (element: DesignElement): element is RasterElement =>
 export const rasterElementsOf = (document: DesignDocument): RasterElement[] =>
   document.pages.flatMap((page) => page.elements.filter(isRaster));
 
+export type PixelRef = {
+  key: string;
+  versionId: string | null;
+  width: number;
+  height: number;
+  mask: boolean;
+};
+
+export const pixelRefsOf = (document: DesignDocument): PixelRef[] =>
+  document.pages.flatMap((page) =>
+    page.elements.flatMap((element): PixelRef[] => {
+      const refs: PixelRef[] = [];
+      if (isRaster(element)) {
+        refs.push({
+          key: element.id,
+          versionId: element.pixelsVersionId,
+          width: element.pixelWidth,
+          height: element.pixelHeight,
+          mask: false,
+        });
+      }
+      if (element.mask !== null && isMaskable(element)) {
+        refs.push({
+          key: maskKey(element.id),
+          versionId: element.mask.mediaVersionId,
+          ...maskPixelSize(element),
+          mask: true,
+        });
+      }
+      return refs;
+    }),
+  );
+
+const retargeted = (
+  element: DesignElement,
+  forMask: boolean,
+  versionId: string,
+): DesignElement | null => {
+  if (forMask && (element.mask === null || element.mask.mediaVersionId === versionId)) {
+    return null;
+  }
+  if (forMask && element.mask !== null) {
+    return { ...element, mask: { ...element.mask, mediaVersionId: versionId } };
+  }
+  if (!isRaster(element) || element.pixelsVersionId === versionId) return null;
+  return { ...element, pixelsVersionId: versionId };
+};
+
 export const withPixelsVersion = (
   document: DesignDocument,
-  id: string,
+  key: string,
   versionId: string,
 ): DesignDocument => {
+  const id = ownerIdOfKey(key);
+  const forMask = isMaskKey(key);
   let changed = false;
   const pages = document.pages.map((page) => {
     const target = page.elements.find((element) => element.id === id);
-    if (target === undefined || !isRaster(target) || target.pixelsVersionId === versionId) {
-      return page;
-    }
+    const next = target === undefined ? null : retargeted(target, forMask, versionId);
+    if (next === null) return page;
     changed = true;
     return {
       ...page,
-      elements: page.elements.map((element) =>
-        element.id === id ? { ...target, pixelsVersionId: versionId } : element,
-      ),
+      elements: page.elements.map((element) => (element.id === id ? next : element)),
     };
   });
   return changed ? inheritPixelStep(document, { ...document, pages }) : document;
@@ -51,31 +105,30 @@ export const retargetHistory = (
 };
 
 export const pendingPixelIds = (document: DesignDocument, dirty: readonly string[]): string[] => {
-  const present = new Set(rasterElementsOf(document).map((element) => element.id));
-  return dirty.filter((id) => present.has(id));
+  const present = new Set(pixelRefsOf(document).map((ref) => ref.key));
+  return dirty.filter((key) => present.has(key));
 };
 
 export const duplicatedPixelIds = (
   document: DesignDocument,
   owners: ReadonlyMap<string, string>,
 ): string[] =>
-  rasterElementsOf(document)
-    .filter((element) => {
-      const owner =
-        element.pixelsVersionId === null ? undefined : owners.get(element.pixelsVersionId);
-      return owner !== undefined && owner !== element.id;
+  pixelRefsOf(document)
+    .filter((ref) => {
+      const owner = ref.versionId === null ? undefined : owners.get(ref.versionId);
+      return owner !== undefined && owner !== ref.key;
     })
-    .map((element) => element.id);
+    .map((ref) => ref.key);
 
 export const claimPixelOwners = (document: DesignDocument, owners: Map<string, string>): void => {
-  for (const element of rasterElementsOf(document)) {
-    if (element.pixelsVersionId === null || owners.has(element.pixelsVersionId)) continue;
-    owners.set(element.pixelsVersionId, element.id);
+  for (const ref of pixelRefsOf(document)) {
+    if (ref.versionId === null || owners.has(ref.versionId)) continue;
+    owners.set(ref.versionId, ref.key);
   }
 };
 
-export const pixelFileName = (id: string, suffix: string): string =>
-  `camada-${id.slice(0, 8)}-${suffix}.png`;
+export const pixelFileName = (key: string, suffix: string): string =>
+  `${isMaskKey(key) ? "mascara" : "camada"}-${ownerIdOfKey(key).slice(0, 8)}-${suffix}.png`;
 
 export const layersDueForFlush = (
   ids: readonly string[],

@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import { checkerboard } from "@/components/shared/design/checkerboard";
+import { DesignCropOverlay } from "@/components/shared/design/design-crop-overlay";
 import { DesignBrushCursor } from "@/components/shared/design/design-brush-cursor";
 import { DesignRulers } from "@/components/shared/design/design-rulers";
 import { DesignSelectionOverlay } from "@/components/shared/design/design-selection-overlay";
@@ -9,6 +10,7 @@ import { DesignTextOverlay } from "@/components/shared/design/design-text-overla
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { LoadedImages } from "@/hooks/shared/design/use-design-assets";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
+import type { CropController } from "@/hooks/shared/design/use-design-crop";
 import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
@@ -64,6 +66,7 @@ export function DesignViewport({
   rulers,
   paint,
   selection,
+  crop,
   onDraw,
 }: {
   viewport: ViewportState;
@@ -79,6 +82,7 @@ export function DesignViewport({
   rulers: boolean;
   paint: DesignPaint;
   selection: SelectionController;
+  crop: CropController;
   onDraw: (tool: DrawTool, start: Point, end: Point | null, shift: boolean) => void;
 }) {
   const view = viewport.view;
@@ -93,7 +97,13 @@ export function DesignViewport({
     (element) => element.id === tool.editingTextId && element.kind === DesignElementKind.Text,
   );
 
+  const frozen = editor.transforming ? (editor.single?.id ?? null) : null;
+  const select = (id: string | null, additive: boolean) => {
+    if (!editor.transforming) editor.select(id, additive);
+  };
+
   const marquee = (box: Box, additive: boolean) => {
+    if (editor.transforming) return;
     const ids = selectInBox(editor.page, box);
     editor.selectMany(additive ? [...editor.selectedIds, ...ids] : ids);
   };
@@ -160,7 +170,8 @@ export function DesignViewport({
                 fontsVersion={fontsVersion}
                 editable={editable}
                 label={label}
-                onSelect={editor.select}
+                onSelect={select}
+                frozenId={frozen}
                 onCommit={editor.patchMany}
                 onMeasure={editor.measure}
                 onMarquee={marquee}
@@ -170,15 +181,31 @@ export function DesignViewport({
                 onZoomStep={viewport.step}
                 onCursor={viewport.cursor.set}
                 overlay={
-                  <DesignSelectionOverlay
-                    outline={selection.outline}
-                    draft={editable ? selection.draft : null}
-                    chrome={chrome}
-                    scale={view.zoom}
-                  />
+                  <>
+                    <DesignSelectionOverlay
+                      outline={selection.outline}
+                      draft={editable ? selection.draft : null}
+                      chrome={chrome}
+                      scale={view.zoom}
+                    />
+                    {crop.active && editable ? (
+                      <DesignCropOverlay
+                        box={crop.box}
+                        size={size}
+                        chrome={chrome}
+                        scale={view.zoom}
+                        fixedRatio={crop.fixedRatio}
+                      />
+                    ) : null}
+                  </>
                 }
                 {...(editable
-                  ? { onEditText: tool.editText, ...paint.callbacks, ...selection.callbacks }
+                  ? {
+                      onEditText: tool.editText,
+                      ...paint.callbacks,
+                      ...selection.callbacks,
+                      ...crop.callbacks,
+                    }
                   : {})}
               />
             </Suspense>

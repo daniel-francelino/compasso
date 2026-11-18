@@ -31,6 +31,10 @@ export const useDesignViewport = (page: PageSize) => {
   }, []);
 
   useEffect(() => {
+    fitted.current = true;
+  }, [page.width, page.height]);
+
+  useEffect(() => {
     if (area.width === 0 || area.height === 0) return;
     setView((current) =>
       current === null || fitted.current

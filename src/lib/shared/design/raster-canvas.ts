@@ -1,8 +1,17 @@
 import { type InheritedLayer, coverCrop } from "@/lib/shared/design/document";
+import {
+  coverageOfPlaced,
+  isMaskActive,
+  maskKey,
+  maskPlacement,
+  maskSignature,
+  maskValueAt,
+} from "@/lib/shared/design/layer-mask";
 import { docToLayerPoint } from "@/lib/shared/design/paint";
 import { adjustBrightnessContrast, rasterizedPixelSize } from "@/lib/shared/design/rasterize";
 import type { DesignElement, ImageElement, RasterElement } from "@/lib/shared/design/schemas";
 import { type SampleSize, sampleColor } from "@/lib/shared/design/raster/fill";
+import type { CoverageMask } from "@/lib/shared/design/raster/blend";
 import {
   evaluateLayerStack,
   type PipelineLayer,
@@ -19,11 +28,13 @@ import { DesignBlendMode, DesignElementKind, type PageSize } from "@/lib/shared/
 
 type LayerCanvasEntry = { canvas: HTMLCanvasElement; buffer: PixelBuffer; revision: number };
 type PlacedEntry = { key: string; placed: PixelBuffer };
+type CoverageEntry = { key: string; coverage: CoverageMask };
 type RunEntry = { signature: string; canvas: HTMLCanvasElement; ownerId: string };
 
 const layerCanvases = new WeakMap<RasterStore, Map<string, LayerCanvasEntry>>();
 const placedLayers = new WeakMap<RasterStore, Map<string, PlacedEntry>>();
 const runCanvases = new WeakMap<RasterStore, Map<string, RunEntry>>();
+const coverages = new WeakMap<RasterStore, Map<string, CoverageEntry>>();
 const serials = new WeakMap<PixelBuffer, number>();
 let nextSerial = 1;
 let scratch: HTMLCanvasElement | null = null;
@@ -137,31 +148,75 @@ const frameKey = (element: DesignElement, size: PageSize): string =>
 
 const placedLayer = (
   store: RasterStore,
-  element: RasterElement,
+  element: DesignElement,
   size: PageSize,
+  storeKey: string = element.id,
 ): PixelBuffer | null => {
-  const buffer = store.get(element.id);
+  const buffer = store.get(storeKey);
   if (buffer === undefined) return null;
-  const key = `${serialOf(buffer)}:${store.revisionOf(element.id)}:${frameKey(element, size)}`;
+  const key = `${serialOf(buffer)}:${store.revisionOf(storeKey)}:${frameKey(element, size)}`;
   const entries = cacheOf(placedLayers, store);
-  const cached = entries.get(element.id);
+  const cached = entries.get(storeKey);
   if (cached !== undefined && cached.key === key) return cached.placed;
-  const source = layerCanvas(store, element.id);
+  const source = layerCanvas(store, storeKey);
   const placed = source === null ? null : placeOnPage(element, source, size);
   if (placed === null) return null;
-  entries.set(element.id, { key, placed });
-  store.trackDerived(element.id, "placed", canvasBytes(size.width, size.height));
+  entries.set(storeKey, { key, placed });
+  store.trackDerived(storeKey, "placed", canvasBytes(size.width, size.height));
   return placed;
 };
 
-const pipelineBase = (layer: InheritedLayer) => ({
+const pageCoverage = (
+  store: RasterStore,
+  element: DesignElement,
+  size: PageSize,
+): CoverageMask | null => {
+  if (!isMaskActive(element)) return null;
+  const storeKey = maskKey(element.id);
+  const buffer = store.get(storeKey);
+  if (buffer === undefined) return null;
+  const key = `${serialOf(buffer)}:${store.revisionOf(storeKey)}:${frameKey(element, size)}`;
+  const entries = cacheOf(coverages, store);
+  const cached = entries.get(storeKey);
+  if (cached !== undefined && cached.key === key) return cached.coverage;
+  const placed = placedLayer(store, element, size, storeKey);
+  if (placed === null) return null;
+  const coverage = coverageOfPlaced(placed);
+  entries.set(storeKey, { key, coverage });
+  store.trackDerived(storeKey, "coverage", size.width * size.height);
+  return coverage;
+};
+
+const windowCoverage = (
+  store: RasterStore,
+  element: DesignElement,
+  x: number,
+  y: number,
+  size: SampleSize,
+): CoverageMask | null => {
+  const buffer = isMaskActive(element) ? store.get(maskKey(element.id)) : undefined;
+  if (buffer === undefined) return null;
+  const placement = maskPlacement(element, buffer);
+  const data = new Uint8Array(size * size);
+  const reach = (size - 1) / 2;
+  for (let wy = 0; wy < size; wy += 1) {
+    for (let wx = 0; wx < size; wx += 1) {
+      const point = { x: x - reach + wx + 0.5, y: y - reach + wy + 0.5 };
+      const local = docToLayerPoint(placement, point);
+      data[wy * size + wx] = maskValueAt(buffer, Math.floor(local.x), Math.floor(local.y));
+    }
+  }
+  return { width: size, height: size, data };
+};
+
+const pipelineBase = (layer: InheritedLayer, mask: CoverageMask | null) => ({
   id: layer.element.id,
   hidden: layer.hidden,
   opacity: layer.opacity,
   fillOpacity: layer.element.fillOpacity,
   blendMode: layer.element.blendMode,
   clipToBelow: layer.element.clipToBelow,
-  mask: null,
+  mask,
 });
 
 type PipelineInput = { stack: PipelineLayer[]; sources: Map<string, PixelBuffer> };
@@ -169,6 +224,7 @@ type PipelineInput = { stack: PipelineLayer[]; sources: Map<string, PixelBuffer>
 const buildPipeline = (
   layers: readonly InheritedLayer[],
   sourceOf: (element: RasterElement) => PixelBuffer | null,
+  maskOf: (element: DesignElement) => CoverageMask | null,
 ): PipelineInput => {
   const sources = new Map<string, PixelBuffer>();
   const stack: PipelineLayer[] = [];
@@ -176,7 +232,7 @@ const buildPipeline = (
     const element = layer.element;
     if (element.kind === DesignElementKind.Adjustment) {
       stack.push({
-        ...pipelineBase(layer),
+        ...pipelineBase(layer, maskOf(element)),
         kind: PipelineLayerKind.Adjustment,
         adjustment: element.adjustment,
       });
@@ -187,7 +243,7 @@ const buildPipeline = (
     if (source === null) continue;
     sources.set(element.id, source);
     stack.push({
-      ...pipelineBase(layer),
+      ...pipelineBase(layer, maskOf(element)),
       kind: PipelineLayerKind.Raster,
       sourceId: element.id,
       x: 0,
@@ -205,7 +261,12 @@ const runSignature = (
   layers
     .map((layer) => {
       const element = layer.element;
-      const base = `${element.id}|${layer.hidden}|${layer.opacity}|${element.fillOpacity}|${element.blendMode}|${element.clipToBelow}`;
+      const mask = store.get(maskKey(element.id));
+      const maskPart =
+        mask === undefined
+          ? "m-"
+          : maskSignature(element, serialOf(mask), store.revisionOf(maskKey(element.id)));
+      const base = `${element.id}|${layer.hidden}|${layer.opacity}|${element.fillOpacity}|${element.blendMode}|${element.clipToBelow}|${maskPart}`;
       if (element.kind === DesignElementKind.Adjustment) {
         return `${base}|${JSON.stringify(element.adjustment)}`;
       }
@@ -222,6 +283,9 @@ const pruneReleased = (store: RasterStore): void => {
   for (const id of cacheOf(placedLayers, store).keys()) {
     if (!store.has(id)) cacheOf(placedLayers, store).delete(id);
   }
+  for (const id of cacheOf(coverages, store).keys()) {
+    if (!store.has(id)) cacheOf(coverages, store).delete(id);
+  }
   const runs = cacheOf(runCanvases, store);
   for (const [key, entry] of runs) {
     if (!store.has(entry.ownerId)) runs.delete(key);
@@ -231,20 +295,55 @@ const pruneReleased = (store: RasterStore): void => {
 const firstRasterId = (layers: readonly InheritedLayer[]): string | null =>
   layers.find((layer) => layer.element.kind === DesignElementKind.Raster)?.element.id ?? null;
 
+const viewedMask = (
+  layers: readonly InheritedLayer[],
+  store: RasterStore,
+  size: PageSize,
+  maskView: string | null,
+): { element: DesignElement; signature: string } | null => {
+  const element = layers.find((layer) => layer.element.id === maskView)?.element;
+  const buffer = element === undefined ? undefined : store.get(maskKey(element.id));
+  if (element === undefined || buffer === undefined) return null;
+  const revision = store.revisionOf(maskKey(element.id));
+  return { element, signature: `view|${serialOf(buffer)}:${revision}:${frameKey(element, size)}` };
+};
+
+const storeRun = (
+  runs: Map<string, RunEntry>,
+  key: string,
+  entry: { signature: string; ownerId: string },
+  placed: PixelBuffer | null,
+  into: HTMLCanvasElement | undefined,
+): HTMLCanvasElement | null => {
+  const canvas = placed === null ? null : bufferToCanvas(placed, into);
+  if (canvas !== null) runs.set(key, { ...entry, canvas });
+  return canvas;
+};
+
 export const renderRun = (
   layers: readonly InheritedLayer[],
   store: RasterStore,
   size: PageSize,
+  maskView: string | null = null,
 ): HTMLCanvasElement | null => {
   const ownerId = firstRasterId(layers);
   if (ownerId === null) return null;
   pruneReleased(store);
   const runs = cacheOf(runCanvases, store);
   const key = `${ownerId}@${size.width}x${size.height}`;
-  const signature = runSignature(layers, store, size);
+  const viewed = viewedMask(layers, store, size, maskView);
+  const signature = viewed === null ? runSignature(layers, store, size) : viewed.signature;
   const cached = runs.get(key);
   if (cached !== undefined && cached.signature === signature) return cached.canvas;
-  const { stack, sources } = buildPipeline(layers, (element) => placedLayer(store, element, size));
+  if (viewed !== null) {
+    const placedView = placedLayer(store, viewed.element, size, maskKey(viewed.element.id));
+    return storeRun(runs, key, { signature, ownerId }, placedView, cached?.canvas);
+  }
+  const { stack, sources } = buildPipeline(
+    layers,
+    (element) => placedLayer(store, element, size),
+    (element) => pageCoverage(store, element, size),
+  );
   const canvas = bufferToCanvas(evaluateLayerStack(stack, sources, size), cached?.canvas);
   if (canvas === null) return null;
   runs.set(key, { signature, canvas, ownerId });
@@ -286,10 +385,14 @@ export const sampleCompositeAt = (
   const runStack: PipelineLayer[] = [];
   const runSources = new Map<string, PixelBuffer>();
   for (const [index, run] of splitRasterRuns(layers).entries()) {
-    const { stack, sources } = buildPipeline(run.layers, (element) => {
-      const buffer = store.get(element.id);
-      return buffer === undefined ? null : windowSource(element, buffer, x, y, size);
-    });
+    const { stack, sources } = buildPipeline(
+      run.layers,
+      (element) => {
+        const buffer = store.get(element.id);
+        return buffer === undefined ? null : windowSource(element, buffer, x, y, size);
+      },
+      (element) => windowCoverage(store, element, x, y, size),
+    );
     const id = `run-${index}`;
     runSources.set(id, evaluateLayerStack(stack, sources, options));
     runStack.push({
@@ -338,4 +441,19 @@ export const bufferToPng = (buffer: PixelBuffer): Promise<Blob | null> => {
   const canvas = bufferToCanvas(buffer);
   if (canvas === null) return Promise.resolve(null);
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+};
+
+export const blobToBuffer = async (blob: Blob): Promise<PixelBuffer | null> => {
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const canvas = newCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (context === null) return null;
+    context.drawImage(bitmap, 0, 0);
+    const pixels = context.getImageData(0, 0, bitmap.width, bitmap.height);
+    bitmap.close();
+    return { width: bitmap.width, height: bitmap.height, data: pixels.data };
+  } catch {
+    return null;
+  }
 };

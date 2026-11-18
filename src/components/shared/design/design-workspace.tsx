@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "lost-ui/ui/alert";
@@ -25,7 +25,10 @@ import { Button } from "@/components/shared/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/shared/ui/sheet";
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
 import { useBrushOptions } from "@/hooks/shared/design/use-brush-options";
+import { useDesignClipboard } from "@/hooks/shared/design/use-design-clipboard";
+import { useDesignCrop } from "@/hooks/shared/design/use-design-crop";
 import { useDesignColors } from "@/hooks/shared/design/use-design-colors";
+import { useDesignMask } from "@/hooks/shared/design/use-design-mask";
 import { useDesignPaint } from "@/hooks/shared/design/use-design-paint";
 import { usePixelHistory } from "@/hooks/shared/design/use-pixel-history";
 import { usePixelPersist } from "@/hooks/shared/design/use-pixel-persist";
@@ -53,6 +56,7 @@ import {
   saveDesignVersion,
   setDesignTemplate,
 } from "@/lib/shared/design/design.functions";
+import { pageSizeOf } from "@/lib/shared/design/crop";
 import { brandFontsOf, createImage } from "@/lib/shared/design/document";
 import { rasterizeImage } from "@/lib/shared/design/raster-canvas";
 import { rasterizedElement } from "@/lib/shared/design/rasterize";
@@ -60,7 +64,6 @@ import type { ImageElement } from "@/lib/shared/design/schemas";
 import { SelectionAdjust } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_PRESET_LABEL,
-  DESIGN_PRESET_SIZE,
   DesignPanel,
   DesignSaveState,
   DesignTool,
@@ -112,7 +115,9 @@ export function DesignWorkspace({
     reuseAssets: can(auth, Action.Media.Update),
     onSaved: (entries) => flushSync(() => editor.setPixelsVersions(entries)),
   });
-  const size = DESIGN_PRESET_SIZE[design.preset];
+  const pageWidth = pageSizeOf(editor.page, design.preset).width;
+  const pageHeight = pageSizeOf(editor.page, design.preset).height;
+  const size = useMemo(() => ({ width: pageWidth, height: pageHeight }), [pageWidth, pageHeight]);
   const viewport = useDesignViewport(size);
   const tool = useDesignTool();
   const kit = useQuery({
@@ -149,6 +154,7 @@ export function DesignWorkspace({
     rasters,
     zoom: viewport.view?.zoom ?? 1,
   });
+  const masks = useDesignMask({ editor, rasters, selection });
   const paint = useDesignPaint({
     tool: tool.active,
     editor,
@@ -159,7 +165,34 @@ export function DesignWorkspace({
     size,
     canPaint,
     selection,
+    masks,
   });
+
+  const crop = useDesignCrop({
+    tool: tool.active,
+    editor,
+    size,
+    zoom: viewport.view?.zoom ?? 1,
+    onDone: tool.reset,
+  });
+  const clipboard = useDesignClipboard({
+    editor,
+    rasters,
+    paint,
+    selection,
+    size,
+    canPaint,
+    editable: canEdit,
+  });
+  const startTransform = () => {
+    if (editor.transforming) return;
+    tool.setTool(DesignTool.Move);
+    editor.beginTransform();
+  };
+  const changeTool = (next: DesignTool) => {
+    if (editor.transforming) editor.commitTransform();
+    tool.setTool(next);
+  };
 
   const applyAdjust = (kind: SelectionAdjust, amount: number) => {
     const actions = {
@@ -177,9 +210,12 @@ export function DesignWorkspace({
     brush,
     selection,
     paint,
+    crop,
+    clipboard,
     tool,
     viewport,
     editable: canEdit,
+    onTransform: startTransform,
     onImage: () => {
       if (full === undefined) setPicking(true);
     },
@@ -312,6 +348,9 @@ export function DesignWorkspace({
     onShortcuts: () => setShortcutsOpen(true),
     selection,
     onAdjust: setAdjust,
+    clipboard,
+    onTransform: startTransform,
+    masks,
   });
 
   const panels = {
@@ -323,6 +362,7 @@ export function DesignWorkspace({
         onRasterize={rasterize}
         failedIds={rasters.failedIds}
         store={rasters.store}
+        masks={masks}
       />
     ),
     [DesignPanel.Properties]: (
@@ -337,7 +377,9 @@ export function DesignWorkspace({
     [DesignPanel.Adjustments]: (
       <DesignAdjustmentsPanel editor={editor} editable={canEdit} size={size} />
     ),
-    [DesignPanel.History]: <DesignHistoryPanel steps={editor.steps} />,
+    [DesignPanel.History]: (
+      <DesignHistoryPanel steps={editor.steps} disabled={!canEdit} onJump={editor.jump} />
+    ),
     [DesignPanel.Brand]: (
       <DesignBrandPanel
         editor={editor}
@@ -425,13 +467,14 @@ export function DesignWorkspace({
           size={size}
           paint={paint}
           selection={selection}
+          crop={crop}
         />
       ) : null}
       <div className="flex min-h-0 flex-1">
         {canEdit ? (
           <DesignToolRail
             tool={tool.active}
-            onTool={tool.setTool}
+            onTool={changeTool}
             onImage={() => setPicking(true)}
             full={full}
             colors={colors}
@@ -452,6 +495,7 @@ export function DesignWorkspace({
           rulers={rulers}
           paint={paint}
           selection={selection}
+          crop={crop}
           onDraw={draw}
         />
         <aside
@@ -504,7 +548,7 @@ export function DesignWorkspace({
           open={exportOpen}
           onOpenChange={setExportOpen}
           document={editor.document}
-          rasters={rasters}
+          rasters={{ ...rasters, maskView: null }}
           preset={design.preset}
           chrome={chrome}
           designId={design.id}

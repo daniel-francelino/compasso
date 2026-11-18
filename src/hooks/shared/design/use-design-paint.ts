@@ -5,7 +5,15 @@ import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import { type FillController, useDesignFill } from "@/hooks/shared/design/use-design-fill";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { PixelHistorySession } from "@/hooks/shared/design/use-pixel-history";
+import type { MaskController } from "@/hooks/shared/design/use-design-mask";
 import { resolveInheritance, rgbToHex } from "@/lib/shared/design/document";
+import {
+  MASK_PAINT_LABEL,
+  type MaskPlacement,
+  type PaintTarget,
+  grayColor,
+  grayOf,
+} from "@/lib/shared/design/layer-mask";
 import {
   PAINT_REASON,
   PAINT_UPLOAD_REASON,
@@ -19,6 +27,7 @@ import {
   toBrushParams,
 } from "@/lib/shared/design/paint";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
+import { selectAllMask } from "@/lib/shared/design/selection-state";
 import {
   type BrushParams,
   beginStroke,
@@ -28,7 +37,6 @@ import {
 import { SampleSize, sampleColor } from "@/lib/shared/design/raster/fill";
 import type { Point, RgbaColor } from "@/lib/shared/design/raster/pixel-buffer";
 import { sampleCompositeAt } from "@/lib/shared/design/raster-canvas";
-import type { RasterElement } from "@/lib/shared/design/schemas";
 import { type StrokeSession, createStrokeSession } from "@/lib/shared/design/stroke-session";
 import {
   DESIGN_TOOL_LABEL,
@@ -53,7 +61,7 @@ const CLEAR_PARAMS: BrushParams = {
   erase: true,
 };
 
-type Active = { session: StrokeSession; id: string; placement: RasterElement; label: string };
+type Active = { session: StrokeSession; key: string; placement: MaskPlacement; label: string };
 
 export type PaintCallbacks = {
   onPaintStart: (point: Point) => void;
@@ -67,7 +75,7 @@ export type DesignPaint = {
   reason: string | undefined;
   callbacks: PaintCallbacks;
   cursorDiameter: (tool: DesignTool, zoom: number) => number | null;
-  clearSelected: () => void;
+  clearSelected: (label?: string) => void;
 };
 
 export const useDesignPaint = ({
@@ -80,6 +88,7 @@ export const useDesignPaint = ({
   size,
   canPaint,
   selection,
+  masks,
 }: {
   tool: DesignTool;
   editor: DesignEditor;
@@ -90,6 +99,7 @@ export const useDesignPaint = ({
   size: PageSize;
   canPaint: boolean;
   selection: SelectionController;
+  masks: MaskController;
 }): DesignPaint => {
   const { store } = rasters;
   const active = useRef<Active | null>(null);
@@ -98,9 +108,22 @@ export const useDesignPaint = ({
   const raster = single?.kind === DesignElementKind.Raster ? single : null;
   const layerReady = raster !== null && !raster.locked && !raster.hidden;
   const target = layerReady && canPaint ? raster : null;
-  const fill = useDesignFill({ tool, editor, rasters, pixels, colors, selection, target });
+  const masked = canPaint ? masks.paintTarget() : null;
+  const drawTarget: PaintTarget | null =
+    masked ?? (target === null ? null : { key: target.id, placement: target, mask: false });
+  const fill = useDesignFill({
+    tool,
+    editor,
+    rasters,
+    pixels,
+    colors,
+    selection,
+    target: drawTarget,
+  });
   const reason =
-    isBrushTool(tool) || isFillTool(tool) ? paintReason(canPaint, layerReady) : undefined;
+    isBrushTool(tool) || isFillTool(tool)
+      ? paintReason(canPaint, layerReady || masked !== null)
+      : undefined;
 
   const cancelFrame = () => {
     if (frame.current === null) return;
@@ -141,21 +164,28 @@ export const useDesignPaint = ({
     brush.sample === PaintSampleMode.Layer ? sampleLayer(point) : sampleAll(point);
 
   const begin = (point: Point) => {
-    if (!isBrushTool(tool) || target === null || colors.foreground === null) return;
-    const buffer = store.get(target.id);
-    const rgb = hexToRgb(colors.foreground);
-    if (buffer === undefined || rgb === null) return;
-    const options = brush.optionsOf(tool);
+    if (!isBrushTool(tool) || drawTarget === null || colors.foreground === null) return;
+    const buffer = store.get(drawTarget.key);
     const erase = tool === DesignTool.Eraser;
+    const source = drawTarget.mask && erase ? colors.background : colors.foreground;
+    const picked = source === null ? null : hexToRgb(source);
+    if (buffer === undefined || picked === null) return;
+    const rgb = drawTarget.mask ? grayColor(grayOf(picked)) : picked;
+    const options = brush.optionsOf(tool);
     const params = {
-      ...toBrushParams(options, rgb, erase),
-      selection: selection.layerMask(target),
+      ...toBrushParams(options, rgb, erase && !drawTarget.mask),
+      selection: selection.layerMask(drawTarget.placement),
     };
     const session = createStrokeSession(buffer, params, options);
-    active.current = { session, id: target.id, placement: target, label: DESIGN_TOOL_LABEL[tool] };
+    active.current = {
+      session,
+      key: drawTarget.key,
+      placement: drawTarget.placement,
+      label: drawTarget.mask ? MASK_PAINT_LABEL : DESIGN_TOOL_LABEL[tool],
+    };
     pixels.stroking.current = true;
-    session.move([docToLayerPoint(target, point)]);
-    schedule(target.id);
+    session.move([docToLayerPoint(drawTarget.placement, point)]);
+    schedule(drawTarget.key);
   };
 
   const onPaintStart = (point: Point) => {
@@ -183,7 +213,7 @@ export const useDesignPaint = ({
     }
     if (current === null) return;
     current.session.move(points.map((point) => docToLayerPoint(current.placement, point)));
-    schedule(current.id);
+    schedule(current.key);
   };
 
   const onPaintEnd = () => {
@@ -197,18 +227,18 @@ export const useDesignPaint = ({
     if (current === null) return;
     cancelFrame();
     const patch = current.session.finish();
-    store.markChanged(current.id);
+    store.markChanged(current.key);
     if (patch === null) return;
     const stepId = crypto.randomUUID();
-    pixels.history.push(current.label, current.id, patch, stepId);
+    pixels.history.push(current.label, current.key, patch, stepId);
     editor.markPixelStep(current.label, stepId);
   };
 
-  const clearSelected = () => {
+  const clearSelected = (label = CLEAR_SELECTION_LABEL) => {
     if (target === null) return;
     const buffer = store.get(target.id);
-    const mask = selection.layerMask(target);
-    if (buffer === undefined || mask === null) return;
+    if (buffer === undefined) return;
+    const mask = selection.layerMask(target) ?? selectAllMask(buffer.width, buffer.height);
     const stroke = beginStroke(buffer);
     const params = {
       ...CLEAR_PARAMS,
@@ -220,13 +250,13 @@ export const useDesignPaint = ({
     store.markChanged(target.id);
     if (patch.tiles.length === 0) return;
     const stepId = crypto.randomUUID();
-    pixels.history.push(CLEAR_SELECTION_LABEL, target.id, patch, stepId);
-    editor.markPixelStep(CLEAR_SELECTION_LABEL, stepId);
+    pixels.history.push(label, target.id, patch, stepId);
+    editor.markPixelStep(label, stepId);
   };
 
   const cursorDiameter = (activeTool: DesignTool, zoom: number): number | null => {
     if (!isBrushTool(activeTool)) return null;
-    const scale = target === null ? 1 : layerScale(target);
+    const scale = drawTarget === null ? 1 : layerScale(drawTarget.placement);
     return cursorDiameterPx(brush.optionsOf(activeTool), scale * zoom);
   };
 

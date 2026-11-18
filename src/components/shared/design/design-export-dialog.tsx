@@ -11,6 +11,7 @@ import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import { type ExportScale, useDesignExport } from "@/hooks/shared/design/use-design-export";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
+import { pageSizeOf } from "@/lib/shared/design/crop";
 import { listDesignExports } from "@/lib/shared/design/design.functions";
 import type { DesignDocument } from "@/lib/shared/design/schemas";
 import {
@@ -86,7 +87,7 @@ function ExportJobView({
   const busy = preparing || exporter.running;
   const total = document.pages.length;
   const page = exporter.job === null ? undefined : document.pages[exporter.job.index];
-  const size = DESIGN_PRESET_SIZE[preset];
+  const size = page === undefined ? DESIGN_PRESET_SIZE[preset] : pageSizeOf(page, preset);
 
   const start = async () => {
     setPreparing(true);

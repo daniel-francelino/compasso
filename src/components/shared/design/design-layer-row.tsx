@@ -2,6 +2,7 @@ import {
   ArrowDown,
   ArrowUp,
   Circle,
+  Contrast,
   CornerDownRight,
   Copy,
   Eye,
@@ -32,6 +33,14 @@ import { checkerboard } from "@/components/shared/design/checkerboard";
 import { DesignBlendControls } from "@/components/shared/design/design-blend-controls";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { layerLabel } from "@/lib/shared/design/layers";
+import type { MaskController } from "@/hooks/shared/design/use-design-mask";
+import { DesignMaskThumb } from "@/components/shared/design/design-mask-thumb";
+import {
+  MASK_DELETE_LABEL,
+  MASK_DISABLE_LABEL,
+  MASK_ENABLE_LABEL,
+  isMaskable,
+} from "@/lib/shared/design/layer-mask";
 import { DesignLayerThumb } from "@/components/shared/design/design-layer-thumb";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
@@ -61,6 +70,7 @@ type Props = {
   editable: boolean;
   pixelsFailed: boolean;
   store: RasterStore;
+  masks: MaskController;
   onRasterize: (element: ImageElement) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -203,7 +213,23 @@ export function DesignLayerRow(props: Props) {
           />
         ) : null}
         {element.kind === DesignElementKind.Raster ? (
-          <DesignLayerThumb store={props.store} element={element} />
+          <button
+            type="button"
+            aria-label="Editar pixels da camada"
+            aria-pressed={selected && props.masks.targetId !== element.id}
+            className="shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              editor.select(element.id);
+              props.masks.target(null);
+            }}
+          >
+            <DesignLayerThumb
+              store={props.store}
+              id={element.id}
+              pixelWidth={element.pixelWidth}
+              pixelHeight={element.pixelHeight}
+            />
+          </button>
         ) : (
           <span
             aria-hidden="true"
@@ -212,6 +238,20 @@ export function DesignLayerRow(props: Props) {
           >
             <KindIcon className="size-4 text-foreground" />
           </span>
+        )}
+        {element.mask === null || !isMaskable(element) ? null : (
+          <DesignMaskThumb
+            store={props.store}
+            element={element}
+            targeted={selected && props.masks.targetId === element.id}
+            viewed={props.masks.viewId === element.id}
+            onSelect={() => {
+              editor.select(element.id);
+              props.masks.target(element.id);
+            }}
+            onView={() => props.masks.toggleView(element.id)}
+            onToggle={() => props.masks.toggleEnabled(element.id)}
+          />
         )}
         {renaming ? (
           <RenameField element={element} onCommit={commitName} onCancel={props.onRenameEnd} />
@@ -311,6 +351,18 @@ export function DesignLayerRow(props: Props) {
           {element.clipToBelow ? "Liberar máscara de corte" : "Criar máscara de corte"}
           <ContextMenuShortcut>Alt+Ctrl+G</ContextMenuShortcut>
         </ContextMenuItem>
+        {element.mask === null ? null : (
+          <>
+            <ContextMenuItem onSelect={() => props.masks.toggleEnabled(element.id)}>
+              <Contrast aria-hidden="true" />
+              {element.mask.enabled ? MASK_DISABLE_LABEL : MASK_ENABLE_LABEL}
+            </ContextMenuItem>
+            <ContextMenuItem onSelect={() => props.masks.remove(element.id)}>
+              <Trash2 aria-hidden="true" />
+              {MASK_DELETE_LABEL}
+            </ContextMenuItem>
+          </>
+        )}
         <ContextMenuSeparator />
         <ContextMenuItem disabled={!props.canMoveUp} onSelect={() => props.onMove(LayerMove.Up)}>
           <ArrowUp aria-hidden="true" />

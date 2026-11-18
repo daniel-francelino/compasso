@@ -1,4 +1,13 @@
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
+import type { ClipboardController } from "@/hooks/shared/design/use-design-clipboard";
+import type { MaskController } from "@/hooks/shared/design/use-design-mask";
+import {
+  LAYER_MASK_KIND_LABEL,
+  LayerMaskKind,
+  MASK_DELETE_LABEL,
+  MASK_DISABLE_LABEL,
+  MASK_ENABLE_LABEL,
+} from "@/lib/shared/design/layer-mask";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
@@ -44,9 +53,19 @@ export type DesignMenuContext = {
   onShortcuts: () => void;
   selection: SelectionController;
   onAdjust: (kind: SelectionAdjust) => void;
+  clipboard: ClipboardController;
+  onTransform: () => void;
+  masks: MaskController;
 };
 
 const NO_SELECTION = "Selecione um elemento.";
+const TRANSFORM_REASON = "Selecione uma camada de pixels visível e desbloqueada.";
+
+const transformReason = ({ editor }: DesignMenuContext): string | undefined => {
+  const layer = editor.single;
+  const usable = layer?.kind === DesignElementKind.Raster && !layer.locked && !layer.hidden;
+  return usable ? undefined : TRANSFORM_REASON;
+};
 
 const fileMenu = (c: DesignMenuContext): DesignMenu => ({
   id: "file",
@@ -82,6 +101,42 @@ const editMenu = (c: DesignMenuContext): DesignMenu => {
         shortcut: "Ctrl+Shift+Z",
         disabledReason: editor.canRedo ? undefined : "Nada para refazer.",
         onSelect: editor.redo,
+      },
+      {
+        id: "copy",
+        label: "Copiar",
+        shortcut: "Ctrl+C",
+        separatorBefore: true,
+        disabledReason: c.clipboard.copyReason,
+        onSelect: c.clipboard.copy,
+      },
+      {
+        id: "cut",
+        label: "Recortar",
+        shortcut: "Ctrl+X",
+        disabledReason: c.clipboard.cutReason,
+        onSelect: c.clipboard.cut,
+      },
+      {
+        id: "paste",
+        label: "Colar",
+        shortcut: "Ctrl+V",
+        disabledReason: c.clipboard.pasteReason,
+        onSelect: () => c.clipboard.paste(false),
+      },
+      {
+        id: "paste-in-place",
+        label: "Colar no lugar",
+        shortcut: "Ctrl+Shift+V",
+        disabledReason: c.clipboard.pasteReason,
+        onSelect: () => c.clipboard.paste(true),
+      },
+      {
+        id: "free-transform",
+        label: "Transformação livre",
+        shortcut: "Ctrl+T",
+        disabledReason: transformReason(c),
+        onSelect: c.onTransform,
       },
       {
         id: "duplicate",
@@ -180,6 +235,20 @@ const layerMenu = (c: DesignMenuContext): DesignMenu => {
         onSelect: c.onAddRaster,
       },
       {
+        id: "layer-via-copy",
+        label: "Camada via cópia",
+        shortcut: "Ctrl+J",
+        disabledReason: c.clipboard.cutReason,
+        onSelect: c.clipboard.layerViaCopy,
+      },
+      {
+        id: "layer-via-cut",
+        label: "Camada via recorte",
+        shortcut: "Ctrl+Shift+J",
+        disabledReason: c.clipboard.cutReason,
+        onSelect: c.clipboard.layerViaCut,
+      },
+      {
         id: "rasterize",
         label: "Rasterizar imagem",
         disabledReason:
@@ -197,6 +266,25 @@ const layerMenu = (c: DesignMenuContext): DesignMenu => {
             ? undefined
             : CLIP_DISABLED_REASON,
         onSelect: editor.toggleClip,
+      },
+      ...Object.values(LayerMaskKind).map((kind, index) => ({
+        id: `mask-${kind}`,
+        label: LAYER_MASK_KIND_LABEL[kind],
+        separatorBefore: index === 0,
+        disabledReason: c.masks.createReason(kind),
+        onSelect: () => c.masks.create(kind),
+      })),
+      {
+        id: "mask-toggle",
+        label: single?.mask?.enabled === false ? MASK_ENABLE_LABEL : MASK_DISABLE_LABEL,
+        disabledReason: c.masks.deleteReason,
+        onSelect: () => single && c.masks.toggleEnabled(single.id),
+      },
+      {
+        id: "mask-delete",
+        label: MASK_DELETE_LABEL,
+        disabledReason: c.masks.deleteReason,
+        onSelect: () => single && c.masks.remove(single.id),
       },
       {
         id: "group",

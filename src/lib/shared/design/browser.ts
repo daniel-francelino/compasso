@@ -47,3 +47,24 @@ export const imageNaturalSize = async (versionId: string): Promise<PageSize | nu
   const image = url === undefined ? null : await loadImage(url);
   return image === null ? null : { width: image.naturalWidth, height: image.naturalHeight };
 };
+
+export const writeClipboardImage = async (blob: Blob): Promise<boolean> => {
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const readClipboardImage = async (): Promise<Blob | null> => {
+  try {
+    for (const item of await navigator.clipboard.read()) {
+      const type = item.types.find((name) => name.startsWith("image/"));
+      if (type !== undefined) return await item.getType(type);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};

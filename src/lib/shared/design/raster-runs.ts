@@ -18,6 +18,9 @@ const isVisibleAdjustment = (layer: InheritedLayer): boolean =>
 const isVisibleClip = (layer: InheritedLayer): boolean =>
   layer.element.clipToBelow && !layer.hidden;
 
+const isVisibleMask = (layer: InheritedLayer): boolean =>
+  layer.element.mask?.enabled === true && !layer.hidden;
+
 export const splitRasterRuns = (layers: readonly InheritedLayer[]): RasterRun[] => {
   const runs: RasterRun[] = [];
   let current: RasterRun | null = null;
@@ -27,7 +30,11 @@ export const splitRasterRuns = (layers: readonly InheritedLayer[]): RasterRun[] 
     current ??= { startIndex: index, layers: [], adjusted: false };
     if (current.layers.length === 0) runs.push(current);
     current.layers.push(layer);
-    current.adjusted = current.adjusted || isVisibleAdjustment(layer) || isVisibleClip(layer);
+    current.adjusted =
+      current.adjusted ||
+      isVisibleAdjustment(layer) ||
+      isVisibleClip(layer) ||
+      isVisibleMask(layer);
   }
   return runs;
 };

@@ -79,4 +79,13 @@ describe("splitRasterRuns", () => {
     expect(splitRasterRuns([raster("a"), clipped])[0]?.adjusted).toBe(true);
     expect(splitRasterRuns([raster("a"), raster("b")])[0]?.adjusted).toBe(false);
   });
+
+  it("marks a run with an enabled mask as composited", () => {
+    const masked = raster("a");
+    const mask = { mediaVersionId: null, enabled: true, linked: true };
+    masked.element = { ...masked.element, mask };
+    expect(splitRasterRuns([masked])[0]?.adjusted).toBe(true);
+    masked.element = { ...masked.element, mask: { ...mask, enabled: false } };
+    expect(splitRasterRuns([masked])[0]?.adjusted).toBe(false);
+  });
 });

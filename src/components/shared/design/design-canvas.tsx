@@ -94,6 +94,7 @@ export type DesignCanvasProps = GestureCallbacks & {
   onMeasure?: (id: string, height: number) => void;
   onStage?: (stage: Konva.Stage | null) => void;
   overlay?: ReactNode;
+  frozenId?: string | null;
 };
 
 export default function DesignCanvas({
@@ -117,6 +118,7 @@ export default function DesignCanvas({
   onMeasure,
   onStage,
   overlay,
+  frozenId = null,
   ...gestureCallbacks
 }: DesignCanvasProps) {
   const scale = view?.viewport.zoom ?? exportScale;
@@ -225,8 +227,11 @@ export default function DesignCanvas({
 
   const inherited = useMemo(() => resolveInheritance(page), [page]);
   const adjustedRuns = useMemo(
-    () => splitRasterRuns(inherited).filter((run) => run.adjusted),
-    [inherited],
+    () =>
+      splitRasterRuns(inherited).filter(
+        (run) => run.adjusted || run.layers.some((layer) => layer.element.id === rasters.maskView),
+      ),
+    [inherited, rasters.maskView],
   );
   const runAt = new Map(adjustedRuns.map((run) => [run.startIndex, run]));
   const composited = new Set(
@@ -252,7 +257,7 @@ export default function DesignCanvas({
           }
           chrome={chrome}
           fontsVersion={fontsVersion}
-          interactive={interactive && moving}
+          interactive={interactive && moving && (frozenId === null || frozenId === element.id)}
           hidden={element.id === editingTextId || composited.has(element.id)}
           events={events}
         />

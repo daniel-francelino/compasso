@@ -4,6 +4,7 @@ import {
   CropRatio,
   cropPage,
   dragCrop,
+  fitRatio,
   fullCrop,
   hitCrop,
   isFullCrop,
@@ -146,5 +147,22 @@ describe("cropPage", () => {
       [-100, -50],
     ]);
     expect(cropped.elements[1]?.width).toBe(1080);
+  });
+});
+
+describe("fitRatio", () => {
+  it("fits the largest centered box of a ratio inside a box", () => {
+    expect(fitRatio({ x: 0, y: 0, width: 1000, height: 800 }, 1)).toEqual({
+      x: 100,
+      y: 0,
+      width: 800,
+      height: 800,
+    });
+    expect(fitRatio({ x: 0, y: 0, width: 1000, height: 800 }, 2)).toEqual({
+      x: 0,
+      y: 150,
+      width: 1000,
+      height: 500,
+    });
   });
 });

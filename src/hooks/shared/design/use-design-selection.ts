@@ -146,7 +146,7 @@ export const useDesignSelection = ({
     replaceMask(null);
     setPolygon([]);
     setDrag(null);
-  }, [pageId]);
+  }, [pageId, size.width, size.height]);
 
   useEffect(() => {
     if (tool !== DesignTool.Lasso) setPolygon([]);

@@ -15,18 +15,24 @@ import {
   clampPercent,
   clampTolerance,
 } from "@/lib/shared/design/fill-tools";
+import {
+  type PaintTarget,
+  grayColor,
+  grayOf,
+  MASK_PAINT_LABEL,
+} from "@/lib/shared/design/layer-mask";
 import { docToLayerPoint, hexToRgb } from "@/lib/shared/design/paint";
 import { bucketPatch, gradientPatch } from "@/lib/shared/design/raster/fill-edit";
 import type { PixelPatch } from "@/lib/shared/design/raster/pixel-history";
 import type { Point, RgbaColor } from "@/lib/shared/design/raster/pixel-buffer";
-import type { RasterElement } from "@/lib/shared/design/schemas";
 import { DesignTool } from "@/lib/shared/design/types";
 
 const MIN_GRADIENT_PX = 1;
 
-const toColor = (hex: string | null): RgbaColor | null => {
+const toColor = (hex: string | null, gray = false): RgbaColor | null => {
   const rgb = hex === null ? null : hexToRgb(hex);
-  return rgb === null ? null : { ...rgb, a: 255 };
+  if (rgb === null) return null;
+  return gray ? grayColor(grayOf(rgb)) : { ...rgb, a: 255 };
 };
 
 export const useDesignFill = ({
@@ -44,7 +50,7 @@ export const useDesignFill = ({
   pixels: PixelHistorySession;
   colors: DesignColors;
   selection: SelectionController;
-  target: RasterElement | null;
+  target: PaintTarget | null;
 }) => {
   const [bucket, setBucket] = useState<BucketToolOptions>(DEFAULT_BUCKET_TOOL_OPTIONS);
   const [gradient, setGradient] = useState<GradientOptions>(DEFAULT_GRADIENT_OPTIONS);
@@ -60,30 +66,30 @@ export const useDesignFill = ({
   };
 
   const fillAt = (point: Point) => {
-    const buffer = target === null ? undefined : store.get(target.id);
-    const color = toColor(colors.foreground);
+    const buffer = target === null ? undefined : store.get(target.key);
+    const color = toColor(colors.foreground, target?.mask === true);
     if (target === null || buffer === undefined || color === null) return;
-    const local = docToLayerPoint(target, point);
+    const local = docToLayerPoint(target.placement, point);
     const patch = bucketPatch(buffer, Math.floor(local.x), Math.floor(local.y), color, {
       tolerance: bucket.tolerance,
       contiguous: bucket.contiguous,
       opacity: bucket.opacity / 100,
       blendMode: bucket.blendMode,
-      selection: selection.layerMask(target),
+      selection: selection.layerMask(target.placement),
     });
-    record(FILL_HISTORY_LABEL, target.id, patch);
+    record(target.mask ? MASK_PAINT_LABEL : FILL_HISTORY_LABEL, target.key, patch);
   };
 
   const finishGradient = () => {
     const current = drag.current;
     drag.current = null;
-    const buffer = target === null ? undefined : store.get(target.id);
-    const first = toColor(colors.foreground);
-    const second = toColor(colors.background);
+    const buffer = target === null ? undefined : store.get(target.key);
+    const first = toColor(colors.foreground, target?.mask === true);
+    const second = toColor(colors.background, target?.mask === true);
     if (current === null || target === null || buffer === undefined) return;
     if (first === null || second === null) return;
-    const from = docToLayerPoint(target, current.start);
-    const to = docToLayerPoint(target, current.end);
+    const from = docToLayerPoint(target.placement, current.start);
+    const to = docToLayerPoint(target.placement, current.end);
     const length = Math.hypot(to.x - from.x, to.y - from.y);
     if (length < MIN_GRADIENT_PX) return;
     const [start, end] = gradient.reverse ? [second, first] : [first, second];
@@ -97,9 +103,9 @@ export const useDesignFill = ({
       start,
       end,
       { opacity: gradient.opacity / 100, blendMode: gradient.blendMode },
-      selection.layerMask(target),
+      selection.layerMask(target.placement),
     );
-    record(GRADIENT_HISTORY_LABEL, target.id, patch);
+    record(target.mask ? MASK_PAINT_LABEL : GRADIENT_HISTORY_LABEL, target.key, patch);
   };
 
   const onStart = (point: Point) => {

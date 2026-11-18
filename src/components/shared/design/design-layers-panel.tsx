@@ -1,8 +1,14 @@
-import { Plus } from "lucide-react";
+import { Contrast, Plus } from "lucide-react";
 import { type DragEvent, useState } from "react";
 import { Button } from "@/components/shared/ui/button";
 import { DesignLayerRow, type DropMark } from "@/components/shared/design/design-layer-row";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
+import type { MaskController } from "@/hooks/shared/design/use-design-mask";
+import {
+  LAYER_MASK_KIND_LABEL,
+  LayerMaskKind,
+  MASK_ADD_LABEL,
+} from "@/lib/shared/design/layer-mask";
 import { dropTargetIndex } from "@/lib/shared/design/layers";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
 import type { ImageElement } from "@/lib/shared/design/schemas";
@@ -18,6 +24,7 @@ export function DesignLayersPanel({
   onRasterize,
   failedIds,
   store,
+  masks,
 }: {
   editor: DesignEditor;
   editable: boolean;
@@ -25,6 +32,7 @@ export function DesignLayersPanel({
   onRasterize: (element: ImageElement) => void;
   failedIds: ReadonlySet<string>;
   store: RasterStore;
+  masks: MaskController;
 }) {
   const elements = editor.page.elements;
   const ordered = [...elements].reverse();
@@ -86,16 +94,32 @@ export function DesignLayersPanel({
           Camadas
         </h2>
         {editable ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!editor.canAdd()}
-            onClick={onAddRaster}
-          >
-            <Plus aria-hidden="true" />
-            Nova camada
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={masks.createReason(LayerMaskKind.RevealAll) !== undefined}
+              title={
+                masks.createReason(LayerMaskKind.RevealAll) ??
+                `${MASK_ADD_LABEL}: ${LAYER_MASK_KIND_LABEL[LayerMaskKind.RevealAll]}`
+              }
+              onClick={() => masks.create(LayerMaskKind.RevealAll)}
+            >
+              <Contrast aria-hidden="true" />
+              Máscara
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!editor.canAdd()}
+              onClick={onAddRaster}
+            >
+              <Plus aria-hidden="true" />
+              Nova camada
+            </Button>
+          </div>
         ) : null}
       </div>
       {ordered.length === 0 ? (
@@ -113,6 +137,7 @@ export function DesignLayersPanel({
               selected={editor.selectedIds.includes(element.id)}
               editable={editable}
               store={store}
+              masks={masks}
               pixelsFailed={failedIds.has(element.id)}
               onRasterize={onRasterize}
               canMoveUp={displayIndex > 0}

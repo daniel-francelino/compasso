@@ -18,8 +18,8 @@ export function DesignRasterStack({
   const { store, revision } = rasters;
   const ref = useRef<Konva.Image>(null);
   const canvas = useMemo(
-    () => (revision < 0 ? null : renderRun(run.layers, store, size)),
-    [run, store, revision, size],
+    () => (revision < 0 ? null : renderRun(run.layers, store, size, rasters.maskView)),
+    [run, store, revision, size, rasters.maskView],
   );
 
   useEffect(() => {

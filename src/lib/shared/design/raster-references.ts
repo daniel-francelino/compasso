@@ -1,3 +1,4 @@
+import { maskKey } from "@/lib/shared/design/layer-mask";
 import type { DesignDocument } from "@/lib/shared/design/schemas";
 import { DesignElementKind } from "@/lib/shared/design/types";
 
@@ -10,6 +11,7 @@ export const referencedRasterIds = (
     for (const page of document.pages) {
       for (const element of page.elements) {
         if (element.kind === DesignElementKind.Raster) referenced.add(element.id);
+        if (element.mask !== null) referenced.add(maskKey(element.id));
       }
     }
   }

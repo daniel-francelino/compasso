@@ -256,6 +256,7 @@ export const DESIGN_ENABLED_TOOLS: readonly DesignTool[] = [
   DesignTool.Marquee,
   DesignTool.Lasso,
   DesignTool.Wand,
+  DesignTool.Crop,
   DesignTool.Eyedropper,
   DesignTool.Brush,
   DesignTool.Eraser,
@@ -336,7 +337,7 @@ export const DESIGN_CLIP_SHORTCUT_LABEL = "Alt + Ctrl + G";
 export const DESIGN_SHORTCUT_HELP: readonly (readonly [string, string])[] = [
   [
     toolKeys(DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool))),
-    "Mover, texto, mão, zoom, seleção, laço, varinha, conta-gotas, pincel, borracha, balde",
+    "Mover, texto, mão, zoom, seleção, laço, varinha, cortar, conta-gotas, pincel, borracha, balde",
   ],
   [`Shift + ${DESIGN_FILL_KEY.toUpperCase()}`, "Balde de tinta e gradiente: alternar"],
   [DESIGN_CLIP_SHORTCUT_LABEL, "Criar ou liberar a máscara de corte da camada"],
@@ -346,6 +347,11 @@ export const DESIGN_SHORTCUT_HELP: readonly (readonly [string, string])[] = [
   ["Ctrl + A / Ctrl + D", "Ferramentas de pixel: selecionar tudo / desmarcar"],
   ["Ctrl + Shift + I", "Inverter a seleção de pixels"],
   ["Delete", "Com seleção de pixels: limpar os pixels selecionados"],
+  ["Ctrl + T", "Transformação livre da camada de pixels: Enter aplica, Esc cancela"],
+  ["Enter / Esc", "Ferramenta Cortar: aplicar o corte / cancelar"],
+  ["Ctrl + C / Ctrl + X", "Copiar / recortar os pixels selecionados"],
+  ["Ctrl + V / Ctrl + Shift + V", "Colar como nova camada / colar no lugar"],
+  ["Ctrl + J / Ctrl + Shift + J", "Com seleção de pixels: camada via cópia / via recorte"],
   [
     `${DESIGN_SHAPE_KEY.toUpperCase()} / Shift + ${DESIGN_SHAPE_KEY.toUpperCase()}`,
     "Formas: última usada / alternar",

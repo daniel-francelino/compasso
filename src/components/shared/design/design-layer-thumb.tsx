@@ -3,21 +3,23 @@ import { checkerboard } from "@/components/shared/design/checkerboard";
 import { THUMBNAIL_SIDE, thumbnailBox } from "@/lib/shared/design/layers";
 import { layerCanvas } from "@/lib/shared/design/raster-canvas";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
-import type { RasterElement } from "@/lib/shared/design/schemas";
 
 const REDRAW_DELAY_MS = 200;
 const BACKDROP = checkerboard(8);
 
 export function DesignLayerThumb({
   store,
-  element,
+  id,
+  pixelWidth,
+  pixelHeight,
 }: {
   store: RasterStore;
-  element: RasterElement;
+  id: string;
+  pixelWidth: number;
+  pixelHeight: number;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
   const drawn = useRef(-1);
-  const { id, pixelWidth, pixelHeight } = element;
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;

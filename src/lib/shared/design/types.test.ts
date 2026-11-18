@@ -68,6 +68,7 @@ describe("tool groups", () => {
     expect(groups.map((item) => item.group)).toEqual([
       DesignToolGroup.Move,
       DesignToolGroup.Selection,
+      DesignToolGroup.Crop,
       DesignToolGroup.Eyedropper,
       DesignToolGroup.Paint,
       DesignToolGroup.Fill,

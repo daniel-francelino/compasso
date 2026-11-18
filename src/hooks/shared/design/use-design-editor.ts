@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { type CropBox, cropPage } from "@/lib/shared/design/crop";
 import {
   alignElements,
   distributeElements,
@@ -49,7 +50,7 @@ import type { AdjustmentType } from "@/lib/shared/design/raster/adjustment-types
 import { type PixelsVersionEntry, retargetHistory } from "@/lib/shared/design/pixel-persist";
 import { replaceElement } from "@/lib/shared/design/rasterize";
 import { moveLayerTo } from "@/lib/shared/design/layers";
-import { type History, historyOf, pushHistory } from "@/lib/shared/design/history";
+import { type History, collapseHistory, historyOf, pushHistory } from "@/lib/shared/design/history";
 import type {
   DesignDocument,
   DesignElement,
@@ -59,6 +60,8 @@ import type {
 import {
   type PixelSteps,
   inheritPixelStep,
+  jumpTimeline,
+  labelDocumentStep,
   markPixelStep,
   redoTimeline,
   timelineSteps,
@@ -71,6 +74,9 @@ import {
   type LayerMove,
   type PageSize,
 } from "@/lib/shared/design/types";
+
+const TRANSFORM_LABEL = "Transformação livre";
+const CROP_LABEL = "Cortar";
 
 const newId = () => crypto.randomUUID();
 
@@ -101,6 +107,8 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
   };
   const [pageId, setPageId] = useState(() => initial.pages[0]?.id ?? "");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const transformBase = useRef<History<DesignDocument> | null>(null);
+  const [transforming, setTransforming] = useState(false);
   const document = history.present;
   const historyDocuments = useMemo(
     () => [...history.past, history.present, ...history.future],
@@ -149,7 +157,34 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
     setSelectedIds(result.ids);
   };
 
+  const named = (label: string, run: () => void) => {
+    const before = latest.current.present;
+    run();
+    const after = latest.current.present;
+    if (after !== before) labelDocumentStep(after, label);
+  };
+
+  const beginTransform = () => {
+    transformBase.current = latest.current;
+    setTransforming(true);
+  };
+
+  const endTransform = (label: string | null) => {
+    const base = transformBase.current;
+    if (base === null) return;
+    transformBase.current = null;
+    setTransforming(false);
+    if (label === null) {
+      setHistory(base);
+      return;
+    }
+    const merged = collapseHistory(latest.current, base, DESIGN_LIMITS.history);
+    if (merged.present !== base.present) labelDocumentStep(merged.present, label);
+    setHistory(merged);
+  };
+
   const goToPage = (id: string) => {
+    endTransform(TRANSFORM_LABEL);
     setPageId(id);
     setSelectedIds([]);
   };
@@ -174,11 +209,27 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
     undo: () => {
-      if (!pixels.busy()) setHistory(undoTimeline(latest.current, pixels));
+      if (!pixels.busy() && transformBase.current === null) {
+        setHistory(undoTimeline(latest.current, pixels));
+      }
     },
     redo: () => {
-      if (!pixels.busy()) setHistory(redoTimeline(latest.current, pixels));
+      if (!pixels.busy() && transformBase.current === null) {
+        setHistory(redoTimeline(latest.current, pixels));
+      }
     },
+    jump: (stepIndex: number) => {
+      if (!pixels.busy() && transformBase.current === null) {
+        setHistory(jumpTimeline(latest.current, pixels, stepIndex));
+      }
+    },
+    named,
+    crop: (box: CropBox) =>
+      named(CROP_LABEL, () => changePage((current) => cropPage(current, box))),
+    transforming,
+    beginTransform,
+    commitTransform: () => endTransform(TRANSFORM_LABEL),
+    cancelTransform: () => endTransform(null),
     markPixelStep: (label: string, stepId: string) =>
       setHistory((current) =>
         pushHistory(current, markPixelStep(current.present, label, stepId), DESIGN_LIMITS.history),

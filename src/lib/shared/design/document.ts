@@ -39,6 +39,7 @@ export type ElementBasePatch = Partial<
     | "name"
     | "hidden"
     | "clipToBelow"
+    | "mask"
   >
 >;
 export type TextPatch = Partial<
@@ -177,11 +178,14 @@ export const hasAdjustments = (page: DesignPage): boolean =>
 export const rasterPixelsIds = (document: DesignDocument): string[] => [
   ...new Set(
     document.pages.flatMap((page) =>
-      page.elements.flatMap((element) =>
-        element.kind === DesignElementKind.Raster && element.pixelsVersionId !== null
-          ? [element.pixelsVersionId]
-          : [],
-      ),
+      page.elements.flatMap((element) => {
+        const ids: string[] = [];
+        if (element.kind === DesignElementKind.Raster && element.pixelsVersionId !== null) {
+          ids.push(element.pixelsVersionId);
+        }
+        if (element.mask?.mediaVersionId) ids.push(element.mask.mediaVersionId);
+        return ids;
+      }),
     ),
   ),
 ];
