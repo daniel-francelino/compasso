@@ -32,7 +32,7 @@ These instructions apply to every session. The project rules are in the two file
 ## Automatic checks (hooks in `.claude/settings.json`)
 
 - **SessionStart / UserPromptSubmit** remind these rules at the start and on each prompt.
-- **PreToolUse (Write/Edit)** blocks mechanical violations before the file is written: comments in `src`, `console`, `any`, `!`, `as unknown as`, loose `z.enum`, hex colors and Tailwind palette, direct storage access, cross-space imports, misnamed or edited migrations, tables without RLS, secrets, non-English or non-kebab document names. It asks for confirmation when a **new document** is created (DOC-3, DOC-7).
+- **PreToolUse (Write/Edit)** blocks mechanical violations before the file is written: comments in `src`, `console`, `any`, `!`, `as unknown as`, loose `z.enum`, hex colors and Tailwind palette, direct storage access, cross-space imports, misnamed or edited migrations, tables without RLS, secrets, non-English or non-kebab document names. It asks for confirmation when a new **audit document** is created (DOC-7).
 - **PostToolUse** formats with Prettier and lints the edited file (when the tooling is installed) and records what changed.
 - **Stop** runs `lint`, `typecheck` and `check:consistency` (when they exist) and reminds you to update the documents if code changed without them.
 

@@ -18,5 +18,5 @@ Target: $1
 Goal (optional): $2
 
 1. If no target was given, ask which screen or component to plan.
-2. Delegate to `ux-ui-designer` with the target and goal. Ask it to answer in chat; do not create `docs/design/` files (DOC-3), add the plan to the module document only if the user asks.
+2. Delegate to `ux-ui-designer` with the target and goal. Ask it to answer in chat; do not create `docs/design/` files (DOC-3: a plan is a topic of its screen, not a document of its own); add it to the document that describes the screen only if the user asks.
 3. When the plan is approved, implementation goes to the `developer` agent in small steps (one screen region per change), then `/design-review` on the running screen. The refactor must keep API calls, business rules and every `Action.*` permission gate unchanged, and follows `docs/standards/base.md` (rules UI-1 to UI-14).

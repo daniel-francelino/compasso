@@ -44,7 +44,7 @@ Guidance lives in `.claude/skills/ui-ux-pro-max/`. Read its `SKILL.md` once, the
 
 ## Output
 
-Answer in chat. Do not create files under `docs/design/` (DOC-3: one document per area); if the person wants the plan saved, propose adding it to the module document of that screen. Structure:
+Answer in chat. Do not create files under `docs/design/` (DOC-3: a plan is a topic of its screen, not a document of its own); if the person wants the plan saved, propose adding it to the document that describes that screen. Structure:
 
 ```
 # Refactor: <screen>

@@ -149,11 +149,9 @@ if (violations.length > 0) {
   process.exit(2);
 }
 
-if (isNew && relativePath.startsWith("docs/") && relativePath !== "docs/README.md") {
-  const isAudit = relativePath.startsWith("docs/audits/");
-  const reason = isAudit
-    ? "DOC-7: audit documents are one file per topic, updated in place. Confirm this is a NEW topic (otherwise add to the existing file) and add it to docs/README.md."
-    : "DOC-3: one document per area; confirm this is not an overlap with an existing document and add it to docs/README.md.";
+if (isNew && relativePath.startsWith("docs/audits/")) {
+  const reason =
+    "DOC-7: audit documents are one file per topic, updated in place. Confirm this is a NEW topic (otherwise add to the existing file) and add it to docs/README.md.";
   process.stdout.write(
     JSON.stringify({
       hookSpecificOutput: {
