@@ -4,6 +4,7 @@ import type { BrushController } from "@/hooks/shared/design/use-brush-options";
 import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import { type FillController, useDesignFill } from "@/hooks/shared/design/use-design-fill";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
+import { type RetouchController, useDesignRetouch } from "@/hooks/shared/design/use-design-retouch";
 import type { PixelHistorySession } from "@/hooks/shared/design/use-pixel-history";
 import type { MaskController } from "@/hooks/shared/design/use-design-mask";
 import { resolveInheritance, rgbToHex } from "@/lib/shared/design/document";
@@ -18,11 +19,14 @@ import {
   PAINT_REASON,
   PAINT_UPLOAD_REASON,
   PaintSampleMode,
+  type PaintInput,
+  type PaintSample,
   cursorDiameterPx,
   docToLayerPoint,
   hexToRgb,
   isBrushTool,
   isFillTool,
+  isRetouchTool,
   layerScale,
   toBrushParams,
 } from "@/lib/shared/design/paint";
@@ -64,14 +68,15 @@ const CLEAR_PARAMS: BrushParams = {
 type Active = { session: StrokeSession; key: string; placement: MaskPlacement; label: string };
 
 export type PaintCallbacks = {
-  onPaintStart: (point: Point) => void;
-  onPaintMove: (points: Point[]) => void;
+  onPaintStart: (point: Point, input: PaintInput) => void;
+  onPaintMove: (points: PaintSample[]) => void;
   onPaintEnd: () => void;
 };
 
 export type DesignPaint = {
   brush: BrushController;
   fill: FillController;
+  retouch: RetouchController;
   reason: string | undefined;
   callbacks: PaintCallbacks;
   cursorDiameter: (tool: DesignTool, zoom: number) => number | null;
@@ -103,6 +108,7 @@ export const useDesignPaint = ({
 }): DesignPaint => {
   const { store } = rasters;
   const active = useRef<Active | null>(null);
+  const lastEnd = useRef<{ key: string; point: Point } | null>(null);
   const frame = useRef<number | null>(null);
   const single = editor.single;
   const raster = single?.kind === DesignElementKind.Raster ? single : null;
@@ -141,6 +147,17 @@ export const useDesignPaint = ({
     });
   };
 
+  const retouch = useDesignRetouch({
+    tool,
+    editor,
+    rasters,
+    pixels,
+    brush,
+    selection,
+    target: drawTarget,
+    schedule,
+  });
+
   const take = (color: RgbaColor | null) => {
     if (color === null || color.a === 0) return;
     colors.setForeground(rgbToHex(color.r, color.g, color.b));
@@ -163,7 +180,7 @@ export const useDesignPaint = ({
   const sample = (point: Point) =>
     brush.sample === PaintSampleMode.Layer ? sampleLayer(point) : sampleAll(point);
 
-  const begin = (point: Point) => {
+  const begin = (point: Point, input: PaintInput) => {
     if (!isBrushTool(tool) || drawTarget === null || colors.foreground === null) return;
     const buffer = store.get(drawTarget.key);
     const erase = tool === DesignTool.Eraser;
@@ -176,7 +193,7 @@ export const useDesignPaint = ({
       ...toBrushParams(options, rgb, erase && !drawTarget.mask),
       selection: selection.layerMask(drawTarget.placement),
     };
-    const session = createStrokeSession(buffer, params, options);
+    const session = createStrokeSession(buffer, params, options, { pressure: brush.pressure });
     active.current = {
       session,
       key: drawTarget.key,
@@ -184,11 +201,19 @@ export const useDesignPaint = ({
       label: drawTarget.mask ? MASK_PAINT_LABEL : DESIGN_TOOL_LABEL[tool],
     };
     pixels.stroking.current = true;
-    session.move([docToLayerPoint(drawTarget.placement, point)]);
+    const previous = lastEnd.current;
+    if (input.shift && previous !== null && previous.key === drawTarget.key) {
+      session.seed(previous.point);
+    }
+    session.move([{ ...docToLayerPoint(drawTarget.placement, point), pressure: input.pressure }]);
     schedule(drawTarget.key);
   };
 
-  const onPaintStart = (point: Point) => {
+  const onPaintStart = (point: Point, input: PaintInput) => {
+    if (isRetouchTool(tool)) {
+      retouch.onStart(point, input);
+      return;
+    }
     if (isFillTool(tool)) {
       fill.onStart(point);
       return;
@@ -197,10 +222,14 @@ export const useDesignPaint = ({
       sample(point);
       return;
     }
-    begin(point);
+    begin(point, input);
   };
 
-  const onPaintMove = (points: Point[]) => {
+  const onPaintMove = (points: PaintSample[]) => {
+    if (isRetouchTool(tool)) {
+      retouch.onMove(points);
+      return;
+    }
     if (isFillTool(tool)) {
       fill.onMove(points);
       return;
@@ -212,11 +241,20 @@ export const useDesignPaint = ({
       return;
     }
     if (current === null) return;
-    current.session.move(points.map((point) => docToLayerPoint(current.placement, point)));
+    current.session.move(
+      points.map((item) => ({
+        ...docToLayerPoint(current.placement, item),
+        pressure: item.pressure,
+      })),
+    );
     schedule(current.key);
   };
 
   const onPaintEnd = () => {
+    if (isRetouchTool(tool)) {
+      retouch.onEnd();
+      return;
+    }
     if (isFillTool(tool)) {
       fill.onEnd();
       return;
@@ -226,6 +264,8 @@ export const useDesignPaint = ({
     pixels.stroking.current = false;
     if (current === null) return;
     cancelFrame();
+    const end = current.session.last();
+    if (end !== null) lastEnd.current = { key: current.key, point: end };
     const patch = current.session.finish();
     store.markChanged(current.key);
     if (patch === null) return;
@@ -263,6 +303,7 @@ export const useDesignPaint = ({
   return {
     brush,
     fill,
+    retouch,
     reason,
     callbacks: { onPaintStart, onPaintMove, onPaintEnd },
     cursorDiameter,

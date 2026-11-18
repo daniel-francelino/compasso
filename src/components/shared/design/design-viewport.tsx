@@ -47,6 +47,8 @@ const CURSOR: Record<DesignTool, string> = {
   [DesignTool.Eyedropper]: "cursor-crosshair",
   [DesignTool.Brush]: "cursor-crosshair",
   [DesignTool.Clone]: "cursor-crosshair",
+  [DesignTool.Dodge]: "cursor-crosshair",
+  [DesignTool.Burn]: "cursor-crosshair",
   [DesignTool.Eraser]: "cursor-crosshair",
   [DesignTool.Fill]: "cursor-crosshair",
   [DesignTool.Gradient]: "cursor-crosshair",

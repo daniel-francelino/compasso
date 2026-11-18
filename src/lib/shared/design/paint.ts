@@ -30,7 +30,40 @@ export const PAINT_REASON = "Selecione uma camada de pixels visível e desbloque
 export const PAINT_UPLOAD_REASON =
   "Pintar exige permissão para enviar arquivos à biblioteca de mídia.";
 
-export type BrushTool = typeof DesignTool.Brush | typeof DesignTool.Eraser;
+export type BrushTool =
+  | typeof DesignTool.Brush
+  | typeof DesignTool.Eraser
+  | typeof DesignTool.Clone
+  | typeof DesignTool.Dodge
+  | typeof DesignTool.Burn;
+
+export type PaintSample = Point & { pressure: number };
+
+export type PaintInput = { shift: boolean; alt: boolean; pressure: number };
+
+export type PressureOptions = { size: boolean; opacity: boolean };
+
+export const DEFAULT_PRESSURE_OPTIONS: PressureOptions = { size: false, opacity: false };
+
+export const MIN_PRESSURE_SIZE_RATIO = 0.1;
+
+export const PRESSURE_LABEL: Record<keyof PressureOptions, string> = {
+  size: "Pressão no tamanho",
+  opacity: "Pressão na opacidade",
+};
+
+export const withPressure = (
+  params: BrushParams,
+  pressure: number,
+  options: PressureOptions,
+): BrushParams => {
+  const level = Math.min(1, Math.max(0, Number.isFinite(pressure) ? pressure : 1));
+  return {
+    ...params,
+    size: options.size ? params.size * Math.max(MIN_PRESSURE_SIZE_RATIO, level) : params.size,
+    opacity: options.opacity ? params.opacity * level : params.opacity,
+  };
+};
 
 export type BrushOptions = {
   size: number;
@@ -51,7 +84,16 @@ export const DEFAULT_BRUSH_OPTIONS: BrushOptions = {
 };
 
 export const isBrushTool = (tool: DesignTool): tool is BrushTool =>
-  tool === DesignTool.Brush || tool === DesignTool.Eraser;
+  tool === DesignTool.Brush ||
+  tool === DesignTool.Eraser ||
+  tool === DesignTool.Clone ||
+  tool === DesignTool.Dodge ||
+  tool === DesignTool.Burn;
+
+export const isRetouchTool = (tool: DesignTool): boolean =>
+  tool === DesignTool.Clone || tool === DesignTool.Dodge || tool === DesignTool.Burn;
+
+export const CLONE_SOURCE_HINT = "Alt+clique para definir a origem.";
 
 export const isFillTool = (tool: DesignTool): boolean =>
   tool === DesignTool.Fill || tool === DesignTool.Gradient;

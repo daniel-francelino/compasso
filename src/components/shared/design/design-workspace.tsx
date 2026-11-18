@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "lost-ui/ui/alert";
 import { DesignBrandPanel } from "@/components/shared/design/design-brand-panel";
 import { DesignHistoryPanel } from "@/components/shared/design/design-history-panel";
 import { DesignContextBar } from "@/components/shared/design/design-context-bar";
+import { DesignFilterDialog } from "@/components/shared/design/design-filter-dialog";
 import { DesignExportDialog } from "@/components/shared/design/design-export-dialog";
 import { DesignMenuBar } from "@/components/shared/design/design-menu-bar";
 import { DesignAdjustmentsPanel } from "@/components/shared/design/design-adjustments-panel";
@@ -28,6 +29,7 @@ import { useBrushOptions } from "@/hooks/shared/design/use-brush-options";
 import { useDesignClipboard } from "@/hooks/shared/design/use-design-clipboard";
 import { useDesignCrop } from "@/hooks/shared/design/use-design-crop";
 import { useDesignColors } from "@/hooks/shared/design/use-design-colors";
+import { useDesignFilter } from "@/hooks/shared/design/use-design-filter";
 import { useDesignMask } from "@/hooks/shared/design/use-design-mask";
 import { useDesignPaint } from "@/hooks/shared/design/use-design-paint";
 import { usePixelHistory } from "@/hooks/shared/design/use-pixel-history";
@@ -167,6 +169,8 @@ export function DesignWorkspace({
     selection,
     masks,
   });
+
+  const filter = useDesignFilter({ editor, rasters, pixels, selection, canPaint });
 
   const crop = useDesignCrop({
     tool: tool.active,
@@ -351,6 +355,8 @@ export function DesignWorkspace({
     clipboard,
     onTransform: startTransform,
     masks,
+    onFilter: filter.open,
+    filterReason: filter.reason,
   });
 
   const panels = {
@@ -515,6 +521,7 @@ export function DesignWorkspace({
         onShortcuts={() => setShortcutsOpen(true)}
       />
       <DesignShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <DesignFilterDialog filter={filter} />
       <DesignSelectionDialog kind={adjust} onApply={applyAdjust} onClose={() => setAdjust(null)} />
       <Sheet open={panelsOpen} onOpenChange={setPanelsOpen}>
         <SheetContent side="right" className="w-96 overflow-y-auto p-0 sm:max-w-96">

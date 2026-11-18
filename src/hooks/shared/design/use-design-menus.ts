@@ -11,6 +11,7 @@ import {
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
+import { DESIGN_FILTER_LABEL, DesignFilter } from "@/lib/shared/design/raster/filter-types";
 import { ADJUSTMENT_TYPE_LABEL, AdjustmentType } from "@/lib/shared/design/raster/adjustment-types";
 import type { ImageElement } from "@/lib/shared/design/schemas";
 import { SELECTION_ADJUST_LABEL, SelectionAdjust } from "@/lib/shared/design/selection-state";
@@ -56,6 +57,8 @@ export type DesignMenuContext = {
   clipboard: ClipboardController;
   onTransform: () => void;
   masks: MaskController;
+  onFilter: (filter: DesignFilter) => void;
+  filterReason: string | undefined;
 };
 
 const NO_SELECTION = "Selecione um elemento.";
@@ -370,6 +373,17 @@ const adjustmentsMenu = (c: DesignMenuContext): DesignMenu => ({
   })),
 });
 
+const filterMenu = (c: DesignMenuContext): DesignMenu => ({
+  id: "filter",
+  label: "Filtro",
+  items: Object.values(DesignFilter).map((filter) => ({
+    id: `filter-${filter}`,
+    label: `${DESIGN_FILTER_LABEL[filter]}…`,
+    disabledReason: c.filterReason,
+    onSelect: () => c.onFilter(filter),
+  })),
+});
+
 const helpMenu = (c: DesignMenuContext): DesignMenu => ({
   id: "help",
   label: "Ajuda",
@@ -380,6 +394,6 @@ export const designMenus = (context: DesignMenuContext): DesignMenu[] => [
   fileMenu(context),
   ...(context.canEdit ? [editMenu(context), selectMenu(context)] : []),
   viewMenu(context),
-  ...(context.canEdit ? [layerMenu(context), adjustmentsMenu(context)] : []),
+  ...(context.canEdit ? [layerMenu(context), adjustmentsMenu(context), filterMenu(context)] : []),
   helpMenu(context),
 ];

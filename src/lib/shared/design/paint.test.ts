@@ -6,6 +6,7 @@ import {
   docToLayerPoint,
   hexToRgb,
   withBrushOption,
+  withPressure,
 } from "@/lib/shared/design/paint";
 
 const placement = {
@@ -64,5 +65,29 @@ describe("hexToRgb", () => {
   it("parses a hex color", () => {
     expect(hexToRgb("#102030")).toEqual({ r: 16, g: 32, b: 48 });
     expect(hexToRgb("red")).toBeNull();
+  });
+});
+
+describe("pressure", () => {
+  const base = {
+    size: 40,
+    hardness: 1,
+    opacity: 0.8,
+    flow: 1,
+    color: { r: 0, g: 0, b: 0 },
+    erase: false,
+  };
+
+  it("maps pressure to size and opacity only when enabled", () => {
+    expect(withPressure(base, 0.5, { size: true, opacity: false })).toMatchObject({
+      size: 20,
+      opacity: 0.8,
+    });
+    expect(withPressure(base, 0.5, { size: false, opacity: true })).toMatchObject({
+      size: 40,
+      opacity: 0.4,
+    });
+    expect(withPressure(base, 0, { size: true, opacity: false }).size).toBe(4);
+    expect(withPressure(base, 0.3, { size: false, opacity: false })).toEqual(base);
   });
 });

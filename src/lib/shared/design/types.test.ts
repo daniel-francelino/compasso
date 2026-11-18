@@ -24,7 +24,7 @@ describe("shortcut table", () => {
 
   it("has no duplicate keys among enabled tools, except the shape group and the fill group sharing theirs", () => {
     const keys = DESIGN_ENABLED_TOOLS.filter(
-      (tool) => !isShapeTool(tool) && tool !== DesignTool.Gradient,
+      (tool) => !isShapeTool(tool) && tool !== DesignTool.Gradient && tool !== DesignTool.Burn,
     ).map((tool) => DESIGN_TOOL_KEY[tool]);
     expect(new Set(keys).size).toBe(keys.length);
     expect(DESIGN_TOOL_KEY[DesignTool.Gradient]).toBe(DESIGN_TOOL_KEY[DesignTool.Fill]);
@@ -39,7 +39,8 @@ describe("shortcut table", () => {
     expect(DESIGN_TOOL_KEY[DesignTool.Eyedropper]).toBe("i");
     expect(DESIGN_TOOL_KEY[DesignTool.Brush]).toBe("b");
     expect(DESIGN_ENABLED_TOOLS).toContain(DesignTool.Brush);
-    expect(DESIGN_ENABLED_TOOLS).not.toContain(DesignTool.Clone);
+    expect(DESIGN_ENABLED_TOOLS).toContain(DesignTool.Clone);
+    expect(DESIGN_TOOL_KEY[DesignTool.Burn]).toBe(DESIGN_TOOL_KEY[DesignTool.Dodge]);
   });
 
   it("cycles the shape tools rect, ellipse, line", () => {
@@ -71,6 +72,7 @@ describe("tool groups", () => {
       DesignToolGroup.Crop,
       DesignToolGroup.Eyedropper,
       DesignToolGroup.Paint,
+      DesignToolGroup.Tone,
       DesignToolGroup.Fill,
       DesignToolGroup.Text,
       DesignToolGroup.Shapes,

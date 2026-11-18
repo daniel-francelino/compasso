@@ -113,6 +113,8 @@ export const DesignTool = {
   Eyedropper: "eyedropper",
   Brush: "brush",
   Clone: "clone",
+  Dodge: "dodge",
+  Burn: "burn",
   Eraser: "eraser",
   Fill: "fill",
   Gradient: "gradient",
@@ -220,6 +222,8 @@ export const DESIGN_TOOL_LABEL: Record<DesignTool, string> = {
   [DesignTool.Eyedropper]: "Conta-gotas",
   [DesignTool.Brush]: "Pincel",
   [DesignTool.Clone]: "Carimbo",
+  [DesignTool.Dodge]: "Subexposição",
+  [DesignTool.Burn]: "Superexposição",
   [DesignTool.Eraser]: "Borracha",
   [DesignTool.Fill]: "Balde de tinta",
   [DesignTool.Gradient]: "Gradiente",
@@ -240,6 +244,8 @@ export const DESIGN_TOOL_KEY: Record<DesignTool, string> = {
   [DesignTool.Eyedropper]: "i",
   [DesignTool.Brush]: "b",
   [DesignTool.Clone]: "s",
+  [DesignTool.Dodge]: "o",
+  [DesignTool.Burn]: "o",
   [DesignTool.Eraser]: "e",
   [DesignTool.Fill]: "g",
   [DesignTool.Gradient]: "g",
@@ -259,6 +265,9 @@ export const DESIGN_ENABLED_TOOLS: readonly DesignTool[] = [
   DesignTool.Crop,
   DesignTool.Eyedropper,
   DesignTool.Brush,
+  DesignTool.Clone,
+  DesignTool.Dodge,
+  DesignTool.Burn,
   DesignTool.Eraser,
   DesignTool.Fill,
   DesignTool.Gradient,
@@ -276,6 +285,7 @@ export const DesignToolGroup = {
   Crop: "crop",
   Eyedropper: "eyedropper",
   Paint: "paint",
+  Tone: "tone",
   Fill: "fill",
   Text: "text",
   Shapes: "shapes",
@@ -290,6 +300,7 @@ export const DESIGN_TOOL_GROUPS: Record<DesignToolGroup, readonly DesignTool[]> 
   [DesignToolGroup.Crop]: [DesignTool.Crop],
   [DesignToolGroup.Eyedropper]: [DesignTool.Eyedropper],
   [DesignToolGroup.Paint]: [DesignTool.Brush, DesignTool.Eraser, DesignTool.Clone],
+  [DesignToolGroup.Tone]: [DesignTool.Dodge, DesignTool.Burn],
   [DesignToolGroup.Fill]: [DesignTool.Fill, DesignTool.Gradient],
   [DesignToolGroup.Text]: [DesignTool.Text],
   [DesignToolGroup.Shapes]: [DesignTool.Rect, DesignTool.Ellipse, DesignTool.Line],
@@ -330,6 +341,8 @@ const toolKeys = (tools: readonly DesignTool[]): string =>
 
 export const DESIGN_FILL_KEY = "g";
 
+export const DESIGN_TONE_KEY = "o";
+
 export const DESIGN_CLIP_KEY = "KeyG";
 
 export const DESIGN_CLIP_SHORTCUT_LABEL = "Alt + Ctrl + G";
@@ -337,9 +350,12 @@ export const DESIGN_CLIP_SHORTCUT_LABEL = "Alt + Ctrl + G";
 export const DESIGN_SHORTCUT_HELP: readonly (readonly [string, string])[] = [
   [
     toolKeys(DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool))),
-    "Mover, texto, mão, zoom, seleção, laço, varinha, cortar, conta-gotas, pincel, borracha, balde",
+    "Mover, texto, mão, zoom, seleção, laço, varinha, cortar, conta-gotas, pincel, carimbo, subexposição, borracha, balde",
   ],
   [`Shift + ${DESIGN_FILL_KEY.toUpperCase()}`, "Balde de tinta e gradiente: alternar"],
+  [`Shift + ${DESIGN_TONE_KEY.toUpperCase()}`, "Subexposição e superexposição: alternar"],
+  ["Alt + clique", "Carimbo: definir a origem da cópia"],
+  ["Shift + clique", "Pincel e borracha: linha reta a partir do último ponto"],
   [DESIGN_CLIP_SHORTCUT_LABEL, "Criar ou liberar a máscara de corte da camada"],
   [`Shift + ${DESIGN_MARQUEE_KEY.toUpperCase()}`, "Seleção retangular / elíptica: alternar"],
   ["Shift / Alt ao selecionar", "Adicionar à seleção / subtrair (os dois: interseção)"],

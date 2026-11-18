@@ -20,6 +20,7 @@ import {
   DESIGN_LIMITS,
   DESIGN_MARQUEE_KEY,
   DESIGN_SHAPE_KEY,
+  DESIGN_TONE_KEY,
   DESIGN_TOOL_KEY,
   DesignElementKind,
   DesignTool,
@@ -201,6 +202,12 @@ const fillKey = (event: KeyboardEvent, { tool }: Context): boolean => {
   return true;
 };
 
+const toneKey = (event: KeyboardEvent, { tool }: Context): boolean => {
+  if (event.key.toLowerCase() !== DESIGN_TONE_KEY || !event.shiftKey) return false;
+  tool.setTool(tool.tool === DesignTool.Dodge ? DesignTool.Burn : DesignTool.Dodge);
+  return true;
+};
+
 const clipKey = (event: KeyboardEvent, { editor }: Context): boolean => {
   if (!event.ctrlKey || !event.altKey || event.shiftKey || event.code !== DESIGN_CLIP_KEY) {
     return false;
@@ -227,6 +234,7 @@ const pixelsKey = (event: KeyboardEvent, { selection, paint, editor }: Context):
 const toolKey = (event: KeyboardEvent, context: Context): boolean => {
   if (event.altKey) return false;
   if (fillKey(event, context)) return true;
+  if (toneKey(event, context)) return true;
   if (marqueeKey(event, context)) return true;
   if (shapeKey(event, context)) return true;
   if (event.shiftKey) return false;

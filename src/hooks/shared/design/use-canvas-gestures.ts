@@ -2,7 +2,7 @@ import type Konva from "konva";
 import { useRef, useState } from "react";
 import { type DrawTool, isDrawTool } from "@/lib/shared/design/arrange";
 import type { PointerModifiers } from "@/hooks/shared/design/use-design-selection";
-import { isPaintTool } from "@/lib/shared/design/paint";
+import { type PaintInput, type PaintSample, isPaintTool } from "@/lib/shared/design/paint";
 import { isSelectionTool } from "@/lib/shared/design/selection-state";
 import type { Box } from "@/lib/shared/design/document";
 import { DESIGN_LIMITS, DesignTool } from "@/lib/shared/design/types";
@@ -20,8 +20,8 @@ export type GestureCallbacks = {
   onZoom?: (factor: number, point: Point) => void;
   onZoomStep?: (direction: 1 | -1, point: Point) => void;
   onCursor?: (point: Point | null) => void;
-  onPaintStart?: (point: Point) => void;
-  onPaintMove?: (points: Point[]) => void;
+  onPaintStart?: (point: Point, input: PaintInput) => void;
+  onPaintMove?: (points: PaintSample[]) => void;
   onPaintEnd?: () => void;
   onSelectStart?: (point: Point, mods: PointerModifiers) => void;
   onSelectMove?: (point: Point, mods: PointerModifiers) => void;
@@ -48,15 +48,29 @@ const pointsOf = (event: PointerEvent | Konva.KonvaEventObject<WheelEvent>) => {
   return { stage, doc, screen };
 };
 
-const pointsOfCoalesced = (event: PointerEvent, stage: Konva.Stage, fallback: Point): Point[] => {
+const pressureOf = (event: globalThis.PointerEvent): number =>
+  event.pointerType === "pen" ? event.pressure : 1;
+
+const paintInputOf = (event: PointerEvent): PaintInput => ({
+  shift: event.evt.shiftKey,
+  alt: event.evt.altKey,
+  pressure: pressureOf(event.evt),
+});
+
+const pointsOfCoalesced = (
+  event: PointerEvent,
+  stage: Konva.Stage,
+  fallback: Point,
+): PaintSample[] => {
   const rect = stage.container().getBoundingClientRect();
   const inverse = stage.getAbsoluteTransform().copy().invert();
   const events =
     typeof event.evt.getCoalescedEvents === "function" ? event.evt.getCoalescedEvents() : [];
-  if (events.length === 0) return [fallback];
-  return events.map((item) =>
-    inverse.point({ x: item.clientX - rect.left, y: item.clientY - rect.top }),
-  );
+  if (events.length === 0) return [{ ...fallback, pressure: pressureOf(event.evt) }];
+  return events.map((item) => ({
+    ...inverse.point({ x: item.clientX - rect.left, y: item.clientY - rect.top }),
+    pressure: pressureOf(item),
+  }));
 };
 
 const isEmptyTarget = (event: PointerEvent) =>
@@ -96,7 +110,7 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
     }
     if (isPaintTool(tool)) {
       painting.current = true;
-      callbacks.onPaintStart?.(doc);
+      callbacks.onPaintStart?.(doc, paintInputOf(event));
       return;
     }
     if (tool === DesignTool.Crop) {

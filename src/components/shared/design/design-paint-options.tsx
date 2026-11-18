@@ -6,7 +6,9 @@ import {
   type BrushOptionKey,
   PAINT_LIMITS,
   PAINT_SAMPLE_LABEL,
+  PRESSURE_LABEL,
   PaintSampleMode,
+  type PressureOptions,
   isBrushTool,
 } from "@/lib/shared/design/paint";
 import { cn } from "@/lib/shared/utils";
@@ -64,6 +66,45 @@ export function OptionField({
   );
 }
 
+export function ToggleButton({
+  label,
+  pressed,
+  onToggle,
+}: {
+  label: string;
+  pressed: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      aria-pressed={pressed}
+      className={cn("shrink-0", pressed && "bg-accent text-accent-foreground")}
+      onClick={onToggle}
+    >
+      {label}
+    </Button>
+  );
+}
+
+function PressureToggles({ paint }: { paint: ToolOptionsProps["paint"] }) {
+  const { pressure, setPressure } = paint.brush;
+  return (
+    <>
+      {(Object.keys(PRESSURE_LABEL) as (keyof PressureOptions)[]).map((key) => (
+        <ToggleButton
+          key={key}
+          label={PRESSURE_LABEL[key]}
+          pressed={pressure[key]}
+          onToggle={() => setPressure({ [key]: !pressure[key] })}
+        />
+      ))}
+    </>
+  );
+}
+
 export function BrushOptionsBar({ tool, paint }: ToolOptionsProps) {
   if (!isBrushTool(tool)) return null;
   const options = paint.brush.optionsOf(tool);
@@ -80,6 +121,7 @@ export function BrushOptionsBar({ tool, paint }: ToolOptionsProps) {
           onChange={(value) => paint.brush.setOption(tool, key, value)}
         />
       ))}
+      <PressureToggles paint={paint} />
       {paint.reason === undefined ? null : (
         <p role="status" className="ml-2 shrink-0 text-sm text-muted-foreground">
           {paint.reason}

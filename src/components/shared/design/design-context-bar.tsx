@@ -6,13 +6,13 @@ import {
   ShapeOptions,
   TextOptions,
   type ToolOptionsProps,
-  UnavailableOptions,
   ZoomOptions,
 } from "@/components/shared/design/design-tool-options";
 import {
   BucketOptionsBar,
   GradientOptionsBar,
 } from "@/components/shared/design/design-fill-options";
+import { CloneOptionsBar, ToneOptionsBar } from "@/components/shared/design/design-retouch-options";
 import {
   BrushOptionsBar,
   EyedropperOptionsBar,
@@ -43,7 +43,9 @@ const DESIGN_TOOL_OPTIONS: Record<DesignTool, ComponentType<ToolOptionsProps>> =
   [DesignTool.Crop]: CropOptions,
   [DesignTool.Eyedropper]: EyedropperOptionsBar,
   [DesignTool.Brush]: BrushOptionsBar,
-  [DesignTool.Clone]: UnavailableOptions,
+  [DesignTool.Clone]: CloneOptionsBar,
+  [DesignTool.Dodge]: ToneOptionsBar,
+  [DesignTool.Burn]: ToneOptionsBar,
   [DesignTool.Eraser]: BrushOptionsBar,
   [DesignTool.Fill]: BucketOptionsBar,
   [DesignTool.Gradient]: GradientOptionsBar,

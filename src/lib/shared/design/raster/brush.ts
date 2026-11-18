@@ -88,15 +88,35 @@ const stampDirect = (
   }
 };
 
-const stampRecorded = (
+export type PixelShader = (
+  dst: Uint8ClampedArray,
+  di: number,
+  base: Uint8ClampedArray,
+  bi: number,
+  amount: number,
+  px: number,
+  py: number,
+) => void;
+
+export type DabStamp = (
   stroke: StrokeAccumulator,
   x: number,
   y: number,
-  radius: number,
-  bounds: Rect,
   params: BrushParams,
+) => void;
+
+export const stampShaded = (
+  stroke: StrokeAccumulator,
+  x: number,
+  y: number,
+  params: BrushParams,
+  shade: PixelShader,
 ): void => {
+  const radius = params.size / 2;
+  if (radius <= 0) return;
   const { buffer } = stroke;
+  const bounds = dabBounds(buffer, x, y, radius);
+  if (bounds === null) return;
   const flow = clamp01(params.flow);
   const opacity = clamp01(params.opacity);
   for (const { tx, ty } of tilesTouchedByRect(buffer.width, buffer.height, bounds)) {
@@ -114,18 +134,24 @@ const stampRecorded = (
         const local = (py - tile.y) * tile.width + (px - tile.x);
         const accumulated = at(cover, local) + (1 - at(cover, local)) * strength * flow;
         cover[local] = accumulated;
-        writePixel(
+        shade(
           buffer.data,
           (py * buffer.width + px) * 4,
           tile.data,
           local * 4,
-          params,
           accumulated * opacity,
+          px,
+          py,
         );
       }
     }
   }
 };
+
+const paintShade =
+  (params: BrushParams): PixelShader =>
+  (dst, di, base, bi, amount) =>
+    writePixel(dst, di, base, bi, params, amount);
 
 export const stampDab = (
   buffer: PixelBuffer,
@@ -136,13 +162,13 @@ export const stampDab = (
 ): void => {
   const radius = params.size / 2;
   if (radius <= 0) return;
-  const bounds = dabBounds(buffer, x, y, radius);
-  if (bounds === null) return;
-  if (stroke === undefined) {
-    stampDirect(buffer, x, y, radius, bounds, params);
+  if (stroke !== undefined) {
+    stampShaded(stroke, x, y, params, paintShade(params));
     return;
   }
-  stampRecorded(stroke, x, y, radius, bounds, params);
+  const bounds = dabBounds(buffer, x, y, radius);
+  if (bounds === null) return;
+  stampDirect(buffer, x, y, radius, bounds, params);
 };
 
 export const dabSpacing = (size: number, spacingPercent: number): number =>
@@ -200,9 +226,13 @@ export const paintStroke = (
   params: BrushParams,
   spacingPercent: number,
   carry?: number,
+  stamp?: DabStamp,
 ): number => {
   const segments = strokeBetween(points, params.size, spacingPercent, carry);
-  for (const dab of segments.dabs) stampDab(stroke.buffer, dab.x, dab.y, params, stroke);
+  for (const dab of segments.dabs) {
+    if (stamp === undefined) stampDab(stroke.buffer, dab.x, dab.y, params, stroke);
+    else stamp(stroke, dab.x, dab.y, params);
+  }
   return segments.carry;
 };
 

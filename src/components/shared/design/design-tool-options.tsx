@@ -210,7 +210,3 @@ export function HandOptions(props: ToolOptionsProps) {
     </>
   );
 }
-
-export function UnavailableOptions() {
-  return <Hint text="Ferramenta ainda indisponível." />;
-}
