@@ -1,7 +1,9 @@
 import type Konva from "konva";
 import { useRef, useState } from "react";
 import { type DrawTool, isDrawTool } from "@/lib/shared/design/arrange";
+import type { PointerModifiers } from "@/hooks/shared/design/use-design-selection";
 import { isPaintTool } from "@/lib/shared/design/paint";
+import { isSelectionTool } from "@/lib/shared/design/selection-state";
 import type { Box } from "@/lib/shared/design/document";
 import { DESIGN_LIMITS, DesignTool } from "@/lib/shared/design/types";
 import { type Point, boxFromPoints } from "@/lib/shared/design/viewport";
@@ -21,12 +23,20 @@ export type GestureCallbacks = {
   onPaintStart?: (point: Point) => void;
   onPaintMove?: (points: Point[]) => void;
   onPaintEnd?: () => void;
+  onSelectStart?: (point: Point, mods: PointerModifiers) => void;
+  onSelectMove?: (point: Point, mods: PointerModifiers) => void;
+  onSelectEnd?: () => void;
 };
 
 type PointerEvent = Konva.KonvaEventObject<globalThis.PointerEvent>;
 type Pan = { x: number; y: number };
 
 const MIDDLE_BUTTON = 1;
+
+const modifiersOf = (event: PointerEvent): PointerModifiers => ({
+  shift: event.evt.shiftKey,
+  alt: event.evt.altKey,
+});
 
 const pointsOf = (event: PointerEvent | Konva.KonvaEventObject<WheelEvent>) => {
   const stage = event.target.getStage();
@@ -57,6 +67,7 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
   const draftRef = useRef<CanvasDraft | null>(null);
   const pan = useRef<Pan | null>(null);
   const painting = useRef(false);
+  const selecting = useRef(false);
 
   const setDraft = (next: CanvasDraft | null) => {
     draftRef.current = next;
@@ -84,6 +95,11 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
       callbacks.onPaintStart?.(doc);
       return;
     }
+    if (isSelectionTool(tool)) {
+      selecting.current = true;
+      callbacks.onSelectStart?.(doc, modifiersOf(event));
+      return;
+    }
     if (isDrawTool(tool)) {
       setDraft({ kind: "draw", tool, start: doc, end: doc, shift: event.evt.shiftKey });
       return;
@@ -97,6 +113,10 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
     callbacks.onCursor?.(doc);
     if (painting.current && stage !== null && doc !== null) {
       callbacks.onPaintMove?.(pointsOfCoalesced(event, stage, doc));
+      return;
+    }
+    if (selecting.current && doc !== null) {
+      callbacks.onSelectMove?.(doc, modifiersOf(event));
       return;
     }
     const panning = pan.current;
@@ -132,6 +152,10 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
     if (painting.current) {
       painting.current = false;
       callbacks.onPaintEnd?.();
+    }
+    if (selecting.current) {
+      selecting.current = false;
+      callbacks.onSelectEnd?.();
     }
     const current = draftRef.current;
     setDraft(null);

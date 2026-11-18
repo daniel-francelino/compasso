@@ -250,6 +250,9 @@ export const DESIGN_ENABLED_TOOLS: readonly DesignTool[] = [
   DesignTool.Line,
   DesignTool.Hand,
   DesignTool.Zoom,
+  DesignTool.Marquee,
+  DesignTool.Lasso,
+  DesignTool.Wand,
   DesignTool.Eyedropper,
   DesignTool.Brush,
   DesignTool.Eraser,
@@ -300,6 +303,8 @@ export const visibleToolGroups = (enabled: readonly DesignTool[]): VisibleToolGr
 
 export const DESIGN_SHAPE_KEY = "u";
 
+export const DESIGN_MARQUEE_KEY = "m";
+
 export const DESIGN_IMAGE_KEY = "k";
 export const DESIGN_IMAGE_SHORTCUT_LABEL = "Ctrl+Shift+K";
 
@@ -320,8 +325,14 @@ const toolKeys = (tools: readonly DesignTool[]): string =>
 export const DESIGN_SHORTCUT_HELP: readonly (readonly [string, string])[] = [
   [
     toolKeys(DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool))),
-    "Mover, texto, mão, zoom, conta-gotas, pincel, borracha",
+    "Mover, texto, mão, zoom, seleção, laço, varinha, conta-gotas, pincel, borracha",
   ],
+  [`Shift + ${DESIGN_MARQUEE_KEY.toUpperCase()}`, "Seleção retangular / elíptica: alternar"],
+  ["Shift / Alt ao selecionar", "Adicionar à seleção / subtrair (os dois: interseção)"],
+  ["Enter / Esc / Backspace", "Laço poligonal: fechar / cancelar / remover o último ponto"],
+  ["Ctrl + A / Ctrl + D", "Ferramentas de pixel: selecionar tudo / desmarcar"],
+  ["Ctrl + Shift + I", "Inverter a seleção de pixels"],
+  ["Delete", "Com seleção de pixels: limpar os pixels selecionados"],
   [
     `${DESIGN_SHAPE_KEY.toUpperCase()} / Shift + ${DESIGN_SHAPE_KEY.toUpperCase()}`,
     "Formas: última usada / alternar",

@@ -4,15 +4,20 @@ import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
+import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
+import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import { isControlTarget, isTypingTarget } from "@/lib/shared/design/browser";
-import { isBrushTool } from "@/lib/shared/design/paint";
+import { isBrushTool, isPaintTool } from "@/lib/shared/design/paint";
+import { isSelectionTool } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_DUPLICATE_KEY,
   DESIGN_ENABLED_TOOLS,
   DESIGN_IMAGE_KEY,
   DESIGN_LIMITS,
+  DESIGN_MARQUEE_KEY,
   DESIGN_SHAPE_KEY,
   DESIGN_TOOL_KEY,
+  DesignElementKind,
   DesignTool,
   isShapeTool,
   nextShapeTool,
@@ -38,6 +43,8 @@ type Context = {
   editable: boolean;
   colors: DesignColors;
   brush: BrushController;
+  selection: SelectionController;
+  paint: DesignPaint;
   onImage: () => void;
 };
 
@@ -81,13 +88,39 @@ const imageKey = (event: KeyboardEvent, context: Context): boolean => {
   return true;
 };
 
+const isPixelTool = (tool: DesignTool): boolean => isPaintTool(tool) || isSelectionTool(tool);
+
+const selectionCommand = (event: KeyboardEvent, context: Context): boolean => {
+  if (!context.editable) return false;
+  const { selection, tool } = context;
+  const key = event.key.toLowerCase();
+  if (key === "a" && !event.shiftKey && isPixelTool(tool.tool)) {
+    selection.selectAll();
+    return true;
+  }
+  if (key === "d" && !event.shiftKey && selection.mask !== null) {
+    selection.deselect();
+    return true;
+  }
+  if (key === "i" && event.shiftKey && selection.mask !== null) {
+    selection.invert();
+    return true;
+  }
+  return false;
+};
+
 const commandKey = (event: KeyboardEvent, context: Context): boolean => {
   if (viewKey(event.key, context.viewport)) return true;
   if (imageKey(event, context)) return true;
+  if (selectionCommand(event, context)) return true;
   return context.editable && editKey(event, context.editor);
 };
 
-const escape = ({ editor, tool }: Context): boolean => {
+const escape = ({ editor, tool, selection }: Context): boolean => {
+  if (selection.drawing) {
+    selection.cancelDraft();
+    return true;
+  }
   if (tool.tool !== DesignTool.Move) {
     tool.reset();
     return true;
@@ -104,8 +137,31 @@ const shapeKey = (event: KeyboardEvent, { tool }: Context): boolean => {
   return true;
 };
 
+const marqueeKey = (event: KeyboardEvent, { tool, selection }: Context): boolean => {
+  if (event.key.toLowerCase() !== DESIGN_MARQUEE_KEY || !event.shiftKey) return false;
+  if (tool.tool === DesignTool.Marquee) selection.cycleShape();
+  tool.setTool(DesignTool.Marquee);
+  return true;
+};
+
+const pixelsKey = (event: KeyboardEvent, { selection, paint, editor }: Context): boolean => {
+  if (event.key === "Enter" && selection.drawing) {
+    selection.closePolygon();
+    return true;
+  }
+  if (event.key === "Backspace" && selection.drawing) {
+    selection.removeLastPoint();
+    return true;
+  }
+  const raster = editor.single?.kind === DesignElementKind.Raster;
+  if (event.key !== "Delete" || selection.mask === null || !raster) return false;
+  paint.clearSelected();
+  return true;
+};
+
 const toolKey = (event: KeyboardEvent, context: Context): boolean => {
   if (event.altKey) return false;
+  if (marqueeKey(event, context)) return true;
   if (shapeKey(event, context)) return true;
   if (event.shiftKey) return false;
   const key = event.key.toLowerCase();
@@ -156,7 +212,12 @@ const selectionKey = (event: KeyboardEvent, editor: DesignEditor): boolean => {
 const plainKey = (event: KeyboardEvent, context: Context): boolean => {
   if (!context.editable) return false;
   if (event.key === "Escape") return escape(context);
-  return toolKey(event, context) || paintKey(event, context) || selectionKey(event, context.editor);
+  return (
+    pixelsKey(event, context) ||
+    toolKey(event, context) ||
+    paintKey(event, context) ||
+    selectionKey(event, context.editor)
+  );
 };
 
 export const useDesignShortcuts = (context: Context) => {

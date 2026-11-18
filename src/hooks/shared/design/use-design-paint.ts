@@ -16,6 +16,13 @@ import {
   layerScale,
   toBrushParams,
 } from "@/lib/shared/design/paint";
+import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
+import {
+  type BrushParams,
+  beginStroke,
+  finishStroke,
+  stampDab,
+} from "@/lib/shared/design/raster/brush";
 import { SampleSize, sampleColor } from "@/lib/shared/design/raster/fill";
 import type { Point, RgbaColor } from "@/lib/shared/design/raster/pixel-buffer";
 import { sampleCompositeAt } from "@/lib/shared/design/raster-canvas";
@@ -33,6 +40,17 @@ const paintReason = (canPaint: boolean, layerReady: boolean): string | undefined
   return layerReady ? undefined : PAINT_REASON;
 };
 
+const CLEAR_SELECTION_LABEL = "Limpar seleção";
+
+const CLEAR_PARAMS: BrushParams = {
+  size: 1,
+  hardness: 1,
+  opacity: 1,
+  flow: 1,
+  color: { r: 0, g: 0, b: 0 },
+  erase: true,
+};
+
 type Active = { session: StrokeSession; id: string; placement: RasterElement; label: string };
 
 export type PaintCallbacks = {
@@ -46,6 +64,7 @@ export type DesignPaint = {
   reason: string | undefined;
   callbacks: PaintCallbacks;
   cursorDiameter: (tool: DesignTool, zoom: number) => number | null;
+  clearSelected: () => void;
 };
 
 export const useDesignPaint = ({
@@ -57,6 +76,7 @@ export const useDesignPaint = ({
   brush,
   size,
   canPaint,
+  selection,
 }: {
   tool: DesignTool;
   editor: DesignEditor;
@@ -66,6 +86,7 @@ export const useDesignPaint = ({
   brush: BrushController;
   size: PageSize;
   canPaint: boolean;
+  selection: SelectionController;
 }): DesignPaint => {
   const { store } = rasters;
   const active = useRef<Active | null>(null);
@@ -121,7 +142,11 @@ export const useDesignPaint = ({
     if (buffer === undefined || rgb === null) return;
     const options = brush.optionsOf(tool);
     const erase = tool === DesignTool.Eraser;
-    const session = createStrokeSession(buffer, toBrushParams(options, rgb, erase), options);
+    const params = {
+      ...toBrushParams(options, rgb, erase),
+      selection: selection.layerMask(target),
+    };
+    const session = createStrokeSession(buffer, params, options);
     active.current = { session, id: target.id, placement: target, label: DESIGN_TOOL_LABEL[tool] };
     pixels.stroking.current = true;
     session.move([docToLayerPoint(target, point)]);
@@ -162,6 +187,26 @@ export const useDesignPaint = ({
     editor.markPixelStep(current.label, stepId);
   };
 
+  const clearSelected = () => {
+    if (target === null) return;
+    const buffer = store.get(target.id);
+    const mask = selection.layerMask(target);
+    if (buffer === undefined || mask === null) return;
+    const stroke = beginStroke(buffer);
+    const params = {
+      ...CLEAR_PARAMS,
+      size: Math.hypot(buffer.width, buffer.height) + 2,
+      selection: mask,
+    };
+    stampDab(buffer, buffer.width / 2, buffer.height / 2, params, stroke);
+    const patch = finishStroke(stroke);
+    store.markChanged(target.id);
+    if (patch.tiles.length === 0) return;
+    const stepId = crypto.randomUUID();
+    pixels.history.push(CLEAR_SELECTION_LABEL, target.id, patch, stepId);
+    editor.markPixelStep(CLEAR_SELECTION_LABEL, stepId);
+  };
+
   const cursorDiameter = (activeTool: DesignTool, zoom: number): number | null => {
     if (!isBrushTool(activeTool)) return null;
     const scale = target === null ? 1 : layerScale(target);
@@ -173,5 +218,6 @@ export const useDesignPaint = ({
     reason,
     callbacks: { onPaintStart, onPaintMove, onPaintEnd },
     cursorDiameter,
+    clearSelected,
   };
 };

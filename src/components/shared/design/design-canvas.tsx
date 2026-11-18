@@ -1,5 +1,5 @@
 import type Konva from "konva";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Layer, Line, Rect, Stage, Transformer } from "react-konva";
 import { DesignDraftShape } from "@/components/shared/design/design-draft-shape";
 import { DesignElementNode, type NodeEvents } from "@/components/shared/design/design-element-node";
@@ -93,6 +93,7 @@ export type DesignCanvasProps = GestureCallbacks & {
   onCommit?: (patches: ElementPatch[], mergeKey: string) => void;
   onMeasure?: (id: string, height: number) => void;
   onStage?: (stage: Konva.Stage | null) => void;
+  overlay?: ReactNode;
 };
 
 export default function DesignCanvas({
@@ -115,6 +116,7 @@ export default function DesignCanvas({
   onCommit,
   onMeasure,
   onStage,
+  overlay,
   ...gestureCallbacks
 }: DesignCanvasProps) {
   const scale = view?.viewport.zoom ?? exportScale;
@@ -327,6 +329,7 @@ export default function DesignCanvas({
           {gestures.draft === null ? null : (
             <DesignDraftShape draft={gestures.draft} scale={scale} color={chrome.accent} />
           )}
+          {overlay}
         </Layer>
       ) : null}
     </Stage>
