@@ -20,6 +20,7 @@ Functional specification of the modules of Aura Creative, written before impleme
 | Portal feed previews | `shared` | How each Instagram format (image, carousel, video, Reel, Story) is drawn in the portal feed | [portal-feed-previews.md](portal-feed-previews.md) |
 | Client feedback | `portal` (answer) + `marketing` (cards) + `shared` (rules) | Monthly survey the client answers in the portal feed and the card view where the manager reads it | [feedback.md](feedback.md) |
 | Image editor (proposal) | `shared` | Canva-style design editor: reverse engineering, feasibility and proposed design | [image-editor.md](image-editor.md) |
+| Image editor import (plan) | `shared` | Phased plan to import PSD, AI, PDF, raster, palettes, fonts, SVG, Sketch, Lottie, HEIC, CMYK and later EPS, Figma, Canva | [image-editor-import.md](image-editor-import.md) |
 | Video editor | `shared` | Timeline editor for short vertical or square videos (clips, images, text, music), exported in the browser to MP4 | [video-editor.md](video-editor.md) |
 | Organization and settings | `shared` | Organization data, defaults, users, roles, invitations | [organization-settings.md](organization-settings.md) |
 | Audit | `shared` | Business audit trail and its screen | [audit.md](audit.md) |

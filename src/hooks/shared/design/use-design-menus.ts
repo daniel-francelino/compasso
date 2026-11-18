@@ -9,7 +9,7 @@ import {
   MASK_DISABLE_LABEL,
   MASK_ENABLE_LABEL,
 } from "@/lib/shared/design/layer-mask";
-import { DESIGN_IMPORT_LABEL } from "@/lib/shared/design/design-import";
+import { DESIGN_IMPORT_LABEL } from "@/lib/shared/design/import/messages";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";

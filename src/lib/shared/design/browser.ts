@@ -32,8 +32,14 @@ export const pickFile = (accept: string): Promise<File | null> =>
     const input = document.createElement("input");
     input.type = "file";
     input.accept = accept;
-    input.onchange = () => resolve(input.files?.[0] ?? null);
-    input.oncancel = () => resolve(null);
+    input.hidden = true;
+    const finish = (file: File | null) => {
+      input.remove();
+      resolve(file);
+    };
+    input.onchange = () => finish(input.files?.[0] ?? null);
+    input.oncancel = () => finish(null);
+    document.body.appendChild(input);
     input.click();
   });
 
