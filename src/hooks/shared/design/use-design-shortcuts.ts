@@ -1,8 +1,11 @@
 import { useEffect, useRef } from "react";
+import type { BrushController } from "@/hooks/shared/design/use-brush-options";
+import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import { isControlTarget, isTypingTarget } from "@/lib/shared/design/browser";
+import { isBrushTool } from "@/lib/shared/design/paint";
 import {
   DESIGN_DUPLICATE_KEY,
   DESIGN_ENABLED_TOOLS,
@@ -33,6 +36,8 @@ type Context = {
   tool: DesignToolState;
   viewport: DesignViewport;
   editable: boolean;
+  colors: DesignColors;
+  brush: BrushController;
   onImage: () => void;
 };
 
@@ -110,6 +115,21 @@ const toolKey = (event: KeyboardEvent, context: Context): boolean => {
   return true;
 };
 
+const paintKey = (event: KeyboardEvent, { tool, colors, brush }: Context): boolean => {
+  if (event.altKey) return false;
+  const key = event.key.toLowerCase();
+  if (key === "x" && !event.shiftKey) {
+    colors.swap();
+    return true;
+  }
+  if (key === "d" && !event.shiftKey) {
+    colors.reset();
+    return true;
+  }
+  if (!isBrushTool(tool.tool)) return false;
+  return brush.adjustByKey(tool.tool, event.key, event.shiftKey);
+};
+
 const selectionKey = (event: KeyboardEvent, editor: DesignEditor): boolean => {
   const movable = editor.selected.filter((element) => !element.locked);
   if (movable.length === 0) return false;
@@ -133,7 +153,7 @@ const selectionKey = (event: KeyboardEvent, editor: DesignEditor): boolean => {
 const plainKey = (event: KeyboardEvent, context: Context): boolean => {
   if (!context.editable) return false;
   if (event.key === "Escape") return escape(context);
-  return toolKey(event, context) || selectionKey(event, context.editor);
+  return toolKey(event, context) || paintKey(event, context) || selectionKey(event, context.editor);
 };
 
 export const useDesignShortcuts = (context: Context) => {

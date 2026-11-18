@@ -31,7 +31,7 @@ import { checkerboard } from "@/components/shared/design/checkerboard";
 import { DesignBlendControls } from "@/components/shared/design/design-blend-controls";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { layerLabel } from "@/lib/shared/design/layers";
-import type { DesignElement } from "@/lib/shared/design/schemas";
+import type { DesignElement, ImageElement } from "@/lib/shared/design/schemas";
 import { DESIGN_LIMITS, DesignElementKind, LayerMove } from "@/lib/shared/design/types";
 import { cn } from "@/lib/shared/utils";
 
@@ -55,6 +55,8 @@ type Props = {
   element: DesignElement;
   selected: boolean;
   editable: boolean;
+  pixelsFailed: boolean;
+  onRasterize: (element: ImageElement) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
   renaming: boolean;
@@ -219,6 +221,9 @@ export function DesignLayerRow(props: Props) {
             {element.groupId === null ? null : (
               <span className="ml-1 text-xs text-muted-foreground">(grupo)</span>
             )}
+            {props.pixelsFailed ? (
+              <span className="ml-1 text-xs text-muted-foreground">Pixels indisponíveis</span>
+            ) : null}
             {element.hidden && !editable ? <span className="sr-only"> (oculta)</span> : null}
             {element.locked && !editable ? <span className="sr-only"> (bloqueada)</span> : null}
           </button>
@@ -276,6 +281,12 @@ export function DesignLayerRow(props: Props) {
           {element.hidden ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
           {element.hidden ? "Mostrar camada" : "Ocultar camada"}
         </ContextMenuItem>
+        {element.kind === DesignElementKind.Image ? (
+          <ContextMenuItem onSelect={() => props.onRasterize(element)}>
+            <Layers aria-hidden="true" />
+            Rasterizar imagem
+          </ContextMenuItem>
+        ) : null}
         <ContextMenuSeparator />
         <ContextMenuItem disabled={!props.canMoveUp} onSelect={() => props.onMove(LayerMove.Up)}>
           <ArrowUp aria-hidden="true" />

@@ -12,12 +12,14 @@ import { IconButton } from "@/components/shared/admin/icon-button";
 import { Divider, DesignSelectionTools } from "@/components/shared/design/design-selection-tools";
 import { Button } from "@/components/shared/ui/button";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
+import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import { normalizeColor } from "@/lib/shared/design/document";
 import {
   DESIGN_ALIGN_LABEL,
   DesignElementKind,
   DesignTextAlign,
+  type DesignTool,
   type PageSize,
 } from "@/lib/shared/design/types";
 import { zoomPercent } from "@/lib/shared/design/viewport";
@@ -27,6 +29,8 @@ export type ToolOptionsProps = {
   editor: DesignEditor;
   viewport: DesignViewport;
   size: PageSize;
+  paint: DesignPaint;
+  tool: DesignTool;
 };
 
 const HINT_CLASS = "truncate text-sm text-muted-foreground";

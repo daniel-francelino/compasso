@@ -190,6 +190,9 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Bloquear / Desbloquear | Layers | A locked element cannot be moved or changed on the canvas |
 | Salvar versão | Editor | Freeze the current state as a numbered version that never changes |
 | Salvando… / Rascunho salvo / Alterações não salvas / Não foi salvo | Editor | State of the automatic saving of the draft |
+| Enviando pixels… / Pixels não enviados | Editor top bar | Pixel flush of raster layers running / failed (alert with "Tentar de novo") |
+| Pixels indisponíveis | Editor layers row | A raster layer whose file could not be loaded (the layer shows empty; the editor keeps working) |
+| Rasterizar imagem | Editor menu "Camada" and layers context menu | Converts the selected image into a raster layer of the same frame in one undo step |
 | Alterado em outra aba / Recarregar design | Editor | The draft was saved elsewhere (`conflict`); autosave stops, the work stays on screen until the person reloads |
 | Cor de fundo | Editor, page properties | Off means a transparent page (shown as a checkerboard) |
 | Espelhar na horizontal / Espelhar na vertical | Editor, image properties | Flip an image |
@@ -209,6 +212,11 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Atalhos | Editor status bar | The list of keyboard shortcuts |
 | Mistura / Opacidade / Preenchimento | Editor, properties panel | Blend mode of the selected element (Normal, Multiplicar, Tela, Sobrepor, Escurecer, Clarear, Subexposição de cores, Superexposição de cores, Luz direta, Luz suave, Diferença, Exclusão, Matiz, Saturação, Cor, Luminosidade) / opacity of the whole element / opacity of its content only |
 | Seleção retangular / Laço / Varinha mágica / Cortar / Conta-gotas / Pincel / Carimbo / Borracha / Balde de tinta | Editor tool rail (not shown until the phase that gives them behavior) | Photoshop-like tools, keys M, L, W, C, I, B, S, E, G |
+| Pincel / Borracha / Conta-gotas (enabled in P5b1) | Editor tool rail and options bar | Paint on the selected raster layer (session-only until the pixel flush); each stroke is one history step named "Pincel" or "Borracha" |
+| Tamanho / Dureza / Opacidade / Fluxo / Suavização / Amostrar | Editor options bar of the paint tools | Brush size in px (1 to 1000), hardness, opacity, flow and smoothing in %; "Amostrar" of the eyedropper reads "Camada atual" or "Todas as camadas" (raster and adjustment layers only) |
+| Cor de frente / Cor de fundo / Trocar cores (X) / Cores padrão (D) / Cores da marca | Editor tool rail, bottom | Foreground and background chips with a color picker (the brand colors are the swatches), swap and reset buttons |
+| Selecione uma camada de pixels visível e desbloqueada para pintar. | Editor options bar of the paint tools | Why painting is unavailable (no raster layer selected, or it is hidden or locked); no layer is created automatically |
+| Passos do histórico / Alteração | Editor, tab "Histórico" | Read-only list of the steps (document steps read "Alteração"; strokes read "Pincel" or "Borracha"); the current step is marked and clicking does not jump (use Desfazer and Refazer) |
 | Arquivo / Editar / Exibir / Camada / Ajuda | Editor menu bar (one "Menu" button below `lg`) | The menus of the editor; every item runs the same handler as its button or shortcut |
 | Nova camada | Editor, menu "Camada" | Adds an empty raster layer (transparent pixels, the size of the page) on top of the stack; session-only until the pixel flush of P5b |
 | Selecionar tudo / Nova camada de texto / Nova camada de forma / Ordem | Editor menu bar | Select every unlocked element / add a text or a shape in the middle of the page / stack order items (Trazer para a frente, Avançar, Recuar, Enviar para trás de tudo); the panel items of "Exibir" read "Painel: Camadas" and so on |

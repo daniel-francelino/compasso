@@ -45,6 +45,7 @@ export type Target = {
   scope: MediaScope;
   brandId?: string | undefined;
   assetId?: string | undefined;
+  hidden?: boolean | undefined;
 };
 
 const MB = 1024 * 1024;
@@ -171,6 +172,7 @@ export const sendUpload = async (
         scope: target.scope,
         ...(target.brandId ? { brandId: target.brandId } : {}),
         ...(target.assetId ? { assetId: target.assetId } : {}),
+        ...(target.hidden === true && !target.assetId ? { hidden: true } : {}),
         filename: file.name,
         size: file.size,
         mime,

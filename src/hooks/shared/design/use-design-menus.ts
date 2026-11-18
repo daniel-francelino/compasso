@@ -1,6 +1,13 @@
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
-import { DESIGN_PANEL_LABEL, DesignPanel, DesignTool, LayerMove } from "@/lib/shared/design/types";
+import type { ImageElement } from "@/lib/shared/design/schemas";
+import {
+  DESIGN_PANEL_LABEL,
+  DesignElementKind,
+  DesignPanel,
+  DesignTool,
+  LayerMove,
+} from "@/lib/shared/design/types";
 
 export type DesignMenuItem = {
   id: string;
@@ -26,6 +33,7 @@ export type DesignMenuContext = {
   onExport: () => void;
   onAddLayer: (tool: DesignTool) => void;
   onAddRaster: () => void;
+  onRasterize: (element: ImageElement) => void;
   onPanel: (panel: DesignPanel) => void;
   onShortcuts: () => void;
 };
@@ -162,6 +170,15 @@ const layerMenu = (c: DesignMenuContext): DesignMenu => {
         label: "Nova camada",
         disabledReason: c.full,
         onSelect: c.onAddRaster,
+      },
+      {
+        id: "rasterize",
+        label: "Rasterizar imagem",
+        disabledReason:
+          single?.kind === DesignElementKind.Image ? undefined : "Selecione uma imagem.",
+        onSelect: () => {
+          if (single?.kind === DesignElementKind.Image) c.onRasterize(single);
+        },
       },
       {
         id: "group",

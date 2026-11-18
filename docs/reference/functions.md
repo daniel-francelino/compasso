@@ -121,7 +121,7 @@ All are `security definer` with a fixed `search_path`; `execute` is revoked from
 | `approver_options(p_brand)` (the approvers of the brand, who are asked when a content is sent) | `listApproverOptions` | `content.submit` + brand | — | — | `not_found` |
 | `profile_set_avatar(p_version)` | `setAvatar` | approved profile (own photo only) | — (personal preference, not audited) | — | `avatar_invalid`, `denied` |
 | `person_avatar_keys(p_ids uuid[])` (the server signs the thumbnails) | `getAvatarUrls` | approved profile; sees self, owners and people who share a brand | — | — | `denied` |
-| `media_request_upload` / `media_confirm_upload` with scope `profile` | `requestUpload`, `confirmUpload` | approved profile (no `media.upload`); own photo only | — | — | `upload_type_not_allowed`, `upload_too_large` |
+| `media_request_upload` / `media_confirm_upload` with scope `profile` | `requestUpload` (optional `hidden`), `confirmUpload` | approved profile (no `media.upload`); own photo only | — | — | `upload_type_not_allowed`, `upload_too_large` |
 | `person_names(p_ids uuid[])` | (internal helper `personNames`, not a server function) | `content.view` or `approvals.view` | — | — | `denied` |
 | (typed query) | `listAssigneeOptions` | `content.view` + brand | — | — | `not_found` |
 | typed queries | `listContentItems`, `getContentItem`, `listBoard`, `listApprovals`, `getApprovalRequest` | `content.view` / `approvals.view` | — | — | `not_found` |
@@ -188,7 +188,7 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 | `media_expire_sessions()` (service role only; returns the keys of abandoned uploads) | cron route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |
 | `media_storage_keys()` | `checkStorage` ("Verificar com o bucket": compares the bucket listing with the keys) | `media.delete` | — | `storage_unavailable` |
 | `media_policy_mb(p_name, p_default)`, `media_version_in_use(p_version)`, `media_assert_asset_access(p_asset)`, `can_view_media_asset(p_asset)` | — | internal helpers (`media_version_in_use` is redefined by the content migration to include `content_revision_media`) | — | — |
-| — | `listMedia`, `getMedia`, `listCollections` | `media.view` | — | `not_found` |
+| — | `listMedia` (excludes hidden assets), `getMedia`, `listCollections` | `media.view` | — | `not_found` |
 | — | `signMediaUrls` (authorizes then signs) | `media.view` (+ brand link) or portal | — | `denied`, `storage_unavailable` |
 | — | server route `/api/cron/media-cleanup` | `CRON_SECRET` | — | — |
 

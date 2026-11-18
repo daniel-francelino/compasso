@@ -1,11 +1,12 @@
-import type { InheritedLayer } from "@/lib/shared/design/document";
-import type { DesignElement } from "@/lib/shared/design/schemas";
+import { type InheritedLayer, coverCrop } from "@/lib/shared/design/document";
+import { adjustBrightnessContrast, rasterizedPixelSize } from "@/lib/shared/design/rasterize";
+import type { DesignElement, ImageElement } from "@/lib/shared/design/schemas";
 import {
   evaluateLayerStack,
   type PipelineLayer,
   PipelineLayerKind,
 } from "@/lib/shared/design/raster/pipeline";
-import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
+import type { PixelBuffer, RgbaColor } from "@/lib/shared/design/raster/pixel-buffer";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
 import { DesignElementKind, type PageSize } from "@/lib/shared/design/types";
 
@@ -109,4 +110,40 @@ export const renderStack = (
     });
   }
   return bufferToCanvas(evaluateLayerStack(stack, sources, size));
+};
+
+export const sampleCanvas = (canvas: HTMLCanvasElement, x: number, y: number): RgbaColor | null => {
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (context === null) return null;
+  const [r = 0, g = 0, b = 0, a = 0] = context.getImageData(x, y, 1, 1).data;
+  return { r, g, b, a };
+};
+
+export const rasterizeImage = (
+  element: ImageElement,
+  image: HTMLImageElement,
+): PixelBuffer | null => {
+  const { pixelWidth, pixelHeight } = rasterizedPixelSize(element.width, element.height);
+  const canvas = newCanvas(pixelWidth, pixelHeight);
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (context === null) return null;
+  const crop = coverCrop(
+    { width: image.naturalWidth, height: image.naturalHeight },
+    { width: element.width, height: element.height },
+    element.zoom,
+    element.focusX,
+    element.focusY,
+  );
+  context.translate(element.flipX ? pixelWidth : 0, element.flipY ? pixelHeight : 0);
+  context.scale(element.flipX ? -1 : 1, element.flipY ? -1 : 1);
+  context.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, pixelWidth, pixelHeight);
+  const pixels = context.getImageData(0, 0, pixelWidth, pixelHeight);
+  adjustBrightnessContrast(pixels.data, element.brightness, element.contrast);
+  return { width: pixelWidth, height: pixelHeight, data: pixels.data };
+};
+
+export const bufferToPng = (buffer: PixelBuffer): Promise<Blob | null> => {
+  const canvas = bufferToCanvas(buffer);
+  if (canvas === null) return Promise.resolve(null);
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 };

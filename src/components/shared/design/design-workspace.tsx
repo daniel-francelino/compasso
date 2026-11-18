@@ -1,9 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { History, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { RefreshCw, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "lost-ui/ui/alert";
 import { DesignBrandPanel } from "@/components/shared/design/design-brand-panel";
+import { DesignHistoryPanel } from "@/components/shared/design/design-history-panel";
 import { DesignContextBar } from "@/components/shared/design/design-context-bar";
 import { DesignExportDialog } from "@/components/shared/design/design-export-dialog";
 import { DesignMenuBar } from "@/components/shared/design/design-menu-bar";
@@ -21,7 +23,12 @@ import { EmptyState } from "@/components/shared/admin/empty-state";
 import { Button } from "@/components/shared/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/shared/ui/sheet";
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
-import { useRasterStore } from "@/hooks/shared/design/use-raster-store";
+import { useBrushOptions } from "@/hooks/shared/design/use-brush-options";
+import { useDesignColors } from "@/hooks/shared/design/use-design-colors";
+import { useDesignPaint } from "@/hooks/shared/design/use-design-paint";
+import { usePixelHistory } from "@/hooks/shared/design/use-pixel-history";
+import { usePixelPersist } from "@/hooks/shared/design/use-pixel-persist";
+import { RASTER_MEMORY_MESSAGE, useRasterStore } from "@/hooks/shared/design/use-raster-store";
 import { useDesignAutosave } from "@/hooks/shared/design/use-design-autosave";
 import { useDesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { designMenus } from "@/hooks/shared/design/use-design-menus";
@@ -44,6 +51,9 @@ import {
   setDesignTemplate,
 } from "@/lib/shared/design/design.functions";
 import { brandFontsOf, createImage } from "@/lib/shared/design/document";
+import { rasterizeImage } from "@/lib/shared/design/raster-canvas";
+import { rasterizedElement } from "@/lib/shared/design/rasterize";
+import type { ImageElement } from "@/lib/shared/design/schemas";
 import {
   DESIGN_PRESET_LABEL,
   DESIGN_PRESET_SIZE,
@@ -58,6 +68,10 @@ import { QueryKey } from "@/lib/shared/query-keys";
 import { unwrapResult } from "@/lib/shared/result-client";
 
 const IMAGE_KINDS = [MediaKind.Image] as const;
+const RASTERIZE_UNAVAILABLE =
+  "A imagem ainda não terminou de carregar. Aguarde um instante e tente de novo.";
+const PIXELS_NOT_SENT =
+  "Os pixels das camadas não foram enviados. A versão não foi salva; tente de novo.";
 const FULL = "O design chegou ao limite de elementos. Remova algum para adicionar outro.";
 
 export function DesignWorkspace({
@@ -72,7 +86,8 @@ export function DesignWorkspace({
   const isMobile = useIsMobile();
   const editable = can(auth, Action.Design.Update) && !design.trashed && !isMobile;
   const canExport = can(auth, Action.Media.Upload);
-  const editor = useDesignEditor(design.document);
+  const pixels = usePixelHistory();
+  const editor = useDesignEditor(design.document, pixels.steps);
   const autosave = useDesignAutosave({
     designId: design.id,
     document: editor.document,
@@ -81,6 +96,16 @@ export function DesignWorkspace({
   });
   const assets = useDesignAssets(editor.document);
   const rasters = useRasterStore(editor.document);
+  pixels.bind(rasters.store);
+  const persist = usePixelPersist({
+    store: rasters.store,
+    revision: rasters.revision,
+    document: editor.document,
+    enabled: editable && autosave.state !== DesignSaveState.Conflict,
+    brandId: design.brandId,
+    reuseAssets: can(auth, Action.Media.Update),
+    onSaved: (id, versionId) => flushSync(() => editor.setPixelsVersion(id, versionId)),
+  });
   const size = DESIGN_PRESET_SIZE[design.preset];
   const viewport = useDesignViewport(size);
   const tool = useDesignTool();
@@ -107,8 +132,22 @@ export function DesignWorkspace({
   const brandFonts = brandFontsOf(kit.data?.fonts ?? []);
   const pageNumber = editor.document.pages.findIndex((page) => page.id === editor.pageId) + 1;
 
+  const colors = useDesignColors(chrome);
+  const brush = useBrushOptions();
+  const paint = useDesignPaint({
+    tool: tool.active,
+    editor,
+    rasters,
+    pixels,
+    colors,
+    brush,
+    size,
+  });
+
   useDesignShortcuts({
     editor,
+    colors,
+    brush,
     tool,
     viewport,
     editable: canEdit,
@@ -132,6 +171,11 @@ export function DesignWorkspace({
 
   const saveVersion = async (): Promise<number | null> => {
     setSavingVersion(true);
+    if (!(await persist.flush())) {
+      setSavingVersion(false);
+      toast.error(PIXELS_NOT_SENT);
+      return null;
+    }
     const result = await autosave.withVersion((expectedVersion) =>
       saveDesignVersion({ data: { id: design.id, expectedVersion } }),
     );
@@ -191,6 +235,22 @@ export function DesignWorkspace({
     }
   };
 
+  const rasterize = (element: ImageElement) => {
+    const image = assets.images.get(element.mediaVersionId);
+    if (image === null || image === undefined) {
+      toast.error(RASTERIZE_UNAVAILABLE);
+      return;
+    }
+    const layerId = editor.newId();
+    const buffer = rasterizeImage(element, image);
+    if (buffer === null || !rasters.store.set(layerId, buffer)) {
+      toast.error(RASTER_MEMORY_MESSAGE);
+      return;
+    }
+    rasters.store.markChanged(layerId);
+    editor.replaceWithRaster(element.id, rasterizedElement(element, layerId));
+  };
+
   const openPanel = (panel: DesignPanel) => {
     panelTab.setTab(panel);
     setPanelsOpen(true);
@@ -214,6 +274,7 @@ export function DesignWorkspace({
       if (isDrawTool(layerTool)) addLayer(layerTool);
     },
     onAddRaster: () => void editor.addRaster(size),
+    onRasterize: rasterize,
     onPanel: openPanel,
     onShortcuts: () => setShortcutsOpen(true),
   });
@@ -224,6 +285,8 @@ export function DesignWorkspace({
         editor={editor}
         editable={canEdit}
         onAddRaster={() => void editor.addRaster(size)}
+        onRasterize={rasterize}
+        failedIds={rasters.failedIds}
       />
     ),
     [DesignPanel.Properties]: (
@@ -243,14 +306,7 @@ export function DesignWorkspace({
         description="Os ajustes de imagem (brilho, curvas, matiz) chegam em uma fase futura do editor."
       />
     ),
-    [DesignPanel.History]: (
-      <EmptyState
-        compact
-        icon={History}
-        title="Ainda não disponível"
-        description="O histórico com o nome de cada passo chega em uma fase futura. Por enquanto, use Desfazer e Refazer."
-      />
-    ),
+    [DesignPanel.History]: <DesignHistoryPanel steps={editor.steps} />,
     [DesignPanel.Brand]: (
       <DesignBrandPanel
         editor={editor}
@@ -273,7 +329,7 @@ export function DesignWorkspace({
         canEdit={canEdit}
         canExport={canExport}
         isTemplate={isTemplate}
-        saveState={autosave.state}
+        saveState={persist.state ?? autosave.state}
         savingVersion={savingVersion}
         showSaveState={editable}
         onRename={rename}
@@ -319,8 +375,25 @@ export function DesignWorkspace({
           <AlertDescription>{autosave.message}</AlertDescription>
         </Alert>
       ) : null}
+      {persist.state === DesignSaveState.UploadFailed && persist.message !== null ? (
+        <Alert variant="destructive" className="rounded-none border-x-0 border-t-0">
+          <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+            <span>{persist.message}</span>
+            <Button type="button" variant="outline" size="sm" onClick={() => void persist.flush()}>
+              <RefreshCw aria-hidden="true" />
+              Tentar de novo
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
       {canEdit ? (
-        <DesignContextBar editor={editor} viewport={viewport} tool={tool.active} size={size} />
+        <DesignContextBar
+          editor={editor}
+          viewport={viewport}
+          tool={tool.active}
+          size={size}
+          paint={paint}
+        />
       ) : null}
       <div className="flex min-h-0 flex-1">
         {canEdit ? (
@@ -329,6 +402,8 @@ export function DesignWorkspace({
             onTool={tool.setTool}
             onImage={() => setPicking(true)}
             full={full}
+            colors={colors}
+            swatches={swatches}
           />
         ) : null}
         <DesignViewport
@@ -343,6 +418,7 @@ export function DesignWorkspace({
           editable={canEdit}
           label={`Página ${pageNumber} do design ${name}`}
           rulers={rulers}
+          paint={paint}
           onDraw={draw}
         />
         <aside

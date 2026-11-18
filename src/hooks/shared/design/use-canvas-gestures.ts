@@ -1,6 +1,7 @@
 import type Konva from "konva";
 import { useRef, useState } from "react";
 import { type DrawTool, isDrawTool } from "@/lib/shared/design/arrange";
+import { isPaintTool } from "@/lib/shared/design/paint";
 import type { Box } from "@/lib/shared/design/document";
 import { DESIGN_LIMITS, DesignTool } from "@/lib/shared/design/types";
 import { type Point, boxFromPoints } from "@/lib/shared/design/viewport";
@@ -17,6 +18,9 @@ export type GestureCallbacks = {
   onZoom?: (factor: number, point: Point) => void;
   onZoomStep?: (direction: 1 | -1, point: Point) => void;
   onCursor?: (point: Point | null) => void;
+  onPaintStart?: (point: Point) => void;
+  onPaintMove?: (points: Point[]) => void;
+  onPaintEnd?: () => void;
 };
 
 type PointerEvent = Konva.KonvaEventObject<globalThis.PointerEvent>;
@@ -31,6 +35,17 @@ const pointsOf = (event: PointerEvent | Konva.KonvaEventObject<WheelEvent>) => {
   return { stage, doc, screen };
 };
 
+const pointsOfCoalesced = (event: PointerEvent, stage: Konva.Stage, fallback: Point): Point[] => {
+  const rect = stage.container().getBoundingClientRect();
+  const inverse = stage.getAbsoluteTransform().copy().invert();
+  const events =
+    typeof event.evt.getCoalescedEvents === "function" ? event.evt.getCoalescedEvents() : [];
+  if (events.length === 0) return [fallback];
+  return events.map((item) =>
+    inverse.point({ x: item.clientX - rect.left, y: item.clientY - rect.top }),
+  );
+};
+
 const isEmptyTarget = (event: PointerEvent) =>
   event.target === event.target.getStage() || event.target.name() === "page";
 
@@ -41,6 +56,7 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
   const [draft, setDraftState] = useState<CanvasDraft | null>(null);
   const draftRef = useRef<CanvasDraft | null>(null);
   const pan = useRef<Pan | null>(null);
+  const painting = useRef(false);
 
   const setDraft = (next: CanvasDraft | null) => {
     draftRef.current = next;
@@ -63,6 +79,11 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
       callbacks.onZoomStep?.(event.evt.altKey ? -1 : 1, screen);
       return;
     }
+    if (isPaintTool(tool)) {
+      painting.current = true;
+      callbacks.onPaintStart?.(doc);
+      return;
+    }
     if (isDrawTool(tool)) {
       setDraft({ kind: "draw", tool, start: doc, end: doc, shift: event.evt.shiftKey });
       return;
@@ -72,8 +93,12 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
   };
 
   const onPointerMove = (event: PointerEvent) => {
-    const { doc } = pointsOf(event);
+    const { stage, doc } = pointsOf(event);
     callbacks.onCursor?.(doc);
+    if (painting.current && stage !== null && doc !== null) {
+      callbacks.onPaintMove?.(pointsOfCoalesced(event, stage, doc));
+      return;
+    }
     const panning = pan.current;
     if (panning !== null) {
       callbacks.onPan?.(event.evt.clientX - panning.x, event.evt.clientY - panning.y);
@@ -104,6 +129,10 @@ export const useCanvasGestures = (tool: DesignTool, zoom: number, callbacks: Ges
 
   const onPointerUp = () => {
     pan.current = null;
+    if (painting.current) {
+      painting.current = false;
+      callbacks.onPaintEnd?.();
+    }
     const current = draftRef.current;
     setDraft(null);
     if (current !== null) finish(current);

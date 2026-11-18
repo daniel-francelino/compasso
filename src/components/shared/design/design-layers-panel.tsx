@@ -4,6 +4,7 @@ import { Button } from "@/components/shared/ui/button";
 import { DesignLayerRow, type DropMark } from "@/components/shared/design/design-layer-row";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { dropTargetIndex } from "@/lib/shared/design/layers";
+import type { ImageElement } from "@/lib/shared/design/schemas";
 import { LayerMove } from "@/lib/shared/design/types";
 
 const announcement = (position: number, total: number) =>
@@ -13,10 +14,14 @@ export function DesignLayersPanel({
   editor,
   editable,
   onAddRaster,
+  onRasterize,
+  failedIds,
 }: {
   editor: DesignEditor;
   editable: boolean;
   onAddRaster: () => void;
+  onRasterize: (element: ImageElement) => void;
+  failedIds: ReadonlySet<string>;
 }) {
   const elements = editor.page.elements;
   const ordered = [...elements].reverse();
@@ -104,6 +109,8 @@ export function DesignLayersPanel({
               element={element}
               selected={editor.selectedIds.includes(element.id)}
               editable={editable}
+              pixelsFailed={failedIds.has(element.id)}
+              onRasterize={onRasterize}
               canMoveUp={displayIndex > 0}
               canMoveDown={displayIndex < total - 1}
               renaming={renamingId === element.id}

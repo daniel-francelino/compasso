@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   alignElements,
   distributeElements,
@@ -38,15 +38,24 @@ import {
   ungroupElements,
   updatePage,
 } from "@/lib/shared/design/document";
+import { retargetHistory } from "@/lib/shared/design/pixel-persist";
+import { replaceElement } from "@/lib/shared/design/rasterize";
 import { moveLayerTo } from "@/lib/shared/design/layers";
+import { type History, historyOf, pushHistory } from "@/lib/shared/design/history";
+import type {
+  DesignDocument,
+  DesignElement,
+  DesignPage,
+  RasterElement,
+} from "@/lib/shared/design/schemas";
 import {
-  type History,
-  historyOf,
-  pushHistory,
-  redoHistory,
-  undoHistory,
-} from "@/lib/shared/design/history";
-import type { DesignDocument, DesignElement, DesignPage } from "@/lib/shared/design/schemas";
+  type PixelSteps,
+  inheritPixelStep,
+  markPixelStep,
+  redoTimeline,
+  timelineSteps,
+  undoTimeline,
+} from "@/lib/shared/design/timeline";
 import {
   DESIGN_LIMITS,
   type DesignAlign,
@@ -64,8 +73,20 @@ const toggle = (page: DesignPage, current: readonly string[], id: string): strin
     : expandSelection(page, [...current, id]);
 };
 
-export const useDesignEditor = (initial: DesignDocument) => {
-  const [history, setHistory] = useState<History<DesignDocument>>(() => historyOf(initial));
+const NO_PIXELS: PixelSteps = { undo: () => undefined, redo: () => undefined };
+
+export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO_PIXELS) => {
+  const [history, setHistoryState] = useState<History<DesignDocument>>(() => historyOf(initial));
+  const latest = useRef(history);
+  latest.current = history;
+  const setHistory = (
+    update:
+      History<DesignDocument> | ((current: History<DesignDocument>) => History<DesignDocument>),
+  ) => {
+    const next = typeof update === "function" ? update(latest.current) : update;
+    latest.current = next;
+    setHistoryState(next);
+  };
   const [pageId, setPageId] = useState(() => initial.pages[0]?.id ?? "");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const document = history.present;
@@ -135,12 +156,23 @@ export const useDesignEditor = (initial: DesignDocument) => {
       changePage((current) => transformSelection(current, selectedIds, box), mergeKey),
     canUndo: history.past.length > 0,
     canRedo: history.future.length > 0,
-    undo: () => setHistory(undoHistory),
-    redo: () => setHistory(redoHistory),
+    undo: () => setHistory(undoTimeline(latest.current, pixels)),
+    redo: () => setHistory(redoTimeline(latest.current, pixels)),
+    markPixelStep: (label: string) =>
+      setHistory((current) =>
+        pushHistory(current, markPixelStep(current.present, label), DESIGN_LIMITS.history),
+      ),
+    steps: timelineSteps(history),
     newId,
     add,
     addRaster: (size: PageSize): boolean => add(createRasterLayer(newId(), page, size)),
     remove,
+    setPixelsVersion: (id: string, versionId: string) =>
+      setHistory((current) => retargetHistory(current, id, versionId)),
+    replaceWithRaster: (replacedId: string, element: RasterElement) => {
+      changePage((current) => replaceElement(current, replacedId, element));
+      setSelectedIds([element.id]);
+    },
     duplicate,
     canAdd: (count = 1) => canAddElements(document, count),
     move: (id: string, move: LayerMove) => changePage((current) => moveLayer(current, id, move)),
@@ -164,10 +196,10 @@ export const useDesignEditor = (initial: DesignDocument) => {
     measure: (id: string, height: number) =>
       setHistory((current) => ({
         ...current,
-        present: {
+        present: inheritPixelStep(current.present, {
           ...current.present,
           pages: current.present.pages.map((item) => patchElement(item, id, { height })),
-        },
+        }),
       })),
     canAddPage: canAddPage(document),
     goToPage,

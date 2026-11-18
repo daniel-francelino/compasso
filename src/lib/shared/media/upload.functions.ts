@@ -53,6 +53,7 @@ export const requestUpload = createServerFn({ method: "POST" })
       p_mime: data.mime,
       p_idempotency_key: data.idempotencyKey,
       p_asset: data.assetId ?? null,
+      p_hidden: data.hidden ?? false,
     });
     if (error) return fail(error);
     const requested = parseOutput(requestedSchema, row);

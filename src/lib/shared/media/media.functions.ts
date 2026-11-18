@@ -101,6 +101,7 @@ export const listMedia = createServerFn({ method: "GET" })
     let query = caller.supabase
       .from("media_assets")
       .select(listColumns, { count: "exact" })
+      .eq("hidden", false)
       .eq("current.status", MediaVersionStatus.Available);
     query =
       data.status === MediaStatusFilter.Trash

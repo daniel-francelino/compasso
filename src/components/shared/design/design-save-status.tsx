@@ -13,6 +13,12 @@ const view = {
     label: "Alterado em outra aba",
   },
   [DesignSaveState.Failed]: { tone: "negative", icon: CircleAlert, label: "Não foi salvo" },
+  [DesignSaveState.Uploading]: { tone: "info", icon: LoaderCircle, label: "Enviando pixels…" },
+  [DesignSaveState.UploadFailed]: {
+    tone: "negative",
+    icon: CircleAlert,
+    label: "Pixels não enviados",
+  },
 } satisfies Record<DesignSaveState, { tone: StatusTone; icon: typeof CircleCheck; label: string }>;
 
 export function DesignSaveStatus({ state }: { state: DesignSaveState }) {
@@ -22,7 +28,9 @@ export function DesignSaveStatus({ state }: { state: DesignSaveState }) {
       <StatusBadge
         tone={current.tone}
         icon={current.icon}
-        {...(state === DesignSaveState.Saving ? { iconClassName: "motion-safe:animate-spin" } : {})}
+        {...(state === DesignSaveState.Saving || state === DesignSaveState.Uploading
+          ? { iconClassName: "motion-safe:animate-spin" }
+          : {})}
       >
         {current.label}
       </StatusBadge>

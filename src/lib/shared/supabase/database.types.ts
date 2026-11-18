@@ -1797,6 +1797,7 @@ export type Database = {
           created_by: string | null
           current_version_id: string | null
           display_name: string
+          hidden: boolean
           id: string
           organization_id: string
           owner_id: string | null
@@ -1813,6 +1814,7 @@ export type Database = {
           created_by?: string | null
           current_version_id?: string | null
           display_name: string
+          hidden?: boolean
           id?: string
           organization_id: string
           owner_id?: string | null
@@ -1829,6 +1831,7 @@ export type Database = {
           created_by?: string | null
           current_version_id?: string | null
           display_name?: string
+          hidden?: boolean
           id?: string
           organization_id?: string
           owner_id?: string | null
@@ -3682,6 +3685,10 @@ export type Database = {
         Args: { p_brand: string | null, p_document: Json | null}
         Returns: undefined
       }
+      design_assert_media: {
+        Args: { p_brand: string | null, p_media: Json | null, p_mime: string | null}
+        Returns: undefined
+      }
       design_create: {
         Args: {          p_brand: string | null,          p_document?: Json | null,          p_name: string | null,          p_preset: string | null}
         Returns: Json
@@ -3841,6 +3848,7 @@ export type Database = {
           created_by: string | null
           current_version_id: string | null
           display_name: string
+          hidden: boolean
           id: string
           organization_id: string
           owner_id: string | null
@@ -3889,7 +3897,7 @@ export type Database = {
         Returns: Json
       }
       media_request_upload: {
-        Args: {          p_asset?: string | null,          p_brand: string | null,          p_filename: string | null,          p_idempotency_key: string | null,          p_mime: string | null,          p_scope: string | null,          p_size: number | null}
+        Args: {          p_asset?: string | null,          p_brand: string | null,          p_filename: string | null,          p_hidden?: boolean | null,          p_idempotency_key: string | null,          p_mime: string | null,          p_scope: string | null,          p_size: number | null}
         Returns: Json
       }
       media_set_trashed: {

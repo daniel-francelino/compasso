@@ -28,6 +28,7 @@ export const requestUploadSchema = z.object({
       message: "Este tipo de arquivo não é aceito.",
     }),
   idempotencyKey: z.string().min(8).max(100),
+  hidden: z.boolean().optional(),
 });
 
 export const confirmUploadSchema = z.object({

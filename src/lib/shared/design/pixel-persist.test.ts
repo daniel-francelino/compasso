@@ -1,0 +1,90 @@
+import { describe, expect, it } from "vitest";
+import { createRasterLayer } from "@/lib/shared/design/document";
+import { historyOf, pushHistory } from "@/lib/shared/design/history";
+import {
+  claimPixelOwners,
+  duplicatedPixelIds,
+  pendingPixelIds,
+  pixelFileName,
+  retargetHistory,
+  withPixelsVersion,
+} from "@/lib/shared/design/pixel-persist";
+import type { DesignDocument } from "@/lib/shared/design/schemas";
+import { isPixelStep, markPixelStep } from "@/lib/shared/design/timeline";
+
+const PAGE = { id: "p1", background: null, elements: [] };
+const VERSION = "11111111-1111-4111-8111-111111111111";
+const OTHER = "22222222-2222-4222-8222-222222222222";
+
+const documentWith = (...ids: string[]): DesignDocument => ({
+  version: 3,
+  pages: [
+    {
+      ...PAGE,
+      elements: ids.map((id) => createRasterLayer(id, PAGE, { width: 100, height: 50 })),
+    },
+  ],
+});
+
+describe("withPixelsVersion", () => {
+  it("sets the version of one raster layer", () => {
+    const next = withPixelsVersion(documentWith("a", "b"), "a", VERSION);
+    const ids = next.pages[0]?.elements.map((element) =>
+      element.kind === "raster" ? element.pixelsVersionId : undefined,
+    );
+    expect(ids).toEqual([VERSION, null]);
+  });
+
+  it("returns the same document when nothing changes", () => {
+    const document = documentWith("a");
+    expect(withPixelsVersion(document, "missing", VERSION)).toBe(document);
+    const patched = withPixelsVersion(document, "a", VERSION);
+    expect(withPixelsVersion(patched, "a", VERSION)).toBe(patched);
+  });
+
+  it("keeps the pixel step marker", () => {
+    const marked = markPixelStep(documentWith("a"), "Pincel");
+    expect(isPixelStep(withPixelsVersion(marked, "a", VERSION))).toBe(true);
+  });
+});
+
+describe("retargetHistory", () => {
+  it("patches past, present and future without adding a step", () => {
+    const first = documentWith("a");
+    const second = documentWith("a", "b");
+    const history = pushHistory(historyOf(first), second, 50);
+    const next = retargetHistory(history, "a", VERSION);
+    expect(next.past).toHaveLength(1);
+    expect(next.future).toHaveLength(0);
+    const present = next.present.pages[0]?.elements[0];
+    const past = next.past[0]?.pages[0]?.elements[0];
+    expect(present?.kind === "raster" && present.pixelsVersionId).toBe(VERSION);
+    expect(past?.kind === "raster" && past.pixelsVersionId).toBe(VERSION);
+  });
+});
+
+describe("pendingPixelIds", () => {
+  it("keeps only dirty ids that are in the document", () => {
+    expect(pendingPixelIds(documentWith("a", "b"), ["b", "gone"])).toEqual(["b"]);
+  });
+});
+
+describe("duplicated pixels", () => {
+  it("flags a layer sharing a file owned by another layer", () => {
+    const base = withPixelsVersion(documentWith("a"), "a", VERSION);
+    const owners = new Map<string, string>();
+    claimPixelOwners(base, owners);
+    const copy = documentWith("a", "b");
+    const shared = withPixelsVersion(withPixelsVersion(copy, "a", VERSION), "b", VERSION);
+    expect(duplicatedPixelIds(shared, owners)).toEqual(["b"]);
+    expect(duplicatedPixelIds(base, owners)).toEqual([]);
+    const own = withPixelsVersion(shared, "b", OTHER);
+    expect(duplicatedPixelIds(own, owners)).toEqual([]);
+  });
+});
+
+describe("pixelFileName", () => {
+  it("builds a short png name", () => {
+    expect(pixelFileName("abcdef12-0000")).toBe("camada-abcdef12.png");
+  });
+});

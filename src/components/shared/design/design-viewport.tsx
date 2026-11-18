@@ -1,14 +1,17 @@
 import { Suspense, lazy } from "react";
 import { checkerboard } from "@/components/shared/design/checkerboard";
+import { DesignBrushCursor } from "@/components/shared/design/design-brush-cursor";
 import { DesignRulers } from "@/components/shared/design/design-rulers";
 import { DesignTextOverlay } from "@/components/shared/design/design-text-overlay";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { LoadedImages } from "@/hooks/shared/design/use-design-assets";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
+import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
 import type { DesignViewport as ViewportState } from "@/hooks/shared/design/use-design-viewport";
 import { type DrawTool, isDrawTool, selectInBox } from "@/lib/shared/design/arrange";
+import { isPaintTool } from "@/lib/shared/design/paint";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
 import type { Box } from "@/lib/shared/design/document";
 import {
@@ -55,6 +58,7 @@ export function DesignViewport({
   editable,
   label,
   rulers,
+  paint,
   onDraw,
 }: {
   viewport: ViewportState;
@@ -68,11 +72,14 @@ export function DesignViewport({
   editable: boolean;
   label: string;
   rulers: boolean;
+  paint: DesignPaint;
   onDraw: (tool: DrawTool, start: Point, end: Point | null, shift: boolean) => void;
 }) {
   const view = viewport.view;
   const rulerSize = rulers ? DESIGN_LIMITS.rulerSize : 0;
-  const active = editable || !isDrawTool(tool.active) ? tool.active : DesignTool.Move;
+  const restricted = isDrawTool(tool.active) || isPaintTool(tool.active);
+  const active = editable || !restricted ? tool.active : DesignTool.Move;
+  const brushDiameter = editable && view !== null ? paint.cursorDiameter(active, view.zoom) : null;
   const editing = editor.page.elements.find(
     (element) => element.id === tool.editingTextId && element.kind === DesignElementKind.Text,
   );
@@ -107,7 +114,10 @@ export function DesignViewport({
       ) : null}
       <div
         ref={viewport.ref}
-        className={cn("relative col-start-2 row-start-2 overflow-hidden", CURSOR[active])}
+        className={cn(
+          "relative col-start-2 row-start-2 overflow-hidden",
+          brushDiameter === null ? CURSOR[active] : "cursor-none",
+        )}
       >
         {view === null ? null : (
           <div
@@ -150,10 +160,13 @@ export function DesignViewport({
                 onZoom={viewport.zoomBy}
                 onZoomStep={viewport.step}
                 onCursor={viewport.cursor.set}
-                {...(editable ? { onEditText: tool.editText } : {})}
+                {...(editable ? { onEditText: tool.editText, ...paint.callbacks } : {})}
               />
             </Suspense>
           </div>
+        )}
+        {brushDiameter === null ? null : (
+          <DesignBrushCursor viewport={viewport} diameter={brushDiameter} />
         )}
         {view === null ||
         editing === undefined ||

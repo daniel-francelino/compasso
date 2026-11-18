@@ -149,6 +149,8 @@ export const DesignSaveState = {
   Saving: "saving",
   Conflict: "conflict",
   Failed: "failed",
+  Uploading: "uploading",
+  UploadFailed: "upload_failed",
 } as const;
 export type DesignSaveState = ValueOf<typeof DesignSaveState>;
 
@@ -248,6 +250,9 @@ export const DESIGN_ENABLED_TOOLS: readonly DesignTool[] = [
   DesignTool.Line,
   DesignTool.Hand,
   DesignTool.Zoom,
+  DesignTool.Eyedropper,
+  DesignTool.Brush,
+  DesignTool.Eraser,
 ];
 
 export const DESIGN_SHAPE_TOOLS: readonly DesignTool[] = [
@@ -313,12 +318,19 @@ const toolKeys = (tools: readonly DesignTool[]): string =>
   tools.map((tool) => DESIGN_TOOL_KEY[tool].toUpperCase()).join(" · ");
 
 export const DESIGN_SHORTCUT_HELP: readonly (readonly [string, string])[] = [
-  [toolKeys(DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool))), "Mover, texto, mão, zoom"],
+  [
+    toolKeys(DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool))),
+    "Mover, texto, mão, zoom, conta-gotas, pincel, borracha",
+  ],
   [
     `${DESIGN_SHAPE_KEY.toUpperCase()} / Shift + ${DESIGN_SHAPE_KEY.toUpperCase()}`,
     "Formas: última usada / alternar",
   ],
   [DESIGN_IMAGE_SHORTCUT_LABEL, "Inserir imagem"],
+  ["X / D", "Trocar as cores de frente e de fundo / cores padrão"],
+  ["[ / ]", "Pincel e borracha: diminuir / aumentar o tamanho"],
+  ["{ / } (Shift + [ / ])", "Pincel e borracha: diminuir / aumentar a dureza"],
+  ["1 a 9, 0", "Pincel e borracha: opacidade de 10% a 100%"],
   ["Espaço + arrastar", "Mover a visualização"],
   ["Ctrl + roda", "Zoom no cursor"],
   ["Ctrl + 0 / Ctrl + 1", "Ajustar à tela / 100%"],
@@ -397,6 +409,7 @@ export const DESIGN_LIMITS = {
   maxStroke: 100,
   history: 100,
   autosaveMs: 2000,
+  pixelFlushMs: 8000,
   nudge: 1,
   nudgeLarge: 10,
   duplicateOffset: 24,

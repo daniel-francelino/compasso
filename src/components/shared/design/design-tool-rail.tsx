@@ -1,7 +1,9 @@
 import { Images } from "lucide-react";
 import { type KeyboardEvent, useRef, useState } from "react";
 import { TooltipProvider } from "lost-ui/ui/tooltip";
+import { DesignColorChips } from "@/components/shared/design/design-color-chips";
 import { RailActionButton, RailToolGroup } from "@/components/shared/design/design-rail-button";
+import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
 import { isDrawTool } from "@/lib/shared/design/arrange";
 import {
   DESIGN_ENABLED_TOOLS,
@@ -36,11 +38,15 @@ export function DesignToolRail({
   onTool,
   onImage,
   full,
+  colors,
+  swatches,
 }: {
   tool: DesignTool;
   onTool: (tool: DesignTool) => void;
   onImage: () => void;
   full: string | undefined;
+  colors: DesignColors;
+  swatches: string[];
 }) {
   const groups = visibleToolGroups(DESIGN_ENABLED_TOOLS);
   const entries = entriesOf(groups);
@@ -112,6 +118,7 @@ export function DesignToolRail({
             />
           );
         })}
+        <DesignColorChips colors={colors} swatches={swatches} />
       </div>
     </TooltipProvider>
   );

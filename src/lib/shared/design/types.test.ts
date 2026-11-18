@@ -37,7 +37,8 @@ describe("shortcut table", () => {
     expect(DESIGN_TOOL_KEY[DesignTool.Move]).toBe("v");
     expect(DESIGN_TOOL_KEY[DesignTool.Eyedropper]).toBe("i");
     expect(DESIGN_TOOL_KEY[DesignTool.Brush]).toBe("b");
-    expect(DESIGN_ENABLED_TOOLS).not.toContain(DesignTool.Brush);
+    expect(DESIGN_ENABLED_TOOLS).toContain(DesignTool.Brush);
+    expect(DESIGN_ENABLED_TOOLS).not.toContain(DesignTool.Clone);
   });
 
   it("cycles the shape tools rect, ellipse, line", () => {
@@ -65,6 +66,8 @@ describe("tool groups", () => {
     const groups = visibleToolGroups(DESIGN_ENABLED_TOOLS);
     expect(groups.map((item) => item.group)).toEqual([
       DesignToolGroup.Move,
+      DesignToolGroup.Eyedropper,
+      DesignToolGroup.Paint,
       DesignToolGroup.Text,
       DesignToolGroup.Shapes,
       DesignToolGroup.Hand,
@@ -75,9 +78,9 @@ describe("tool groups", () => {
   });
 
   it("shows a future tool in its group once it is enabled", () => {
-    const groups = visibleToolGroups([...DESIGN_ENABLED_TOOLS, DesignTool.Brush]);
+    const groups = visibleToolGroups([...DESIGN_ENABLED_TOOLS, DesignTool.Clone]);
     const paint = groups.find((item) => item.group === DesignToolGroup.Paint);
-    expect(paint?.tools).toEqual([DesignTool.Brush]);
+    expect(paint?.tools).toEqual([DesignTool.Brush, DesignTool.Eraser, DesignTool.Clone]);
   });
 
   it("places every tool in exactly one group", () => {

@@ -19,6 +19,7 @@ export type RasterHandle = {
   revision: number;
   ready: boolean;
   failed: boolean;
+  failedIds: ReadonlySet<string>;
 };
 
 const rasterElements = (document: DesignDocument): RasterElement[] =>
@@ -85,5 +86,5 @@ export const useRasterStore = (document: DesignDocument): RasterHandle => {
   }, [urls, elementsKey, store]);
 
   const ready = elements.every((element) => store.has(element.id) || failedIds.has(element.id));
-  return { store, revision, ready, failed: failedIds.size > 0 || signed.isError };
+  return { store, revision, ready, failed: failedIds.size > 0 || signed.isError, failedIds };
 };
