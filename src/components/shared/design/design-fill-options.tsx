@@ -1,34 +1,9 @@
 import { FormSelect } from "lost-ui/forms/form-select";
-import { OptionField } from "@/components/shared/design/design-paint-options";
+import { OptionField, ToggleButton } from "@/components/shared/design/design-paint-options";
 import type { ToolOptionsProps } from "@/components/shared/design/design-tool-options";
-import { Button } from "@/components/shared/ui/button";
 import { BLEND_ITEMS, asBlendMode } from "@/lib/shared/design/blend-items";
 import { FILL_LIMITS, GRADIENT_KIND_LABEL, GradientKind } from "@/lib/shared/design/fill-tools";
 import type { DesignBlendMode } from "@/lib/shared/design/types";
-import { cn } from "@/lib/shared/utils";
-
-function ToggleButton({
-  label,
-  pressed,
-  onClick,
-}: {
-  label: string;
-  pressed: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      aria-pressed={pressed}
-      className={cn(pressed && "bg-accent text-accent-foreground")}
-      onClick={onClick}
-    >
-      {label}
-    </Button>
-  );
-}
 
 function BlendField({
   name,
@@ -77,7 +52,7 @@ export function BucketOptionsBar({ paint }: ToolOptionsProps) {
       <ToggleButton
         label="Contíguo"
         pressed={bucket.contiguous}
-        onClick={() => setBucket({ contiguous: !bucket.contiguous })}
+        onToggle={() => setBucket({ contiguous: !bucket.contiguous })}
       />
       <OptionField
         name="fill-opacity"
@@ -107,14 +82,14 @@ export function GradientOptionsBar({ paint }: ToolOptionsProps) {
             key={kind}
             label={GRADIENT_KIND_LABEL[kind]}
             pressed={gradient.kind === kind}
-            onClick={() => setGradient({ kind })}
+            onToggle={() => setGradient({ kind })}
           />
         ))}
       </div>
       <ToggleButton
         label="Inverter cores"
         pressed={gradient.reverse}
-        onClick={() => setGradient({ reverse: !gradient.reverse })}
+        onToggle={() => setGradient({ reverse: !gradient.reverse })}
       />
       <OptionField
         name="gradient-opacity"

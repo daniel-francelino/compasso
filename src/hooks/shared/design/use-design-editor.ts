@@ -65,6 +65,7 @@ import {
   markPixelStep,
   redoTimeline,
   timelineSteps,
+  trimLostPixelSteps,
   undoTimeline,
 } from "@/lib/shared/design/timeline";
 import {
@@ -88,8 +89,9 @@ const toggle = (page: DesignPage, current: readonly string[], id: string): strin
 };
 
 const NO_PIXELS: PixelSteps = {
-  undo: () => undefined,
-  redo: () => undefined,
+  undo: () => true,
+  redo: () => true,
+  has: () => true,
   busy: () => false,
 };
 
@@ -232,7 +234,14 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
     cancelTransform: () => endTransform(null),
     markPixelStep: (label: string, stepId: string) =>
       setHistory((current) =>
-        pushHistory(current, markPixelStep(current.present, label, stepId), DESIGN_LIMITS.history),
+        trimLostPixelSteps(
+          pushHistory(
+            current,
+            markPixelStep(current.present, label, stepId),
+            DESIGN_LIMITS.history,
+          ),
+          pixels,
+        ),
       ),
     steps: timelineSteps(history),
     newId,
@@ -251,8 +260,12 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
       if (single !== undefined) changePage((current) => toggleClipToBelow(current, single.id));
     },
     remove,
-    setPixelsVersions: (entries: readonly PixelsVersionEntry[]) =>
-      setHistory((current) => retargetHistory(current, entries)),
+    setPixelsVersions: (entries: readonly PixelsVersionEntry[]) => {
+      if (transformBase.current !== null) {
+        transformBase.current = retargetHistory(transformBase.current, entries);
+      }
+      setHistory((current) => retargetHistory(current, entries));
+    },
     replaceWithRaster: (replacedId: string, element: RasterElement) => {
       changePage((current) => replaceElement(current, replacedId, element));
       setSelectedIds([element.id]);

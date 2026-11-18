@@ -11,7 +11,12 @@ export type FilterRequest = {
 
 export type FilterResponse = { data: ArrayBuffer };
 
-export const FILTER_CANCELLED = "filter-cancelled";
+export class FilterCancelledError extends Error {
+  constructor() {
+    super("filter-cancelled");
+    this.name = "FilterCancelledError";
+  }
+}
 
 export type FilterJob = { result: Promise<PixelBuffer>; cancel: () => void };
 
@@ -32,6 +37,10 @@ export const startFilterJob = (crop: PixelBuffer, inner: Rect, params: FilterPar
       worker.terminate();
       reject(new Error("filter-failed"));
     };
+    worker.onmessageerror = () => {
+      worker.terminate();
+      reject(new Error("filter-failed"));
+    };
     const data = new Uint8ClampedArray(crop.data).buffer;
     const request: FilterRequest = { data, width: crop.width, height: crop.height, inner, params };
     worker.postMessage(request, { transfer: [data] });
@@ -40,7 +49,7 @@ export const startFilterJob = (crop: PixelBuffer, inner: Rect, params: FilterPar
     result,
     cancel: () => {
       worker.terminate();
-      abort(new Error(FILTER_CANCELLED));
+      abort(new FilterCancelledError());
     },
   };
 };

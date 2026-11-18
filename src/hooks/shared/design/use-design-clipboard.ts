@@ -30,7 +30,7 @@ import {
   regionPlacement,
 } from "@/lib/shared/design/pixel-clipboard";
 import { blobToBuffer, bufferToPng } from "@/lib/shared/design/raster-canvas";
-import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
+import { type PixelBuffer, clonePixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 import { DesignElementKind, type PageSize } from "@/lib/shared/design/types";
 
 const FULL = "O design chegou ao limite de elementos. Remova algum para adicionar outro.";
@@ -98,7 +98,7 @@ export const useDesignClipboard = ({
     });
   };
 
-  const insert = (buffer: PixelBuffer, placement: ClipPlacement, label: string): boolean => {
+  const fits = (buffer: PixelBuffer): boolean => {
     if (!editor.canAdd()) {
       toast.error(FULL);
       return false;
@@ -107,13 +107,23 @@ export const useDesignClipboard = ({
       toast.error(PASTE_TOO_LARGE);
       return false;
     }
+    if (!store.canAllocate(buffer.width, buffer.height)) {
+      toast.error(RASTER_MEMORY_MESSAGE);
+      return false;
+    }
+    return true;
+  };
+
+  const insert = (buffer: PixelBuffer, placement: ClipPlacement, label: string): boolean => {
+    if (!fits(buffer)) return false;
+    const owned = clonePixelBuffer(buffer);
     const id = editor.newId();
-    if (!store.set(id, buffer)) {
+    if (!store.set(id, owned)) {
       toast.error(RASTER_MEMORY_MESSAGE);
       return false;
     }
     store.markChanged(id);
-    editor.named(label, () => editor.add(pastedLayer(id, editor.page, size, buffer, placement)));
+    editor.named(label, () => editor.add(pastedLayer(id, editor.page, size, owned, placement)));
     return true;
   };
 
@@ -129,7 +139,7 @@ export const useDesignClipboard = ({
       insert(memory.buffer, where, PASTE_LABEL);
       return;
     }
-    const buffer = system === null ? null : await blobToBuffer(system);
+    const buffer = system === null ? null : await blobToBuffer(system, store.canAllocate);
     if (buffer === null) {
       toast.error(NOTHING_TO_PASTE);
       return;
@@ -183,7 +193,7 @@ export const useDesignClipboard = ({
     },
     layerViaCut: () => {
       const grabbed = cutReason === undefined ? grab() : null;
-      if (grabbed === null) return;
+      if (grabbed === null || !fits(grabbed.buffer)) return;
       paint.clearSelected(LAYER_VIA_CUT_LABEL);
       insert(grabbed.buffer, grabbed.placement, LAYER_VIA_CUT_LABEL);
     },

@@ -11,6 +11,7 @@ import {
   markPixelStep,
   redoTimeline,
   timelineSteps,
+  trimLostPixelSteps,
   undoTimeline,
 } from "@/lib/shared/design/timeline";
 
@@ -24,8 +25,9 @@ const setup = (budgetBytes?: number) => {
   let counter = 0;
   const resolve = () => buffer;
   const steps = {
-    undo: (id: string) => void pixels.undo(resolve, id),
-    redo: (id: string) => void pixels.redo(resolve, id),
+    undo: (id: string) => pixels.undo(resolve, id) !== null,
+    redo: (id: string) => pixels.redo(resolve, id) !== null,
+    has: (id: string) => pixels.steps().some((step) => step.id === id),
     busy: () => false,
   };
   const stroke = (
@@ -82,23 +84,32 @@ describe("unified timeline", () => {
     expect(timelineSteps(history)).toEqual([{ label: "Pincel", applied: false, pixels: true }]);
   });
 
-  it("keeps redo aligned with the timeline after the pixel history evicts a step", () => {
+  it("stops undo at a pixel step the pixel history already evicted", () => {
     const { stroke, steps, alpha } = setup(1);
     let history = historyOf(doc("a"));
     history = stroke(history, 10, "Um");
     history = stroke(history, 30, "Dois");
     history = stroke(history, 50, "Tres");
     history = undoTimeline(history, steps);
-    history = undoTimeline(history, steps);
-    history = undoTimeline(history, steps);
     expect(alpha(50)).toBe(0);
+    const stuck = undoTimeline(history, steps);
+    expect(stuck).toBe(history);
     expect(alpha(30)).toBeGreaterThan(0);
-    history = redoTimeline(history, steps);
-    expect(alpha(50)).toBe(0);
-    history = redoTimeline(history, steps);
-    expect(alpha(50)).toBe(0);
-    redoTimeline(history, steps);
-    expect(alpha(50)).toBeGreaterThan(0);
+    expect(jumpTimeline(history, steps, -1).past.length).toBe(history.past.length);
+  });
+
+  it("trims document history older than the oldest surviving pixel step", () => {
+    const { stroke, steps } = setup(1);
+    let history = historyOf(doc("a"));
+    history = stroke(history, 10, "Um");
+    history = pushHistory(history, doc("b"), 100);
+    history = stroke(history, 30, "Dois");
+    history = stroke(history, 50, "Tres");
+    const trimmed = trimLostPixelSteps(history, steps);
+    expect(trimmed.present).toBe(history.present);
+    expect(trimmed.past).toHaveLength(1);
+    expect(timelineSteps(trimmed).map((step) => step.label)).toEqual(["Tres"]);
+    expect(trimLostPixelSteps(trimmed, steps)).toBe(trimmed);
   });
 
   it("names a document step without touching the pixel history", () => {

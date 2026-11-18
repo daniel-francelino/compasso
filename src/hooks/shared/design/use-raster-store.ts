@@ -71,7 +71,12 @@ export const useRasterStore = (document: DesignDocument): RasterHandle => {
       for (const element of pending) {
         const url = element.versionId === null ? undefined : urls[element.versionId];
         const image = url === undefined ? null : await loadImage(url);
-        const buffer = image === null ? null : imageToBuffer(image);
+        if (image !== null && !store.canAllocate(image.naturalWidth, image.naturalHeight)) {
+          memory = true;
+          failedNow.push(element.key);
+          continue;
+        }
+        const buffer = image === null ? null : imageToBuffer(image, element.width, element.height);
         if (buffer === null) {
           failedNow.push(element.key);
           continue;

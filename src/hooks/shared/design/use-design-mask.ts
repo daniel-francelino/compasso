@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
+import type { PixelHistorySession } from "@/hooks/shared/design/use-pixel-history";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import {
@@ -20,6 +21,7 @@ import {
   maskKey,
   maskPixelSize,
 } from "@/lib/shared/design/layer-mask";
+import { recordReplace } from "@/lib/shared/design/raster/pixel-history";
 import { selectionForLayer } from "@/lib/shared/design/selection-state";
 
 export type MaskController = {
@@ -38,10 +40,12 @@ export type MaskController = {
 export const useDesignMask = ({
   editor,
   rasters,
+  pixels,
   selection,
 }: {
   editor: DesignEditor;
   rasters: RasterHandle;
+  pixels: PixelHistorySession;
   selection: SelectionController;
 }): MaskController => {
   const [targetId, setTargetId] = useState<string | null>(null);
@@ -59,15 +63,22 @@ export const useDesignMask = ({
     const layerSelection =
       selection.mask === null ? null : selectionForLayer(selection.mask, placement);
     const key = maskKey(single.id);
-    if (!store.set(key, buildMaskBuffer(kind, width, height, layerSelection))) {
+    const label = `${MASK_PAINT_LABEL}: ${LAYER_MASK_KIND_LABEL[kind]}`;
+    const next = buildMaskBuffer(kind, width, height, layerSelection);
+    const previous = store.get(key);
+    const replaced = previous === undefined ? null : recordReplace(previous, next);
+    if (!store.set(key, next)) {
       toast.error(MASK_MEMORY_MESSAGE);
       return;
     }
     store.markChanged(key);
+    if (replaced !== null) {
+      const stepId = crypto.randomUUID();
+      pixels.history.push(label, key, replaced, stepId);
+      editor.markPixelStep(label, stepId);
+    }
     const id = single.id;
-    editor.named(`${MASK_PAINT_LABEL}: ${LAYER_MASK_KIND_LABEL[kind]}`, () =>
-      editor.patch(id, { mask: NEW_LAYER_MASK }),
-    );
+    editor.named(label, () => editor.patch(id, { mask: NEW_LAYER_MASK }));
     setTargetId(id);
   };
 

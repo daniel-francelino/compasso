@@ -24,7 +24,12 @@ import {
 } from "@/lib/shared/design/raster/pixel-buffer";
 import { splitRasterRuns } from "@/lib/shared/design/raster-runs";
 import { RASTER_BYTES_PER_PIXEL, type RasterStore } from "@/lib/shared/design/raster-store";
-import { DesignBlendMode, DesignElementKind, type PageSize } from "@/lib/shared/design/types";
+import {
+  DESIGN_LIMITS,
+  DesignBlendMode,
+  DesignElementKind,
+  type PageSize,
+} from "@/lib/shared/design/types";
 
 type LayerCanvasEntry = { canvas: HTMLCanvasElement; buffer: PixelBuffer; revision: number };
 type PlacedEntry = { key: string; placed: PixelBuffer };
@@ -88,10 +93,18 @@ export const bufferToCanvas = (
   return canvas;
 };
 
-export const imageToBuffer = (image: HTMLImageElement): PixelBuffer | null => {
+export const MAX_PASTE_BYTES = 25 * 1024 * 1024;
+
+export const imageToBuffer = (
+  image: HTMLImageElement,
+  maxWidth: number = DESIGN_LIMITS.maxRasterSide,
+  maxHeight: number = DESIGN_LIMITS.maxRasterSide,
+): PixelBuffer | null => {
   const width = image.naturalWidth;
   const height = image.naturalHeight;
   if (width < 1 || height < 1) return null;
+  const side = DESIGN_LIMITS.maxRasterSide;
+  if (width > Math.min(maxWidth, side) || height > Math.min(maxHeight, side)) return null;
   const canvas = newCanvas(width, height);
   const context = canvas.getContext("2d", { willReadFrequently: true });
   if (context === null) return null;
@@ -316,7 +329,11 @@ const storeRun = (
   into: HTMLCanvasElement | undefined,
 ): HTMLCanvasElement | null => {
   const canvas = placed === null ? null : bufferToCanvas(placed, into);
-  if (canvas !== null) runs.set(key, { ...entry, canvas });
+  if (canvas === null) return null;
+  for (const [other, existing] of runs) {
+    if (other !== key && existing.ownerId === entry.ownerId) runs.delete(other);
+  }
+  runs.set(key, { ...entry, canvas });
   return canvas;
 };
 
@@ -443,17 +460,27 @@ export const bufferToPng = (buffer: PixelBuffer): Promise<Blob | null> => {
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 };
 
-export const blobToBuffer = async (blob: Blob): Promise<PixelBuffer | null> => {
+export const blobToBuffer = async (
+  blob: Blob,
+  canAllocate: (width: number, height: number) => boolean = () => true,
+): Promise<PixelBuffer | null> => {
+  if (blob.size > MAX_PASTE_BYTES) return null;
+  let bitmap: ImageBitmap | null = null;
   try {
-    const bitmap = await createImageBitmap(blob);
-    const canvas = newCanvas(bitmap.width, bitmap.height);
+    bitmap = await createImageBitmap(blob);
+    const { width, height } = bitmap;
+    const side = DESIGN_LIMITS.maxRasterSide;
+    if (width < 1 || height < 1 || width > side || height > side) return null;
+    if (!canAllocate(width, height)) return null;
+    const canvas = newCanvas(width, height);
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (context === null) return null;
     context.drawImage(bitmap, 0, 0);
-    const pixels = context.getImageData(0, 0, bitmap.width, bitmap.height);
-    bitmap.close();
-    return { width: bitmap.width, height: bitmap.height, data: pixels.data };
+    const pixels = context.getImageData(0, 0, width, height);
+    return { width, height, data: pixels.data };
   } catch {
     return null;
+  } finally {
+    bitmap?.close();
   }
 };

@@ -196,15 +196,15 @@ const marqueeKey = (event: KeyboardEvent, { tool, selection }: Context): boolean
   return true;
 };
 
-const fillKey = (event: KeyboardEvent, { tool }: Context): boolean => {
-  if (event.key.toLowerCase() !== DESIGN_FILL_KEY || !event.shiftKey) return false;
-  tool.setTool(tool.tool === DesignTool.Fill ? DesignTool.Gradient : DesignTool.Fill);
-  return true;
-};
-
-const toneKey = (event: KeyboardEvent, { tool }: Context): boolean => {
-  if (event.key.toLowerCase() !== DESIGN_TONE_KEY || !event.shiftKey) return false;
-  tool.setTool(tool.tool === DesignTool.Dodge ? DesignTool.Burn : DesignTool.Dodge);
+const alternateKey = (
+  event: KeyboardEvent,
+  { tool }: Context,
+  key: string,
+  first: DesignTool,
+  second: DesignTool,
+): boolean => {
+  if (event.key.toLowerCase() !== key || !event.shiftKey) return false;
+  tool.setTool(tool.tool === first ? second : first);
   return true;
 };
 
@@ -233,8 +233,12 @@ const pixelsKey = (event: KeyboardEvent, { selection, paint, editor }: Context):
 
 const toolKey = (event: KeyboardEvent, context: Context): boolean => {
   if (event.altKey) return false;
-  if (fillKey(event, context)) return true;
-  if (toneKey(event, context)) return true;
+  if (alternateKey(event, context, DESIGN_FILL_KEY, DesignTool.Fill, DesignTool.Gradient)) {
+    return true;
+  }
+  if (alternateKey(event, context, DESIGN_TONE_KEY, DesignTool.Dodge, DesignTool.Burn)) {
+    return true;
+  }
   if (marqueeKey(event, context)) return true;
   if (shapeKey(event, context)) return true;
   if (event.shiftKey) return false;

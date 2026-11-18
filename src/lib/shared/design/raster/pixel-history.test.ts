@@ -15,6 +15,7 @@ import {
   MAX_PIXEL_HISTORY_STEPS,
   applyPatch,
   createPixelHistory,
+  recordReplace,
   recordStroke,
   revertPatch,
   type PixelPatch,
@@ -158,5 +159,25 @@ describe("PixelHistory", () => {
     history.push("A", "t", fake(10));
     history.clear();
     expect([history.size(), history.bytes(), history.canUndo()]).toEqual([0, 0, false]);
+  });
+});
+
+describe("recordReplace", () => {
+  it("restores the replaced content on revert and reapplies it on apply", () => {
+    const before = createPixelBuffer(300, 10, { r: 255, g: 255, b: 255, a: 255 });
+    const after = createPixelBuffer(300, 10, { r: 0, g: 0, b: 0, a: 255 });
+    const patch = recordReplace(before, after);
+    if (patch === null) throw new Error("expected a patch");
+    const target = clonePixelBuffer(after);
+    revertPatch(target, patch);
+    expect(tilesEqual(target.data, before.data)).toBe(true);
+    applyPatch(target, patch);
+    expect(tilesEqual(target.data, after.data)).toBe(true);
+  });
+
+  it("returns null for identical or differently sized buffers", () => {
+    const a = createPixelBuffer(8, 8);
+    expect(recordReplace(a, clonePixelBuffer(a))).toBeNull();
+    expect(recordReplace(a, createPixelBuffer(9, 8))).toBeNull();
   });
 });

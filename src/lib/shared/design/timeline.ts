@@ -4,8 +4,9 @@ import type { DesignDocument } from "@/lib/shared/design/schemas";
 const TIMELINE_DOCUMENT_LABEL = "Alteração";
 
 export type PixelSteps = {
-  undo: (stepId: string) => void;
-  redo: (stepId: string) => void;
+  undo: (stepId: string) => boolean;
+  redo: (stepId: string) => boolean;
+  has: (stepId: string) => boolean;
   busy: () => boolean;
 };
 
@@ -45,7 +46,7 @@ export const undoTimeline = (
 ): History<DesignDocument> => {
   if (history.past.length === 0) return history;
   const stepId = stepIdOf(history.present);
-  if (stepId !== null) pixels.undo(stepId);
+  if (stepId !== null && !pixels.undo(stepId)) return history;
   return undoHistory(history);
 };
 
@@ -56,8 +57,22 @@ export const redoTimeline = (
   const next = history.future[0];
   if (next === undefined) return history;
   const stepId = stepIdOf(next);
-  if (stepId !== null) pixels.redo(stepId);
+  if (stepId !== null && !pixels.redo(stepId)) return history;
   return redoHistory(history);
+};
+
+export const trimLostPixelSteps = (
+  history: History<DesignDocument>,
+  pixels: PixelSteps,
+): History<DesignDocument> => {
+  const documents = [...history.past, history.present];
+  let lost = -1;
+  documents.forEach((document, index) => {
+    const stepId = stepIdOf(document);
+    if (stepId !== null && !pixels.has(stepId)) lost = index;
+  });
+  if (lost <= 0) return history;
+  return { ...history, past: documents.slice(lost, -1) };
 };
 
 export const timelineSteps = (history: History<DesignDocument>): TimelineStep[] =>

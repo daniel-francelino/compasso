@@ -57,14 +57,14 @@ values
   ('00000000-0000-0000-0000-00000000bb03', (select id from public.organizations limit 1), 'brand', current_setting('t.brand')::uuid, 'pending.png', true, null),
   ('00000000-0000-0000-0000-00000000bb04', (select id from public.organizations limit 1), 'brand', current_setting('t.brand')::uuid, 'trashed.png', true, now()),
   ('00000000-0000-0000-0000-00000000bb05', (select id from public.organizations limit 1), 'brand', current_setting('t.brand')::uuid, 'filler.png', true, null);
-insert into public.media_versions (id, asset_id, version_no, storage_key, original_filename, mime_type, size_bytes, status)
-select ('00000000-0000-0000-0000-00000000cc0' || n)::uuid, '00000000-0000-0000-0000-00000000bb01', n, 'k/l' || n, 'layer.png', 'image/png', 10, 'available'
+insert into public.media_versions (id, asset_id, version_no, storage_key, original_filename, mime_type, size_bytes, status, width, height)
+select ('00000000-0000-0000-0000-00000000cc0' || n)::uuid, '00000000-0000-0000-0000-00000000bb01', n, 'k/l' || n, 'layer.png', 'image/png', 10, 'available', 512, 512
 from generate_series(1, 6) n;
-insert into public.media_versions (id, asset_id, version_no, storage_key, original_filename, mime_type, size_bytes, status)
+insert into public.media_versions (id, asset_id, version_no, storage_key, original_filename, mime_type, size_bytes, status, width, height)
 values
-  ('00000000-0000-0000-0000-00000000cd01', '00000000-0000-0000-0000-00000000bb02', 1, 'k/s1', 'loose.png', 'image/png', 10, 'available'),
-  ('00000000-0000-0000-0000-00000000cd02', '00000000-0000-0000-0000-00000000bb03', 1, 'k/s2', 'pending.png', 'image/png', 10, 'pending'),
-  ('00000000-0000-0000-0000-00000000cd03', '00000000-0000-0000-0000-00000000bb04', 1, 'k/s3', 'trashed.png', 'image/png', 10, 'available');
+  ('00000000-0000-0000-0000-00000000cd01', '00000000-0000-0000-0000-00000000bb02', 1, 'k/s1', 'loose.png', 'image/png', 10, 'available', 512, 512),
+  ('00000000-0000-0000-0000-00000000cd02', '00000000-0000-0000-0000-00000000bb03', 1, 'k/s2', 'pending.png', 'image/png', 10, 'pending', 512, 512),
+  ('00000000-0000-0000-0000-00000000cd03', '00000000-0000-0000-0000-00000000bb04', 1, 'k/s3', 'trashed.png', 'image/png', 10, 'available', 512, 512);
 update public.media_assets set current_version_id = '00000000-0000-0000-0000-00000000cc06' where id = '00000000-0000-0000-0000-00000000bb01';
 update public.media_assets set current_version_id = '00000000-0000-0000-0000-00000000cd01' where id = '00000000-0000-0000-0000-00000000bb02';
 insert into public.media_usages (media_version_id, usage_type, usage_ref_id)

@@ -195,7 +195,7 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 | D-23 | P8 fill, gradient, adjustment layers, Ajustes panel, clipping, thumbnails | image-editor 7b | curves layer shows in export | done in code (not browser-tested; see Implementation status P8) |
 | D-24 | P9 free transform, crop, History jump, copy and paste | image-editor 7b | Ctrl+T commit is one undo step | done in code (2026-11-18; not browser-tested; see Implementation status P9) |
 | D-25 | P10 masks | image-editor 7b | mask hides in composite and export | done in code (2026-11-18, not tested in a browser) |
-| D-26 | P11 filters, clone stamp, dodge/burn, pressure, shift-line | image-editor 7b | blur on 4096 within budget | open |
+| D-26 | P11 filters, clone stamp, dodge/burn, pressure, shift-line | image-editor 7b | blur on 4096 within budget | done in code (2026-11-18; not browser-tested; the 4096 budget is not measured, see Implementation status P11) |
 
 > Open decisions (recommended answers): ABNT2 alternatives for `[ ] { }` (add them); raster paint gating (`Media.Upload` too); hidden asset sharing and publishing (forbid). See [modules/image-editor.md](modules/image-editor.md) 8f.
 

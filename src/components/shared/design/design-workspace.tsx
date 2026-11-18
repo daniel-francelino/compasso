@@ -156,7 +156,7 @@ export function DesignWorkspace({
     rasters,
     zoom: viewport.view?.zoom ?? 1,
   });
-  const masks = useDesignMask({ editor, rasters, selection });
+  const masks = useDesignMask({ editor, rasters, pixels, selection });
   const paint = useDesignPaint({
     tool: tool.active,
     editor,

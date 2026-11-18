@@ -95,6 +95,21 @@ Hypotheses are marked.
 5. P7 Selections, P8 Fill/gradient/adjustments/clipping/thumbnails, P9 Transform/crop/History jump/copy-paste, P10 Masks, P11 Filters and extras (see image-editor 7b).
 6. Rerun pgTAP (`db:verify`, then `supabase test db`) after the migration.
 
+### Review findings after P5b to P11 (2026-11-18)
+
+| ID | Severity | Evidence | Status |
+|---|---|---|---|
+| N1 | High | In-memory paste shared one `PixelBuffer` between layers | fixed: `insert` clones |
+| N2 | High | Pixel history eviction desynced the unified timeline | fixed: `PixelSteps.undo/redo` report success, undo/redo/jump stop at a step that cannot be reverted, `trimLostPixelSteps` drops older document history |
+| N3 | Medium | A second mask overwrote the buffer needed to undo "Excluir máscara" | fixed: replacing a leftover mask buffer is recorded as a pixel step (`recordReplace`); only a size change stays unrestorable |
+| N4 | Medium | Cancelling a free transform could restore a stale `pixelsVersionId` | fixed: `setPixelsVersions` retargets the transform base too |
+| N5 | Medium | "Camada via recorte" cleared before insert | fixed: pre-check before clearing; still two undo steps |
+| N6 | Low | Filter dialog stuck on early returns, no `onmessageerror`, cancel by message, no `logError` | fixed: `FilterCancelledError`, `logError` |
+| N7 | Low | Run-canvas cache kept entries of the same owner under other keys | fixed in `storeRun` |
+| N8 | Medium | Pixel, mask and paste decode without limits | fixed: side, element size, `canAllocate`, 25 MB paste cap, `ImageBitmap` closed in `finally` |
+| N9 | Medium | Server: purge ignored other drafts; no size cap on raster refs; hidden version on trashed asset or archived brand | fixed in migration `20261118300000_design_hidden_hardening.sql` (local, not pushed) |
+| N10 | Low | Duplicated `ToggleButton`, `fillKey`/`toneKey` | fixed |
+
 ## 5. Status of each finding
 
 | ID | Status |

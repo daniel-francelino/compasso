@@ -5,7 +5,7 @@ import type { SelectionController } from "@/hooks/shared/design/use-design-selec
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import {
   type FilterJob,
-  FILTER_CANCELLED,
+  FilterCancelledError,
   startFilterJob,
 } from "@/lib/shared/design/filter-client";
 import { PAINT_UPLOAD_REASON } from "@/lib/shared/design/paint";
@@ -33,6 +33,7 @@ import {
 import { maskBoundingBox, type SelectionMask } from "@/lib/shared/design/raster/selection";
 import { snapshotRect, type TileData } from "@/lib/shared/design/raster/tiles";
 import { DesignElementKind } from "@/lib/shared/design/types";
+import { logError } from "@/lib/shared/logger";
 
 const PREVIEW_DELAY_MS = 150;
 
@@ -56,8 +57,7 @@ export type FilterState = {
   failed: boolean;
 };
 
-const isCancel = (error: unknown): boolean =>
-  error instanceof Error && error.message === FILTER_CANCELLED;
+const isCancel = (error: unknown): boolean => error instanceof FilterCancelledError;
 
 const stopWork = (current: Session) => {
   if (current.timer !== null) clearTimeout(current.timer);
@@ -117,12 +117,18 @@ export const useDesignFilter = ({
       const filtered = await compute(current, params);
       const buffer = store.get(current.key);
       const stale = session.current !== current || current.version !== version;
-      if (stale || filtered === null || buffer === undefined) return;
+      if (stale) return;
+      if (filtered === null || buffer === undefined) {
+        patchState({ working: false });
+        return;
+      }
       blendFiltered(buffer, current.original, filtered, current.region, current.mask);
       store.markChanged(current.key);
       patchState({ working: false });
     } catch (error) {
-      if (!isCancel(error)) patchState({ working: false, failed: true });
+      if (isCancel(error)) return;
+      logError(error);
+      patchState({ working: false, failed: true });
     }
   };
 
@@ -210,11 +216,17 @@ export const useDesignFilter = ({
     patchState({ working: true, failed: false });
     try {
       const filtered = await compute(current, state.params);
-      if (session.current !== current || filtered === null) return;
+      if (session.current !== current) return;
+      if (filtered === null) {
+        patchState({ working: false });
+        return;
+      }
       commit(current, state.filter, filtered);
       close();
     } catch (error) {
-      if (!isCancel(error)) patchState({ working: false, failed: true });
+      if (isCancel(error)) return;
+      logError(error);
+      patchState({ working: false, failed: true });
     }
   };
 

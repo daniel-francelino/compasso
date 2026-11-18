@@ -64,13 +64,13 @@ values
   ('00000000-0000-0000-0000-00000000aa12', (select id from public.organizations limit 1), 'brand', current_setting('t.brand')::uuid, 'mask-1.png', true),
   ('00000000-0000-0000-0000-00000000aa13', (select id from public.organizations limit 1), 'brand', current_setting('t.brandB')::uuid, 'layer-b.png', true),
   ('00000000-0000-0000-0000-00000000aa14', (select id from public.organizations limit 1), 'brand', current_setting('t.brand')::uuid, 'layer-2.png', true);
-insert into public.media_versions (id, asset_id, version_no, storage_key, original_filename, mime_type, size_bytes, status)
+insert into public.media_versions (id, asset_id, version_no, storage_key, original_filename, mime_type, size_bytes, status, width, height)
 values
-  ('00000000-0000-0000-0000-00000000ab01', '00000000-0000-0000-0000-00000000aa01', 1, 'k/a', 'photo.jpg', 'image/jpeg', 10, 'available'),
-  ('00000000-0000-0000-0000-00000000ab11', '00000000-0000-0000-0000-00000000aa11', 1, 'k/b', 'layer-1.png', 'image/png', 10, 'available'),
-  ('00000000-0000-0000-0000-00000000ab12', '00000000-0000-0000-0000-00000000aa12', 1, 'k/c', 'mask-1.png', 'image/png', 10, 'available'),
-  ('00000000-0000-0000-0000-00000000ab13', '00000000-0000-0000-0000-00000000aa13', 1, 'k/d', 'layer-b.png', 'image/png', 10, 'available'),
-  ('00000000-0000-0000-0000-00000000ab14', '00000000-0000-0000-0000-00000000aa14', 1, 'k/e', 'layer-2.png', 'image/png', 10, 'available');
+  ('00000000-0000-0000-0000-00000000ab01', '00000000-0000-0000-0000-00000000aa01', 1, 'k/a', 'photo.jpg', 'image/jpeg', 10, 'available', 512, 512),
+  ('00000000-0000-0000-0000-00000000ab11', '00000000-0000-0000-0000-00000000aa11', 1, 'k/b', 'layer-1.png', 'image/png', 10, 'available', 512, 512),
+  ('00000000-0000-0000-0000-00000000ab12', '00000000-0000-0000-0000-00000000aa12', 1, 'k/c', 'mask-1.png', 'image/png', 10, 'available', 512, 512),
+  ('00000000-0000-0000-0000-00000000ab13', '00000000-0000-0000-0000-00000000aa13', 1, 'k/d', 'layer-b.png', 'image/png', 10, 'available', 512, 512),
+  ('00000000-0000-0000-0000-00000000ab14', '00000000-0000-0000-0000-00000000aa14', 1, 'k/e', 'layer-2.png', 'image/png', 10, 'available', 512, 512);
 update public.media_assets set current_version_id = '00000000-0000-0000-0000-00000000ab11' where id = '00000000-0000-0000-0000-00000000aa11';
 update public.media_assets set current_version_id = '00000000-0000-0000-0000-00000000ab01' where id = '00000000-0000-0000-0000-00000000aa01';
 set local session_replication_role = origin;

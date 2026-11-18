@@ -2,6 +2,8 @@ import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 import {
   applyTile,
   extractTile,
+  tileCount,
+  tileKey,
   tileFromKey,
   tilesEqual,
   type TileData,
@@ -67,6 +69,18 @@ export const recordStroke = (
     });
   }
   return { tiles, bytes: patchBytes(tiles) };
+};
+
+export const recordReplace = (before: PixelBuffer, after: PixelBuffer): PixelPatch | null => {
+  if (before.width !== after.width || before.height !== after.height) return null;
+  const snapshots = new Map<number, TileData>();
+  for (let ty = 0; ty < tileCount(before.height); ty += 1) {
+    for (let tx = 0; tx < tileCount(before.width); tx += 1) {
+      snapshots.set(tileKey(tx, ty), extractTile(before, tx, ty));
+    }
+  }
+  const patch = recordStroke(snapshots, after);
+  return patch.tiles.length === 0 ? null : patch;
 };
 
 export const applyPatch = (buffer: PixelBuffer, patch: PixelPatch): void => {
