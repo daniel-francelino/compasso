@@ -66,6 +66,7 @@ describe("tool groups", () => {
     const groups = visibleToolGroups(DESIGN_ENABLED_TOOLS);
     expect(groups.map((item) => item.group)).toEqual([
       DesignToolGroup.Move,
+      DesignToolGroup.Selection,
       DesignToolGroup.Eyedropper,
       DesignToolGroup.Paint,
       DesignToolGroup.Text,

@@ -12,6 +12,7 @@ import { DesignMenuBar } from "@/components/shared/design/design-menu-bar";
 import { DesignLayersPanel } from "@/components/shared/design/design-layers-panel";
 import { DesignPanelDock } from "@/components/shared/design/design-panel-dock";
 import { DesignPropertiesTab } from "@/components/shared/design/design-properties-tab";
+import { DesignSelectionDialog } from "@/components/shared/design/design-selection-dialog";
 import { DesignShortcutsDialog } from "@/components/shared/design/design-shortcuts-dialog";
 import { DesignStatusBar } from "@/components/shared/design/design-status-bar";
 import { DesignToolRail } from "@/components/shared/design/design-tool-rail";
@@ -34,6 +35,7 @@ import { useDesignAutosave } from "@/hooks/shared/design/use-design-autosave";
 import { useDesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { designMenus } from "@/hooks/shared/design/use-design-menus";
 import { useDesignPanelTab } from "@/hooks/shared/design/use-design-panel-tab";
+import { useDesignSelection } from "@/hooks/shared/design/use-design-selection";
 import { useDesignShortcuts } from "@/hooks/shared/design/use-design-shortcuts";
 import { useDesignTool } from "@/hooks/shared/design/use-design-tool";
 import { useDesignViewport } from "@/hooks/shared/design/use-design-viewport";
@@ -55,6 +57,7 @@ import { brandFontsOf, createImage } from "@/lib/shared/design/document";
 import { rasterizeImage } from "@/lib/shared/design/raster-canvas";
 import { rasterizedElement } from "@/lib/shared/design/rasterize";
 import type { ImageElement } from "@/lib/shared/design/schemas";
+import { SelectionAdjust } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_PRESET_LABEL,
   DESIGN_PRESET_SIZE,
@@ -127,6 +130,7 @@ export function DesignWorkspace({
   const [picking, setPicking] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [rulers, setRulers] = useState(true);
+  const [adjust, setAdjust] = useState<SelectionAdjust | null>(null);
   const panelTab = useDesignPanelTab();
   const conflict = autosave.state === DesignSaveState.Conflict;
   const canEdit = editable && !conflict;
@@ -302,6 +306,8 @@ export function DesignWorkspace({
     onRasterize: rasterize,
     onPanel: openPanel,
     onShortcuts: () => setShortcutsOpen(true),
+    selection,
+    onAdjust: setAdjust,
   });
 
   const panels = {
@@ -418,6 +424,7 @@ export function DesignWorkspace({
           tool={tool.active}
           size={size}
           paint={paint}
+          selection={selection}
         />
       ) : null}
       <div className="flex min-h-0 flex-1">
@@ -444,6 +451,7 @@ export function DesignWorkspace({
           label={`Página ${pageNumber} do design ${name}`}
           rulers={rulers}
           paint={paint}
+          selection={selection}
           onDraw={draw}
         />
         <aside
@@ -463,6 +471,7 @@ export function DesignWorkspace({
         onShortcuts={() => setShortcutsOpen(true)}
       />
       <DesignShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <DesignSelectionDialog kind={adjust} onApply={applyAdjust} onClose={() => setAdjust(null)} />
       <Sheet open={panelsOpen} onOpenChange={setPanelsOpen}>
         <SheetContent side="right" className="w-96 overflow-y-auto p-0 sm:max-w-96">
           <SheetHeader className="px-4 pt-4">
