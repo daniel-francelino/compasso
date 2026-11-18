@@ -9,6 +9,7 @@ import {
   WorkerStatus,
 } from "@/lib/shared/design/import/worker/protocol";
 import { validateWorkerDocument } from "@/lib/shared/design/import/worker/validate-document";
+import { errorName } from "@/lib/shared/design/import/run-limits";
 import { logError } from "@/lib/shared/logger";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 
@@ -45,8 +46,6 @@ const failureMessage = (failure: DesignImportFailure, limits: WorkerLimits): str
   }
 };
 
-const nameOf = (error: unknown): string => (error instanceof Error ? error.name : "unknown");
-
 const createWorker = (): Worker =>
   new Worker(new URL("./import.worker.ts", import.meta.url), { type: "module" });
 
@@ -64,7 +63,7 @@ const runOnce = (
     try {
       worker = createWorker();
     } catch (error) {
-      logError("import worker start failed", nameOf(error));
+      logError("import worker start failed", errorName(error));
       resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
       return;
     }
@@ -110,12 +109,6 @@ const runOnce = (
     worker.postMessage(request);
   });
 
-const watchSignal = (signal: AbortSignal | undefined, cancel: () => void): void => {
-  if (signal === undefined) return;
-  if (signal.aborted) cancel();
-  else signal.addEventListener("abort", cancel, { once: true });
-};
-
 let queue: Promise<unknown> = Promise.resolve();
 let nextId = 0;
 
@@ -139,6 +132,10 @@ export const startImportJob = (input: JobInput, options: ImportJobOptions = {}):
     () => undefined,
     () => undefined,
   );
-  watchSignal(options.signal, cancel);
+  const { signal } = options;
+  if (signal?.aborted === true) cancel();
+  else signal?.addEventListener("abort", cancel, { once: true });
+  const detach = (): void => signal?.removeEventListener("abort", cancel);
+  result.then(detach, detach);
   return { result, cancel };
 };

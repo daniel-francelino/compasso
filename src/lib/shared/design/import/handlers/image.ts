@@ -4,12 +4,22 @@ import {
   readImageHeader,
 } from "@/lib/shared/design/import/handlers/image-header";
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
-import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
+import {
+  DESIGN_IMPORT_LAYER_NAME,
+  DESIGN_IMPORT_MESSAGE,
+  IMPORT_CANCELLED,
+} from "@/lib/shared/design/import/messages";
+import {
+  ImportAbortedError,
+  errorName,
+  raceWithLimits,
+} from "@/lib/shared/design/import/run-limits";
+import { singleLayerDesign } from "@/lib/shared/design/import/single-layer";
+import { rasterBytes } from "@/lib/shared/design/raster-store";
 import {
   hasJpegSignature,
   hasPngSignature,
   hasWebpSignature,
-  importBaseName,
 } from "@/lib/shared/design/import/sniff";
 import {
   DesignImportFormat,
@@ -20,9 +30,7 @@ import {
   type ImportKindResult,
   type ImportNote,
 } from "@/lib/shared/design/import/types";
-import { createRasterLayer, emptyPage } from "@/lib/shared/design/document";
 import { logError } from "@/lib/shared/logger";
-import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
@@ -37,16 +45,8 @@ export type ImagePlan = {
 
 export type DecodedPixels = Size & { data: Uint8ClampedArray };
 
-const BYTES_PER_PIXEL = 4;
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
-const DEFAULT_LAYER_NAME = "Imagem";
 const ORIENTATION_FROM_IMAGE = "from-image";
-
-class ImageTimeout extends Error {}
-
-class ImageCancelled extends Error {}
-
-const errorName = (error: unknown): string => (error instanceof Error ? error.name : "unknown");
 
 const targetSize = (size: Size): { size: Size; downscaled: boolean } => {
   const longest = Math.max(size.width, size.height);
@@ -66,7 +66,7 @@ export const planImage = (header: ImageHeader, usedBytes: number): Result<{ plan
   if (checked.some(sideOver)) {
     return invalid(DESIGN_IMPORT_MESSAGE.imageTooLarge(header.width, header.height));
   }
-  const declaredBytes = header.width * header.height * BYTES_PER_PIXEL;
+  const declaredBytes = rasterBytes(header.width, header.height);
   if (declaredBytes > DESIGN_LIMITS.rasterBudgetBytes) {
     return invalid(DESIGN_IMPORT_MESSAGE.imageTooLarge(header.width, header.height));
   }
@@ -74,7 +74,7 @@ export const planImage = (header: ImageHeader, usedBytes: number): Result<{ plan
     return invalid(DESIGN_IMPORT_MESSAGE.memory);
   }
   if (declared.width < minPageSide || declared.height < minPageSide) {
-    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall);
+    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall(minPageSide));
   }
   const { size, downscaled } = targetSize(declared);
   const swapped = { width: size.height, height: size.width };
@@ -160,28 +160,13 @@ const decodeWithLimits = async (
   signal: AbortSignal | undefined,
   timeoutMs: number,
 ): Promise<Result<DecodedPixels>> => {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  let stop: (reason: Error) => void = () => undefined;
-  const expiry = new Promise<never>((_resolve, reject) => {
-    stop = reject;
-    timer = setTimeout(() => reject(new ImageTimeout()), timeoutMs);
-  });
-  const onAbort = (): void => stop(new ImageCancelled());
-  signal?.addEventListener("abort", onAbort, { once: true });
-  if (signal?.aborted === true) onAbort();
-  const work = decodePixels(file, plan);
-  work.catch(() => undefined);
+  if (signal?.aborted === true) return IMPORT_CANCELLED;
   try {
-    return await Promise.race([work, expiry]);
+    return await raceWithLimits(decodePixels(file, plan), { timeoutMs, signal });
   } catch (error) {
-    return invalid(
-      error instanceof ImageCancelled
-        ? DESIGN_IMPORT_MESSAGE.cancelled
-        : DESIGN_IMPORT_MESSAGE.timedOut,
-    );
-  } finally {
-    clearTimeout(timer);
-    signal?.removeEventListener("abort", onAbort);
+    return error instanceof ImportAbortedError
+      ? IMPORT_CANCELLED
+      : invalid(DESIGN_IMPORT_MESSAGE.timedOut);
   }
 };
 
@@ -189,34 +174,6 @@ const notesOf = (plan: ImagePlan): ImportNote[] => [
   ...(plan.downscaled ? [{ kind: DesignImportNoteKind.Downscaled, count: 1 }] : []),
   ...(plan.animated ? [{ kind: DesignImportNoteKind.AnimationIgnored, count: 1 }] : []),
 ];
-
-export const imageToDesign = (
-  format: DesignImportFormat,
-  pixels: DecodedPixels,
-  options: { newId: () => string; fileName: string; notes: ImportNote[] },
-): ImportKindResult => {
-  const size = { width: pixels.width, height: pixels.height };
-  const id = options.newId();
-  const name =
-    importBaseName(options.fileName).slice(0, DESIGN_LIMITS.layerNameMax) || DEFAULT_LAYER_NAME;
-  const buffer: PixelBuffer = { ...size, data: pixels.data };
-  const element = {
-    ...createRasterLayer(id, emptyPage("import"), size),
-    name,
-    pixelWidth: size.width,
-    pixelHeight: size.height,
-  };
-  return {
-    kind: DesignImportKind.Image,
-    design: {
-      format,
-      ...size,
-      elements: [element],
-      buffers: new Map([[id, buffer]]),
-      notes: options.notes,
-    },
-  };
-};
 
 export const decodeImage = async (
   format: DesignImportFormat,
@@ -236,10 +193,11 @@ export const decodeImage = async (
   if (!decoded.ok) return decoded;
   return {
     ok: true,
-    ...imageToDesign(format, decoded, {
+    ...singleLayerDesign(format, decoded, {
       newId: input.newId,
       fileName: input.file.name,
       notes: notesOf(plan),
+      defaultName: DESIGN_IMPORT_LAYER_NAME.image,
     }),
   };
 };
@@ -254,6 +212,7 @@ const imageHandler = (
   extensions,
   maxBytes: MAX_IMAGE_BYTES,
   runsIn: "main",
+  headBytes: DESIGN_IMPORT_LIMITS.jpegHeaderWindowBytes,
   sniff,
   decode: (input) => decodeImage(format, input),
 });

@@ -1,4 +1,5 @@
 import type { Layer, Psd } from "ag-psd";
+import { rasterBytes } from "@/lib/shared/design/raster-store";
 import { DesignImportFailure } from "@/lib/shared/design/import/types";
 
 const COLOR_MODE_CMYK = 4;
@@ -57,7 +58,7 @@ const intersect = (
     : { left, top, width: right - left, height: bottom - top };
 };
 
-export const planBytes = (box: PlanBox): number => box.width * box.height * 4;
+export const planBytes = (box: PlanBox): number => rasterBytes(box.width, box.height);
 
 type Budget = { capacity: number; remaining: bigint; planned: number; leaves: number };
 
@@ -79,23 +80,21 @@ const leafNode = (layer: Layer, depth: number, box: PlanBox | null, mask: boolea
   decodeMask: mask,
 });
 
-const maskFits = (
+const maskBytes = (
   layer: Layer,
   depth: number,
-  budget: Budget,
   limits: PlanLimits,
-): boolean | DesignImportFailure => {
+): { bytes: bigint } | { failure: DesignImportFailure } | null => {
   const mask = layer.mask;
-  if (mask === undefined || mask.disabled === true) return false;
+  if (mask === undefined || mask.disabled === true) return null;
   const width = extent(mask.left, mask.right);
   const height = extent(mask.top, mask.bottom);
-  if (width === null || height === null) return DesignImportFailure.LayerTooLarge;
-  if (width === 0 || height === 0) return false;
+  if (width === null || height === null) return { failure: DesignImportFailure.LayerTooLarge };
+  if (width === 0 || height === 0) return null;
   if (width > limits.maxLayerSide || height > limits.maxLayerSide) {
-    return DesignImportFailure.LayerTooLarge;
+    return { failure: DesignImportFailure.LayerTooLarge };
   }
-  const peak = BigInt(budget.planned) + decodedBytes(width, height, RGBA_CHANNELS, depth);
-  return peak > budget.remaining ? DesignImportFailure.Memory : true;
+  return { bytes: decodedBytes(width, height, RGBA_CHANNELS, depth) };
 };
 
 const planLeaf = (
@@ -117,24 +116,32 @@ const planLeaf = (
   }
   const { bitsPerChannel, colorMode } = layer.rawData;
   const channels = colorMode === COLOR_MODE_CMYK ? CMYK_DECODE_CHANNELS : RGBA_CHANNELS;
-  const peak = BigInt(budget.planned) + decodedBytes(width, height, channels, bitsPerChannel);
-  if (peak > budget.remaining) return { failure: DesignImportFailure.Memory };
+  const layerBytes = decodedBytes(width, height, channels, bitsPerChannel);
+  if (BigInt(budget.planned) + layerBytes > budget.remaining) {
+    return { failure: DesignImportFailure.Memory };
+  }
   const box = intersect({ left: layer.left ?? 0, top: layer.top ?? 0, width, height }, page);
   if (box === null) return { node: leafNode(layer, depth, null, false) };
   budget.leaves += 1;
   if (budget.leaves > budget.capacity) return { failure: DesignImportFailure.TooManyLayers };
-  const mask = maskFits(layer, bitsPerChannel, budget, limits);
-  if (typeof mask === "string") return { failure: mask };
+  const mask = maskBytes(layer, bitsPerChannel, limits);
+  if (mask !== null && "failure" in mask) return { failure: mask.failure };
+  const peak =
+    BigInt(budget.planned) +
+    layerBytes +
+    BigInt(planBytes(box)) +
+    (mask === null ? 0n : mask.bytes);
+  if (peak > budget.remaining) return { failure: DesignImportFailure.Memory };
   budget.planned += planBytes(box);
-  if (BigInt(budget.planned) > budget.remaining) return { failure: DesignImportFailure.Memory };
-  return { node: leafNode(layer, depth, box, mask) };
+  return { node: leafNode(layer, depth, box, mask !== null) };
 };
 
 const planComposite = (psd: Psd, budget: Budget): PlanResult => {
   const page = { left: 0, top: 0, width: psd.width, height: psd.height };
   const depth = psd.bitsPerChannel ?? 8;
   const channels = psd.colorMode === COLOR_MODE_CMYK ? CMYK_DECODE_CHANNELS : RGBA_CHANNELS;
-  if (decodedBytes(page.width, page.height, channels, depth) > budget.remaining) {
+  const peak = decodedBytes(page.width, page.height, channels, depth) + BigInt(planBytes(page));
+  if (peak > budget.remaining) {
     return refuse(DesignImportFailure.Memory);
   }
   if (budget.capacity < 1) return refuse(DesignImportFailure.TooManyLayers);
@@ -149,14 +156,21 @@ const planComposite = (psd: Psd, budget: Budget): PlanResult => {
   return { ok: true, plan: { nodes: [node], plannedBytes: planBytes(page), decodeCount: 1 } };
 };
 
+const newBudget = (limits: PlanLimits): Budget => ({
+  capacity: limits.capacityElements,
+  remaining: BigInt(Math.max(0, limits.remainingBytes)),
+  planned: 0,
+  leaves: 0,
+});
+
+export const planFlattened = (psd: Psd, limits: PlanLimits): PlanResult =>
+  psd.rawCompositeData === undefined
+    ? refuse(DesignImportFailure.NoLayers)
+    : planComposite(psd, newBudget(limits));
+
 export const planPsd = (psd: Psd, limits: PlanLimits): PlanResult => {
   const page = { width: psd.width, height: psd.height };
-  const budget: Budget = {
-    capacity: limits.capacityElements,
-    remaining: BigInt(Math.max(0, limits.remainingBytes)),
-    planned: 0,
-    leaves: 0,
-  };
+  const budget = newBudget(limits);
   const nodes: PlanNode[] = [];
   const stack: Frame[] = [{ layers: psd.children ?? [], index: 0, depth: 0 }];
   while (stack.length > 0) {

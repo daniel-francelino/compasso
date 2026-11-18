@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
 import { DesignImportFailure, DesignImportFormat } from "@/lib/shared/design/import/types";
+import { rasterBytes } from "@/lib/shared/design/raster-store";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
 const MAX_NODES = 65535;
@@ -116,7 +117,7 @@ export const WorkerResponseSchema = ResponseUnion.refine(
 export type WorkerResponse = z.infer<typeof WorkerResponseSchema>;
 
 export const pixelBytesOf = (box: { width: number; height: number }): number =>
-  box.width * box.height * 4;
+  rasterBytes(box.width, box.height);
 
 export const transferablesOf = (document: WorkerDocument): ArrayBuffer[] =>
   document.nodes.flatMap((node) => (node.pixels === null ? [] : [node.pixels]));

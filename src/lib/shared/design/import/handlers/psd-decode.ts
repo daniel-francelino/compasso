@@ -2,6 +2,7 @@ import type { Layer, LayerMaskData, PixelArray, PixelData, Psd } from "ag-psd";
 import type { PlanBox, PlanNode, PsdPlan } from "@/lib/shared/design/import/handlers/psd-plan";
 import { sanitizeImportName } from "@/lib/shared/design/import/sanitize";
 import type { WorkerDocument, WorkerNode } from "@/lib/shared/design/import/worker/protocol";
+import { RASTER_BYTES_PER_PIXEL, rasterBytes } from "@/lib/shared/design/raster-store";
 import { clampByte } from "@/lib/shared/design/raster/numeric";
 
 const COLOR_MODE_CMYK = 4;
@@ -26,8 +27,8 @@ const byteReader = (data: PixelArray): ((index: number) => number) => {
 };
 
 const hasExpectedLength = (pixels: PixelData): boolean =>
-  Number.isSafeInteger(pixels.width * pixels.height * 4) &&
-  pixels.data.length === pixels.width * pixels.height * 4;
+  Number.isSafeInteger(rasterBytes(pixels.width, pixels.height)) &&
+  pixels.data.length === rasterBytes(pixels.width, pixels.height);
 
 export const cropPixels = (
   source: PixelData,
@@ -39,12 +40,12 @@ export const cropPixels = (
   const offsetY = box.top - origin.top;
   if (offsetX < 0 || offsetY < 0) return null;
   if (offsetX + box.width > source.width || offsetY + box.height > source.height) return null;
-  const out = new Uint8ClampedArray(box.width * box.height * 4);
+  const out = new Uint8ClampedArray(rasterBytes(box.width, box.height));
   const direct = source.data instanceof Uint8ClampedArray || source.data instanceof Uint8Array;
   const read = byteReader(source.data);
   for (let row = 0; row < box.height; row += 1) {
-    const from = ((offsetY + row) * source.width + offsetX) * 4;
-    const rowLength = box.width * 4;
+    const from = ((offsetY + row) * source.width + offsetX) * RASTER_BYTES_PER_PIXEL;
+    const rowLength = box.width * RASTER_BYTES_PER_PIXEL;
     if (direct) {
       out.set(source.data.subarray(from, from + rowLength), row * rowLength);
       continue;
@@ -66,7 +67,7 @@ const maskValueAt = (
   const column = point.x - (mask.left ?? 0);
   const row = point.y - (mask.top ?? 0);
   const inside = column >= 0 && row >= 0 && column < pixels.width && row < pixels.height;
-  return inside ? read((row * pixels.width + column) * 4) : fallback;
+  return inside ? read((row * pixels.width + column) * RASTER_BYTES_PER_PIXEL) : fallback;
 };
 
 export const bakeMask = (
@@ -82,7 +83,7 @@ export const bakeMask = (
   for (let row = 0; row < box.height; row += 1) {
     for (let column = 0; column < box.width; column += 1) {
       const value = maskValueAt(mask, pixels, read, { x: box.left + column, y: box.top + row });
-      const index = (row * box.width + column) * 4 + 3;
+      const index = (row * box.width + column) * RASTER_BYTES_PER_PIXEL + 3;
       data[index] = Math.round(((data[index] ?? 0) * value) / BYTE_RANGE);
     }
   }
@@ -120,7 +121,7 @@ const describe = (node: PlanNode): Omit<WorkerNode, "box" | "pixels"> => {
 
 type Decoded = { box: PlanBox; data: Uint8ClampedArray<ArrayBuffer> } | null;
 
-const decodeNode = (node: PlanNode, psd: Psd, source: PsdPixelSource): Decoded => {
+const cropLayer = (node: PlanNode, psd: Psd, source: PsdPixelSource): Decoded => {
   const { box, layer } = node;
   if (box === null) return null;
   const pixels = node.composite ? source.compositePixels(psd) : source.layerPixels(layer);
@@ -129,7 +130,14 @@ const decodeNode = (node: PlanNode, psd: Psd, source: PsdPixelSource): Decoded =
     ? { left: 0, top: 0 }
     : { left: layer.left ?? 0, top: layer.top ?? 0 };
   const data = cropPixels(pixels, origin, box);
-  if (data === null) return null;
+  return data === null ? null : { box, data };
+};
+
+const decodeNode = (node: PlanNode, psd: Psd, source: PsdPixelSource): Decoded => {
+  const cropped = cropLayer(node, psd, source);
+  if (cropped === null) return null;
+  const { box, data } = cropped;
+  const { layer } = node;
   if (layer.mask !== undefined) {
     bakeMask(data, box, layer.mask, node.decodeMask ? source.maskPixels(layer) : undefined);
   }

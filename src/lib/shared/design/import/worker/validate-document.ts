@@ -8,11 +8,22 @@ import {
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 
+const isResizable = (buffer: ArrayBuffer): boolean =>
+  "resizable" in buffer && buffer.resizable === true;
+
+const isSharedOrResizable = (buffer: ArrayBuffer, seen: Set<ArrayBuffer>): boolean => {
+  if (seen.has(buffer) || isResizable(buffer)) return true;
+  seen.add(buffer);
+  return false;
+};
+
 const badNode = (document: WorkerDocument): boolean => {
+  const seen = new Set<ArrayBuffer>();
   for (const node of document.nodes) {
     if ((node.box === null) !== (node.pixels === null)) return true;
     if (node.group && node.box !== null) return true;
     if (node.box === null || node.pixels === null) continue;
+    if (isSharedOrResizable(node.pixels, seen)) return true;
     const outside =
       node.box.left + node.box.width > document.width ||
       node.box.top + node.box.height > document.height;

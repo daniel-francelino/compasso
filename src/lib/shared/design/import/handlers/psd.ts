@@ -1,6 +1,10 @@
 import type { BlendMode } from "ag-psd";
 import { sizeFitsPage } from "@/lib/shared/design/import/limits";
-import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
+import {
+  DESIGN_IMPORT_LAYER_NAME,
+  DESIGN_IMPORT_MESSAGE,
+  IMPORT_CANCELLED,
+} from "@/lib/shared/design/import/messages";
 import { sanitizeImportName } from "@/lib/shared/design/import/sanitize";
 import { hasPsdSignature } from "@/lib/shared/design/import/sniff";
 import {
@@ -178,7 +182,7 @@ const rasterOf = (
     height: box.height,
     pixelWidth: box.width,
     pixelHeight: box.height,
-    name: nameOf(node, "Camada"),
+    name: nameOf(node, DESIGN_IMPORT_LAYER_NAME.layer),
     hidden: node.hidden,
     opacity: node.opacity,
     fillOpacity: node.fillOpacity,
@@ -201,7 +205,7 @@ const groupOf = (node: WorkerNode, parentId: string | null, context: Context): G
   groupId: null,
   blendMode: blendOf(node, context),
   fillOpacity: 1,
-  name: nameOf(node, "Grupo"),
+  name: nameOf(node, DESIGN_IMPORT_LAYER_NAME.group),
   hidden: node.hidden,
   parentId,
   clipToBelow: false,
@@ -340,7 +344,7 @@ const decodeInWorker = async ({
     const budgetBytes = DESIGN_LIMITS.rasterBudgetBytes - usedBytes;
     return asDocument(psdToDesign(outcome.document, { newId, budgetBytes }));
   } catch (error) {
-    if (error instanceof ImportCancelledError) return invalid(DESIGN_IMPORT_MESSAGE.cancelled);
+    if (error instanceof ImportCancelledError) return IMPORT_CANCELLED;
     throw error;
   }
 };

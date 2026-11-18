@@ -1,8 +1,14 @@
 import type { Psd } from "ag-psd";
 import { decodePsd, type PsdPixelSource } from "@/lib/shared/design/import/handlers/psd-decode";
-import { planPsd } from "@/lib/shared/design/import/handlers/psd-plan";
+import {
+  type PlanLimits,
+  type PlanResult,
+  planFlattened,
+  planPsd,
+} from "@/lib/shared/design/import/handlers/psd-plan";
 import { DESIGN_IMPORT_LIMITS, sizeFitsPage } from "@/lib/shared/design/import/limits";
 import {
+  type WorkerDocument,
   type WorkerRequest,
   type WorkerResponse,
   WorkerStatus,
@@ -12,22 +18,43 @@ import { DesignImportFailure, DesignImportFormat } from "@/lib/shared/design/imp
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
 const MEMORY_ERROR = "Exceeded memory limit";
+const ALLOCATION_FAILURE = /allocation/i;
 
 export type PsdEngine = {
-  readStructure: (buffer: ArrayBuffer) => Psd;
+  readStructure: (buffer: ArrayBuffer, options?: { composite: boolean }) => Psd;
   source: PsdPixelSource;
 };
 
 export type PostResponse = (response: WorkerResponse, transfer: ArrayBuffer[]) => void;
 
 const failureOf = (error: unknown): DesignImportFailure => {
-  if (error instanceof RangeError) return DesignImportFailure.Memory;
+  if (error instanceof RangeError && ALLOCATION_FAILURE.test(error.message)) {
+    return DesignImportFailure.Memory;
+  }
   if (error instanceof Error && error.message === MEMORY_ERROR) return DesignImportFailure.Memory;
   return DesignImportFailure.Corrupt;
 };
 
 const fail = (id: number, failure: DesignImportFailure, post: PostResponse): void =>
   post({ id, status: WorkerStatus.Error, failure }, []);
+
+const isEmpty = (document: WorkerDocument): boolean =>
+  document.nodes.every((node) => node.pixels === null);
+
+type Stage = { document: WorkerDocument } | { failure: DesignImportFailure };
+
+const decodeFlattened = (
+  buffer: ArrayBuffer,
+  limits: PlanLimits,
+  engine: PsdEngine,
+  post: (done: number, total: number) => void,
+): Stage => {
+  const flat = engine.readStructure(buffer, { composite: true });
+  const planned: PlanResult = planFlattened(flat, limits);
+  if (!planned.ok) return { failure: planned.failure };
+  const document = decodePsd(flat, planned.plan, engine.source, post);
+  return isEmpty(document) ? { failure: DesignImportFailure.NoLayers } : { document };
+};
 
 export const runPsdRequest = async (
   request: WorkerRequest,
@@ -37,21 +64,29 @@ export const runPsdRequest = async (
   const { id, limits } = request;
   if (request.format !== DesignImportFormat.Psd) return fail(id, DesignImportFailure.Corrupt, post);
   try {
-    const psd = engine.readStructure(await request.file.arrayBuffer());
+    const buffer = await request.file.arrayBuffer();
+    const psd = engine.readStructure(buffer);
     if (!sizeFitsPage(psd.width, psd.height).ok) return fail(id, DesignImportFailure.Corrupt, post);
-    const planned = planPsd(psd, {
+    const planLimits: PlanLimits = {
       capacityElements: limits.capacityElements,
       remainingBytes: DESIGN_LIMITS.rasterBudgetBytes - limits.usedBytes,
       maxLayerSide: DESIGN_IMPORT_LIMITS.maxLayerSide,
-    });
+    };
+    const planned = planPsd(psd, planLimits);
     if (!planned.ok) return fail(id, planned.failure, post);
-    const document = decodePsd(psd, planned.plan, engine.source, (done, total) =>
-      post({ id, status: WorkerStatus.Progress, done, total }, []),
+    const progress = (done: number, total: number): void =>
+      post({ id, status: WorkerStatus.Progress, done, total }, []);
+    const layered = decodePsd(psd, planned.plan, engine.source, progress);
+    const stage: Stage =
+      isEmpty(layered) && planned.plan.nodes[0]?.composite !== true
+        ? decodeFlattened(buffer, planLimits, engine, progress)
+        : { document: layered };
+    if ("failure" in stage) return fail(id, stage.failure, post);
+    if (isEmpty(stage.document)) return fail(id, DesignImportFailure.NoLayers, post);
+    post(
+      { id, status: WorkerStatus.Result, document: stage.document },
+      transferablesOf(stage.document),
     );
-    if (document.nodes.every((node) => node.pixels === null)) {
-      return fail(id, DesignImportFailure.NoLayers, post);
-    }
-    post({ id, status: WorkerStatus.Result, document }, transferablesOf(document));
   } catch (error) {
     fail(id, failureOf(error), post);
   }

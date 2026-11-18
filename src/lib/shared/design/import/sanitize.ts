@@ -1,24 +1,28 @@
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
-const CONTROL_OR_SURROGATE = /^[\p{Cc}\p{Cs}]$/u;
+const UNSAFE_CHARACTER = /^[\p{Cc}\p{Cs}\p{Cf}\p{Zl}\p{Zp}\p{Co}]$/u;
 
-const HIDDEN_RANGES: readonly (readonly [number, number])[] = [
-  [0x061c, 0x061c],
-  [0x200b, 0x200f],
-  [0x202a, 0x202e],
-  [0x2060, 0x2060],
-  [0x2066, 0x2069],
-  [0xfeff, 0xfeff],
-];
+const TAG_FROM = 0xe0000;
+const TAG_TO = 0xe007f;
+const RAW_FACTOR = 4;
 
 const isUnsafe = (character: string): boolean => {
-  if (CONTROL_OR_SURROGATE.test(character)) return true;
+  if (UNSAFE_CHARACTER.test(character)) return true;
   const code = character.codePointAt(0) ?? 0;
-  return HIDDEN_RANGES.some(([from, to]) => code >= from && code <= to);
+  return code >= TAG_FROM && code <= TAG_TO;
+};
+
+const cutCodePoints = (raw: string, limit: number): string => {
+  const kept: string[] = [];
+  for (const character of raw) {
+    if (kept.length >= limit) break;
+    kept.push(character);
+  }
+  return kept.join("");
 };
 
 export const sanitizeImportName = (raw: string, maxLength = DESIGN_LIMITS.layerNameMax): string =>
-  Array.from(raw.normalize("NFC"))
+  Array.from(cutCodePoints(raw, maxLength * RAW_FACTOR).normalize("NFC"))
     .filter((character) => !isUnsafe(character))
     .slice(0, maxLength)
     .join("")

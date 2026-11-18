@@ -16,10 +16,10 @@ export const DESIGN_IMPORT_LIMITS = {
 export const sizeFitsPage = (width: number, height: number): Result<object> => {
   const { maxPageSide, minPageSide } = DESIGN_IMPORT_LIMITS;
   if (width > maxPageSide || height > maxPageSide) {
-    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge);
+    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge(maxPageSide));
   }
   if (width < minPageSide || height < minPageSide) {
-    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall);
+    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall(minPageSide));
   }
   return { ok: true };
 };

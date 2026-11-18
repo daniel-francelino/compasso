@@ -24,6 +24,12 @@ const source: PsdPixelSource = {
 };
 
 export const agPsdEngine: PsdEngine = {
-  readStructure: (buffer) => readPsd(buffer, PSD_STRUCTURE_OPTIONS),
+  readStructure: (buffer, options) =>
+    readPsd(
+      buffer,
+      options?.composite === true
+        ? { ...PSD_STRUCTURE_OPTIONS, skipCompositeImageData: false }
+        : PSD_STRUCTURE_OPTIONS,
+    ),
   source,
 };

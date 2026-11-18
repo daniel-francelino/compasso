@@ -1,3 +1,4 @@
+import { type Failure, invalid } from "@/lib/shared/server-utils";
 import {
   DesignImportFormat,
   DesignImportNoteKind,
@@ -28,6 +29,13 @@ export const designImportHistoryLabel = (format: DesignImportFormat): string =>
 export const IMPORT_UPLOAD_REASON =
   "Importar exige permissão para enviar arquivos à biblioteca de mídia.";
 
+export const DESIGN_IMPORT_LAYER_NAME = {
+  image: "Imagem",
+  art: "Arte",
+  layer: "Camada",
+  group: "Grupo",
+} as const;
+
 export const DESIGN_IMPORT_MESSAGE = {
   tooLarge: (limitBytes: number): string =>
     `O arquivo passa de ${Math.floor(limitBytes / BYTES_PER_MIB)} MB. Exporte uma versão menor e tente de novo.`,
@@ -41,9 +49,10 @@ export const DESIGN_IMPORT_MESSAGE = {
     `A imagem é grande demais para abrir (${width} × ${height} px).`,
   psdColorMode:
     "O modo de cor deste PSD não é aceito. Converta para RGB, CMYK, tons de cinza ou indexado.",
-  canvasTooLarge:
-    "A tela do arquivo passa de 4096 px em um dos lados. Reduza o tamanho e tente de novo.",
-  canvasTooSmall: "A tela do arquivo é menor que 64 px. Use um arquivo maior.",
+  canvasTooLarge: (maxSide: number): string =>
+    `A tela do arquivo passa de ${maxSide} px em um dos lados. Reduza o tamanho e tente de novo.`,
+  canvasTooSmall: (minSide: number): string =>
+    `A tela do arquivo é menor que ${minSide} px. Use um arquivo maior.`,
   aiNotPdf:
     "Este arquivo .ai foi salvo sem compatibilidade com PDF. No Illustrator, salve de novo marcando “Criar arquivo compatível com PDF”.",
   encrypted: "O arquivo tem senha. Salve uma cópia sem senha e tente de novo.",
@@ -84,8 +93,9 @@ export const DESIGN_IMPORT_NOTE_SENTENCE: Record<DesignImportNoteKind, (count: n
       "Animação ignorada: só o primeiro quadro foi importado.",
   };
 
-export const isImportCancelled = (message: string): boolean =>
-  message === DESIGN_IMPORT_MESSAGE.cancelled;
+export const IMPORT_CANCELLED: Failure = invalid(DESIGN_IMPORT_MESSAGE.cancelled);
+
+export const isImportCancelled = (failure: Failure): boolean => failure === IMPORT_CANCELLED;
 
 export const describeImportNotes = (notes: readonly ImportNote[]): string =>
   notes.map((note) => DESIGN_IMPORT_NOTE_SENTENCE[note.kind](note.count)).join(" ");

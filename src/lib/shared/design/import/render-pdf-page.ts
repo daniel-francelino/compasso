@@ -2,29 +2,32 @@ import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { PDFDocumentLoadingTask } from "pdfjs-dist";
 import type { DocumentInitParameters } from "pdfjs-dist/types/src/display/api";
 import { DESIGN_IMPORT_LIMITS, sizeFitsPage } from "@/lib/shared/design/import/limits";
-import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
-import { findPdfStart, importBaseName } from "@/lib/shared/design/import/sniff";
 import {
-  DesignImportKind,
+  DESIGN_IMPORT_LAYER_NAME,
+  DESIGN_IMPORT_MESSAGE,
+  IMPORT_CANCELLED,
+} from "@/lib/shared/design/import/messages";
+import {
+  ImportAbortedError,
+  ImportTimeoutError,
+  errorName,
+  raceWithLimits,
+} from "@/lib/shared/design/import/run-limits";
+import { singleLayerDesign } from "@/lib/shared/design/import/single-layer";
+import { rasterBytes } from "@/lib/shared/design/raster-store";
+import { findPdfStart } from "@/lib/shared/design/import/sniff";
+import {
   DesignImportNoteKind,
   type DesignImportFormat,
   type ImportKindResult,
   type ImportNote,
 } from "@/lib/shared/design/import/types";
-import { createRasterLayer, emptyPage } from "@/lib/shared/design/document";
 import { logError } from "@/lib/shared/logger";
-import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
 const PASSWORD_ERROR = "PasswordException";
 const TRANSPARENT = "rgba(0,0,0,0)";
-const BYTES_PER_PIXEL = 4;
-const DEFAULT_LAYER_NAME = "Arte";
-
-class PdfTimeout extends Error {}
-
-class PdfCancelled extends Error {}
 
 export type PdfPage = {
   width: number;
@@ -48,6 +51,7 @@ export const buildPdfOpenOptions = (data: Uint8Array): DocumentInitParameters =>
   useWorkerFetch: false,
   stopAtErrors: false,
   maxImageSize: DESIGN_IMPORT_LIMITS.aiMaxImagePixels,
+  verbosity: 0,
 });
 
 export const pageRenderSize = (
@@ -72,12 +76,12 @@ const ownedBytes = (bytes: Uint8Array): Uint8Array =>
   bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength ? bytes : bytes.slice();
 
 const failureOf = (error: unknown, renderFailure: string): Result<PdfPage> => {
-  if (error instanceof PdfCancelled) return invalid(DESIGN_IMPORT_MESSAGE.cancelled);
-  if (error instanceof PdfTimeout) return invalid(DESIGN_IMPORT_MESSAGE.timedOut);
+  if (error instanceof ImportAbortedError) return IMPORT_CANCELLED;
+  if (error instanceof ImportTimeoutError) return invalid(DESIGN_IMPORT_MESSAGE.timedOut);
   if (error instanceof Error && error.name === PASSWORD_ERROR) {
     return invalid(DESIGN_IMPORT_MESSAGE.encrypted);
   }
-  logError("pdf render failed", error);
+  logError("pdf render failed", errorName(error));
   return invalid(renderFailure);
 };
 
@@ -96,12 +100,12 @@ const drawFirstPage = async (
     natural.width > DESIGN_IMPORT_LIMITS.maxLayerSide ||
     natural.height > DESIGN_IMPORT_LIMITS.maxLayerSide
   ) {
-    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge);
+    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge(DESIGN_IMPORT_LIMITS.maxPageSide));
   }
   const size = pageRenderSize(natural.width, natural.height);
   const fits = sizeFitsPage(size.width, size.height);
   if (!fits.ok) return fits;
-  if (usedBytes + size.width * size.height * BYTES_PER_PIXEL > DESIGN_LIMITS.rasterBudgetBytes) {
+  if (usedBytes + rasterBytes(size.width, size.height) > DESIGN_LIMITS.rasterBudgetBytes) {
     return invalid(DESIGN_IMPORT_MESSAGE.memory);
   }
   const canvas = globalThis.document.createElement("canvas");
@@ -135,30 +139,19 @@ export const renderPdfPage = async (
     signal?: AbortSignal | undefined;
   },
 ): Promise<Result<PdfPage>> => {
+  if (options.signal?.aborted === true) return IMPORT_CANCELLED;
   const pdfjs = await import("pdfjs-dist");
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const task = pdfjs.getDocument(buildPdfOpenOptions(ownedBytes(bytes)));
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  let cancel: (reason: Error) => void = () => undefined;
-  const expiry = new Promise<never>((_resolve, reject) => {
-    cancel = reject;
-    timer = setTimeout(
-      () => reject(new PdfTimeout()),
-      options.timeoutMs ?? DESIGN_IMPORT_LIMITS.pdfTimeoutMs,
-    );
-  });
-  const onAbort = (): void => cancel(new PdfCancelled());
-  options.signal?.addEventListener("abort", onAbort, { once: true });
-  if (options.signal?.aborted === true) onAbort();
   const work = drawFirstPage(task, options.usedBytes, options.renderFailure);
-  work.catch(() => undefined);
   try {
-    return await Promise.race([work, expiry]);
+    return await raceWithLimits(work, {
+      timeoutMs: options.timeoutMs ?? DESIGN_IMPORT_LIMITS.pdfTimeoutMs,
+      signal: options.signal,
+    });
   } catch (error) {
     return failureOf(error, options.renderFailure);
   } finally {
-    clearTimeout(timer);
-    options.signal?.removeEventListener("abort", onAbort);
     await task.destroy();
   }
 };
@@ -173,38 +166,26 @@ export const renderPdfPageDesign = async (
     fileName: string;
     newId: () => string;
     usedBytes: number;
+    notPdf?: string;
     signal?: AbortSignal | undefined;
   },
   renderFailure: string,
 ): Promise<Result<ImportKindResult>> => {
   const pdf = extractPdfBytes(input.bytes);
-  if (pdf === null) return invalid(DESIGN_IMPORT_MESSAGE.corrupt);
+  if (pdf === null) return invalid(input.notPdf ?? DESIGN_IMPORT_MESSAGE.corrupt);
   const rendered = await renderPdfPage(pdf, {
     usedBytes: input.usedBytes,
     renderFailure,
     signal: input.signal,
   });
   if (!rendered.ok) return rendered;
-  const size = { width: rendered.width, height: rendered.height };
-  const buffer: PixelBuffer = { ...size, data: rendered.data };
-  const id = input.newId();
-  const name =
-    importBaseName(input.fileName).slice(0, DESIGN_LIMITS.layerNameMax) || DEFAULT_LAYER_NAME;
-  const element = {
-    ...createRasterLayer(id, emptyPage("import"), size),
-    name,
-    pixelWidth: size.width,
-    pixelHeight: size.height,
-  };
   return {
     ok: true,
-    kind: DesignImportKind.Image,
-    design: {
-      format,
-      ...size,
-      elements: [element],
-      buffers: new Map([[id, buffer]]),
+    ...singleLayerDesign(format, rendered, {
+      newId: input.newId,
+      fileName: input.fileName,
       notes: pdfPageNotes(rendered.pageCount),
-    },
+      defaultName: DESIGN_IMPORT_LAYER_NAME.art,
+    }),
   };
 };

@@ -10,11 +10,10 @@ import type {
   ImportKindResult,
   WorkerImportInput,
 } from "@/lib/shared/design/import/types";
+import { errorName } from "@/lib/shared/design/import/run-limits";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 import { logError } from "@/lib/shared/logger";
 import { type Result, invalid } from "@/lib/shared/server-utils";
-
-const errorName = (error: unknown): string => (error instanceof Error ? error.name : "unknown");
 
 const LIST_SEPARATOR = ", ";
 const LAST_SEPARATOR = " ou ";
@@ -54,7 +53,9 @@ const runHandler = async (
   input: WorkerImportInput,
 ): Promise<Result<ImportKindResult>> => {
   if (handler.runsIn === "worker") return handler.decode(input);
-  const bytes = await readBytes(input.file);
+  const bytes = await readBytes(
+    handler.headBytes === undefined ? input.file : input.file.slice(0, handler.headBytes),
+  );
   if (bytes === null) return invalid(DESIGN_IMPORT_MESSAGE.readFailed);
   return handler.decode({ ...input, bytes });
 };

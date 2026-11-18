@@ -83,6 +83,10 @@ type HandlerBase = {
 
 export type ImportHandler = HandlerBase &
   (
-    | { runsIn: "main"; decode: (input: ImportInput) => Promise<Result<ImportKindResult>> }
+    | {
+        runsIn: "main";
+        headBytes?: number;
+        decode: (input: ImportInput) => Promise<Result<ImportKindResult>>;
+      }
     | { runsIn: "worker"; decode: (input: WorkerImportInput) => Promise<Result<ImportKindResult>> }
   );
