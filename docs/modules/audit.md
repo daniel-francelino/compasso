@@ -126,7 +126,7 @@ This table is the **registry of audit actions** (rule: one row per action; `Audi
 | `media.published` | `media_version` | `media_publish_derivative` |
 | `media.unpublished` | `media_version` | `media_withdraw_derivative` |
 | `media.deleted_permanently` | `media_asset` | `media_delete_permanently` |
-| `media.hidden_removed` | `media_asset` | `media_set_trashed` (trash) and `media_delete_permanently` when the asset is a hidden layer file of the image editor (metadata: `step`, versions) |
+| `media.hidden_removed` | `media_asset` | `media_set_trashed` (trash) and `media_delete_permanently` when the asset is a hidden layer file of the image editor (metadata: the step, trashed or deleted, and the number of versions) |
 | `media.version_replaced` | `media_asset` | `media_replace_version` |
 | `media.share_created` | `media_share` | `media_share_create` |
 | `media.share_revoked` | `media_share` | `media_share_revoke` |

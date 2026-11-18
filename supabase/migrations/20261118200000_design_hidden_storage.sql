@@ -383,6 +383,158 @@ begin
 end;
 $$;
 
+create or replace function public.audit_write(
+  p_org uuid,
+  p_brand uuid,
+  p_action text,
+  p_entity_type text,
+  p_entity_id uuid,
+  p_metadata jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_catalog constant text[] := array[
+    'invitation.created',
+    'invitation.revoked',
+    'invitation.accepted',
+    'client.created',
+    'client.updated',
+    'client.owner_changed',
+    'client.archived',
+    'client.reactivated',
+    'client.deleted',
+    'contact.created',
+    'contact.updated',
+    'contact.deleted',
+    'brand.created',
+    'brand.updated',
+    'brand.timezone_changed',
+    'brand.archived',
+    'brand.reactivated',
+    'brand.deleted',
+    'brand.member_added',
+    'brand.member_revoked',
+    'brand.member_can_decide_changed',
+    'channel.created',
+    'channel.updated',
+    'channel.archived',
+    'channel.reactivated',
+    'channel.deleted',
+    'content.created',
+    'content.updated',
+    'content.submitted',
+    'content.reopened',
+    'content.cancelled',
+    'content.published',
+    'content.deleted',
+    'content_channel.added',
+    'content_channel.removed',
+    'content_channel.rescheduled',
+    'content_channel.published_manually',
+    'content_channel.cancelled',
+    'calendar_note.created',
+    'calendar_note.updated',
+    'calendar_note.archived',
+    'calendar_note.converted',
+    'variant.created',
+    'variant.updated',
+    'variant.submitted',
+    'variant.reopened',
+    'variant.rescheduled',
+    'variant.cancelled',
+    'variant.published_manually',
+    'comment.created',
+    'comment.deleted',
+    'comment.edited',
+    'approval.requested',
+    'approval.decided',
+    'approval.superseded',
+    'approval.approved_by_team',
+    'approval.cancelled',
+    'approval.approver_reassigned',
+    'approval.reminder_sent',
+    'media.published',
+    'media.unpublished',
+    'media.deleted_permanently',
+    'media.version_replaced',
+    'media.share_created',
+    'media.share_revoked',
+    'site.page_published',
+    'site.page_unpublished',
+    'site.rolled_back',
+    'site.case_study_authorized',
+    'site.case_study_withdrawn',
+    'site.settings_changed',
+    'settings.policy_changed',
+    'content_type.saved',
+    'content_type.archived',
+    'organization.updated',
+    'channel.connected',
+    'channel.disconnected',
+    'channel.connection_lost',
+    'content_channel.published_auto',
+    'content_channel.publish_failed',
+    'content_channel.publish_mode_changed',
+    'content_channel.publish_requested',
+    'metric_mark.created',
+    'metric_mark.updated',
+    'metric_mark.deleted',
+    'metrics_report.published',
+    'metrics_report.withdrawn',
+    'feedback.answered',
+    'feedback.declined',
+    'design.created',
+    'design.version_saved',
+    'design.trashed',
+    'design.restored',
+    'design.exported',
+    'design.version_restored',
+    'design.template_changed',
+    'video.created',
+    'video.version_saved',
+    'video.trashed',
+    'video.restored',
+    'video.exported',
+    'design.hidden_purged',
+    'media.hidden_removed',
+    'audit.exported'
+  ];
+  v_actor uuid := auth.uid();
+  v_kind text;
+  v_request text;
+begin
+  if not (p_action = any (v_catalog)) then
+    raise exception 'invalid_input';
+  end if;
+
+  if v_actor is null then
+    v_kind := 'system';
+  else
+    select p.kind into v_kind from public.profiles p where p.id = v_actor;
+    v_kind := coalesce(v_kind, 'internal');
+  end if;
+
+  begin
+    v_request := (current_setting('request.headers', true)::jsonb) ->> 'x-request-id';
+  exception when others then
+    v_request := null;
+  end;
+
+  insert into public.audit_events (
+    organization_id, brand_id, actor_id, actor_kind, action, entity_type, entity_id, metadata,
+    request_id
+  )
+  values (
+    p_org, p_brand, v_actor, v_kind, p_action, p_entity_type, p_entity_id,
+    coalesce(p_metadata, '{}'::jsonb), v_request
+  );
+end;
+$$;
+
 revoke execute on function public.media_hidden_in_draft(uuid) from public, anon, authenticated;
 revoke execute on function public.design_purge_hidden_versions(uuid) from public, anon;
 grant execute on function public.design_purge_hidden_versions(uuid) to authenticated;

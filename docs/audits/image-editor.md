@@ -100,7 +100,12 @@ Hypotheses are marked.
 | ID | Status |
 |---|---|
 | S1, S2 | client part fixed (2026-11-18, not seen in a browser); SQL part open |
-| S3 to S9 | open |
+| S1 | fixed in migration `20261118200000_design_hidden_storage.sql` (local, not pushed): `design_purge_hidden_versions` and a cap of 300 live hidden versions per user and brand (`hidden_limit_reached`); the client call is pending |
+| S2 | fixed in the same migration: `design.update` adds versions to hidden assets created by the caller |
+| S3 | fixed in the same migration: trashing or deleting a hidden asset referenced by a draft (or used by a saved version, for trashing) is refused with `media_in_use`; `media.hidden_removed` audit |
+| S4 | fixed in the same migration (`available` and not trashed) |
+| S5 | fixed in the same migration: default quota 10240 MB, as documented in media-library.md (the documents agreed; the functions had drifted) |
+| S6 to S9 | open (S6 verified accurate in media-library.md) |
 | R1, R5, R6, R7, R9, R10, R12, R13, R16, R18 | fixed (2026-11-18, not seen in a browser) |
 | R8, R14 | deferred (no schema field for the asset id; cursor ellipse) |
 | R2, R3, R4, R11 | fixed (2026-11-18, not seen in a browser) |

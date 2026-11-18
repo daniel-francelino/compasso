@@ -1,6 +1,6 @@
 begin;
 
-select plan(30);
+select plan(28);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
