@@ -7,7 +7,7 @@ import {
   patchElement,
   rgbToHex,
 } from "@/lib/shared/design/document";
-import { dropTargetIndex, layerLabel, moveLayerTo } from "@/lib/shared/design/layers";
+import { dropTargetIndex, layerLabel, moveLayerTo, thumbnailBox } from "@/lib/shared/design/layers";
 import { DesignElementKind, DesignPreset } from "@/lib/shared/design/types";
 
 const palette = {
@@ -69,5 +69,13 @@ describe("dropTargetIndex", () => {
     expect(dropTargetIndex(3, 0, 3)).toBe(0);
     expect(dropTargetIndex(3, 0, 1)).toBe(2);
     expect(dropTargetIndex(3, 1, 2)).toBe(1);
+  });
+});
+
+describe("thumbnailBox", () => {
+  it("fits and centers inside the square", () => {
+    expect(thumbnailBox(100, 50)).toEqual({ x: 0, y: 8, width: 32, height: 16 });
+    expect(thumbnailBox(10, 40)).toEqual({ x: 12, y: 0, width: 8, height: 32 });
+    expect(thumbnailBox(0, 0).width).toBe(1);
   });
 });

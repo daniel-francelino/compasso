@@ -1,4 +1,5 @@
 import {
+  Blend,
   BoxSelect,
   Brush,
   Circle,
@@ -36,4 +37,5 @@ export const DESIGN_TOOL_ICON: Record<DesignTool, LucideIcon> = {
   [DesignTool.Clone]: Stamp,
   [DesignTool.Eraser]: Eraser,
   [DesignTool.Fill]: PaintBucket,
+  [DesignTool.Gradient]: Blend,
 };

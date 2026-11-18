@@ -1,3 +1,4 @@
+import { pageSizeOf } from "@/lib/shared/design/crop";
 import type {
   DesignDocument,
   DesignElement,
@@ -37,6 +38,7 @@ export type ElementBasePatch = Partial<
     | "fillOpacity"
     | "name"
     | "hidden"
+    | "clipToBelow"
   >
 >;
 export type TextPatch = Partial<
@@ -643,19 +645,22 @@ export const resizeDocument = (
   from: DesignPreset,
   to: DesignPreset,
 ): DesignDocument => {
-  const source = DESIGN_PRESET_SIZE[from];
   const target = DESIGN_PRESET_SIZE[to];
-  const scale = Math.min(target.width / source.width, target.height / source.height);
-  const offset = {
-    x: (target.width - source.width * scale) / 2,
-    y: (target.height - source.height * scale) / 2,
-  };
   return {
     ...document,
-    pages: document.pages.map((page) => ({
-      ...page,
-      elements: page.elements.map((element) => scaleElement(element, scale, offset)),
-    })),
+    pages: document.pages.map((page) => {
+      const source = pageSizeOf(page, from);
+      const scale = Math.min(target.width / source.width, target.height / source.height);
+      const offset = {
+        x: (target.width - source.width * scale) / 2,
+        y: (target.height - source.height * scale) / 2,
+      };
+      return {
+        id: page.id,
+        background: page.background,
+        elements: page.elements.map((element) => scaleElement(element, scale, offset)),
+      };
+    }),
   };
 };
 

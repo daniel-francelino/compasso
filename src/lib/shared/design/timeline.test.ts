@@ -6,6 +6,8 @@ import { DEFAULT_BRUSH_OPTIONS, toBrushParams } from "@/lib/shared/design/paint"
 import type { DesignDocument } from "@/lib/shared/design/schemas";
 import { createStrokeSession } from "@/lib/shared/design/stroke-session";
 import {
+  jumpTimeline,
+  labelDocumentStep,
   markPixelStep,
   redoTimeline,
   timelineSteps,
@@ -97,5 +99,36 @@ describe("unified timeline", () => {
     expect(alpha(50)).toBe(0);
     redoTimeline(history, steps);
     expect(alpha(50)).toBeGreaterThan(0);
+  });
+
+  it("names a document step without touching the pixel history", () => {
+    const { steps } = setup();
+    const next = doc("b");
+    labelDocumentStep(next, "Cortar");
+    let history = pushHistory(historyOf(doc("a")), next, 100);
+    expect(timelineSteps(history)).toEqual([{ label: "Cortar", applied: true, pixels: false }]);
+    history = undoTimeline(history, steps);
+    history = redoTimeline(history, steps);
+    expect(history.present).toBe(next);
+  });
+
+  it("jumps to any step and back, replaying the pixels", () => {
+    const { stroke, steps, alpha } = setup();
+    let history = historyOf(doc("a"));
+    history = stroke(history, 10, "Um");
+    history = pushHistory(history, doc("b"), 100);
+    history = stroke(history, 40, "Dois");
+    const full = history;
+    history = jumpTimeline(history, steps, 0);
+    expect(history.past).toHaveLength(1);
+    expect(alpha(10)).toBeGreaterThan(0);
+    expect(alpha(40)).toBe(0);
+    history = jumpTimeline(history, steps, -1);
+    expect(history.past).toHaveLength(0);
+    expect(alpha(10)).toBe(0);
+    history = jumpTimeline(history, steps, 2);
+    expect(alpha(40)).toBeGreaterThan(0);
+    expect(history.present).toBe(full.present);
+    expect(jumpTimeline(history, steps, 99).past).toHaveLength(3);
   });
 });

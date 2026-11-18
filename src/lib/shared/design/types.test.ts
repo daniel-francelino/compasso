@@ -22,11 +22,12 @@ describe("shortcut table", () => {
     }
   });
 
-  it("has no duplicate keys among enabled tools, except the shape group sharing its key", () => {
-    const keys = DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool)).map(
-      (tool) => DESIGN_TOOL_KEY[tool],
-    );
+  it("has no duplicate keys among enabled tools, except the shape group and the fill group sharing theirs", () => {
+    const keys = DESIGN_ENABLED_TOOLS.filter(
+      (tool) => !isShapeTool(tool) && tool !== DesignTool.Gradient,
+    ).map((tool) => DESIGN_TOOL_KEY[tool]);
     expect(new Set(keys).size).toBe(keys.length);
+    expect(DESIGN_TOOL_KEY[DesignTool.Gradient]).toBe(DESIGN_TOOL_KEY[DesignTool.Fill]);
     expect(keys).not.toContain(DESIGN_SHAPE_KEY);
     for (const tool of DESIGN_ENABLED_TOOLS.filter(isShapeTool)) {
       expect(DESIGN_TOOL_KEY[tool]).toBe(DESIGN_SHAPE_KEY);
@@ -69,6 +70,7 @@ describe("tool groups", () => {
       DesignToolGroup.Selection,
       DesignToolGroup.Eyedropper,
       DesignToolGroup.Paint,
+      DesignToolGroup.Fill,
       DesignToolGroup.Text,
       DesignToolGroup.Shapes,
       DesignToolGroup.Hand,

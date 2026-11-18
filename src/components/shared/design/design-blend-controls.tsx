@@ -1,15 +1,8 @@
 import { FormSelect } from "lost-ui/forms/form-select";
 import { FormSlider } from "lost-ui/forms/form-slider";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
+import { BLEND_ITEMS, asBlendMode } from "@/lib/shared/design/blend-items";
 import type { DesignElement } from "@/lib/shared/design/schemas";
-import { DESIGN_BLEND_MODE_LABEL, DesignBlendMode } from "@/lib/shared/design/types";
-
-const BLEND_ITEMS = Object.values(DesignBlendMode).map((value) => ({
-  value,
-  label: DESIGN_BLEND_MODE_LABEL[value],
-}));
-
-const asBlendMode = (value: string) => BLEND_ITEMS.find((item) => item.value === value)?.value;
 
 const first = (value: number | number[]) => (Array.isArray(value) ? (value[0] ?? 0) : value);
 

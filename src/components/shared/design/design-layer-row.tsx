@@ -2,6 +2,7 @@ import {
   ArrowDown,
   ArrowUp,
   Circle,
+  CornerDownRight,
   Copy,
   Eye,
   EyeOff,
@@ -31,6 +32,9 @@ import { checkerboard } from "@/components/shared/design/checkerboard";
 import { DesignBlendControls } from "@/components/shared/design/design-blend-controls";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { layerLabel } from "@/lib/shared/design/layers";
+import { DesignLayerThumb } from "@/components/shared/design/design-layer-thumb";
+import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
+import type { RasterStore } from "@/lib/shared/design/raster-store";
 import type { DesignElement, ImageElement } from "@/lib/shared/design/schemas";
 import { DESIGN_LIMITS, DesignElementKind, LayerMove } from "@/lib/shared/design/types";
 import { cn } from "@/lib/shared/utils";
@@ -56,6 +60,7 @@ type Props = {
   selected: boolean;
   editable: boolean;
   pixelsFailed: boolean;
+  store: RasterStore;
   onRasterize: (element: ImageElement) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -197,13 +202,17 @@ export function DesignLayerRow(props: Props) {
             onClick={toggleHidden}
           />
         ) : null}
-        <span
-          aria-hidden="true"
-          style={THUMB}
-          className="flex size-8 shrink-0 items-center justify-center rounded border"
-        >
-          <KindIcon className="size-4 text-foreground" />
-        </span>
+        {element.kind === DesignElementKind.Raster ? (
+          <DesignLayerThumb store={props.store} element={element} />
+        ) : (
+          <span
+            aria-hidden="true"
+            style={THUMB}
+            className="flex size-8 shrink-0 items-center justify-center rounded border"
+          >
+            <KindIcon className="size-4 text-foreground" />
+          </span>
+        )}
         {renaming ? (
           <RenameField element={element} onCommit={commitName} onCancel={props.onRenameEnd} />
         ) : (
@@ -218,6 +227,12 @@ export function DesignLayerRow(props: Props) {
             onKeyDown={onKeyDown}
           >
             {label}
+            {element.clipToBelow ? (
+              <CornerDownRight
+                aria-label="Cortada na camada de baixo"
+                className="ml-1 inline size-3.5 text-muted-foreground"
+              />
+            ) : null}
             {element.groupId === null ? null : (
               <span className="ml-1 text-xs text-muted-foreground">(grupo)</span>
             )}
@@ -287,6 +302,15 @@ export function DesignLayerRow(props: Props) {
             Rasterizar imagem
           </ContextMenuItem>
         ) : null}
+        <ContextMenuItem
+          disabled={!canClipToBelow(editor.page, element.id)}
+          title={CLIP_DISABLED_REASON}
+          onSelect={() => editor.patch(element.id, { clipToBelow: !element.clipToBelow })}
+        >
+          <CornerDownRight aria-hidden="true" />
+          {element.clipToBelow ? "Liberar máscara de corte" : "Criar máscara de corte"}
+          <ContextMenuShortcut>Alt+Ctrl+G</ContextMenuShortcut>
+        </ContextMenuItem>
         <ContextMenuSeparator />
         <ContextMenuItem disabled={!props.canMoveUp} onSelect={() => props.onMove(LayerMove.Up)}>
           <ArrowUp aria-hidden="true" />

@@ -38,6 +38,14 @@ import {
   ungroupElements,
   updatePage,
 } from "@/lib/shared/design/document";
+import {
+  createAdjustmentLayer,
+  insertAdjustment,
+  patchAdjustment,
+  toggleClipToBelow,
+} from "@/lib/shared/design/adjustment-layers";
+import type { AdjustmentParams } from "@/lib/shared/design/raster/adjustment-schemas";
+import type { AdjustmentType } from "@/lib/shared/design/raster/adjustment-types";
 import { type PixelsVersionEntry, retargetHistory } from "@/lib/shared/design/pixel-persist";
 import { replaceElement } from "@/lib/shared/design/rasterize";
 import { moveLayerTo } from "@/lib/shared/design/layers";
@@ -179,6 +187,18 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
     newId,
     add,
     addRaster: (size: PageSize): boolean => add(createRasterLayer(newId(), page, size)),
+    addAdjustment: (type: AdjustmentType, size: PageSize): boolean => {
+      if (!canAddElements(document)) return false;
+      const element = createAdjustmentLayer(newId(), type, size);
+      changePage((current) => insertAdjustment(current, element, single?.id ?? null));
+      setSelectedIds([element.id]);
+      return true;
+    },
+    patchAdjustment: (id: string, params: AdjustmentParams, mergeKey?: string) =>
+      changePage((current) => patchAdjustment(current, id, params), mergeKey),
+    toggleClip: () => {
+      if (single !== undefined) changePage((current) => toggleClipToBelow(current, single.id));
+    },
     remove,
     setPixelsVersions: (entries: readonly PixelsVersionEntry[]) =>
       setHistory((current) => retargetHistory(current, entries)),

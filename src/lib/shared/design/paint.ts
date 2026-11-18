@@ -53,8 +53,11 @@ export const DEFAULT_BRUSH_OPTIONS: BrushOptions = {
 export const isBrushTool = (tool: DesignTool): tool is BrushTool =>
   tool === DesignTool.Brush || tool === DesignTool.Eraser;
 
+export const isFillTool = (tool: DesignTool): boolean =>
+  tool === DesignTool.Fill || tool === DesignTool.Gradient;
+
 export const isPaintTool = (tool: DesignTool): boolean =>
-  isBrushTool(tool) || tool === DesignTool.Eyedropper;
+  isBrushTool(tool) || isFillTool(tool) || tool === DesignTool.Eyedropper;
 
 const clampTo = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, Number.isFinite(value) ? value : min));

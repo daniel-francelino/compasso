@@ -51,3 +51,17 @@ export const redoHistory = <T>(history: History<T>): History<T> => {
     mergeKey: null,
   };
 };
+
+export const collapseHistory = <T>(
+  history: History<T>,
+  base: History<T>,
+  limit: number,
+): History<T> => {
+  if (history.present === base.present) return base;
+  return {
+    past: [...base.past, base.present].slice(-limit),
+    present: history.present,
+    future: [],
+    mergeKey: null,
+  };
+};

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import type { BrushController } from "@/hooks/shared/design/use-brush-options";
 import type { DesignColors } from "@/hooks/shared/design/use-design-colors";
+import { type FillController, useDesignFill } from "@/hooks/shared/design/use-design-fill";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { PixelHistorySession } from "@/hooks/shared/design/use-pixel-history";
 import { resolveInheritance, rgbToHex } from "@/lib/shared/design/document";
@@ -13,6 +14,7 @@ import {
   docToLayerPoint,
   hexToRgb,
   isBrushTool,
+  isFillTool,
   layerScale,
   toBrushParams,
 } from "@/lib/shared/design/paint";
@@ -61,6 +63,7 @@ export type PaintCallbacks = {
 
 export type DesignPaint = {
   brush: BrushController;
+  fill: FillController;
   reason: string | undefined;
   callbacks: PaintCallbacks;
   cursorDiameter: (tool: DesignTool, zoom: number) => number | null;
@@ -95,7 +98,9 @@ export const useDesignPaint = ({
   const raster = single?.kind === DesignElementKind.Raster ? single : null;
   const layerReady = raster !== null && !raster.locked && !raster.hidden;
   const target = layerReady && canPaint ? raster : null;
-  const reason = isBrushTool(tool) ? paintReason(canPaint, layerReady) : undefined;
+  const fill = useDesignFill({ tool, editor, rasters, pixels, colors, selection, target });
+  const reason =
+    isBrushTool(tool) || isFillTool(tool) ? paintReason(canPaint, layerReady) : undefined;
 
   const cancelFrame = () => {
     if (frame.current === null) return;
@@ -154,6 +159,10 @@ export const useDesignPaint = ({
   };
 
   const onPaintStart = (point: Point) => {
+    if (isFillTool(tool)) {
+      fill.onStart(point);
+      return;
+    }
     if (tool === DesignTool.Eyedropper) {
       sample(point);
       return;
@@ -162,6 +171,10 @@ export const useDesignPaint = ({
   };
 
   const onPaintMove = (points: Point[]) => {
+    if (isFillTool(tool)) {
+      fill.onMove(points);
+      return;
+    }
     const current = active.current;
     const last = points.at(-1);
     if (tool === DesignTool.Eyedropper && last !== undefined) {
@@ -174,6 +187,10 @@ export const useDesignPaint = ({
   };
 
   const onPaintEnd = () => {
+    if (isFillTool(tool)) {
+      fill.onEnd();
+      return;
+    }
     const current = active.current;
     active.current = null;
     pixels.stroking.current = false;
@@ -215,6 +232,7 @@ export const useDesignPaint = ({
 
   return {
     brush,
+    fill,
     reason,
     callbacks: { onPaintStart, onPaintMove, onPaintEnd },
     cursorDiameter,

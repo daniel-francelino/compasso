@@ -11,7 +11,9 @@ import { isBrushTool, isPaintTool } from "@/lib/shared/design/paint";
 import { isSelectionTool } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_DUPLICATE_KEY,
+  DESIGN_CLIP_KEY,
   DESIGN_ENABLED_TOOLS,
+  DESIGN_FILL_KEY,
   DESIGN_IMAGE_KEY,
   DESIGN_LIMITS,
   DESIGN_MARQUEE_KEY,
@@ -31,9 +33,9 @@ const ARROWS: Record<string, [number, number]> = {
 };
 
 const TOOL_BY_KEY = new Map(
-  DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool)).map(
-    (tool) => [DESIGN_TOOL_KEY[tool], tool] as const,
-  ),
+  DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool))
+    .reverse()
+    .map((tool) => [DESIGN_TOOL_KEY[tool], tool] as const),
 );
 
 type Context = {
@@ -144,6 +146,20 @@ const marqueeKey = (event: KeyboardEvent, { tool, selection }: Context): boolean
   return true;
 };
 
+const fillKey = (event: KeyboardEvent, { tool }: Context): boolean => {
+  if (event.key.toLowerCase() !== DESIGN_FILL_KEY || !event.shiftKey) return false;
+  tool.setTool(tool.tool === DesignTool.Fill ? DesignTool.Gradient : DesignTool.Fill);
+  return true;
+};
+
+const clipKey = (event: KeyboardEvent, { editor }: Context): boolean => {
+  if (!event.ctrlKey || !event.altKey || event.shiftKey || event.code !== DESIGN_CLIP_KEY) {
+    return false;
+  }
+  editor.toggleClip();
+  return true;
+};
+
 const pixelsKey = (event: KeyboardEvent, { selection, paint, editor }: Context): boolean => {
   if (event.key === "Enter" && selection.drawing) {
     selection.closePolygon();
@@ -161,6 +177,7 @@ const pixelsKey = (event: KeyboardEvent, { selection, paint, editor }: Context):
 
 const toolKey = (event: KeyboardEvent, context: Context): boolean => {
   if (event.altKey) return false;
+  if (fillKey(event, context)) return true;
   if (marqueeKey(event, context)) return true;
   if (shapeKey(event, context)) return true;
   if (event.shiftKey) return false;
@@ -213,6 +230,7 @@ const plainKey = (event: KeyboardEvent, context: Context): boolean => {
   if (!context.editable) return false;
   if (event.key === "Escape") return escape(context);
   return (
+    clipKey(event, context) ||
     pixelsKey(event, context) ||
     toolKey(event, context) ||
     paintKey(event, context) ||

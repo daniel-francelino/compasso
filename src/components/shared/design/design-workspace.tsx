@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, SlidersHorizontal } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { DesignHistoryPanel } from "@/components/shared/design/design-history-pa
 import { DesignContextBar } from "@/components/shared/design/design-context-bar";
 import { DesignExportDialog } from "@/components/shared/design/design-export-dialog";
 import { DesignMenuBar } from "@/components/shared/design/design-menu-bar";
+import { DesignAdjustmentsPanel } from "@/components/shared/design/design-adjustments-panel";
 import { DesignLayersPanel } from "@/components/shared/design/design-layers-panel";
 import { DesignPanelDock } from "@/components/shared/design/design-panel-dock";
 import { DesignPropertiesTab } from "@/components/shared/design/design-properties-tab";
@@ -20,7 +21,6 @@ import { DesignTopBar } from "@/components/shared/design/design-top-bar";
 import { DesignVersionsDialog } from "@/components/shared/design/design-versions-dialog";
 import { DesignViewport } from "@/components/shared/design/design-viewport";
 import { MediaPicker } from "@/components/shared/media/media-picker";
-import { EmptyState } from "@/components/shared/admin/empty-state";
 import { Button } from "@/components/shared/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/shared/ui/sheet";
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
@@ -303,6 +303,10 @@ export function DesignWorkspace({
       if (isDrawTool(layerTool)) addLayer(layerTool);
     },
     onAddRaster: () => void editor.addRaster(size),
+    onAddAdjustment: (type) => {
+      if (!editor.addAdjustment(type, size)) toast.error(FULL);
+      openPanel(DesignPanel.Adjustments);
+    },
     onRasterize: rasterize,
     onPanel: openPanel,
     onShortcuts: () => setShortcutsOpen(true),
@@ -318,6 +322,7 @@ export function DesignWorkspace({
         onAddRaster={() => void editor.addRaster(size)}
         onRasterize={rasterize}
         failedIds={rasters.failedIds}
+        store={rasters.store}
       />
     ),
     [DesignPanel.Properties]: (
@@ -330,12 +335,7 @@ export function DesignWorkspace({
       />
     ),
     [DesignPanel.Adjustments]: (
-      <EmptyState
-        compact
-        icon={SlidersHorizontal}
-        title="Ainda não disponível"
-        description="Os ajustes de imagem (brilho, curvas, matiz) chegam em uma fase futura do editor."
-      />
+      <DesignAdjustmentsPanel editor={editor} editable={canEdit} size={size} />
     ),
     [DesignPanel.History]: <DesignHistoryPanel steps={editor.steps} />,
     [DesignPanel.Brand]: (

@@ -36,3 +36,16 @@ export const dropTargetIndex = (
   const finalDisplay = insertDisplay > fromDisplay ? insertDisplay - 1 : insertDisplay;
   return count - 1 - finalDisplay;
 };
+
+export const THUMBNAIL_SIDE = 32;
+
+export const thumbnailBox = (
+  pixelWidth: number,
+  pixelHeight: number,
+  side = THUMBNAIL_SIDE,
+): { x: number; y: number; width: number; height: number } => {
+  const scale = Math.min(side / Math.max(1, pixelWidth), side / Math.max(1, pixelHeight));
+  const width = Math.max(1, Math.round(pixelWidth * scale));
+  const height = Math.max(1, Math.round(pixelHeight * scale));
+  return { x: Math.floor((side - width) / 2), y: Math.floor((side - height) / 2), width, height };
+};

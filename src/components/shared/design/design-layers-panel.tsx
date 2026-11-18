@@ -4,6 +4,7 @@ import { Button } from "@/components/shared/ui/button";
 import { DesignLayerRow, type DropMark } from "@/components/shared/design/design-layer-row";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import { dropTargetIndex } from "@/lib/shared/design/layers";
+import type { RasterStore } from "@/lib/shared/design/raster-store";
 import type { ImageElement } from "@/lib/shared/design/schemas";
 import { LayerMove } from "@/lib/shared/design/types";
 
@@ -16,12 +17,14 @@ export function DesignLayersPanel({
   onAddRaster,
   onRasterize,
   failedIds,
+  store,
 }: {
   editor: DesignEditor;
   editable: boolean;
   onAddRaster: () => void;
   onRasterize: (element: ImageElement) => void;
   failedIds: ReadonlySet<string>;
+  store: RasterStore;
 }) {
   const elements = editor.page.elements;
   const ordered = [...elements].reverse();
@@ -109,6 +112,7 @@ export function DesignLayersPanel({
               element={element}
               selected={editor.selectedIds.includes(element.id)}
               editable={editable}
+              store={store}
               pixelsFailed={failedIds.has(element.id)}
               onRasterize={onRasterize}
               canMoveUp={displayIndex > 0}

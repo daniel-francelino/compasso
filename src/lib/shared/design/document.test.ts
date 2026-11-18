@@ -275,6 +275,16 @@ describe("design document", () => {
     const text = smaller.pages[0]?.elements[0];
     expect(text?.kind === DesignElementKind.Text ? text.fontSize : 0).toBe(Math.round(72 * 0.5625));
   });
+
+  it("resizes a cropped page from its own size and drops the page size", () => {
+    const base = sample();
+    const first = base.pages[0];
+    if (first === undefined) throw new Error("no page");
+    const cropped = { ...base, pages: [{ ...first, width: 540, height: 540 }] };
+    const resized = resizeDocument(cropped, DesignPreset.FeedSquare, DesignPreset.FeedSquare);
+    expect(resized.pages[0]?.width).toBeUndefined();
+    expect(resized.pages[0]?.elements[1]?.width).toBe((first.elements[1]?.width ?? 0) * 2);
+  });
 });
 
 describe("design snapping", () => {

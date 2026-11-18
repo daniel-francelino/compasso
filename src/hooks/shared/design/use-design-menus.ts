@@ -1,9 +1,12 @@
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
+import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
+import { ADJUSTMENT_TYPE_LABEL, AdjustmentType } from "@/lib/shared/design/raster/adjustment-types";
 import type { ImageElement } from "@/lib/shared/design/schemas";
 import { SELECTION_ADJUST_LABEL, SelectionAdjust } from "@/lib/shared/design/selection-state";
 import {
+  DESIGN_CLIP_SHORTCUT_LABEL,
   DESIGN_PANEL_LABEL,
   DesignElementKind,
   DesignPanel,
@@ -35,6 +38,7 @@ export type DesignMenuContext = {
   onExport: () => void;
   onAddLayer: (tool: DesignTool) => void;
   onAddRaster: () => void;
+  onAddAdjustment: (type: AdjustmentType) => void;
   onRasterize: (element: ImageElement) => void;
   onPanel: (panel: DesignPanel) => void;
   onShortcuts: () => void;
@@ -185,6 +189,16 @@ const layerMenu = (c: DesignMenuContext): DesignMenu => {
         },
       },
       {
+        id: "clip",
+        label: single?.clipToBelow ? "Liberar máscara de corte" : "Criar máscara de corte",
+        shortcut: DESIGN_CLIP_SHORTCUT_LABEL,
+        disabledReason:
+          single !== undefined && canClipToBelow(editor.page, single.id)
+            ? undefined
+            : CLIP_DISABLED_REASON,
+        onSelect: editor.toggleClip,
+      },
+      {
         id: "group",
         label: "Agrupar",
         shortcut: "Ctrl+G",
@@ -257,6 +271,17 @@ const selectMenu = (c: DesignMenuContext): DesignMenu => {
   };
 };
 
+const adjustmentsMenu = (c: DesignMenuContext): DesignMenu => ({
+  id: "adjustments",
+  label: "Ajustes",
+  items: Object.values(AdjustmentType).map((type) => ({
+    id: `adjustment-${type}`,
+    label: `${ADJUSTMENT_TYPE_LABEL[type]}…`,
+    disabledReason: c.full,
+    onSelect: () => c.onAddAdjustment(type),
+  })),
+});
+
 const helpMenu = (c: DesignMenuContext): DesignMenu => ({
   id: "help",
   label: "Ajuda",
@@ -267,6 +292,6 @@ export const designMenus = (context: DesignMenuContext): DesignMenu[] => [
   fileMenu(context),
   ...(context.canEdit ? [editMenu(context), selectMenu(context)] : []),
   viewMenu(context),
-  ...(context.canEdit ? [layerMenu(context)] : []),
+  ...(context.canEdit ? [layerMenu(context), adjustmentsMenu(context)] : []),
   helpMenu(context),
 ];

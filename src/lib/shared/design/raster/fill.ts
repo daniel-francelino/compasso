@@ -94,6 +94,18 @@ export const radialGradient = (
   );
 };
 
+export const bucketRegion = (
+  buffer: PixelBuffer,
+  x: number,
+  y: number,
+  options: BucketOptions,
+): SelectionMask => {
+  const region = magicWand(options.sample ?? buffer, x, y, options);
+  return options.selection === null || options.selection === undefined
+    ? region
+    : combineMasks(region, options.selection, SelectionCombine.Intersect);
+};
+
 export const bucketFill = (
   buffer: PixelBuffer,
   x: number,
@@ -101,11 +113,7 @@ export const bucketFill = (
   color: RgbaColor,
   options: BucketOptions,
 ): SelectionMask => {
-  const region = magicWand(options.sample ?? buffer, x, y, options);
-  const limited =
-    options.selection === null || options.selection === undefined
-      ? region
-      : combineMasks(region, options.selection, SelectionCombine.Intersect);
+  const limited = bucketRegion(buffer, x, y, options);
   fillSelection(buffer, color, limited);
   return limited;
 };

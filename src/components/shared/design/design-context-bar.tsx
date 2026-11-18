@@ -9,6 +9,10 @@ import {
   ZoomOptions,
 } from "@/components/shared/design/design-tool-options";
 import {
+  BucketOptionsBar,
+  GradientOptionsBar,
+} from "@/components/shared/design/design-fill-options";
+import {
   BrushOptionsBar,
   EyedropperOptionsBar,
 } from "@/components/shared/design/design-paint-options";
@@ -39,7 +43,8 @@ const DESIGN_TOOL_OPTIONS: Record<DesignTool, ComponentType<ToolOptionsProps>> =
   [DesignTool.Brush]: BrushOptionsBar,
   [DesignTool.Clone]: UnavailableOptions,
   [DesignTool.Eraser]: BrushOptionsBar,
-  [DesignTool.Fill]: UnavailableOptions,
+  [DesignTool.Fill]: BucketOptionsBar,
+  [DesignTool.Gradient]: GradientOptionsBar,
 };
 
 export function DesignContextBar({

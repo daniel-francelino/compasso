@@ -72,4 +72,11 @@ describe("splitRasterRuns", () => {
   it("returns no runs without pixel layers", () => {
     expect(splitRasterRuns([text("t")])).toEqual([]);
   });
+
+  it("marks a run that clips a layer to the one below as composited", () => {
+    const clipped = raster("b");
+    clipped.element = { ...clipped.element, clipToBelow: true };
+    expect(splitRasterRuns([raster("a"), clipped])[0]?.adjusted).toBe(true);
+    expect(splitRasterRuns([raster("a"), raster("b")])[0]?.adjusted).toBe(false);
+  });
 });
