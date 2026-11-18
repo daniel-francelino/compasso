@@ -1,102 +1,136 @@
-import { ArrowDown, ArrowUp, Lock, LockOpen, Trash2 } from "lucide-react";
-import { IconButton } from "@/components/shared/admin/icon-button";
+import { Plus } from "lucide-react";
+import { type DragEvent, useState } from "react";
+import { Button } from "@/components/shared/ui/button";
+import { DesignLayerRow, type DropMark } from "@/components/shared/design/design-layer-row";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
-import type { DesignElement } from "@/lib/shared/design/schemas";
-import { DESIGN_ELEMENT_LABEL, DesignElementKind, LayerMove } from "@/lib/shared/design/types";
-import { cn } from "@/lib/shared/utils";
+import { dropTargetIndex } from "@/lib/shared/design/layers";
+import { LayerMove } from "@/lib/shared/design/types";
 
-const SNIPPET = 28;
-
-const layerName = (element: DesignElement): string => {
-  const kind = DESIGN_ELEMENT_LABEL[element.kind];
-  const detail =
-    element.kind === DesignElementKind.Text
-      ? element.text.trim().replace(/\s+/g, " ")
-      : element.kind === DesignElementKind.Image
-        ? element.alt.trim()
-        : "";
-  if (detail === "") return kind;
-  return `${kind}: ${detail.length > SNIPPET ? `${detail.slice(0, SNIPPET)}…` : detail}`;
-};
+const announcement = (position: number, total: number) =>
+  `Camada movida para a posição ${position} de ${total}`;
 
 export function DesignLayersPanel({
   editor,
   editable,
+  onAddRaster,
 }: {
   editor: DesignEditor;
   editable: boolean;
+  onAddRaster: () => void;
 }) {
   const elements = editor.page.elements;
   const ordered = [...elements].reverse();
-  const last = elements.length - 1;
+  const total = elements.length;
+  const [message, setMessage] = useState("");
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [insertAt, setInsertAt] = useState<number | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+
+  const announce = (index: number) => {
+    const clamped = Math.min(total - 1, Math.max(0, index));
+    setMessage(announcement(total - clamped, total));
+  };
+
+  const moveByStep = (id: string, move: LayerMove) => {
+    const index = elements.findIndex((element) => element.id === id);
+    const target = move === LayerMove.Up ? index + 1 : index - 1;
+    if (target < 0 || target >= total) return;
+    editor.move(id, move);
+    announce(target);
+  };
+
+  const endDrag = () => {
+    setDragId(null);
+    setInsertAt(null);
+  };
+
+  const overRow = (event: DragEvent<HTMLLIElement>, displayIndex: number) => {
+    if (dragId === null) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    const box = event.currentTarget.getBoundingClientRect();
+    const below = event.clientY > box.top + box.height / 2;
+    setInsertAt(below ? displayIndex + 1 : displayIndex);
+  };
+
+  const dropOnList = (event: DragEvent<HTMLLIElement>) => {
+    event.preventDefault();
+    const from = ordered.findIndex((element) => element.id === dragId);
+    if (dragId !== null && insertAt !== null && from >= 0) {
+      const target = dropTargetIndex(total, from, insertAt);
+      editor.moveTo(dragId, target);
+      announce(target);
+    }
+    endDrag();
+  };
+
+  const markOf = (displayIndex: number): DropMark => {
+    if (insertAt === null) return null;
+    if (insertAt === displayIndex) return "before";
+    if (insertAt === total && displayIndex === total - 1) return "after";
+    return null;
+  };
 
   return (
     <section aria-labelledby="design-layers-title" className="space-y-2">
-      <h2 id="design-layers-title" className="text-sm font-semibold">
-        Camadas
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="design-layers-title" className="text-sm font-semibold">
+          Camadas
+        </h2>
+        {editable ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!editor.canAdd()}
+            onClick={onAddRaster}
+          >
+            <Plus aria-hidden="true" />
+            Nova camada
+          </Button>
+        ) : null}
+      </div>
       {ordered.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Nenhum elemento nesta página. Use a barra acima para adicionar texto, imagem, forma ou
-          linha.
+          Nenhum elemento nesta página. Use a barra de ferramentas para adicionar texto, imagem,
+          forma ou linha.
         </p>
       ) : (
         <ol className="space-y-1" aria-label="Camadas da página, da frente para trás">
-          {ordered.map((element) => {
-            const index = elements.indexOf(element);
-            const selected = editor.selectedIds.includes(element.id);
-            return (
-              <li
-                key={element.id}
-                className={cn(
-                  "flex items-center gap-1 rounded-md border px-1",
-                  selected ? "border-primary bg-accent" : "border-transparent",
-                )}
-              >
-                <button
-                  type="button"
-                  className="min-h-11 flex-1 truncate rounded px-2 text-left text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  aria-pressed={selected}
-                  onClick={(event) => editor.select(element.id, event.shiftKey)}
-                >
-                  {layerName(element)}
-                  {element.groupId === null ? null : (
-                    <span className="ml-1 text-xs text-muted-foreground">(grupo)</span>
-                  )}
-                  {element.locked ? <span className="sr-only"> (bloqueado)</span> : null}
-                </button>
-                {editable ? (
-                  <>
-                    <IconButton
-                      label={element.locked ? "Desbloquear" : "Bloquear"}
-                      icon={element.locked ? Lock : LockOpen}
-                      onClick={() => editor.patch(element.id, { locked: !element.locked })}
-                    />
-                    <IconButton
-                      label="Trazer para frente"
-                      icon={ArrowUp}
-                      disabled={index === last}
-                      onClick={() => editor.move(element.id, LayerMove.Up)}
-                    />
-                    <IconButton
-                      label="Enviar para trás"
-                      icon={ArrowDown}
-                      disabled={index === 0}
-                      onClick={() => editor.move(element.id, LayerMove.Down)}
-                    />
-                    <IconButton
-                      label="Excluir"
-                      icon={Trash2}
-                      destructive
-                      onClick={() => editor.remove([element.id])}
-                    />
-                  </>
-                ) : null}
-              </li>
-            );
-          })}
+          {ordered.map((element, displayIndex) => (
+            <DesignLayerRow
+              key={element.id}
+              editor={editor}
+              element={element}
+              selected={editor.selectedIds.includes(element.id)}
+              editable={editable}
+              canMoveUp={displayIndex > 0}
+              canMoveDown={displayIndex < total - 1}
+              renaming={renamingId === element.id}
+              dropMark={markOf(displayIndex)}
+              onRenameStart={() => setRenamingId(element.id)}
+              onRenameEnd={() => setRenamingId(null)}
+              onMove={(move) => moveByStep(element.id, move)}
+              onDragStart={(event) => {
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", element.id);
+                setDragId(element.id);
+              }}
+              onDragOver={(event) => overRow(event, displayIndex)}
+              onDrop={dropOnList}
+              onDragEnd={endDrag}
+            />
+          ))}
         </ol>
       )}
+      <p role="status" aria-live="polite" className="sr-only">
+        {message}
+      </p>
+      {editable && ordered.length > 1 ? (
+        <p className="text-xs text-muted-foreground">
+          Arraste para reordenar ou use Alt + seta para cima ou para baixo na camada. F2 renomeia.
+        </p>
+      ) : null}
     </section>
   );
 }

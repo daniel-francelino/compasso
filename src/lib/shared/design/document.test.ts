@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addElement,
   addPage,
+  canvasBlendOperation,
   canAddElements,
   coverCrop,
   createImage,
@@ -16,6 +17,7 @@ import {
   expandSelection,
   groupElements,
   imageVersionIds,
+  isRendered,
   isTooLarge,
   moveLayer,
   movePage,
@@ -38,10 +40,11 @@ import {
   type DesignDocument,
   type DesignPage,
   designDocumentSchema,
-  designDocumentV2Schema,
+  designDocumentV3Schema,
 } from "@/lib/shared/design/schemas";
 import {
   DESIGN_LIMITS,
+  DesignBlendMode,
   DesignElementKind,
   DesignPreset,
   LayerMove,
@@ -66,7 +69,7 @@ const samplePage = (): DesignPage => {
   );
 };
 
-const sample = (): DesignDocument => ({ version: 2, pages: [samplePage()] });
+const sample = (): DesignDocument => ({ version: 3, pages: [samplePage()] });
 
 const ids = (page: DesignPage | undefined) => page?.elements.map((element) => element.id) ?? [];
 
@@ -99,7 +102,7 @@ describe("design document", () => {
     const withLine = updatePage(document, "p1", (page) =>
       addElement(page, createLine("l1", DesignPreset.FeedSquare, palette)),
     );
-    expect(designDocumentV2Schema.safeParse(withLine).success).toBe(true);
+    expect(designDocumentV3Schema.safeParse(withLine).success).toBe(true);
   });
 
   it("reads a version 1 document as one page with the new defaults", () => {
@@ -225,7 +228,7 @@ describe("design document", () => {
     }
     expect(document.pages).toHaveLength(DESIGN_LIMITS.maxPages);
     const full: DesignDocument = {
-      version: 2,
+      version: 3,
       pages: [
         {
           id: "f",
@@ -237,7 +240,7 @@ describe("design document", () => {
       ],
     };
     expect(canAddElements(full)).toBe(false);
-    expect(designDocumentV2Schema.safeParse(full).success).toBe(true);
+    expect(designDocumentV3Schema.safeParse(full).success).toBe(true);
   });
 
   it("measures the document size in bytes", () => {
@@ -251,15 +254,15 @@ describe("design document", () => {
   it("refuses duplicated ids and unknown kinds", () => {
     const page = samplePage();
     const duplicated = {
-      version: 2,
+      version: 3,
       pages: [{ ...page, elements: [...page.elements, page.elements[0]] }],
     };
-    expect(designDocumentV2Schema.safeParse(duplicated).success).toBe(false);
+    expect(designDocumentV3Schema.safeParse(duplicated).success).toBe(false);
     const unknown = {
-      version: 2,
+      version: 3,
       pages: [{ ...page, elements: [{ ...page.elements[1], kind: "video" }] }],
     };
-    expect(designDocumentV2Schema.safeParse(unknown).success).toBe(false);
+    expect(designDocumentV3Schema.safeParse(unknown).success).toBe(false);
   });
 
   it("resizes a square design into a story, scaled and centered", () => {
@@ -325,5 +328,88 @@ describe("design history", () => {
     let history = historyOf(0);
     for (let step = 1; step <= 10; step += 1) history = pushHistory(history, step, 3);
     expect(history.past).toEqual([7, 8, 9]);
+  });
+});
+
+describe("layer attributes (P1)", () => {
+  it("gives new elements the defaults", () => {
+    const text = createText("t", DesignPreset.FeedSquare, palette);
+    expect(text).toMatchObject({
+      blendMode: DesignBlendMode.Normal,
+      fillOpacity: 1,
+      name: "",
+      hidden: false,
+    });
+  });
+
+  it("reads a version 2 document without the new keys using defaults", () => {
+    const parsed = designDocumentSchema.parse({
+      version: 2,
+      pages: [
+        {
+          id: "p",
+          background: null,
+          elements: [
+            {
+              id: "e",
+              kind: DesignElementKind.Ellipse,
+              x: 0,
+              y: 0,
+              width: 10,
+              height: 10,
+              rotation: 0,
+              opacity: 1,
+              locked: false,
+              fill: "#112233",
+            },
+          ],
+        },
+      ],
+    });
+    expect(parsed.pages[0]?.elements[0]).toMatchObject({
+      blendMode: DesignBlendMode.Normal,
+      fillOpacity: 1,
+      name: "",
+      hidden: false,
+    });
+  });
+
+  it("rejects an unknown blend mode, a long name and a fill opacity above 1", () => {
+    const base = createShape("s", DesignElementKind.Rect, DesignPreset.FeedSquare, palette);
+    const parse = (patch: object) =>
+      designDocumentSchema.safeParse({
+        version: 2,
+        pages: [{ id: "p", background: null, elements: [{ ...base, ...patch }] }],
+      }).success;
+    expect(parse({ blendMode: "burn" })).toBe(false);
+    expect(parse({ name: "x".repeat(DESIGN_LIMITS.layerNameMax + 1) })).toBe(false);
+    expect(parse({ fillOpacity: 1.5 })).toBe(false);
+    expect(parse({ blendMode: DesignBlendMode.Multiply, fillOpacity: 0.5, hidden: true })).toBe(
+      true,
+    );
+  });
+
+  it("patches blend mode, fill opacity, name and hidden, clamping the values", () => {
+    const page = patchElement(samplePage(), "r1", {
+      blendMode: DesignBlendMode.Screen,
+      fillOpacity: 4,
+      name: "y".repeat(200),
+      hidden: true,
+    });
+    expect(page.elements.find((element) => element.id === "r1")).toMatchObject({
+      blendMode: DesignBlendMode.Screen,
+      fillOpacity: 1,
+      hidden: true,
+    });
+    expect(page.elements.find((element) => element.id === "r1")?.name).toHaveLength(
+      DESIGN_LIMITS.layerNameMax,
+    );
+  });
+
+  it("excludes hidden elements from the render and maps blend modes to canvas operations", () => {
+    const page = patchElement(samplePage(), "r1", { hidden: true });
+    expect(page.elements.filter(isRendered).map((element) => element.id)).toEqual(["t1", "i1"]);
+    expect(canvasBlendOperation(DesignBlendMode.Normal)).toBe("source-over");
+    expect(canvasBlendOperation(DesignBlendMode.ColorDodge)).toBe("color-dodge");
   });
 });

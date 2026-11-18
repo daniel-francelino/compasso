@@ -207,6 +207,18 @@ Use the **verb + object** form for primary buttons; short verbs in row menus. On
 | Trazer para a frente / Enviar para trás de tudo | Editor options bar | Put the element on top of / below every other one |
 | Ajustar à tela / 100% / Aumentar zoom / Diminuir zoom | Editor status bar | Zoom of the view (never changes the design) |
 | Atalhos | Editor status bar | The list of keyboard shortcuts |
+| Mistura / Opacidade / Preenchimento | Editor, properties panel | Blend mode of the selected element (Normal, Multiplicar, Tela, Sobrepor, Escurecer, Clarear, Subexposição de cores, Superexposição de cores, Luz direta, Luz suave, Diferença, Exclusão, Matiz, Saturação, Cor, Luminosidade) / opacity of the whole element / opacity of its content only |
+| Seleção retangular / Laço / Varinha mágica / Cortar / Conta-gotas / Pincel / Carimbo / Borracha / Balde de tinta | Editor tool rail (not shown until the phase that gives them behavior) | Photoshop-like tools, keys M, L, W, C, I, B, S, E, G |
+| Arquivo / Editar / Exibir / Camada / Ajuda | Editor menu bar (one "Menu" button below `lg`) | The menus of the editor; every item runs the same handler as its button or shortcut |
+| Nova camada | Editor, menu "Camada" | Adds an empty raster layer (transparent pixels, the size of the page) on top of the stack; session-only until the pixel flush of P5b |
+| Selecionar tudo / Nova camada de texto / Nova camada de forma / Ordem | Editor menu bar | Select every unlocked element / add a text or a shape in the middle of the page / stack order items (Trazer para a frente, Avançar, Recuar, Enviar para trás de tudo); the panel items of "Exibir" read "Painel: Camadas" and so on |
+| Réguas | Editor menu "Exibir" | Show or hide the rulers (a view setting, never stored in the design) |
+| Camadas / Propriedades / Ajustes / Histórico / Marca | Editor docked panels (tabs) | The tabs of the panel dock; "Ajustes" and "Histórico" say they arrive with later phases until they have behavior |
+| Ocultar / Mostrar camada, Visível, Bloqueada | Layers | The eye and lock buttons of a layer (pressed means visible / locked); hiding is a document change that can be undone |
+| Renomear camada | Layers (double click or F2) | Give a layer its own name (up to 80 characters); an empty name goes back to the derived one |
+| Camada movida para a posição X de Y | Layers (announcement) | Spoken after a layer is moved with Alt + arrow or by dragging; position 1 is the front |
+| Ferramentas / Mais ferramentas | Editor tool rail | The tool rail; a group with more tools opens a flyout (long press, right click or Alt + arrow down) |
+| Opções da ferramenta | Editor options bar (toolbar name) | The settings of the active tool: Negrito, Itálico, alignment, Cor, Preenchimento, Cor da linha |
 | Zoom / Foco | Image properties | Enlarge the image inside its frame (the crop) and choose the visible part |
 | Brilho / Contraste / Sombra / Texto alternativo | Image and text properties | Simple filters, the text shadow and the description of an image for screen readers |
 | Versões / Restaurar no rascunho | Editor | The saved versions / copy one of them into the draft (the version itself never changes) |

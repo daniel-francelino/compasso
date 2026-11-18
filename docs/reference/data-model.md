@@ -265,6 +265,8 @@ Migration `20261105100000_feedback.sql`. Rules: [../modules/feedback.md](../modu
 
 ## 4d. Image editor (designs)
 
+Migration `20261118100000_design_document_v3.sql` (P4, document version 3, local only until the owner approves the push): column `media_assets.hidden` (`boolean not null default false`; true marks a layer pixel or mask file of the image editor, left out of the library listing; the default keeps every existing row visible), no new table. `designs.draft_document` and `design_versions.document` may hold version 2 or 3 (saved versions keep what was written).
+
 Migrations `20261116100000_design.sql` (phase 1) and `20261117100000_design_phases_2_3.sql` (pages, exports, usages, restore, templates). Rules: [../modules/image-editor.md](../modules/image-editor.md).
 
 **`designs`** — one row per design: `brand_id` (foreign key to `brands`), `name` (1 to 120 characters), `preset` (`DesignPreset`), `draft_document` (`jsonb` object, the working copy written by autosave; shape in the module document, section 5.2), `current_version_no` (`int`, 0 while no version was saved), `is_template` (`boolean`, default false: a template of the brand, "Modelo da marca"), `version` (optimistic locking), `trashed_at`, `created_by`, `created_at`, `updated_at` (trigger). `unique (id, brand_id)`. Indexes `(brand_id, updated_at desc)` and a trigram-free `lower(name)` index for the search.
@@ -518,6 +520,7 @@ create table media_assets (
   size_bytes bigint not null default 0,
   version int not null default 1,
   trashed_at timestamptz,
+  hidden boolean not null default false,
   created_by uuid references profiles(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),

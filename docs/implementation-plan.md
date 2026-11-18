@@ -182,6 +182,14 @@ Pending decision before T-02: O6 (policy `requirePlanApproval`) and O8 (what the
 | D-10 | Part B: drawing with the tools, marquee selection, "Transformar" for one or several elements, align and distribute, options bar | image-editor 5.7 | Vitest of the new document operations | done in code (2026-11-17): lint, typecheck, Vitest, check:consistency, check:docs and build pass; not seen in a browser |
 | D-11 | Part C: text editing on the canvas | image-editor 5.7 | acceptance criteria of section 9 for the layout | done in code (2026-11-17): lint, typecheck, Vitest, check:consistency, check:docs and build pass; not seen in a browser; acceptance criteria not exercised |
 | D-12 | List: no header, no brand filter, infinite scroll, instant creation from a format circle and "Usar modelo"; pointer cursor on buttons | image-editor 5.6, 8d | lint, typecheck and build pass | done in code (2026-11-17): lint, typecheck, Vitest, check:consistency, check:docs and build pass; not seen in a browser |
+| D-13 | Photoshop-like scope P0 and P1: documents and registries first, then blend modes, fill opacity, layer name and visibility, new tools, one shortcut table | image-editor 4.4, 7b, 8e | lint, typecheck, Vitest, check:consistency, check:docs pass | done in code (2026-11-17; check:docs only fails on the unrelated link to ../CLAUDE.md in lost-ui-requests.md) |
+| D-14 | P2 pure raster core (`lib/shared/design/raster/`) with Vitest | image-editor 7b | Vitest of every pure function | done 2026-11-17 (155 tests) |
+| D-15 | P3 UI shell: menu bar, tabbed panel dock, layers panel v2, tool groups and per-tool options bar | image-editor 7b | lint, typecheck, build pass | done 2026-11-18 (not seen in a browser) |
+| D-16 | P4 document version 3 migration and pgTAP (local only, not pushed) | image-editor 7b, 8e item 11 | `db:verify` and check:consistency pass | done (2026-11-18, local only) |
+| D-17 | P5 raster layers, brush, eraser, colors, pixel flush and pixel history | image-editor 7b | Vitest, lint, typecheck, build pass | open |
+| D-18 | P6 selections, masks, fill, gradient, eyedropper, adjustment layers | image-editor 7b | Vitest, lint, typecheck, build pass | open |
+| D-19 | P7 filters, clone stamp, free transform, History panel | image-editor 7b | Vitest, lint, typecheck, build pass | open |
+| D-20 | P8 hardening, review and honest Implementation status | image-editor 7b | /check-standards clean | open |
 
 ## Phase VE — Video editor
 

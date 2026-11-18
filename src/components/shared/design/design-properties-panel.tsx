@@ -1,6 +1,6 @@
 import { FormColorPicker } from "lost-ui/forms/form-color-picker";
-import { FormSlider } from "lost-ui/forms/form-slider";
 import { FormSwitch } from "lost-ui/forms/form-switch";
+import { DesignBlendControls } from "@/components/shared/design/design-blend-controls";
 import { DesignImageProperties } from "@/components/shared/design/design-image-properties";
 import { DesignShapeProperties } from "@/components/shared/design/design-shape-properties";
 import { DesignTextProperties } from "@/components/shared/design/design-text-properties";
@@ -13,8 +13,6 @@ import {
   DesignElementKind,
   type DesignFont,
 } from "@/lib/shared/design/types";
-
-const first = (value: number | number[]) => (Array.isArray(value) ? (value[0] ?? 0) : value);
 
 type PanelProps = {
   editor: DesignEditor;
@@ -77,6 +75,13 @@ function KindProperties({
   if (element.kind === DesignElementKind.Image) {
     return <DesignImageProperties element={element} editor={props.editor} disabled={disabled} />;
   }
+  if (
+    element.kind !== DesignElementKind.Rect &&
+    element.kind !== DesignElementKind.Ellipse &&
+    element.kind !== DesignElementKind.Line
+  ) {
+    return null;
+  }
   return (
     <DesignShapeProperties
       element={element}
@@ -119,23 +124,17 @@ export function DesignPropertiesPanel(props: PanelProps) {
       ) : null}
       {element === undefined ? (
         <p className="text-sm text-muted-foreground">
-          As propriedades são editadas um elemento por vez. Use “Transformar” para mover ou
+          As propriedades são editadas um elemento por vez. Use “Transformar” acima para mover ou
           redimensionar todos.
         </p>
       ) : (
         <>
-          <FormSlider
-            name="opacity"
-            label="Opacidade"
-            value={Math.round(element.opacity * 100)}
-            min={0}
-            max={100}
-            step={1}
-            showValue
+          <DesignBlendControls
+            editor={editor}
+            element={element}
             disabled={disabled}
-            onValueChange={(value) =>
-              editor.patch(element.id, { opacity: first(value) / 100 }, `opacity:${element.id}`)
-            }
+            showFill
+            idPrefix="properties-"
           />
           <KindProperties {...props} element={element} disabled={disabled} />
         </>

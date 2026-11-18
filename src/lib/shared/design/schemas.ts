@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { adjustmentSchema } from "@/lib/shared/design/raster/adjustment-schemas";
 import {
   DESIGN_LIMITS,
+  DesignBlendMode,
   DesignElementKind,
   DesignExportFormat,
   DesignFont,
@@ -15,6 +17,12 @@ const coordinate = z.number().min(-DESIGN_LIMITS.maxCoordinate).max(DESIGN_LIMIT
 const size = z.number().min(DESIGN_LIMITS.minSize).max(DESIGN_LIMITS.maxSize);
 const elementId = z.string().min(1).max(40);
 
+export const layerMaskSchema = z.object({
+  mediaVersionId: z.string().uuid().nullable().default(null),
+  enabled: z.boolean().default(true),
+  linked: z.boolean().default(true),
+});
+
 const baseElement = {
   id: elementId,
   x: coordinate,
@@ -25,6 +33,13 @@ const baseElement = {
   opacity: z.number().min(0).max(1),
   locked: z.boolean(),
   groupId: elementId.nullable().default(null),
+  blendMode: z.nativeEnum(DesignBlendMode).default(DesignBlendMode.Normal),
+  fillOpacity: z.number().min(0).max(1).default(1),
+  name: z.string().max(DESIGN_LIMITS.layerNameMax).default(""),
+  hidden: z.boolean().default(false),
+  parentId: elementId.nullable().default(null),
+  clipToBelow: z.boolean().default(false),
+  mask: layerMaskSchema.nullable().default(null),
 };
 
 export const textShadowSchema = z.object({
@@ -87,7 +102,28 @@ export const lineElementSchema = z.object({
   dashed: z.boolean(),
 });
 
-export const designElementSchema = z.discriminatedUnion("kind", [
+export const rasterElementSchema = z.object({
+  ...baseElement,
+  kind: z.literal(DesignElementKind.Raster),
+  pixelsVersionId: z.string().uuid().nullable().default(null),
+  pixelWidth: z.number().int().min(1).max(DESIGN_LIMITS.maxRasterSide),
+  pixelHeight: z.number().int().min(1).max(DESIGN_LIMITS.maxRasterSide),
+});
+
+export const adjustmentElementSchema = z.object({
+  ...baseElement,
+  kind: z.literal(DesignElementKind.Adjustment),
+  adjustment: adjustmentSchema,
+});
+
+export const groupElementSchema = z.object({
+  ...baseElement,
+  kind: z.literal(DesignElementKind.Group),
+  collapsed: z.boolean().default(false),
+  passThrough: z.boolean().default(false),
+});
+
+const legacyElementSchema = z.discriminatedUnion("kind", [
   textElementSchema,
   imageElementSchema,
   rectElementSchema,
@@ -95,41 +131,116 @@ export const designElementSchema = z.discriminatedUnion("kind", [
   lineElementSchema,
 ]);
 
-export const designPageSchema = z.object({
+export const designElementSchema = z.discriminatedUnion("kind", [
+  textElementSchema,
+  imageElementSchema,
+  rectElementSchema,
+  ellipseElementSchema,
+  lineElementSchema,
+  rasterElementSchema,
+  adjustmentElementSchema,
+  groupElementSchema,
+]);
+
+const pageSide = z.number().int().min(DESIGN_LIMITS.minPageSide).max(DESIGN_LIMITS.maxPageSide);
+
+const pageShape = {
   id: elementId,
   background: hexColorSchema.nullable(),
+  width: pageSide.optional(),
+  height: pageSide.optional(),
+};
+
+export const designPageSchema = z.object({
+  ...pageShape,
   elements: z.array(designElementSchema).max(DESIGN_LIMITS.maxElements),
 });
+
+const legacyPageSchema = z.object({
+  id: elementId,
+  background: hexColorSchema.nullable(),
+  elements: z.array(legacyElementSchema).max(DESIGN_LIMITS.maxElementsV2),
+});
+
+type ParentLink = { id: string; kind: string; parentId: string | null };
+
+const parentChainValid = (element: ParentLink, byId: ReadonlyMap<string, ParentLink>): boolean => {
+  let current = element.parentId;
+  let depth = 0;
+  while (current !== null) {
+    depth += 1;
+    const parent = byId.get(current);
+    const broken =
+      depth > DESIGN_LIMITS.maxGroupDepth ||
+      current === element.id ||
+      parent === undefined ||
+      parent.kind !== DesignElementKind.Group;
+    if (broken) return false;
+    current = parent.parentId;
+  }
+  return true;
+};
+
+const documentIssues = (
+  pages: readonly z.infer<typeof designPageSchema>[],
+  maxElements: number,
+) => {
+  const elements = pages.flatMap((page) => page.elements);
+  const pageIds = new Set(pages.map((page) => page.id));
+  const elementIds = new Set(elements.map((element) => element.id));
+  if (elements.length > maxElements) return true;
+  if (pageIds.size !== pages.length || elementIds.size !== elements.length) return true;
+  return pages.some((page) => {
+    const byId = new Map(page.elements.map((element) => [element.id, element]));
+    return page.elements.some((element) => !parentChainValid(element, byId));
+  });
+};
+
+export const designDocumentV3Schema = z
+  .object({
+    version: z.literal(3),
+    pages: z.array(designPageSchema).min(1).max(DESIGN_LIMITS.maxPages),
+  })
+  .superRefine((document, context) => {
+    if (documentIssues(document.pages, DESIGN_LIMITS.maxElements)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages"] });
+    }
+  });
 
 export const designDocumentV2Schema = z
   .object({
     version: z.literal(2),
-    pages: z.array(designPageSchema).min(1).max(DESIGN_LIMITS.maxPages),
+    pages: z.array(legacyPageSchema).min(1).max(DESIGN_LIMITS.maxPages),
   })
   .superRefine((document, context) => {
     const elements = document.pages.flatMap((page) => page.elements);
     const pageIds = new Set(document.pages.map((page) => page.id));
     const elementIds = new Set(elements.map((element) => element.id));
-    if (elements.length > DESIGN_LIMITS.maxElements) {
+    if (elements.length > DESIGN_LIMITS.maxElementsV2) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages"] });
     }
     if (pageIds.size !== document.pages.length || elementIds.size !== elements.length) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages"] });
     }
-  });
+  })
+  .transform((document) => ({ version: 3 as const, pages: document.pages }));
 
 const designDocumentV1Schema = z
   .object({
     version: z.literal(1),
     background: hexColorSchema.nullable(),
-    elements: z.array(designElementSchema).max(DESIGN_LIMITS.maxElements),
+    elements: z.array(legacyElementSchema).max(DESIGN_LIMITS.maxElementsV2),
   })
   .transform((document) => ({
-    version: 2 as const,
+    version: 3 as const,
     pages: [{ id: "page-1", background: document.background, elements: document.elements }],
   }));
 
-export const designDocumentSchema = z.union([designDocumentV2Schema, designDocumentV1Schema]);
+export const designDocumentSchema = z.union([
+  designDocumentV3Schema,
+  designDocumentV2Schema,
+  designDocumentV1Schema,
+]);
 
 export type TextShadow = z.infer<typeof textShadowSchema>;
 export type TextElement = z.infer<typeof textElementSchema>;
@@ -137,9 +248,13 @@ export type ImageElement = z.infer<typeof imageElementSchema>;
 export type RectElement = z.infer<typeof rectElementSchema>;
 export type EllipseElement = z.infer<typeof ellipseElementSchema>;
 export type LineElement = z.infer<typeof lineElementSchema>;
+export type RasterElement = z.infer<typeof rasterElementSchema>;
+export type AdjustmentElement = z.infer<typeof adjustmentElementSchema>;
+export type GroupElement = z.infer<typeof groupElementSchema>;
+export type LayerMask = z.infer<typeof layerMaskSchema>;
 export type DesignElement = z.infer<typeof designElementSchema>;
 export type DesignPage = z.infer<typeof designPageSchema>;
-export type DesignDocument = z.infer<typeof designDocumentV2Schema>;
+export type DesignDocument = z.infer<typeof designDocumentV3Schema>;
 
 const designName = z.string().trim().min(1).max(DESIGN_LIMITS.nameMax);
 const expectedVersion = z.number().int().min(1);
@@ -160,12 +275,12 @@ export const createDesignSchema = z.object({
   brandId: z.string().uuid(),
   name: designName,
   preset: z.nativeEnum(DesignPreset),
-  document: designDocumentV2Schema.optional(),
+  document: designDocumentV3Schema.optional(),
 });
 
 export const saveDesignDraftSchema = z.object({
   id: designId,
-  document: designDocumentV2Schema,
+  document: designDocumentV3Schema,
   expectedVersion,
 });
 

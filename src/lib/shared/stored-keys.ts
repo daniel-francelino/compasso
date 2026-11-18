@@ -12,7 +12,7 @@ export const StoredKey = {
   ApprovalDraftComment: "aura:approval-draft-comment",
   PortalFeed: "aura:portal-feed",
   FeedbackDraft: "aura:feedback-draft",
-  DesignPanels: "aura:design-panels",
+  DesignPanelTab: "aura:design-panel-tab",
 } as const;
 export type StoredKey = ValueOf<typeof StoredKey>;
 

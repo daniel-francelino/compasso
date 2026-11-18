@@ -2,11 +2,12 @@ import Konva from "konva";
 import { useEffect, useRef } from "react";
 import { Ellipse, Group, Image as KonvaImage, Line, Rect, Text } from "react-konva";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
-import { coverCrop } from "@/lib/shared/design/document";
+import { canvasBlendOperation, coverCrop, isRendered } from "@/lib/shared/design/document";
 import type {
   DesignElement,
   ImageElement,
   LineElement,
+  RasterElement,
   TextElement,
 } from "@/lib/shared/design/schemas";
 import {
@@ -28,6 +29,7 @@ export type NodeEvents = {
 type NodeProps = {
   element: DesignElement;
   image: HTMLImageElement | null | undefined;
+  raster?: HTMLCanvasElement | null | undefined;
   chrome: CanvasChrome;
   fontsVersion: number;
   interactive: boolean;
@@ -168,6 +170,23 @@ function ImageBody({
   );
 }
 
+function RasterBody({
+  element,
+  canvas,
+}: {
+  element: RasterElement;
+  canvas: HTMLCanvasElement | null | undefined;
+}) {
+  return (
+    <>
+      <Rect width={element.width} height={element.height} fill="transparent" />
+      {canvas === null || canvas === undefined ? null : (
+        <KonvaImage image={canvas} width={element.width} height={element.height} />
+      )}
+    </>
+  );
+}
+
 function LineBody({ element }: { element: LineElement }) {
   const middle = element.height / 2;
   return (
@@ -187,10 +206,11 @@ function LineBody({ element }: { element: LineElement }) {
 function ElementBody({
   element,
   image,
+  raster,
   chrome,
   fontsVersion,
   onMeasure,
-}: Pick<NodeProps, "element" | "image" | "chrome" | "fontsVersion"> & {
+}: Pick<NodeProps, "element" | "image" | "raster" | "chrome" | "fontsVersion"> & {
   onMeasure: NodeEvents["onMeasure"];
 }) {
   if (element.kind === DesignElementKind.Text) {
@@ -200,6 +220,12 @@ function ElementBody({
     return <ImageBody element={element} image={image} chrome={chrome} />;
   }
   if (element.kind === DesignElementKind.Line) return <LineBody element={element} />;
+  if (element.kind === DesignElementKind.Raster) {
+    return <RasterBody element={element} canvas={raster} />;
+  }
+  if (element.kind === DesignElementKind.Adjustment || element.kind === DesignElementKind.Group) {
+    return null;
+  }
   if (element.kind === DesignElementKind.Rect) {
     return (
       <Rect
@@ -224,12 +250,15 @@ function ElementBody({
 export function DesignElementNode({
   element,
   image,
+  raster,
   chrome,
   fontsVersion,
   interactive,
   hidden = false,
   events,
 }: NodeProps) {
+  if (!isRendered(element) || element.kind === DesignElementKind.Adjustment) return null;
+  if (element.kind === DesignElementKind.Group) return null;
   const edit = () => {
     if (element.kind === DesignElementKind.Text && !element.locked) events.onEdit(element.id);
   };
@@ -249,6 +278,7 @@ export function DesignElementNode({
       height={element.height}
       rotation={element.rotation}
       opacity={hidden ? 0 : element.opacity}
+      globalCompositeOperation={canvasBlendOperation(element.blendMode)}
       draggable={movable}
       listening={interactive}
       onMouseDown={(event) => events.onPointer(element.id, event.evt.shiftKey)}
@@ -259,13 +289,16 @@ export function DesignElementNode({
       onDragMove={(event) => events.onDragMove(element.id, event.target)}
       onDragEnd={events.onDragEnd}
     >
-      <ElementBody
-        element={element}
-        image={image}
-        chrome={chrome}
-        fontsVersion={fontsVersion}
-        onMeasure={events.onMeasure}
-      />
+      <Group opacity={element.fillOpacity}>
+        <ElementBody
+          element={element}
+          image={image}
+          raster={raster}
+          chrome={chrome}
+          fontsVersion={fontsVersion}
+          onMeasure={events.onMeasure}
+        />
+      </Group>
     </Group>
   );
 }

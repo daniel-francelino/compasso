@@ -4,10 +4,15 @@ import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import { isControlTarget, isTypingTarget } from "@/lib/shared/design/browser";
 import {
+  DESIGN_DUPLICATE_KEY,
+  DESIGN_ENABLED_TOOLS,
   DESIGN_IMAGE_KEY,
   DESIGN_LIMITS,
+  DESIGN_SHAPE_KEY,
   DESIGN_TOOL_KEY,
   DesignTool,
+  isShapeTool,
+  nextShapeTool,
 } from "@/lib/shared/design/types";
 
 const ARROWS: Record<string, [number, number]> = {
@@ -18,7 +23,9 @@ const ARROWS: Record<string, [number, number]> = {
 };
 
 const TOOL_BY_KEY = new Map(
-  Object.values(DesignTool).map((tool) => [DESIGN_TOOL_KEY[tool], tool] as const),
+  DESIGN_ENABLED_TOOLS.filter((tool) => !isShapeTool(tool)).map(
+    (tool) => [DESIGN_TOOL_KEY[tool], tool] as const,
+  ),
 );
 
 type Context = {
@@ -52,16 +59,26 @@ const editKey = (event: KeyboardEvent, editor: DesignEditor): boolean => {
     g: shift ? editor.ungroup : editor.group,
     a: editor.selectAll,
     d: () => editor.duplicate(editor.selectedIds),
+    [DESIGN_DUPLICATE_KEY]: () => editor.duplicate(editor.selectedIds),
   };
   const action = actions[key];
   if (action === undefined) return false;
-  if (key === "d" && editor.selectedIds.length === 0) return false;
+  const duplicates = key === "d" || key === DESIGN_DUPLICATE_KEY;
+  if (duplicates && editor.selectedIds.length === 0) return false;
   action();
+  return true;
+};
+
+const imageKey = (event: KeyboardEvent, context: Context): boolean => {
+  if (!event.shiftKey || event.key.toLowerCase() !== DESIGN_IMAGE_KEY) return false;
+  if (!context.editable) return false;
+  context.onImage();
   return true;
 };
 
 const commandKey = (event: KeyboardEvent, context: Context): boolean => {
   if (viewKey(event.key, context.viewport)) return true;
+  if (imageKey(event, context)) return true;
   return context.editable && editKey(event, context.editor);
 };
 
@@ -75,13 +92,18 @@ const escape = ({ editor, tool }: Context): boolean => {
   return true;
 };
 
+const shapeKey = (event: KeyboardEvent, { tool }: Context): boolean => {
+  if (event.key.toLowerCase() !== DESIGN_SHAPE_KEY) return false;
+  const current = isShapeTool(tool.tool) ? tool.tool : tool.lastShape;
+  tool.setTool(event.shiftKey ? nextShapeTool(current) : tool.lastShape);
+  return true;
+};
+
 const toolKey = (event: KeyboardEvent, context: Context): boolean => {
-  if (event.altKey || event.shiftKey) return false;
+  if (event.altKey) return false;
+  if (shapeKey(event, context)) return true;
+  if (event.shiftKey) return false;
   const key = event.key.toLowerCase();
-  if (key === DESIGN_IMAGE_KEY) {
-    context.onImage();
-    return true;
-  }
   const next = TOOL_BY_KEY.get(key);
   if (next === undefined) return false;
   context.tool.setTool(next);

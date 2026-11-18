@@ -171,7 +171,7 @@ All: `security definer`, require `has_action('portal.view')` and an active exter
 
 | SQL function | Server function / route | Act. | Audit | Errors |
 |---|---|---|---|---|
-| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null)` (a given `p_asset` creates a new version and needs `media.update`; accepts the MIME types of [../spaces/media-library.md](../spaces/media-library.md) section 7) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `storage_unavailable` |
+| `media_request_upload(p_scope, p_brand, p_filename, p_size, p_mime, p_idempotency_key, p_asset default null, p_hidden default false)` (`p_hidden` true marks a layer file of the image editor as hidden from the library: brand scope, new asset only, needs `design.update` too; a given `p_asset` creates a new version and needs `media.update`; accepts the MIME types of [../spaces/media-library.md](../spaces/media-library.md) section 7) | `requestUpload` (then signs the PUT URLs) | `media.upload` (+ brand link; `site.view` for the site scope) | — | `upload_too_large`, `upload_type_not_allowed`, `quota_exceeded`, `storage_unavailable` |
 | `media_confirm_upload(p_version, p_checksum, p_width, p_height, p_duration, p_derivative_bytes default 0)` | `confirmUpload` (stat → range read → validates → calls the RPC) | `media.upload` | — | `upload_size_mismatch`, `upload_content_mismatch`, `upload_video_invalid`, `upload_not_received`, `media_not_available` |
 | `media_update(p_asset jsonb)` | `updateMedia` | `media.update` | — | `conflict` |
 | `media_set_trashed(p_asset, p_trashed)` | `trashMedia` | `media.delete` | — | `media_in_use` (when archiving a used file is restricted) |
@@ -312,14 +312,14 @@ Server functions in `lib/shared/design/design.functions.ts`. The list and the de
 | `design_create(p_brand, p_name, p_preset, p_document)` (`p_document` optional) | `createDesign` | `design.create` + brand link | `design.created` | — | `denied`, `not_found`, `invalid_input`, `design_too_large` |
 | `design_save_draft(p_design, p_document, p_expected_version)` | `saveDesignDraft` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_too_large`, `design_trashed` |
 | `design_rename(p_design, p_name, p_expected_version)` | `renameDesign` | `design.update` + brand link | — | — | `denied`, `not_found`, `conflict`, `invalid_input`, `design_trashed` |
-| `design_save_version(p_design, p_expected_version)` (also writes the `design_version` media usages) | `saveDesignVersion` | `design.update` + brand link | `design.version_saved` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
+| `design_save_version(p_design, p_expected_version)` (also writes the `design_version` media usages: images, raster pixel files and mask files) | `saveDesignVersion` | `design.update` + brand link | `design.version_saved` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
 | — (select on `design_versions`, `design_exports`) | `listDesignVersions`, `listDesignExports` | `design.view` + brand link | — | — | `not_found` |
 | `design_restore_version(p_design, p_version_no, p_expected_version)` | `restoreDesignVersion` | `design.update` + brand link | `design.version_restored` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
 | `design_set_template(p_design, p_template, p_expected_version)` | `setDesignTemplate` | `design.update` + brand link | `design.template_changed` | — | `denied`, `not_found`, `conflict`, `design_trashed` |
 | `design_record_export(p_design, p_version_no, p_page_no, p_format, p_scale, p_media_version)` | `recordDesignExport` | `design.update` + brand link | `design.exported` | — | `denied`, `not_found`, `invalid_input` |
 | — (select on `brands`) | `getDesignBrandKit` | `design.view` + brand link | — | — | `not_found` |
 | `design_set_trashed(p_design, p_trashed)` | `setDesignTrashed` | `design.delete` + brand link | `design.trashed`, `design.restored` | — | `denied`, `not_found` |
-| `design_assert_document`, `design_lock`, `design_upgrade_document`; trigger `design_versions_immutable` | — | internal | — | — | `invalid_input`, `design_too_large`, `design_trashed`, `design_version_immutable` |
+| `design_assert_document` (versions 2 and 3, up to 200 elements in version 3), `design_assert_media` (one media reference: same brand, MIME pattern), `design_lock`, `design_upgrade_document` (1 to 2 to 3); trigger `design_versions_immutable` | — | internal | — | — | `invalid_input`, `design_too_large`, `design_trashed`, `design_version_immutable` |
 
 ## 9e. Video editor (module: video-editor)
 

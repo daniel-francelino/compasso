@@ -1,26 +1,31 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { History, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "lost-ui/ui/alert";
 import { DesignBrandPanel } from "@/components/shared/design/design-brand-panel";
 import { DesignContextBar } from "@/components/shared/design/design-context-bar";
 import { DesignExportDialog } from "@/components/shared/design/design-export-dialog";
+import { DesignMenuBar } from "@/components/shared/design/design-menu-bar";
 import { DesignLayersPanel } from "@/components/shared/design/design-layers-panel";
 import { DesignPanelDock } from "@/components/shared/design/design-panel-dock";
-import { DesignPropertiesPanel } from "@/components/shared/design/design-properties-panel";
+import { DesignPropertiesTab } from "@/components/shared/design/design-properties-tab";
+import { DesignShortcutsDialog } from "@/components/shared/design/design-shortcuts-dialog";
 import { DesignStatusBar } from "@/components/shared/design/design-status-bar";
 import { DesignToolRail } from "@/components/shared/design/design-tool-rail";
 import { DesignTopBar } from "@/components/shared/design/design-top-bar";
-import { DesignTransformPanel } from "@/components/shared/design/design-transform-panel";
 import { DesignVersionsDialog } from "@/components/shared/design/design-versions-dialog";
 import { DesignViewport } from "@/components/shared/design/design-viewport";
 import { MediaPicker } from "@/components/shared/media/media-picker";
+import { EmptyState } from "@/components/shared/admin/empty-state";
 import { Button } from "@/components/shared/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/shared/ui/sheet";
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
+import { useRasterStore } from "@/hooks/shared/design/use-raster-store";
 import { useDesignAutosave } from "@/hooks/shared/design/use-design-autosave";
 import { useDesignEditor } from "@/hooks/shared/design/use-design-editor";
+import { designMenus } from "@/hooks/shared/design/use-design-menus";
+import { useDesignPanelTab } from "@/hooks/shared/design/use-design-panel-tab";
 import { useDesignShortcuts } from "@/hooks/shared/design/use-design-shortcuts";
 import { useDesignTool } from "@/hooks/shared/design/use-design-tool";
 import { useDesignViewport } from "@/hooks/shared/design/use-design-viewport";
@@ -28,7 +33,7 @@ import { useIsMobile } from "@/hooks/shared/use-mobile";
 import { Action } from "@/lib/shared/auth/actions";
 import { can } from "@/lib/shared/auth/permissions";
 import { useAuth } from "@/lib/shared/auth/use-auth";
-import { type DrawTool, drawnElement } from "@/lib/shared/design/arrange";
+import { type DrawTool, drawnElement, isDrawTool } from "@/lib/shared/design/arrange";
 import { type CanvasChrome, imageNaturalSize, readCanvasChrome } from "@/lib/shared/design/browser";
 import {
   type DesignDetail,
@@ -75,6 +80,7 @@ export function DesignWorkspace({
     enabled: editable,
   });
   const assets = useDesignAssets(editor.document);
+  const rasters = useRasterStore(editor.document);
   const size = DESIGN_PRESET_SIZE[design.preset];
   const viewport = useDesignViewport(size);
   const tool = useDesignTool();
@@ -91,6 +97,9 @@ export function DesignWorkspace({
   const [exportOpen, setExportOpen] = useState(false);
   const [panelsOpen, setPanelsOpen] = useState(false);
   const [picking, setPicking] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [rulers, setRulers] = useState(true);
+  const panelTab = useDesignPanelTab();
   const conflict = autosave.state === DesignSaveState.Conflict;
   const canEdit = editable && !conflict;
   const full = editor.canAdd() ? undefined : FULL;
@@ -182,10 +191,43 @@ export function DesignWorkspace({
     }
   };
 
+  const openPanel = (panel: DesignPanel) => {
+    panelTab.setTab(panel);
+    setPanelsOpen(true);
+  };
+
+  const addLayer = (drawTool: DrawTool) =>
+    draw(drawTool, { x: size.width / 2, y: size.height / 2 }, null, false);
+
+  const menus = designMenus({
+    editor,
+    viewport,
+    canEdit,
+    canExport,
+    full,
+    rulers,
+    onRulers: () => setRulers((current) => !current),
+    onSaveVersion: () => void saveVersion(),
+    onVersions: () => setVersionsOpen(true),
+    onExport: () => setExportOpen(true),
+    onAddLayer: (layerTool) => {
+      if (isDrawTool(layerTool)) addLayer(layerTool);
+    },
+    onAddRaster: () => void editor.addRaster(size),
+    onPanel: openPanel,
+    onShortcuts: () => setShortcutsOpen(true),
+  });
+
   const panels = {
-    [DesignPanel.Transform]: <DesignTransformPanel editor={editor} editable={canEdit} />,
+    [DesignPanel.Layers]: (
+      <DesignLayersPanel
+        editor={editor}
+        editable={canEdit}
+        onAddRaster={() => void editor.addRaster(size)}
+      />
+    ),
     [DesignPanel.Properties]: (
-      <DesignPropertiesPanel
+      <DesignPropertiesTab
         editor={editor}
         chrome={chrome}
         editable={canEdit}
@@ -193,7 +235,22 @@ export function DesignWorkspace({
         brandFonts={brandFonts}
       />
     ),
-    [DesignPanel.Layers]: <DesignLayersPanel editor={editor} editable={canEdit} />,
+    [DesignPanel.Adjustments]: (
+      <EmptyState
+        compact
+        icon={SlidersHorizontal}
+        title="Ainda não disponível"
+        description="Os ajustes de imagem (brilho, curvas, matiz) chegam em uma fase futura do editor."
+      />
+    ),
+    [DesignPanel.History]: (
+      <EmptyState
+        compact
+        icon={History}
+        title="Ainda não disponível"
+        description="O histórico com o nome de cada passo chega em uma fase futura. Por enquanto, use Desfazer e Refazer."
+      />
+    ),
     [DesignPanel.Brand]: (
       <DesignBrandPanel
         editor={editor}
@@ -226,6 +283,7 @@ export function DesignWorkspace({
         onExport={() => setExportOpen(true)}
         onPanels={() => setPanelsOpen(true)}
       />
+      <DesignMenuBar menus={menus} />
       {design.trashed ? (
         <Alert className="rounded-none border-x-0 border-t-0">
           <AlertDescription>
@@ -261,7 +319,9 @@ export function DesignWorkspace({
           <AlertDescription>{autosave.message}</AlertDescription>
         </Alert>
       ) : null}
-      {canEdit ? <DesignContextBar editor={editor} tool={tool.active} size={size} /> : null}
+      {canEdit ? (
+        <DesignContextBar editor={editor} viewport={viewport} tool={tool.active} size={size} />
+      ) : null}
       <div className="flex min-h-0 flex-1">
         {canEdit ? (
           <DesignToolRail
@@ -277,26 +337,37 @@ export function DesignWorkspace({
           editor={editor}
           size={size}
           images={assets.images}
+          rasters={rasters}
           chrome={chrome}
           fontsVersion={assets.fontsVersion}
           editable={canEdit}
           label={`Página ${pageNumber} do design ${name}`}
+          rulers={rulers}
           onDraw={draw}
         />
         <aside
           aria-label="Painéis"
-          className="hidden w-80 shrink-0 overflow-y-auto border-l bg-card xl:block"
+          className="hidden w-96 shrink-0 overflow-y-auto border-l bg-card xl:block"
         >
-          {panelsOpen ? null : <DesignPanelDock panels={panels} />}
+          {panelsOpen ? null : (
+            <DesignPanelDock panels={panels} tab={panelTab.tab} onTab={panelTab.setTab} />
+          )}
         </aside>
       </div>
-      <DesignStatusBar editor={editor} viewport={viewport} editable={canEdit} size={size} />
+      <DesignStatusBar
+        editor={editor}
+        viewport={viewport}
+        editable={canEdit}
+        size={size}
+        onShortcuts={() => setShortcutsOpen(true)}
+      />
+      <DesignShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <Sheet open={panelsOpen} onOpenChange={setPanelsOpen}>
-        <SheetContent side="right" className="w-80 overflow-y-auto p-0 sm:max-w-80">
+        <SheetContent side="right" className="w-96 overflow-y-auto p-0 sm:max-w-96">
           <SheetHeader className="px-4 pt-4">
             <SheetTitle>Painéis</SheetTitle>
           </SheetHeader>
-          <DesignPanelDock panels={panels} />
+          <DesignPanelDock panels={panels} tab={panelTab.tab} onTab={panelTab.setTab} />
         </SheetContent>
       </Sheet>
       <MediaPicker
@@ -323,6 +394,7 @@ export function DesignWorkspace({
           open={exportOpen}
           onOpenChange={setExportOpen}
           document={editor.document}
+          rasters={rasters}
           preset={design.preset}
           chrome={chrome}
           designId={design.id}

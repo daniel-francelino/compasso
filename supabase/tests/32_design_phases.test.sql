@@ -67,8 +67,8 @@ set local session_replication_role = origin;
 
 select is(
   public.design_upgrade_document('{"version":1,"background":"#aabbcc","elements":[{"id":"x","kind":"rect"}]}'::jsonb),
-  '{"version":2,"pages":[{"id":"page-1","background":"#aabbcc","elements":[{"id":"x","kind":"rect"}]}]}'::jsonb,
-  'a version 1 document becomes a version 2 document with one page'
+  '{"version":3,"pages":[{"id":"page-1","background":"#aabbcc","elements":[{"id":"x","kind":"rect","mask":null,"name":"","hidden":false,"parentId":null,"blendMode":"normal","clipToBelow":false,"fillOpacity":1}]}]}'::jsonb,
+  'a version 1 document becomes a version 3 document with one page and the defaults'
 );
 
 select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');

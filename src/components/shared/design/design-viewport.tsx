@@ -1,8 +1,10 @@
 import { Suspense, lazy } from "react";
+import { checkerboard } from "@/components/shared/design/checkerboard";
 import { DesignRulers } from "@/components/shared/design/design-rulers";
 import { DesignTextOverlay } from "@/components/shared/design/design-text-overlay";
 import { Skeleton } from "@/components/shared/ui/skeleton";
 import type { LoadedImages } from "@/hooks/shared/design/use-design-assets";
+import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignToolState } from "@/hooks/shared/design/use-design-tool";
 import type { DesignViewport as ViewportState } from "@/hooks/shared/design/use-design-viewport";
@@ -20,10 +22,7 @@ import { cn } from "@/lib/shared/utils";
 
 const DesignCanvas = lazy(() => import("@/components/shared/design/design-canvas"));
 
-const CHECKER = {
-  backgroundImage: "repeating-conic-gradient(var(--line) 0% 25%, var(--surface) 0% 50%)",
-  backgroundSize: "16px 16px",
-};
+const CHECKER = checkerboard(16);
 
 const CURSOR: Record<DesignTool, string> = {
   [DesignTool.Move]: "cursor-default",
@@ -33,6 +32,15 @@ const CURSOR: Record<DesignTool, string> = {
   [DesignTool.Line]: "cursor-crosshair",
   [DesignTool.Hand]: "cursor-grab active:cursor-grabbing",
   [DesignTool.Zoom]: "cursor-zoom-in",
+  [DesignTool.Marquee]: "cursor-crosshair",
+  [DesignTool.Lasso]: "cursor-crosshair",
+  [DesignTool.Wand]: "cursor-crosshair",
+  [DesignTool.Crop]: "cursor-crosshair",
+  [DesignTool.Eyedropper]: "cursor-crosshair",
+  [DesignTool.Brush]: "cursor-crosshair",
+  [DesignTool.Clone]: "cursor-crosshair",
+  [DesignTool.Eraser]: "cursor-crosshair",
+  [DesignTool.Fill]: "cursor-crosshair",
 };
 
 export function DesignViewport({
@@ -41,10 +49,12 @@ export function DesignViewport({
   editor,
   size,
   images,
+  rasters,
   chrome,
   fontsVersion,
   editable,
   label,
+  rulers,
   onDraw,
 }: {
   viewport: ViewportState;
@@ -52,13 +62,16 @@ export function DesignViewport({
   editor: DesignEditor;
   size: PageSize;
   images: LoadedImages;
+  rasters: RasterHandle;
   chrome: CanvasChrome | null;
   fontsVersion: number;
   editable: boolean;
   label: string;
+  rulers: boolean;
   onDraw: (tool: DrawTool, start: Point, end: Point | null, shift: boolean) => void;
 }) {
   const view = viewport.view;
+  const rulerSize = rulers ? DESIGN_LIMITS.rulerSize : 0;
   const active = editable || !isDrawTool(tool.active) ? tool.active : DesignTool.Move;
   const editing = editor.page.elements.find(
     (element) => element.id === tool.editingTextId && element.kind === DesignElementKind.Text,
@@ -82,12 +95,16 @@ export function DesignViewport({
     <div
       className="grid min-h-0 min-w-0 flex-1 bg-muted"
       style={{
-        gridTemplateColumns: `${DESIGN_LIMITS.rulerSize}px 1fr`,
-        gridTemplateRows: `${DESIGN_LIMITS.rulerSize}px 1fr`,
+        gridTemplateColumns: `${rulerSize}px 1fr`,
+        gridTemplateRows: `${rulerSize}px 1fr`,
       }}
     >
-      <div className="col-start-1 row-start-1 border-b border-r bg-card" aria-hidden="true" />
-      <DesignRulers viewport={viewport} />
+      {rulers ? (
+        <>
+          <div className="col-start-1 row-start-1 border-b border-r bg-card" aria-hidden="true" />
+          <DesignRulers viewport={viewport} />
+        </>
+      ) : null}
       <div
         ref={viewport.ref}
         className={cn("relative col-start-2 row-start-2 overflow-hidden", CURSOR[active])}
@@ -119,6 +136,7 @@ export function DesignViewport({
                 scale={view.zoom}
                 selectedIds={editor.selectedIds}
                 images={images}
+                rasters={rasters}
                 chrome={chrome}
                 fontsVersion={fontsVersion}
                 editable={editable}

@@ -14,6 +14,7 @@ import {
   type ShapePatch,
   type TextPatch,
   addElement,
+  createRasterLayer,
   addPage,
   canAddElements,
   canAddPage,
@@ -37,6 +38,7 @@ import {
   ungroupElements,
   updatePage,
 } from "@/lib/shared/design/document";
+import { moveLayerTo } from "@/lib/shared/design/layers";
 import {
   type History,
   historyOf,
@@ -137,10 +139,12 @@ export const useDesignEditor = (initial: DesignDocument) => {
     redo: () => setHistory(redoHistory),
     newId,
     add,
+    addRaster: (size: PageSize): boolean => add(createRasterLayer(newId(), page, size)),
     remove,
     duplicate,
     canAdd: (count = 1) => canAddElements(document, count),
     move: (id: string, move: LayerMove) => changePage((current) => moveLayer(current, id, move)),
+    moveTo: (id: string, index: number) => changePage((current) => moveLayerTo(current, id, index)),
     patch: (id: string, patch: ElementBasePatch, mergeKey?: string) =>
       changePage((current) => patchElement(current, id, patch), mergeKey),
     patchMany: (patches: readonly ElementPatch[], mergeKey?: string) =>

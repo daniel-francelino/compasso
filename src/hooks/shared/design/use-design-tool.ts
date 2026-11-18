@@ -1,17 +1,24 @@
 import { useState } from "react";
-import { DesignTool } from "@/lib/shared/design/types";
+import { DesignTool, isShapeTool } from "@/lib/shared/design/types";
 
 export const useDesignTool = () => {
-  const [tool, setTool] = useState<DesignTool>(DesignTool.Move);
+  const [tool, setToolState] = useState<DesignTool>(DesignTool.Move);
+  const [lastShape, setLastShape] = useState<DesignTool>(DesignTool.Rect);
   const [holding, setHolding] = useState(false);
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
 
+  const setTool = (next: DesignTool) => {
+    if (isShapeTool(next)) setLastShape(next);
+    setToolState(next);
+  };
+
   return {
     tool,
+    lastShape,
     active: holding ? DesignTool.Hand : tool,
     setTool,
     hold: setHolding,
-    reset: () => setTool(DesignTool.Move),
+    reset: () => setToolState(DesignTool.Move),
     editingTextId,
     editText: setEditingTextId,
   };

@@ -4,6 +4,7 @@ import type {
   DesignPage,
   ImageElement,
   LineElement,
+  RasterElement,
   RectElement,
   TextElement,
 } from "@/lib/shared/design/schemas";
@@ -12,6 +13,7 @@ import {
   DESIGN_LIMITS,
   DESIGN_PRESET_SIZE,
   DesignElementKind,
+  DesignBlendMode,
   DesignFont,
   type DesignPreset,
   DesignTextAlign,
@@ -22,7 +24,20 @@ import {
 export type DesignPalette = { ink: string; surface: string; accent: string };
 
 export type ElementBasePatch = Partial<
-  Pick<DesignElement, "x" | "y" | "width" | "height" | "rotation" | "opacity" | "locked">
+  Pick<
+    DesignElement,
+    | "x"
+    | "y"
+    | "width"
+    | "height"
+    | "rotation"
+    | "opacity"
+    | "locked"
+    | "blendMode"
+    | "fillOpacity"
+    | "name"
+    | "hidden"
+  >
 >;
 export type TextPatch = Partial<
   Pick<
@@ -67,10 +82,15 @@ export const normalizeColor = (value: string): string | null => {
   return rgbToHex(Number(r), Number(g), Number(b));
 };
 
+export const isRendered = (element: DesignElement): boolean => !element.hidden;
+
+export const canvasBlendOperation = (mode: DesignBlendMode): GlobalCompositeOperation =>
+  mode === DesignBlendMode.Normal ? "source-over" : mode;
+
 export const emptyPage = (id: string): DesignPage => ({ id, background: null, elements: [] });
 
 export const emptyDocument = (pageId = "page-1"): DesignDocument => ({
-  version: 2,
+  version: 3,
   pages: [emptyPage(pageId)],
 });
 
@@ -85,8 +105,84 @@ const placed = (preset: DesignPreset, width: number, height: number) => {
     opacity: 1,
     locked: false,
     groupId: null,
+    blendMode: DesignBlendMode.Normal,
+    fillOpacity: 1,
+    name: "",
+    hidden: false,
+    parentId: null,
+    clipToBelow: false,
+    mask: null,
   };
 };
+
+export const newLayerName = (page: DesignPage): string => {
+  const names = new Set(page.elements.map((element) => element.name));
+  let number = page.elements.filter((element) => element.kind === DesignElementKind.Raster).length;
+  do {
+    number += 1;
+  } while (names.has(`Camada ${number}`));
+  return `Camada ${number}`;
+};
+
+export const createRasterLayer = (id: string, page: DesignPage, size: PageSize): RasterElement => ({
+  id,
+  kind: DesignElementKind.Raster,
+  x: 0,
+  y: 0,
+  width: size.width,
+  height: size.height,
+  rotation: 0,
+  opacity: 1,
+  locked: false,
+  groupId: null,
+  blendMode: DesignBlendMode.Normal,
+  fillOpacity: 1,
+  name: newLayerName(page),
+  hidden: false,
+  parentId: null,
+  clipToBelow: false,
+  mask: null,
+  pixelsVersionId: null,
+  pixelWidth: Math.min(size.width, DESIGN_LIMITS.maxRasterSide),
+  pixelHeight: Math.min(size.height, DESIGN_LIMITS.maxRasterSide),
+});
+
+export type InheritedLayer = { element: DesignElement; hidden: boolean; opacity: number };
+
+export const resolveInheritance = (page: DesignPage): InheritedLayer[] => {
+  const byId = new Map(page.elements.map((element) => [element.id, element]));
+  return page.elements.map((element) => {
+    let hidden = element.hidden;
+    let opacity = element.opacity;
+    let parent = element.parentId === null ? undefined : byId.get(element.parentId);
+    let depth = 0;
+    while (parent !== undefined && depth < DESIGN_LIMITS.maxGroupDepth) {
+      hidden = hidden || parent.hidden;
+      opacity *= parent.opacity;
+      parent = parent.parentId === null ? undefined : byId.get(parent.parentId);
+      depth += 1;
+    }
+    return { element, hidden, opacity };
+  });
+};
+
+export const isRasterStackKind = (element: DesignElement): boolean =>
+  element.kind === DesignElementKind.Raster || element.kind === DesignElementKind.Adjustment;
+
+export const hasAdjustments = (page: DesignPage): boolean =>
+  page.elements.some((element) => element.kind === DesignElementKind.Adjustment && !element.hidden);
+
+export const rasterPixelsIds = (document: DesignDocument): string[] => [
+  ...new Set(
+    document.pages.flatMap((page) =>
+      page.elements.flatMap((element) =>
+        element.kind === DesignElementKind.Raster && element.pixelsVersionId !== null
+          ? [element.pixelsVersionId]
+          : [],
+      ),
+    ),
+  ),
+];
 
 export const createText = (
   id: string,
@@ -214,6 +310,8 @@ const sanitizeBase = (patch: ElementBasePatch): ElementBasePatch => {
     ...(patch.height === undefined ? {} : { height: size(patch.height) }),
     ...(patch.rotation === undefined ? {} : { rotation: normalizeRotation(patch.rotation) }),
     ...(patch.opacity === undefined ? {} : { opacity: clamp(patch.opacity, 0, 1) }),
+    ...(patch.fillOpacity === undefined ? {} : { fillOpacity: clamp(patch.fillOpacity, 0, 1) }),
+    ...(patch.name === undefined ? {} : { name: patch.name.slice(0, DESIGN_LIMITS.layerNameMax) }),
   };
 };
 
@@ -311,10 +409,24 @@ export const addElement = (page: DesignPage, element: DesignElement): DesignPage
   elements: [...page.elements, element],
 });
 
-export const removeElements = (page: DesignPage, ids: readonly string[]): DesignPage => ({
-  ...page,
-  elements: page.elements.filter((element) => !ids.includes(element.id)),
-});
+export const removeElements = (page: DesignPage, ids: readonly string[]): DesignPage => {
+  const parents = new Map(page.elements.map((element) => [element.id, element.parentId]));
+  const surviving = (parentId: string | null): string | null => {
+    let current = parentId;
+    while (current !== null && ids.includes(current)) current = parents.get(current) ?? null;
+    return current;
+  };
+  return {
+    ...page,
+    elements: page.elements
+      .filter((element) => !ids.includes(element.id))
+      .map((element) =>
+        element.parentId === null || !ids.includes(element.parentId)
+          ? element
+          : { ...element, parentId: surviving(element.parentId) },
+      ),
+  };
+};
 
 export const duplicateElements = (
   page: DesignPage,

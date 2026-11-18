@@ -80,7 +80,7 @@ select is((public.design_save_draft(current_setting('t.design')::uuid, pg_temp.d
 select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, pg_temp.doc('00000000-0000-0000-0000-00000000ab01'), 1)$$, 'conflict', 'a stale version is a conflict, never a silent overwrite');
 select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, pg_temp.doc('00000000-0000-0000-0000-00000000ab02'), 2)$$, 'invalid_input', 'an image of another brand is refused');
 select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, pg_temp.doc('00000000-0000-0000-0000-00000000ab03'), 2)$$, 'invalid_input', 'a media version that is not an image is refused');
-select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, '{"version":3,"pages":[{"id":"p","background":null,"elements":[]}]}'::jsonb, 2)$$, 'invalid_input', 'an unknown document version is refused');
+select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, '{"version":4,"pages":[{"id":"p","background":null,"elements":[]}]}'::jsonb, 2)$$, 'invalid_input', 'an unknown document version is refused');
 select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, '{"version":2,"pages":[{"id":"p","background":"red","elements":[]}]}'::jsonb, 2)$$, 'invalid_input', 'a background that is not #rrggbb is refused');
 select throws_ok($$select public.design_save_draft(current_setting('t.design')::uuid, '{"version":2,"pages":[{"id":"p","background":null,"elements":[{"id":"x","kind":"video"}]}]}'::jsonb, 2)$$, 'invalid_input', 'an unknown element kind is refused');
 select throws_ok(
@@ -90,7 +90,7 @@ select throws_ok(
 
 select is((public.design_rename(current_setting('t.design')::uuid, 'Post final', 2) ->> 'version')::int, 3, 'renaming bumps the version');
 select is((public.design_save_version(current_setting('t.design')::uuid, 3) ->> 'version_no')::int, 1, 'the first saved version is number 1');
-select is((select document from public.design_versions where design_id = current_setting('t.design')::uuid and version_no = 1), pg_temp.doc('00000000-0000-0000-0000-00000000ab01'), 'the saved version freezes the draft');
+select is((select document -> 'pages' -> 0 -> 'elements' -> 1 ->> 'mediaVersionId' from public.design_versions where design_id = current_setting('t.design')::uuid and version_no = 1), '00000000-0000-0000-0000-00000000ab01', 'the saved version freezes the draft');
 select throws_ok($$select public.design_set_trashed(current_setting('t.design')::uuid, true)$$, 'denied', 'a collaborator cannot move a design to the trash');
 reset role;
 

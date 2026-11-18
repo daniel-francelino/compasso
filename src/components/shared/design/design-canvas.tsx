@@ -1,21 +1,27 @@
 import type Konva from "konva";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Group, Layer, Line, Rect, Stage, Transformer } from "react-konva";
 import { DesignDraftShape } from "@/components/shared/design/design-draft-shape";
 import { DesignElementNode, type NodeEvents } from "@/components/shared/design/design-element-node";
+import { DesignRasterStack } from "@/components/shared/design/design-raster-stack";
 import {
   type GestureCallbacks,
   useCanvasGestures,
 } from "@/hooks/shared/design/use-canvas-gestures";
 import type { LoadedImages } from "@/hooks/shared/design/use-design-assets";
+import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
 import {
   type ElementPatch,
   type SnapTargets,
   boundsOf,
+  hasAdjustments,
+  isRasterStackKind,
+  resolveInheritance,
   snapBox,
   snapTargets,
 } from "@/lib/shared/design/document";
+import { layerCanvas } from "@/lib/shared/design/raster-canvas";
 import type { DesignElement, DesignPage } from "@/lib/shared/design/schemas";
 import {
   DESIGN_LIMITS,
@@ -79,6 +85,7 @@ export type DesignCanvasProps = GestureCallbacks & {
   scale: number;
   selectedIds: readonly string[];
   images: LoadedImages;
+  rasters: RasterHandle;
   chrome: CanvasChrome;
   fontsVersion: number;
   editable: boolean;
@@ -99,6 +106,7 @@ export default function DesignCanvas({
   scale: exportScale,
   selectedIds,
   images,
+  rasters,
   chrome,
   fontsVersion,
   editable,
@@ -214,20 +222,39 @@ export default function DesignCanvas({
     commit(patches, `transform:${crypto.randomUUID()}`);
   };
 
-  const elements = page.elements.map((element) => (
-    <DesignElementNode
-      key={element.id}
-      element={element}
-      image={
-        element.kind === DesignElementKind.Image ? images.get(element.mediaVersionId) : undefined
-      }
-      chrome={chrome}
-      fontsVersion={fontsVersion}
-      interactive={interactive && moving}
-      hidden={element.id === editingTextId}
-      events={events}
-    />
-  ));
+  const inherited = useMemo(() => resolveInheritance(page), [page]);
+  const stacked = hasAdjustments(page);
+  const firstStack = stacked ? inherited.findIndex((item) => isRasterStackKind(item.element)) : -1;
+  const stackLayers = useMemo(
+    () => inherited.filter((item) => isRasterStackKind(item.element)),
+    [inherited],
+  );
+
+  const elements = inherited.map((item, index) => {
+    const element = { ...item.element, hidden: item.hidden, opacity: item.opacity };
+    const isRaster = element.kind === DesignElementKind.Raster;
+    return (
+      <Fragment key={element.id}>
+        {index === firstStack ? (
+          <DesignRasterStack layers={stackLayers} rasters={rasters} size={size} />
+        ) : null}
+        <DesignElementNode
+          element={element}
+          image={
+            element.kind === DesignElementKind.Image
+              ? images.get(element.mediaVersionId)
+              : undefined
+          }
+          raster={isRaster && !stacked ? layerCanvas(rasters.store, element.id) : null}
+          chrome={chrome}
+          fontsVersion={fontsVersion}
+          interactive={interactive && moving}
+          hidden={element.id === editingTextId || (isRaster && stacked)}
+          events={events}
+        />
+      </Fragment>
+    );
+  });
 
   return (
     <Stage

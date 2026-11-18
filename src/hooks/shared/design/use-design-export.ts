@@ -7,6 +7,7 @@ import { logError } from "@/lib/shared/logger";
 import { recordDesignExport } from "@/lib/shared/design/design.functions";
 import { DESIGN_EXPORT_MIME, DESIGN_LIMITS, DesignExportFormat } from "@/lib/shared/design/types";
 import { MediaScope } from "@/lib/shared/enums";
+import { DEFAULT_LIMITS_MB } from "@/lib/shared/media/limits";
 import { QueryKey } from "@/lib/shared/query-keys";
 
 export type ExportScale = 1 | 2;
@@ -29,10 +30,16 @@ type Options = {
   previousAssets: ReadonlyMap<number, string>;
   reuseAssets: boolean;
   assetsReady: boolean;
+  opaque: boolean;
 };
 
 const RENDER_FAILED =
   "Não foi possível gerar a imagem. Confira se o armazenamento permite a leitura das imagens (CORS) e tente de novo.";
+
+const JPEG_FALLBACK_NOTICE =
+  "O PNG ficou maior que o limite de arquivos da biblioteca e as páginas grandes foram exportadas em JPEG.";
+
+const MAX_EXPORT_BYTES = DEFAULT_LIMITS_MB.image * 1024 * 1024;
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -57,6 +64,7 @@ export const useDesignExport = (options: Options) => {
   const [job, setJob] = useState<ExportJob | null>(null);
   const [done, setDone] = useState<ExportResult[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [stageVersion, setStageVersion] = useState(0);
   const stageRef = useRef<Konva.Stage | null>(null);
   const latest = useRef(options);
@@ -108,8 +116,17 @@ export const useDesignExport = (options: Options) => {
     }
     let active = true;
     void (async () => {
-      const blob = await render(stage, job.format);
-      const outcome = blob === null ? RENDER_FAILED : await uploadRef.current(job, blob);
+      const first = await render(stage, job.format);
+      const oversize =
+        first !== null &&
+        job.format === DesignExportFormat.Png &&
+        latest.current.opaque &&
+        first.size > MAX_EXPORT_BYTES;
+      const fallback = oversize ? await render(stage, DesignExportFormat.Jpeg) : null;
+      const blob = fallback ?? first;
+      const sent = fallback === null ? job : { ...job, format: DesignExportFormat.Jpeg };
+      const outcome = blob === null ? RENDER_FAILED : await uploadRef.current(sent, blob);
+      if (fallback !== null && active) setNotice(JPEG_FALLBACK_NOTICE);
       if (!active) return;
       if (typeof outcome === "string") {
         setError(outcome);
@@ -135,15 +152,18 @@ export const useDesignExport = (options: Options) => {
     job,
     done,
     error,
+    notice,
     onStage,
     running: job !== null,
     start: (versionNo: number, total: number, format: DesignExportFormat, scale: ExportScale) => {
       setError(null);
+      setNotice(null);
       setDone(null);
       setJob({ versionNo, format, scale, index: 0, total, results: [] });
     },
     reset: () => {
       setError(null);
+      setNotice(null);
       setDone(null);
       setJob(null);
     },

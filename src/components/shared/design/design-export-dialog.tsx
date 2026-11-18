@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "lost-ui/ui/alert";
 import { Progress } from "lost-ui/ui/progress";
 import { Button } from "@/components/shared/ui/button";
 import { useDesignAssets } from "@/hooks/shared/design/use-design-assets";
+import type { RasterHandle } from "@/hooks/shared/design/use-raster-store";
 import { type ExportScale, useDesignExport } from "@/hooks/shared/design/use-design-export";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
 import { listDesignExports } from "@/lib/shared/design/design.functions";
@@ -38,6 +39,7 @@ const asFormat = (value: string) => formatItems.find((item) => item.value === va
 
 function ExportJobView({
   document,
+  rasters,
   preset,
   chrome,
   designId,
@@ -48,6 +50,7 @@ function ExportJobView({
   onBusyChange,
 }: {
   document: DesignDocument;
+  rasters: RasterHandle;
   preset: DesignPreset;
   chrome: CanvasChrome;
   designId: string;
@@ -69,15 +72,16 @@ function ExportJobView({
   for (const row of [...(previous.data ?? [])].reverse()) {
     previousAssets.set(row.pageNo, row.mediaAssetId);
   }
+  const transparent = document.pages.some((page) => page.background === null);
   const exporter = useDesignExport({
     designId,
     designName,
     brandId,
     previousAssets,
     reuseAssets,
-    assetsReady: assets.ready,
+    assetsReady: assets.ready && rasters.ready,
+    opaque: !transparent,
   });
-  const transparent = document.pages.some((page) => page.background === null);
   const jpegBlocked = format === DesignExportFormat.Jpeg && transparent;
   const busy = preparing || exporter.running;
   const total = document.pages.length;
@@ -140,6 +144,11 @@ function ExportJobView({
           <AlertDescription>{exporter.error}</AlertDescription>
         </Alert>
       )}
+      {exporter.notice === null ? null : (
+        <Alert>
+          <AlertDescription>{exporter.notice}</AlertDescription>
+        </Alert>
+      )}
       {exporter.done === null ? null : (
         <Alert>
           <AlertDescription className="space-y-2">
@@ -166,7 +175,7 @@ function ExportJobView({
       <Button
         type="button"
         loading={busy}
-        disabled={jpegBlocked || assets.failed}
+        disabled={jpegBlocked || assets.failed || rasters.failed}
         onClick={() => void start()}
       >
         <Download aria-hidden="true" />
@@ -181,6 +190,7 @@ function ExportJobView({
               scale={exporter.job?.scale ?? 1}
               selectedIds={NO_IDS}
               images={assets.images}
+              rasters={rasters}
               chrome={chrome}
               fontsVersion={assets.fontsVersion}
               editable={false}
@@ -203,6 +213,7 @@ export function DesignExportDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   document: DesignDocument;
+  rasters: RasterHandle;
   preset: DesignPreset;
   chrome: CanvasChrome;
   designId: string;

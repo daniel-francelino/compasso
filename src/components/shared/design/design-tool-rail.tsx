@@ -1,84 +1,35 @@
-import {
-  Circle,
-  Hand,
-  Images,
-  type LucideIcon,
-  Minus,
-  MousePointer2,
-  Square,
-  Type,
-  ZoomIn,
-} from "lucide-react";
-import { Button } from "@/components/shared/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/shared/ui/tooltip";
+import { Images } from "lucide-react";
+import { type KeyboardEvent, useRef, useState } from "react";
+import { TooltipProvider } from "lost-ui/ui/tooltip";
+import { RailActionButton, RailToolGroup } from "@/components/shared/design/design-rail-button";
 import { isDrawTool } from "@/lib/shared/design/arrange";
 import {
-  DESIGN_IMAGE_KEY,
-  DESIGN_TOOL_KEY,
-  DESIGN_TOOL_LABEL,
-  DesignTool,
+  DESIGN_ENABLED_TOOLS,
+  DESIGN_IMAGE_SHORTCUT_LABEL,
+  type DesignTool,
+  DesignToolGroup,
+  type VisibleToolGroup,
+  visibleToolGroups,
 } from "@/lib/shared/design/types";
-import { cn } from "@/lib/shared/utils";
 
-const ICONS: Record<DesignTool, LucideIcon> = {
-  [DesignTool.Move]: MousePointer2,
-  [DesignTool.Text]: Type,
-  [DesignTool.Rect]: Square,
-  [DesignTool.Ellipse]: Circle,
-  [DesignTool.Line]: Minus,
-  [DesignTool.Hand]: Hand,
-  [DesignTool.Zoom]: ZoomIn,
-};
+type Entry = { kind: "group"; item: VisibleToolGroup } | { kind: "image" };
 
-const GROUPS: DesignTool[][] = [
-  [DesignTool.Move],
-  [DesignTool.Text, DesignTool.Rect, DesignTool.Ellipse, DesignTool.Line],
-  [DesignTool.Hand, DesignTool.Zoom],
-];
+type Remembered = Partial<Record<DesignToolGroup, DesignTool>>;
 
-function RailButton({
-  label,
-  shortcut,
-  icon: Icon,
-  pressed,
-  disabledReason,
-  onClick,
-}: {
-  label: string;
-  shortcut: string;
-  icon: LucideIcon;
-  pressed?: boolean;
-  disabledReason?: string | undefined;
-  onClick: () => void;
-}) {
-  const title = `${label} (${shortcut.toUpperCase()})`;
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={disabledReason === undefined ? title : `${title}. ${disabledReason}`}
-          aria-pressed={pressed}
-          disabled={disabledReason !== undefined}
-          className={cn("size-11", pressed && "bg-accent text-accent-foreground")}
-          onClick={onClick}
-        >
-          <Icon aria-hidden="true" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-64">
-        {disabledReason ?? title}
-      </TooltipContent>
-    </Tooltip>
+const entriesOf = (groups: readonly VisibleToolGroup[]): Entry[] =>
+  groups.flatMap((item): Entry[] =>
+    item.group === DesignToolGroup.Shapes
+      ? [{ kind: "group", item }, { kind: "image" }]
+      : [{ kind: "group", item }],
   );
-}
+
+const nextStop = (key: string, at: number, count: number): number | null => {
+  if (key === "Home") return 0;
+  if (key === "End") return count - 1;
+  if (key === "ArrowDown") return (at + 1) % count;
+  if (key === "ArrowUp") return (at - 1 + count) % count;
+  return null;
+};
 
 export function DesignToolRail({
   tool,
@@ -91,6 +42,39 @@ export function DesignToolRail({
   onImage: () => void;
   full: string | undefined;
 }) {
+  const groups = visibleToolGroups(DESIGN_ENABLED_TOOLS);
+  const entries = entriesOf(groups);
+  const [remembered, setRemembered] = useState<Remembered>({});
+  const [focusIndex, setFocusIndex] = useState(0);
+  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const owner = groups.find((item) => item.tools.includes(tool));
+  if (owner !== undefined && remembered[owner.group] !== tool) {
+    setRemembered({ ...remembered, [owner.group]: tool });
+  }
+
+  const reasonOf = (candidate: DesignTool) => (isDrawTool(candidate) ? full : undefined);
+
+  const move = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.altKey) return;
+    const enabled = buttons.current.filter(
+      (node): node is HTMLButtonElement => node !== null && !node.disabled,
+    );
+    const at = enabled.findIndex((node) => node === document.activeElement);
+    const target = nextStop(event.key, at, enabled.length);
+    if (target === null || enabled.length === 0) return;
+    event.preventDefault();
+    enabled[target]?.focus();
+  };
+
+  const stopProps = (index: number) => ({
+    buttonRef: (node: HTMLButtonElement | null) => {
+      buttons.current[index] = node;
+    },
+    tabIndex: focusIndex === index ? 0 : -1,
+    onFocus: () => setFocusIndex(index),
+  });
+
   return (
     <TooltipProvider delayDuration={250}>
       <div
@@ -98,34 +82,36 @@ export function DesignToolRail({
         aria-label="Ferramentas"
         aria-orientation="vertical"
         className="flex w-14 shrink-0 flex-col items-center gap-1 overflow-y-auto border-r bg-card py-2"
+        onKeyDown={move}
       >
-        {GROUPS.map((group, index) => (
-          <div
-            key={group.join("-")}
-            className={cn("flex flex-col items-center gap-1", index > 0 && "border-t pt-1")}
-          >
-            {group.map((item) => (
-              <RailButton
-                key={item}
-                label={DESIGN_TOOL_LABEL[item]}
-                shortcut={DESIGN_TOOL_KEY[item]}
-                icon={ICONS[item]}
-                pressed={tool === item}
-                disabledReason={isDrawTool(item) ? full : undefined}
-                onClick={() => onTool(item)}
-              />
-            ))}
-            {index === 1 ? (
-              <RailButton
+        {entries.map((entry, index) => {
+          if (entry.kind === "image") {
+            return (
+              <RailActionButton
+                key="image"
                 label="Imagem"
-                shortcut={DESIGN_IMAGE_KEY}
+                shortcut={DESIGN_IMAGE_SHORTCUT_LABEL}
                 icon={Images}
                 disabledReason={full}
                 onClick={onImage}
+                {...stopProps(index)}
               />
-            ) : null}
-          </div>
-        ))}
+            );
+          }
+          const { group, tools } = entry.item;
+          const last = remembered[group];
+          return (
+            <RailToolGroup
+              key={group}
+              tools={tools}
+              shown={last !== undefined && tools.includes(last) ? last : (tools[0] ?? tool)}
+              active={tool}
+              disabledReasonOf={reasonOf}
+              onTool={onTool}
+              {...stopProps(index)}
+            />
+          );
+        })}
       </div>
     </TooltipProvider>
   );

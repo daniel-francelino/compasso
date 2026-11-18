@@ -4,27 +4,10 @@ import { IconButton } from "@/components/shared/admin/icon-button";
 import { DesignPagesStrip } from "@/components/shared/design/design-pages-strip";
 import { Button } from "@/components/shared/ui/button";
 import { Input } from "@/components/shared/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/ui/popover";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
 import { DESIGN_LIMITS, type PageSize } from "@/lib/shared/design/types";
 import { zoomPercent } from "@/lib/shared/design/viewport";
-
-const SHORTCUTS: [string, string][] = [
-  ["V · T · R · E · L · I · H · Z", "Ferramentas"],
-  ["Espaço + arrastar", "Mover a visualização"],
-  ["Ctrl + roda", "Zoom no cursor"],
-  ["Ctrl + 0 / Ctrl + 1", "Ajustar à tela / 100%"],
-  ["Ctrl + = / Ctrl + -", "Aumentar / diminuir zoom"],
-  ["Setas (Shift: 10 px)", "Mover a seleção"],
-  ["Ctrl + A", "Selecionar tudo"],
-  ["Ctrl + D", "Duplicar"],
-  ["Ctrl + G / Ctrl + Shift + G", "Agrupar / desagrupar"],
-  ["Ctrl + Z / Ctrl + Shift + Z", "Desfazer / refazer"],
-  ["Delete", "Excluir"],
-  ["Duplo clique no texto", "Editar o texto na página"],
-  ["Esc", "Voltar para Mover / limpar a seleção"],
-];
 
 function CursorPosition({ viewport }: { viewport: DesignViewport }) {
   const point = useSyncExternalStore(viewport.cursor.subscribe, viewport.cursor.get, () => null);
@@ -67,40 +50,18 @@ function ZoomField({ viewport }: { viewport: DesignViewport }) {
   );
 }
 
-function ShortcutsHelp() {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button type="button" variant="ghost" size="sm">
-          <Keyboard aria-hidden="true" />
-          Atalhos
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
-        <h2 className="mb-2 text-sm font-semibold">Atalhos do teclado</h2>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs">
-          {SHORTCUTS.map(([keys, action]) => (
-            <div key={keys} className="contents">
-              <dt className="font-mono text-muted-foreground">{keys}</dt>
-              <dd>{action}</dd>
-            </div>
-          ))}
-        </dl>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 export function DesignStatusBar({
   editor,
   viewport,
   editable,
   size,
+  onShortcuts,
 }: {
   editor: DesignEditor;
   viewport: DesignViewport;
   editable: boolean;
   size: PageSize;
+  onShortcuts: () => void;
 }) {
   return (
     <footer className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t bg-card px-3 py-1">
@@ -118,7 +79,10 @@ export function DesignStatusBar({
           100%
         </Button>
       </div>
-      <ShortcutsHelp />
+      <Button type="button" variant="ghost" size="sm" onClick={onShortcuts}>
+        <Keyboard aria-hidden="true" />
+        Atalhos
+      </Button>
     </footer>
   );
 }

@@ -1,173 +1,39 @@
-# Project Engineering Instructions
+# Aura Creative — instructions for Claude Code
 
-## Mission
+These instructions apply to every session. The project rules are in the two files imported below; read them as binding, not as suggestions.
 
-Build reliable, secure, maintainable software using the minimum effective context, agents, tools, and changes.
+@AGENTS.md
+@docs/standards/base.md
 
-Priorities, in order:
+## How to work in this repository
 
-1. Business correctness.
-2. Security and data integrity.
-3. Functional correctness.
-4. Simplicity and maintainability.
-5. Risk-appropriate testing.
-6. Evidence-based performance.
-7. Token and resource efficiency.
+1. **Start every task by reading the right document.** `docs/README.md` is the map; the work is organized in `docs/implementation-plan.md` (take one task, in order). For a module, read `docs/modules/<module>.md` (and the `spaces/` or `foundations/` documents it links). Rule IDs (GOLD-1, CODE-1, SEC-2…) are in `docs/standards/base.md`; cite them when you decide something.
+1b. **Look names up in `docs/reference/`** (data model, functions, routes, enums, error codes), plus the action catalog, notification kinds, audit actions and `docs/standards/ui-glossary.md`. A name that is not in a registry must be added there **first**; never invent it in code.
+2. **Search before you create** (rule GOLD-2). Look in `src/`, `supabase/` and `docs/` for the existing implementation of the concern (see the table in base.md section 2). Extend it. Never add a second audit table, a second `Result`, a second status list, a second document about the same topic.
+3. **Do not invent names** (GOLD-4): tables, columns, actions, routes, error codes, notification kinds, audit actions, tokens, components. If it is not in the documentation, add it to the documentation in the same change.
+4. **When the request conflicts with a rule or document, stop** (GOLD-3). Say which rule ID or document, propose the compliant option and the cost of changing the rule, and wait. If the person decides to change the rule: restate the new decision in one line, update the documents first (base.md sections 9.1–9.3), then adapt the code, then remove what became dead. Never deviate silently and never "fix the docs later".
+5. **Docs change with the code** (DOC-2, base.md section 9.2). Finish by updating the module's "Implementation status": files and migrations touched, validation actually performed, what was **not** tested.
+6. **Smallest coherent change** (GOLD-5): one purpose per change, no drive-by refactors, no unrelated formatting.
+7. **Prove it** (GOLD-6): run the commands of base.md section 11 when the tooling exists and report exactly what was and was not run. If a command is unavailable, say so.
+8. **Language**: documentation, files, folders, code, routes, SQL in English; UI copy only in Brazilian Portuguese. Talk to the user in the language they use.
+9. **Security first** (GOLD-7): never read, print or edit `.env*` files or secrets; never weaken RLS, policies or validation to make something work; external users only read through `portal_*` functions.
+10. **Shared UI comes from `lost-ui`.** Before building a screen or component, use the skill in `.claude/skills/lost-ui` (catalog, recipes, props) and check whether the library already has it (auth pages, `BackofficeLayout`, forms, data table, AI chat, editor, calendar). This project installs the package as an alias, so write `lost-ui/...` where the skill says `@danielsoaresf/lost-ui/...`. Ask to add what is missing to the library instead of rebuilding it here.
 
-**Precedence:** `AGENTS.md` and `docs/standards/base.md` (imported by the root `CLAUDE.md`) prevail over this file. Where this file and those documents disagree (document locations, naming, doc creation, audits), follow them. This file only adds the working method (Caveman principles, agents, workflow commands).
+## Slash commands
 
-Stack of this project: TanStack Start (React 19, Vite, TanStack Router/Query), Supabase (Postgres, Auth, RLS), Cloudflare R2, Vercel, shared UI from `lost-ui`. Follow existing architecture, conventions and business rules; do not bring patterns from other stacks (Vue, Nuxt, Pinia).
+| Command | Use |
+|---|---|
+| `/feature <description>` | Implement a feature end to end following the standards and the Definition of Done |
+| `/migration <description>` | Create a database change with the full checklist (RLS, actions, errors, tests, types) |
+| `/check-standards [scope]` | Review the current changes against base.md with the `standards-reviewer` agent |
+| `/sync-docs` | Bring the documents in line with the current code and fill the "Implementation status" |
+| `/change-rule <rule or decision>` | Change a documented rule or decision the right way (docs first) |
 
-## 1. Core Principles — Caveman
+## Automatic checks (hooks in `.claude/settings.json`)
 
-Apply to all tasks:
+- **SessionStart / UserPromptSubmit** remind these rules at the start and on each prompt.
+- **PreToolUse (Write/Edit)** blocks mechanical violations before the file is written: comments in `src`, `console`, `any`, `!`, `as unknown as`, loose `z.enum`, hex colors and Tailwind palette, direct storage access, cross-space imports, misnamed or edited migrations, tables without RLS, secrets, non-English or non-kebab document names. It asks for confirmation when a **new document** is created (DOC-3, DOC-7).
+- **PostToolUse** formats with Prettier and lints the edited file (when the tooling is installed) and records what changed.
+- **Stop** runs `lint`, `typecheck` and `check:consistency` (when they exist) and reminds you to update the documents if code changed without them.
 
-- **Investigate First:** Understand the problem and gather evidence before modifying code.
-- **Lean Build:** Implement only what is required. Reuse existing patterns; avoid speculative features and unnecessary abstractions.
-- **Surgical Patch:** Fix confirmed defects with minimal changes. Preserve unrelated behavior.
-- **Safe Refactor:** Preserve contracts and observable behavior unless changes are explicitly requested.
-- **Progressive Context:** Search before reading. Load only relevant files, skills, and documentation.
-- **Smart Delegation:** Use the fewest specialists necessary. Avoid redundant investigations and excessive handoffs.
-- **Efficient Execution:** Prefer focused commands, bounded output, and the cheapest reliable validation.
-- **Verify and Stop:** Validate acceptance criteria, report results, and stop without unnecessary additional work.
-
-Correctness, security, and data integrity always take precedence over token savings.
-
-Use the corresponding Caveman skills on demand. Do not preload all skills or duplicate their detailed instructions here.
-
-The Caveman runtime is optional and separate from its skills. Never assume compression, routing, or telemetry controls are active without verification.
-
-## 2. Agent Orchestration
-
-Agents are defined in `.claude/agents/`. The main Claude Code session coordinates execution and delegation. Use only existing, available agents.
-
-- **Leadership:** `product-owner` (requirements, priorities, backlog, roadmap); `product-researcher` (market, competitors, opportunities); `tech-lead` (complex planning, coordination, delivery).
-- **Engineering:** `business-analyst` (business rules, workflows); `software-architect` (architecture, significant design decisions); `developer` (implementation, refactoring); `code-reviewer` (independent code review); `test-designer` (scenarios, acceptance criteria); `test-engineer` (test implementation and execution); `test-reviewer` (independent test quality review).
-- **Specialists:** `security-analyst`, `data-integrity-auditor`, `reporting-analyst`, `performance-engineer`, `geo-specialist`, `marketing-strategist`, `seo-specialist`, `standards-reviewer` (conformance with `docs/standards/base.md`; `/check-standards`), `ux-ui-designer` (layout and refactor plans on `lost-ui` and the token palette; skill `ui-ux-pro-max`; `/design-plan`), `design-review` (reviews a running screen in a browser; `/design-review`).
-
-Delegation rules:
-
-- **Simple:** Execute directly or use one specialist.
-- **Moderate:** Delegate only when expertise adds value.
-- **Complex:** Use `tech-lead` when coordination is necessary.
-- **Critical:** Require relevant specialist analysis, appropriate validation, and independent review.
-
-Do not invoke every agent automatically. Provide concise handoffs containing objective, scope, constraints, relevant references, and acceptance criteria. Do not simulate agent execution or assume subagents can delegate further.
-
-## 3. Development Workflow
-
-Commands are defined in `.claude/commands/`:
-
-- `/discover`: investigate context and requirements.
-- `/spec`: define requirements and acceptance criteria.
-- `/plan`: plan implementation.
-- `/build`: implement changes.
-- `/test`: validate behavior.
-- `/review`: review code independently.
-- `/audit`: perform specialist audits.
-- `/debug`: diagnose and fix defects.
-- `/ship`: evaluate delivery readiness.
-
-Use the smallest workflow appropriate to the task. Do not require every phase for simple changes.
-
-Research findings are not automatically approved requirements. Significant product decisions require stakeholder approval.
-
-## 4. Graphify — Codebase Intelligence
-
-Graphify provides a local knowledge graph at `graphify-out/` (not generated yet in this repository; run `/graphify` to build it before relying on it).
-
-- **Skill:** `.claude/skills/graphify/SKILL.md`. **Command:** `/graphify`. When the user explicitly invokes `/graphify`, follow the installed Graphify skill before performing other work. Do not duplicate its instructions here.
-
-When `graphify-out/graph.json` exists and is current:
-
-- Prefer `graphify query "<question>"` before broad codebase searches.
-- Use `graphify explain "<concept>"` for focused component analysis and `graphify path "<A>" "<B>"` for dependencies and relationships.
-- Read source files directly to verify implementation details and critical behavior.
-- Use `GRAPH_REPORT.md` only for broad architecture reviews.
-- Fall back to targeted source searches when the graph is missing, outdated, incomplete, or insufficient.
-
-Agent integration:
-
-- Code-oriented agents should use Graphify when it materially improves discovery or impact analysis.
-- The `tech-lead` may use the graph to identify affected modules and coordinate specialists.
-- Do not require unrelated agents to query the graph.
-- Include Graphify guidance in subagent handoffs only when relevant.
-- Reuse existing graph results instead of repeating queries.
-
-Graph maintenance:
-
-- Prefer incremental `graphify update .` after meaningful code changes when fresh graph information is needed. Avoid rebuilding after every file modification.
-- Do not generate visualizations or reports unnecessarily. Follow existing Git conventions for generated artifacts.
-
-Source code and verified documentation remain authoritative. Inferred graph relationships are not proof of actual behavior. Graphify complements Caveman's progressive context principles; neither replaces source verification.
-
-## 5. Engineering Standards
-
-**Architecture:**
-
-- Follow existing patterns and conventions.
-- Prefer focused, incremental changes.
-- Reuse established utilities and components.
-- Avoid unnecessary dependencies, abstractions, and unrelated refactoring.
-- Preserve existing contracts unless changes are authorized.
-
-**Business and data integrity:**
-
-- Never invent business rules.
-- For critical calculations (dates and time zones, quotas, metrics), verify formulas, rounding and affected modules.
-- Preserve historical correctness and auditability.
-
-**Security:**
-
-- Never expose secrets, bypass authorization, or access production data without permission.
-- Preserve tenant isolation across queries, APIs, caches, jobs, and reports.
-- Require explicit authorization for destructive operations.
-
-**Testing:**
-
-- Use the cheapest reliable test layer: unit, integration, API, then E2E for critical workflows.
-- Run focused tests first. Broaden validation according to risk.
-- Never weaken assertions or claim tests passed without execution.
-- For important changes, separate implementation from independent review.
-
-**Performance:**
-
-- Optimize measured bottlenecks rather than speculative problems.
-- Never sacrifice correctness, security, or data integrity for performance.
-
-## 6. Context and Token Efficiency
-
-- Search before reading entire files. Load skills and documentation only when needed.
-- Avoid repeated exploration of unchanged code. Prefer scoped Graphify queries when useful.
-- Keep tool output concise without hiding errors. Avoid unnecessary screenshots, traces, and verbose logs.
-- Reuse existing documentation and findings. Parallelize only independent tasks.
-- Avoid repeated agent reviews without relevant changes. Stop researching when sufficient evidence supports a decision.
-
-Store durable findings in project documentation rather than relying exclusively on conversation history. Do not claim automatic session clearing or compaction unless actually performed.
-
-## 7. Documentation
-
-Documentation follows `docs/standards/base.md` sections 8.2 and 8.3 (DOC-1 to DOC-7): English kebab-case files, one document per area, never an overlapping document. Reports from agents (security, data integrity, performance, reporting, SEO, code review) are **audit documents**: one file per topic in `docs/audits/<topic>.md`, updated in place, using the template in base.md 8.3 and listed in `docs/README.md`. Do not create per-domain directories (`docs/security/`, `docs/reviews/`, `docs/financial/`, `docs/product/`, `docs/features/`). Product, module and spec content goes into the existing `docs/modules/*.md`, `docs/spaces/*.md` or `docs/foundations/*.md`. Design plans are answered in chat; saving one needs a new topic confirmed by the person (DOC-3).
-
-Create documentation only when necessary or explicitly requested. Do not duplicate existing reports. Preserve finding identifiers and distinguish verified evidence from hypotheses.
-
-## 8. Git and Change Safety
-
-- Inspect relevant existing changes before editing. Preserve unrelated user modifications.
-- Limit changes to the requested scope. Never reset unrelated work.
-- Never force-push or rewrite shared history without approval.
-- Never commit, deploy, or run destructive commands without authorization.
-
-## 9. Completion Contract
-
-Before declaring completion: confirm requirements were addressed; verify relevant behavior and business rules; run appropriate validation; resolve blocking findings; identify remaining risks or limitations.
-
-Final responses briefly report what changed, relevant files, validation actually performed, and remaining blockers or risks. Never invent results, tests, agent executions, or completed work.
-
----
-
-## Fundamental Principle
-
-**Investigate first. Build lean. Patch surgically. Load context progressively. Delegate selectively. Verify and stop.**
-
-Quality must be proportional to risk. Coordination must reduce work, not create overhead.
+If a hook blocks you, fix the cause. Do not try to bypass it (no `eslint-disable`, no splitting content to dodge a regex, no editing the hooks to silence them). If a hook is wrong, tell the person and propose the fix to the hook in the same change.
