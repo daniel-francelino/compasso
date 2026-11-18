@@ -21,6 +21,7 @@ import { readDesignFile } from "@/lib/shared/design/import/read-file";
 import { DESIGN_IMPORT_ACCEPT } from "@/lib/shared/design/import/registry";
 import { DesignImportKind, type ImportKindResult } from "@/lib/shared/design/import/types";
 import { logError } from "@/lib/shared/logger";
+import type { Failure } from "@/lib/shared/server-utils";
 import { DESIGN_LIMITS, type DesignPreset } from "@/lib/shared/design/types";
 
 export type DesignImporter = {
@@ -68,9 +69,9 @@ export const createImportRun = (deps: ImportRunDeps) => {
     });
   };
 
-  const reportRefusal = (message: string): void => {
-    if (isImportCancelled(message) || disposed) return;
-    toast.error(message);
+  const reportRefusal = (failure: Failure): void => {
+    if (isImportCancelled(failure) || disposed) return;
+    toast.error(failure.message);
   };
 
   const run = async (controller: AbortController): Promise<void> => {
@@ -86,7 +87,7 @@ export const createImportRun = (deps: ImportRunDeps) => {
         signal: controller.signal,
       });
       if (result.ok) finishRead(controller, result);
-      else reportRefusal(result.message);
+      else reportRefusal(result);
     } finally {
       toast.dismiss(toastId);
     }

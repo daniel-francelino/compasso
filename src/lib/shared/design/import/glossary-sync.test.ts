@@ -30,7 +30,7 @@ describe("import copy against docs/standards/ui-glossary.md", () => {
     );
     expect(fixed.length).toBeGreaterThan(10);
     const missing = fixed
-      .filter(([key]) => key !== "cancelled")
+      .filter(([, text]) => text !== DESIGN_IMPORT_MESSAGE.cancelled)
       .filter(([, text]) => !GLOSSARY.includes(text))
       .map(([key]) => key);
     expect(missing).toEqual([]);

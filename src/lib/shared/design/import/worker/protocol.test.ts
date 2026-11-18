@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
 import { DesignImportFailure } from "@/lib/shared/design/import/types";
 import { WorkerResponseSchema, WorkerStatus } from "@/lib/shared/design/import/worker/protocol";
-import { documentOf, layerNode, square } from "@/lib/shared/design/import/worker/test-fixtures";
+import {
+  documentOf,
+  layerNode,
+  pixelBuffer,
+  square,
+} from "@/lib/shared/design/import/worker/test-fixtures";
 import { validateWorkerDocument } from "@/lib/shared/design/import/worker/validate-document";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
@@ -96,6 +101,24 @@ describe("validateWorkerDocument", () => {
       flattened: true,
     });
     expect(messageOf(validateWorkerDocument(two, limits))).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
+  });
+
+  it("rejects one ArrayBuffer used by two layers", () => {
+    const shared = pixelBuffer(8, 8);
+    const first = layerNode("A", square(0, 0, 8), { pixels: shared });
+    const second = layerNode("B", square(8, 0, 8), { pixels: shared });
+    const result = validateWorkerDocument(documentOf([first, second], 64), limits);
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
+  });
+
+  it("rejects a resizable ArrayBuffer", () => {
+    const resizable: ArrayBuffer = Reflect.construct(ArrayBuffer, [
+      8 * 8 * 4,
+      { maxByteLength: 512 },
+    ]);
+    const node = layerNode("A", square(0, 0, 8), { pixels: resizable });
+    const result = validateWorkerDocument(documentOf([node], 64), limits);
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
   });
 
   it("rejects too many layers even when the worker said it was fine", () => {

@@ -14,6 +14,10 @@ const pdfjs = vi.hoisted(() => ({
 
 vi.mock("pdfjs-dist", () => pdfjs);
 
+const logger = vi.hoisted(() => ({ logError: vi.fn() }));
+
+vi.mock("@/lib/shared/logger", () => logger);
+
 const { buildPdfOpenOptions, extractPdfBytes, pageRenderSize, renderPdfPage, renderPdfPageDesign } =
   await import("@/lib/shared/design/import/render-pdf-page");
 
@@ -133,6 +137,10 @@ describe("buildPdfOpenOptions", () => {
     });
   });
 
+  it("silences pdf.js warnings that carry text from the file", () => {
+    expect(options.verbosity).toBe(0);
+  });
+
   it("has no URL option and no option the installed version lacks", () => {
     for (const name of [
       "cMapUrl",
@@ -203,13 +211,17 @@ describe("renderPdfPage", () => {
 
   it("refuses a huge page before creating a canvas", async () => {
     const { create } = setup({ viewport: { width: 1e9, height: 1e9 } });
-    expect(await render()).toEqual(invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge));
+    expect(await render()).toEqual(
+      invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge(DESIGN_IMPORT_LIMITS.maxPageSide)),
+    );
     expect(create).not.toHaveBeenCalledWith("canvas");
   });
 
   it("refuses a page that would render below the minimum before creating a canvas", async () => {
     const { create } = setup({ viewport: { width: 10, height: 10 } });
-    expect(await render()).toEqual(invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall));
+    expect(await render()).toEqual(
+      invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall(DESIGN_IMPORT_LIMITS.minPageSide)),
+    );
     expect(create).not.toHaveBeenCalledWith("canvas");
   });
 
@@ -243,6 +255,29 @@ describe("renderPdfPage", () => {
     controller.abort();
     expect(await pending).toEqual(invalid(DESIGN_IMPORT_MESSAGE.cancelled));
     expect(destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it("logs only the error name, never text taken from the file", async () => {
+    const marker = "SECRET-MARKER-from-the-file";
+    setup({ open: () => Promise.reject(new Error(marker)) });
+    logger.logError.mockClear();
+    expect(await render()).toEqual(invalid(FAILURE));
+    expect(logger.logError).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(logger.logError.mock.calls)).not.toContain(marker);
+    expect(logger.logError).toHaveBeenCalledWith("pdf render failed", "Error");
+  });
+
+  it("does not start pdf.js when the signal is already aborted", async () => {
+    setup();
+    const controller = new AbortController();
+    controller.abort();
+    const result = await renderPdfPage(bytesOf(PDF), {
+      usedBytes: 0,
+      renderFailure: FAILURE,
+      signal: controller.signal,
+    });
+    expect(result).toEqual(invalid(DESIGN_IMPORT_MESSAGE.cancelled));
+    expect(pdfjs.getDocument).not.toHaveBeenCalled();
   });
 
   it("releases the canvas when drawing fails", async () => {
@@ -283,6 +318,21 @@ describe("renderPdfPageDesign", () => {
     expect(result.design.elements).toHaveLength(1);
     expect(result.design.elements[0]).toMatchObject({ id: "layer-1", name: "menu.final" });
     expect(result.design.notes).toEqual([{ kind: "first_page_only", count: 1 }]);
+  });
+
+  it("cuts the name by code points so an emoji at position 80 stays whole", async () => {
+    setup();
+    const emoji = String.fromCodePoint(0x1f600);
+    const result = await renderPdfPageDesign(
+      DesignImportFormat.Pdf,
+      input("a".repeat(79) + emoji + "tail.pdf"),
+      FAILURE,
+    );
+    if (!result.ok) throw new Error("expected success");
+    const name = result.design.elements[0]?.name ?? "";
+    expect(Array.from(name)).toHaveLength(80);
+    expect(name.endsWith(emoji)).toBe(true);
+    expect(name).not.toMatch(/\p{Cs}/u);
   });
 
   it("adds no note for a single page and falls back to a default name", async () => {

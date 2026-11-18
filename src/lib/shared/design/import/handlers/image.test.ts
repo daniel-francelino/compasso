@@ -8,6 +8,7 @@ const { jpegBytes, pngBytes, webpBytes } =
   await import("@/lib/shared/design/import/handlers/image-fixtures");
 const { readImageHeader } = await import("@/lib/shared/design/import/handlers/image-header");
 const { DESIGN_IMPORT_MESSAGE } = await import("@/lib/shared/design/import/messages");
+const { DESIGN_IMPORT_LIMITS } = await import("@/lib/shared/design/import/limits");
 const { readDesignFile } = await import("@/lib/shared/design/import/read-file");
 const { DesignImportFormat, DesignImportKind, DesignImportNoteKind } =
   await import("@/lib/shared/design/import/types");
@@ -140,7 +141,9 @@ describe("pre-decode checks (no real decoder runs in the node test environment)"
         DesignImportFormat.Png,
         inputOf("a.png", pngBytes(width, height)),
       );
-      expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.canvasTooSmall);
+      expect(messageOf(result)).toBe(
+        DESIGN_IMPORT_MESSAGE.canvasTooSmall(DESIGN_IMPORT_LIMITS.minPageSide),
+      );
     }
     expect(createImageBitmapSpy).not.toHaveBeenCalled();
     stubDecode(64, 64);
@@ -151,7 +154,7 @@ describe("pre-decode checks (no real decoder runs in the node test environment)"
   it("applies the minimum after the EXIF swap", () => {
     const jpeg = readImageHeader(jpegBytes(500, 63, { orientation: 6 }), DesignImportFormat.Jpeg);
     expect(jpeg.ok && messageOf(planImage(jpeg.header, 0))).toBe(
-      DESIGN_IMPORT_MESSAGE.canvasTooSmall,
+      DESIGN_IMPORT_MESSAGE.canvasTooSmall(DESIGN_IMPORT_LIMITS.minPageSide),
     );
   });
 });
@@ -185,6 +188,17 @@ describe("decodeImage", () => {
     if (!result.ok) throw new Error("expected ok");
     const layerName = result.design.elements[0]?.name ?? "";
     expect(layerName).toBe("x".repeat(DESIGN_LIMITS.layerNameMax));
+  });
+
+  it("keeps an emoji at position 80 whole instead of cutting a surrogate pair", async () => {
+    stubDecode(100, 100);
+    const emoji = String.fromCodePoint(0x1f600);
+    const name = "a".repeat(79) + emoji + "tail.png";
+    const result = await decodeImage(DesignImportFormat.Png, inputOf(name, pngBytes(100, 100)));
+    if (!result.ok) throw new Error("expected ok");
+    const layerName = result.design.elements[0]?.name ?? "";
+    expect(layerName.endsWith(emoji)).toBe(true);
+    expect(layerName).not.toMatch(/\p{Cs}/u);
   });
 
   it("downscales an 8000 x 4000 image with resize options and notes it", async () => {

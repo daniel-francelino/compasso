@@ -3,10 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/hooks/shared/design/use-raster-store", () => ({ RASTER_MEMORY_MESSAGE: "memory" }));
 
 const { createImportPlacer } = await import("@/hooks/shared/design/use-import-place");
-const { createRasterLayer, emptyPage } = await import("@/lib/shared/design/document");
+const { createRasterLayer, createShape, emptyPage } = await import("@/lib/shared/design/document");
+const palette = { ink: "ink", surface: "surface", accent: "accent" };
 const { DesignImportFormat } = await import("@/lib/shared/design/import/types");
 const { DESIGN_IMPORT_MESSAGE } = await import("@/lib/shared/design/import/messages");
-const { DESIGN_LIMITS, DesignPreset } = await import("@/lib/shared/design/types");
+const { DESIGN_LIMITS, DesignElementKind, DesignPreset } =
+  await import("@/lib/shared/design/types");
 
 const designOf = (ids: string[], side = 10) => ({
   format: DesignImportFormat.Psd,
@@ -56,6 +58,17 @@ describe("createImportPlacer", () => {
     });
     expect(h.set).not.toHaveBeenCalled();
     expect(h.addImported).not.toHaveBeenCalled();
+  });
+
+  it("counts elements without a buffer, such as groups, against the capacity", () => {
+    const h = harness({ existing: 150 });
+    const base = designOf(["leaf"]);
+    const extra = Array.from({ length: 50 }, (_, index) =>
+      createShape(`g${index}`, DesignElementKind.Rect, DesignPreset.FeedSquare, palette),
+    );
+    const result = h.placer.document({ ...base, elements: [...base.elements, ...extra] });
+    expect(result).toMatchObject({ ok: false });
+    expect(h.set).not.toHaveBeenCalled();
   });
 
   it("accepts exactly the remaining capacity", () => {

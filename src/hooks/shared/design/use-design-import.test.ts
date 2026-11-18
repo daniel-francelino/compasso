@@ -16,7 +16,7 @@ vi.mock("@/lib/shared/logger", () => ({ logError: vi.fn() }));
 vi.mock("@/hooks/shared/design/use-raster-store", () => ({ RASTER_MEMORY_MESSAGE: "memory" }));
 
 const { createImportRun } = await import("@/hooks/shared/design/use-design-import");
-const { DESIGN_IMPORT_MESSAGE, IMPORT_UPLOAD_REASON } =
+const { DESIGN_IMPORT_MESSAGE, IMPORT_CANCELLED, IMPORT_UPLOAD_REASON } =
   await import("@/lib/shared/design/import/messages");
 const { DESIGN_IMPORT_ACCEPT } = await import("@/lib/shared/design/import/registry");
 const { DesignImportFormat, DesignImportKind, DesignImportNoteKind } =
@@ -131,7 +131,7 @@ describe("createImportRun", () => {
     const pending = run.open();
     await vi.waitFor(() => expect(read).toHaveBeenCalled());
     run.cancel();
-    gate.resolve(invalid(DESIGN_IMPORT_MESSAGE.cancelled));
+    gate.resolve(IMPORT_CANCELLED);
     await pending;
     expect(toastMock.error).not.toHaveBeenCalled();
     expect(toastMock.success).not.toHaveBeenCalled();

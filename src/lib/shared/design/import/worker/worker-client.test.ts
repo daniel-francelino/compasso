@@ -92,6 +92,27 @@ describe("startImportJob", () => {
     expect(worker.terminated).toBe(1);
   });
 
+  it("removes its abort listener when the job ends and never starts on an aborted signal", async () => {
+    const controller = new AbortController();
+    const remove = vi.spyOn(controller.signal, "removeEventListener");
+    const job = startImportJob(input(), { signal: controller.signal });
+    await vi.advanceTimersByTimeAsync(0);
+    const worker = lastWorker();
+    worker.emit({
+      id: requestId(worker),
+      status: WorkerStatus.Result,
+      document: goodDocument(),
+    });
+    await job.result;
+    expect(remove).toHaveBeenCalledWith("abort", expect.any(Function));
+    const before = FakeWorker.instances.length;
+    const aborted = new AbortController();
+    aborted.abort();
+    const late = startImportJob(input(), { signal: aborted.signal });
+    await expect(late.result).rejects.toBeInstanceOf(ImportCancelledError);
+    expect(FakeWorker.instances).toHaveLength(before);
+  });
+
   it("times out at workerTimeoutMs and ignores a late result", async () => {
     const job = startImportJob(input());
     await vi.advanceTimersByTimeAsync(0);

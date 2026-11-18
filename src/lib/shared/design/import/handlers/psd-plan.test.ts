@@ -67,8 +67,8 @@ describe("planPsd byte budget", () => {
     const side = 1024;
     const bytes = side * side * 4;
     const layer = [pixelLayer(0, 0, side, side)];
-    expect(planPsd(psdOf(layer), limits({ remainingBytes: bytes })).ok).toBe(true);
-    expect(failureOf(planPsd(psdOf(layer), limits({ remainingBytes: bytes - 4 })))).toBe(
+    expect(planPsd(psdOf(layer), limits({ remainingBytes: bytes * 2 })).ok).toBe(true);
+    expect(failureOf(planPsd(psdOf(layer), limits({ remainingBytes: bytes * 2 - 4 })))).toBe(
       DesignImportFailure.Memory,
     );
   });
@@ -109,7 +109,7 @@ describe("planPsd byte budget", () => {
     const layers = Array.from({ length: 10 }, () => pixelLayer(0, 0, 4096, 4096));
     expect(failureOf(planPsd(psdOf(layers), limits()))).toBe(DesignImportFailure.Memory);
     const one = [pixelLayer(0, 0, 2048, 2048)];
-    const used = BUDGET - 2048 * 2048 * 4;
+    const used = BUDGET - 2048 * 2048 * 4 * 2;
     expect(planPsd(psdOf(one), limits({ remainingBytes: BUDGET - used })).ok).toBe(true);
     expect(failureOf(planPsd(psdOf(one), limits({ remainingBytes: BUDGET - used - 4 })))).toBe(
       DesignImportFailure.Memory,
@@ -123,9 +123,20 @@ describe("planPsd byte budget", () => {
     expect(failureOf(planPsd(psdOf([cmyk]), limits({ remainingBytes: rgb * 2 })))).toBe(
       DesignImportFailure.Memory,
     );
-    expect(planPsd(psdOf([cmyk]), limits({ remainingBytes: Math.ceil(rgb * 2.25) })).ok).toBe(true);
+    expect(planPsd(psdOf([cmyk]), limits({ remainingBytes: Math.ceil(rgb * 3.25) })).ok).toBe(true);
     const deep: Layer = { ...pixelLayer(0, 0, side, side), rawData: raw(3, 16) };
     expect(failureOf(planPsd(psdOf([deep]), limits({ remainingBytes: rgb })))).toBe(
+      DesignImportFailure.Memory,
+    );
+  });
+
+  it("checks layer pixels, crop and mask together against the remaining budget", () => {
+    const side = 512;
+    const rgb = side * side * 4;
+    const mask = { left: 0, top: 0, right: side, bottom: side };
+    const layer = pixelLayer(0, 0, side, side, { mask });
+    expect(planPsd(psdOf([layer]), limits({ remainingBytes: rgb * 3 })).ok).toBe(true);
+    expect(failureOf(planPsd(psdOf([layer]), limits({ remainingBytes: rgb * 3 - 4 })))).toBe(
       DesignImportFailure.Memory,
     );
   });
@@ -150,7 +161,8 @@ describe("planPsd walk", () => {
     const flat: Psd = { width: 64, height: 64, rawCompositeData: new Uint8Array(4) };
     const result = planPsd(flat, limits());
     expect(result.ok && result.plan.nodes[0]?.composite).toBe(true);
-    expect(failureOf(planPsd(flat, limits({ remainingBytes: 64 * 64 * 4 - 1 })))).toBe(
+    expect(planPsd(flat, limits({ remainingBytes: 64 * 64 * 4 * 2 })).ok).toBe(true);
+    expect(failureOf(planPsd(flat, limits({ remainingBytes: 64 * 64 * 4 * 2 - 1 })))).toBe(
       DesignImportFailure.Memory,
     );
   });

@@ -88,6 +88,51 @@ describe("runPsdRequest refusals decode nothing", () => {
     expect(failureOf(await run(requestOf(), memory))).toBe(DesignImportFailure.Memory);
   });
 
+  it("maps only an allocation RangeError to memory and any other RangeError to corrupt", async () => {
+    const throwing = (error: Error): PsdEngine => ({
+      readStructure: () => {
+        throw error;
+      },
+      source: { layerPixels: vi.fn(), maskPixels: vi.fn(), compositePixels: vi.fn() },
+    });
+    const allocation = new RangeError("Array buffer allocation failed");
+    expect(failureOf(await run(requestOf(), throwing(allocation)))).toBe(
+      DesignImportFailure.Memory,
+    );
+    const overflow = new RangeError("Maximum call stack size exceeded");
+    expect(failureOf(await run(requestOf(), throwing(overflow)))).toBe(DesignImportFailure.Corrupt);
+  });
+
+  it("falls back to the composite when every layer decodes to nothing", async () => {
+    const layer: Layer = { left: 0, top: 0, right: 8, bottom: 8, rawData: raw };
+    const layered: Psd = { width: 64, height: 64, children: [layer] };
+    const flat: Psd = { width: 64, height: 64, rawCompositeData: new Uint8Array(4) };
+    const readStructure = vi.fn((_buffer: ArrayBuffer, options?: { composite: boolean }) =>
+      options?.composite === true ? flat : layered,
+    );
+    const visible = testImageData(64, 64);
+    visible.data.fill(255);
+    const compositePixels = vi.fn(() => visible);
+    const engine: PsdEngine = {
+      readStructure,
+      source: { layerPixels: vi.fn(), maskPixels: vi.fn(), compositePixels },
+    };
+    const posted = await run(requestOf(), engine);
+    const last = posted.at(-1)?.response;
+    expect(last?.status).toBe("result");
+    if (last?.status !== "result") return;
+    expect(last.document.flattened).toBe(true);
+    expect(last.document.nodes).toHaveLength(1);
+    expect(readStructure).toHaveBeenLastCalledWith(expect.any(ArrayBuffer), { composite: true });
+  });
+
+  it("reports no layers when nothing decodes and there is no composite", async () => {
+    const layer: Layer = { left: 0, top: 0, right: 8, bottom: 8, rawData: raw };
+    const psd: Psd = { width: 64, height: 64, children: [layer] };
+    const { engine } = spyEngine(psd);
+    expect(failureOf(await run(requestOf(), engine))).toBe(DesignImportFailure.NoLayers);
+  });
+
   it("refuses a non-PSD format", async () => {
     const { engine } = spyEngine({ width: 64, height: 64 });
     const request: WorkerRequest = { ...requestOf(), format: DesignImportFormat.Ai };

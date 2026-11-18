@@ -18,6 +18,7 @@ These instructions apply to every session. The project rules are in the two file
 8. **Language**: documentation, files, folders, code, routes, SQL in English; UI copy only in Brazilian Portuguese. Talk to the user in the language they use.
 9. **Security first** (GOLD-7): never read, print or edit `.env*` files or secrets; never weaken RLS, policies or validation to make something work; external users only read through `portal_*` functions.
 10. **Shared UI comes from `lost-ui`.** Before building a screen or component, use the skill in `.claude/skills/lost-ui` (catalog, recipes, props) and check whether the library already has it (auth pages, `BackofficeLayout`, forms, data table, AI chat, editor, calendar). This project installs the package as an alias, so write `lost-ui/...` where the skill says `@danielsoaresf/lost-ui/...`. Ask to add what is missing to the library instead of rebuilding it here.
+11. **Resource limits (owner decision, 2026-11-18, until the owner lifts it).** Do not run `npm run build` and do not create or run e2e tests (`npm run e2e`, `e2e/*.spec.ts`, Playwright): both use too many machine resources that are not available now. This overrides the build and e2e lines of base.md section 11. Verify with `lint`, `typecheck`, `format:check`, `test` (Vitest), `check:consistency` and `check:docs`. Never pretend: in the "Implementation status" and in reports write "build not run" and "e2e not written", "by owner decision (resources)", and list what only a build or a browser could prove as **not proven**.
 
 ## Slash commands
 

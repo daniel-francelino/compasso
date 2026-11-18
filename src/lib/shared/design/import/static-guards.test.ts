@@ -23,12 +23,9 @@ const DESIGN_DIRS = [
   "src/components/shared/design",
 ];
 
-let cachedSources: string[] | null = null;
+const SOURCES = DESIGN_DIRS.flatMap((directory) => filesUnder(directory));
 
-const designSources = (): string[] => {
-  cachedSources ??= DESIGN_DIRS.flatMap((directory) => filesUnder(directory));
-  return cachedSources;
-};
+const designSources = (): string[] => SOURCES;
 
 const IMPORT_DIR = "src/lib/shared/design/import";
 const importSources = (): string[] =>

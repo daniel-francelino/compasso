@@ -164,15 +164,12 @@ describe("truncated PSD through the real structure reader", () => {
     }
   });
 
-  it.fails(
-    "FINDING: answers corrupt (not memory) for cuts inside the header and the early sections",
-    async () => {
-      for (const cut of [0, 4, 10, 25]) {
-        const last = (await runCut(cut)).at(-1);
-        expect(last?.status === "error" && last.failure).toBe(DesignImportFailure.Corrupt);
-      }
-    },
-  );
+  it("answers corrupt (not memory) for cuts inside the header and the early sections", async () => {
+    for (const cut of [0, 4, 10, 25]) {
+      const last = (await runCut(cut)).at(-1);
+      expect(last?.status === "error" && last.failure).toBe(DesignImportFailure.Corrupt);
+    }
+  });
 
   it("answers a failure (corrupt or memory) for cuts inside the header", async () => {
     for (const cut of [0, 4, 10, 25]) {

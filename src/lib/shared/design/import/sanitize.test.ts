@@ -19,6 +19,17 @@ describe("sanitizeImportName", () => {
     expect(name).not.toMatch(/\p{Cs}/u);
   });
 
+  it("strips the other format characters, tag characters, separators and private use", () => {
+    const hidden = [0xad, 0x180e, 0x2061, 0x206a, 0xfff9, 0x2028, 0x2029, 0xe000, 0xe0041, 0x200d];
+    const raw = "a" + hidden.map((code) => String.fromCodePoint(code)).join("b") + "z";
+    expect(sanitizeImportName(raw)).toBe("a" + "b".repeat(hidden.length - 1) + "z");
+  });
+
+  it("cuts a very large raw string before normalizing", () => {
+    const name = sanitizeImportName("x".repeat(5_000_000));
+    expect(name).toHaveLength(80);
+  });
+
   it("returns an empty string for hidden-only input", () => {
     expect(sanitizeImportName(BIDI + NUL)).toBe("");
   });

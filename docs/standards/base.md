@@ -346,7 +346,7 @@ A feature is done only when every item is true (or explicitly marked "not applic
 - [ ] Time zones visible where a date-time appears.
 
 **Verification**
-- [ ] `npm run lint`, `npm run typecheck`, `npm run check:consistency` pass; relevant unit, pgTAP and E2E tests were added and pass.
+- [ ] `npm run lint`, `npm run typecheck`, `npm run check:consistency` pass; relevant unit and pgTAP tests were added and pass (E2E tests and `npm run build` are suspended by the resource limit in section 11; state them as not run).
 - [ ] The acceptance criteria of the module document were exercised, or the gap is stated.
 
 ## 11. Verification commands
@@ -357,11 +357,13 @@ A feature is done only when every item is true (or explicitly marked "not applic
 | After touching SQL or constants | `npm run check:consistency` · `npx supabase db reset` · `npx supabase test db` · `npm run db:types` |
 | Without Docker (fallback) | `npm run db:verify`: applies the migrations and runs `supabase/tests/*.test.sql` on an in-process Postgres (PGlite) with a pgTAP-compatible shim and Supabase stubs. It does **not** replace `supabase test db` (no `pg_cron`, no real GoTrue) |
 | After touching documents or registries | `npm run check:docs` (`node scripts/check-docs.mjs`): relative links, and that error codes, actions, audit actions and notification kinds used in `reference/functions.md` and `reference/routes.md` exist in their registries |
-| After touching flows | `npm run test` (Vitest) · `npm run e2e` (Playwright) |
+| After touching flows | `npm run test` (Vitest). `npm run e2e` (Playwright) is suspended while the resource limit below is in force |
 | Before pushing | the `pre-push` hook runs lint, typecheck and check:consistency |
 | Searching for existing code | `grep`/glob in `src/`, `supabase/`, `docs/` for the concern name (section 2) |
 
 If a command cannot be run in the current environment, say so and list what remains unverified.
+
+**Resource limit (owner decision, 2026-11-18, in force until the owner lifts it).** Do not run `npm run build` and do not create or run E2E tests (`npm run e2e`, `e2e/<flow>.spec.ts`, Playwright): both use more machine resources than are available. Verify with `lint`, `typecheck`, `format:check`, `test` (Vitest), `check:consistency` and `check:docs`. A task is not blocked by the missing build or E2E; the "Implementation status" must say "build not run" and "E2E not written, by owner decision (resources)" and list what only a build or a browser could prove as **not proven** (GOLD-6, DOC-4).
 
 ## 12. Rule map (what to read for each task)
 
