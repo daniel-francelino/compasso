@@ -2,6 +2,7 @@ import {
   DESIGN_IMPORT_MESSAGE,
   DESIGN_IMPORT_FORMAT_LABEL,
 } from "@/lib/shared/design/import/messages";
+import { withMetadataNotes } from "@/lib/shared/design/import/metadata";
 import { IMPORT_HANDLERS } from "@/lib/shared/design/import/registry";
 import { SNIFF_HEAD_BYTES, extensionOf } from "@/lib/shared/design/import/sniff";
 import type {
@@ -65,7 +66,7 @@ const decodeWith = async (
   input: WorkerImportInput,
 ): Promise<Result<ImportKindResult>> => {
   try {
-    return await runHandler(handler, input);
+    return withMetadataNotes(await runHandler(handler, input));
   } catch (error) {
     logError("import decode failed", errorName(error));
     return invalid(DESIGN_IMPORT_MESSAGE.readFailed);

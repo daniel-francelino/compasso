@@ -6,6 +6,7 @@ import {
   type ImportKindResult,
   type ImportNote,
 } from "@/lib/shared/design/import/types";
+import type { ImportedDesignMetadata } from "@/lib/shared/design/import/metadata";
 import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 
 export type SinglePixels = { width: number; height: number; data: Uint8ClampedArray };
@@ -13,7 +14,13 @@ export type SinglePixels = { width: number; height: number; data: Uint8ClampedAr
 export const singleLayerDesign = (
   format: DesignImportFormat,
   pixels: SinglePixels,
-  options: { newId: () => string; fileName: string; notes: ImportNote[]; defaultName: string },
+  options: {
+    newId: () => string;
+    fileName: string;
+    notes: ImportNote[];
+    defaultName: string;
+    metadata: ImportedDesignMetadata | null;
+  },
 ): ImportKindResult => {
   const size = { width: pixels.width, height: pixels.height };
   const id = options.newId();
@@ -32,6 +39,7 @@ export const singleLayerDesign = (
       elements: [element],
       buffers: new Map([[id, buffer]]),
       notes: options.notes,
+      metadata: options.metadata,
     },
   };
 };

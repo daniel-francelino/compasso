@@ -33,6 +33,7 @@ describe("import notes", () => {
       first_page_only: "S{o} a primeira p{a}gina foi importada.",
       downscaled: "Imagem reduzida para caber na p{a}gina (2).",
       animation_ignored: "Anima{c}{t}o ignorada: s{o} o primeiro quadro foi importado.",
+      metadata_truncated: "Metadados do arquivo registrados s{o} em parte (2 listas).",
     };
     expect(Object.keys(expected).sort()).toEqual(Object.values(DesignImportNoteKind).sort());
     for (const kind of Object.values(DesignImportNoteKind)) {

@@ -18,6 +18,7 @@ const imageOf = (
   elements: [createRasterLayer("a", emptyPage("p"), { width, height })],
   buffers: new Map(),
   notes,
+  metadata: null,
 });
 
 const box = (design: ReturnType<typeof placeImageDesign>) => {

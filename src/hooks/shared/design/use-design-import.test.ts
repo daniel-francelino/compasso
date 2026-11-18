@@ -31,6 +31,7 @@ const design = {
   elements: [],
   buffers: new Map(),
   notes: [],
+  metadata: null,
 };
 
 type Deferred<T> = { promise: Promise<T>; resolve: (value: T) => void };
@@ -44,10 +45,11 @@ const deferred = <T>(): Deferred<T> => {
 
 const setup = (existing = 0, allowed = true) => {
   const placer = {
-    document: vi.fn((..._args: unknown[]) => ({ ok: true as const, notes: [] })),
+    document: vi.fn((..._args: unknown[]) => ({ ok: true as const, notes: [], metadata: null })),
     image: vi.fn((..._args: unknown[]) => ({
       ok: true as const,
       notes: [{ kind: DesignImportNoteKind.Downscaled, count: 1 }],
+      metadata: null,
     })),
   };
   const onBusy = vi.fn();
@@ -100,6 +102,17 @@ describe("createImportRun", () => {
     read.mockResolvedValue({ ok: true, kind: DesignImportKind.Document, design });
     await run.open();
     expect(placer.document).toHaveBeenCalledWith(design);
+  });
+
+  it("hands the placer the design with its metadata unchanged, whatever the format", async () => {
+    const metadata = { version: 1 };
+    const withMetadata = { ...design, format: DesignImportFormat.Psd, metadata };
+    read.mockResolvedValue({ ok: true, kind: DesignImportKind.Document, design: withMetadata });
+    const { run, placer } = setup();
+    await run.open();
+    expect(placer.document).toHaveBeenCalledWith(withMetadata);
+    const [handed] = placer.document.mock.calls[0] ?? [];
+    expect(handed).toBe(withMetadata);
   });
 
   it("shows the loading toast with a cancel action", async () => {

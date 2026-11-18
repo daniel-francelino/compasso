@@ -2,6 +2,7 @@ import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import type { PDFDocumentLoadingTask } from "pdfjs-dist";
 import type { DocumentInitParameters } from "pdfjs-dist/types/src/display/api";
 import { DESIGN_IMPORT_LIMITS, sizeFitsPage } from "@/lib/shared/design/import/limits";
+import { buildMetadata } from "@/lib/shared/design/import/metadata";
 import {
   DESIGN_IMPORT_LAYER_NAME,
   DESIGN_IMPORT_MESSAGE,
@@ -17,6 +18,7 @@ import { singleLayerDesign } from "@/lib/shared/design/import/single-layer";
 import { rasterBytes } from "@/lib/shared/design/raster-store";
 import { findPdfStart } from "@/lib/shared/design/import/sniff";
 import {
+  DesignImportColorMode,
   DesignImportNoteKind,
   type DesignImportFormat,
   type ImportKindResult,
@@ -34,6 +36,8 @@ export type PdfPage = {
   height: number;
   data: Uint8ClampedArray;
   pageCount: number;
+  naturalWidth: number;
+  naturalHeight: number;
 };
 
 export const extractPdfBytes = (bytes: Uint8Array): Uint8Array | null => {
@@ -123,6 +127,8 @@ const drawFirstPage = async (
       height: size.height,
       data: pixels.data,
       pageCount: document.numPages,
+      naturalWidth: natural.width,
+      naturalHeight: natural.height,
     };
   } finally {
     canvas.width = 0;
@@ -159,6 +165,22 @@ export const renderPdfPage = async (
 const pdfPageNotes = (pageCount: number): ImportNote[] =>
   pageCount > 1 ? [{ kind: DesignImportNoteKind.FirstPageOnly, count: 1 }] : [];
 
+const pdfMetadata = (format: DesignImportFormat, page: PdfPage) =>
+  buildMetadata({
+    source: {
+      format,
+      colorMode: DesignImportColorMode.Unknown,
+      bitsPerChannel: null,
+      pageCount: page.pageCount,
+    },
+    dimensions: {
+      sourceWidth: page.naturalWidth,
+      sourceHeight: page.naturalHeight,
+      pageWidth: page.width,
+      pageHeight: page.height,
+    },
+  });
+
 export const renderPdfPageDesign = async (
   format: DesignImportFormat,
   input: {
@@ -186,6 +208,7 @@ export const renderPdfPageDesign = async (
       fileName: input.fileName,
       notes: pdfPageNotes(rendered.pageCount),
       defaultName: DESIGN_IMPORT_LAYER_NAME.art,
+      metadata: pdfMetadata(format, rendered),
     }),
   };
 };

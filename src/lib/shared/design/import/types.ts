@@ -2,6 +2,7 @@ import type { ValueOf } from "@/lib/shared/utils";
 import type { Result } from "@/lib/shared/server-utils";
 import type { DesignElement } from "@/lib/shared/design/schemas";
 import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
+import type { ImportedDesignMetadata } from "@/lib/shared/design/import/metadata";
 
 export const DesignImportFormat = {
   Psd: "psd",
@@ -33,8 +34,19 @@ export const DesignImportNoteKind = {
   FirstPageOnly: "first_page_only",
   Downscaled: "downscaled",
   AnimationIgnored: "animation_ignored",
+  MetadataTruncated: "metadata_truncated",
 } as const;
 export type DesignImportNoteKind = ValueOf<typeof DesignImportNoteKind>;
+
+export const DesignImportColorMode = {
+  Grayscale: "grayscale",
+  Rgb: "rgb",
+  Cmyk: "cmyk",
+  Indexed: "indexed",
+  Bitmap: "bitmap",
+  Unknown: "unknown",
+} as const;
+export type DesignImportColorMode = ValueOf<typeof DesignImportColorMode>;
 
 export type ImportNote = { kind: DesignImportNoteKind; count: number };
 
@@ -45,6 +57,7 @@ export type ImportedDesign = {
   elements: DesignElement[];
   buffers: Map<string, PixelBuffer>;
   notes: ImportNote[];
+  metadata: ImportedDesignMetadata | null;
 };
 
 export type ImportKindResult =

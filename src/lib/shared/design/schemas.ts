@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { importedDesignMetadataSchema } from "@/lib/shared/design/import/metadata";
 import { adjustmentSchema } from "@/lib/shared/design/raster/adjustment-schemas";
 import {
   DESIGN_LIMITS,
@@ -309,4 +310,9 @@ export const recordDesignExportSchema = z.object({
   format: z.nativeEnum(DesignExportFormat),
   scale: z.union([z.literal(1), z.literal(2)]),
   mediaVersionId: z.string().uuid(),
+});
+
+export const recordDesignImportSchema = z.object({
+  id: designId,
+  metadata: importedDesignMetadataSchema,
 });

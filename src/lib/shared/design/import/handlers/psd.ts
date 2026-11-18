@@ -311,6 +311,7 @@ export const psdToDesign = (
         elements,
         buffers: context.buffers,
         notes: notesOf(context.counters, document),
+        metadata: document.metadata,
       },
     };
   } catch (error) {

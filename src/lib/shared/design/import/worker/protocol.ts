@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
+import { importedDesignMetadataSchema } from "@/lib/shared/design/import/metadata";
 import { DesignImportFailure, DesignImportFormat } from "@/lib/shared/design/import/types";
 import { rasterBytes } from "@/lib/shared/design/raster-store";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
@@ -76,6 +77,7 @@ export const WorkerDocumentSchema = z
     cmyk: z.boolean(),
     flattened: z.boolean(),
     nodes: z.array(WorkerNodeSchema).max(MAX_NODES),
+    metadata: importedDesignMetadataSchema.nullable().catch(null),
   })
   .strict();
 export type WorkerDocument = z.infer<typeof WorkerDocumentSchema>;

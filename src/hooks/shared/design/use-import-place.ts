@@ -11,13 +11,14 @@ import {
   placeDocumentDesign,
   placeImageDesign,
 } from "@/lib/shared/design/import/placement";
+import type { ImportedDesignMetadata } from "@/lib/shared/design/import/metadata";
 import type { ImportNote, ImportedDesign } from "@/lib/shared/design/import/types";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
 import { rasterBytes } from "@/lib/shared/design/raster-store";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 import { DESIGN_LIMITS, type DesignPreset } from "@/lib/shared/design/types";
 
-export type ImportPlaced = Result<{ notes: ImportNote[] }>;
+export type ImportPlaced = Result<{ notes: ImportNote[]; metadata: ImportedDesignMetadata | null }>;
 
 export type ImportPlacer = {
   document: (design: ImportedDesign) => ImportPlaced;
@@ -78,7 +79,7 @@ const commit = (target: PlaceTarget, design: ImportedDesign, plan: Plan): Import
     return invalid(DESIGN_IMPORT_MESSAGE.tooManyLayers(DESIGN_LIMITS.maxElements));
   }
   for (const id of design.buffers.keys()) store.markChanged(id);
-  return { ok: true, notes: placement.notes };
+  return { ok: true, notes: placement.notes, metadata: design.metadata };
 };
 
 export const createImportPlacer = (target: PlaceTarget): ImportPlacer => ({

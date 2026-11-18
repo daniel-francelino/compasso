@@ -6,6 +6,8 @@ const { createImportPlacer } = await import("@/hooks/shared/design/use-import-pl
 const { createRasterLayer, createShape, emptyPage } = await import("@/lib/shared/design/document");
 const palette = { ink: "ink", surface: "surface", accent: "accent" };
 const { DesignImportFormat } = await import("@/lib/shared/design/import/types");
+const { buildMetadata } = await import("@/lib/shared/design/import/metadata");
+const { DesignImportColorMode } = await import("@/lib/shared/design/import/types");
 const { DESIGN_IMPORT_MESSAGE } = await import("@/lib/shared/design/import/messages");
 const { DESIGN_LIMITS, DesignElementKind, DesignPreset } =
   await import("@/lib/shared/design/types");
@@ -19,6 +21,7 @@ const designOf = (ids: string[], side = 10) => ({
     ids.map((id) => [id, { width: side, height: side, data: new Uint8ClampedArray(0) }]),
   ),
   notes: [],
+  metadata: null,
 });
 
 const harness = (options: {
@@ -115,5 +118,28 @@ describe("createImportPlacer", () => {
       { width: 64, height: 64 },
       "Importar PSD",
     );
+  });
+
+  it("returns the metadata of the placed design, and null when the design has none", () => {
+    const metadata = buildMetadata({
+      source: {
+        format: DesignImportFormat.Psd,
+        colorMode: DesignImportColorMode.Rgb,
+        bitsPerChannel: 8,
+        pageCount: null,
+      },
+      dimensions: { sourceWidth: 10, sourceHeight: 10, pageWidth: 10, pageHeight: 10 },
+    });
+    const h = harness({});
+    expect(h.placer.document({ ...designOf(["a"]), metadata })).toMatchObject({
+      ok: true,
+      metadata,
+    });
+    expect(h.placer.document(designOf(["b"]))).toMatchObject({ ok: true, metadata: null });
+  });
+
+  it("returns no metadata when the placement is refused", () => {
+    const h = harness({ used: DESIGN_LIMITS.rasterBudgetBytes });
+    expect(h.placer.image(designOf(["a"]))).not.toHaveProperty("metadata");
   });
 });

@@ -11,6 +11,7 @@ import {
   designIdSchema,
   listDesignsSchema,
   recordDesignExportSchema,
+  recordDesignImportSchema,
   renameDesignSchema,
   restoreDesignVersionSchema,
   saveDesignDraftSchema,
@@ -388,6 +389,19 @@ export const recordDesignExport = createServerFn({ method: "POST" })
       p_format: data.format,
       p_scale: data.scale,
       p_media_version: data.mediaVersionId,
+    });
+    if (error) return fail(error);
+    return parseOutput(idSchema, raw);
+  });
+
+export const recordDesignImport = createServerFn({ method: "POST" })
+  .validator(recordDesignImportSchema)
+  .handler(async ({ data }): Promise<Result<{ id: string }>> => {
+    const caller = await requireActionServer(Action.Design.Update);
+    if (caller === null) return denied;
+    const { data: raw, error } = await caller.supabase.rpc("design_record_import", {
+      p_design: data.id,
+      p_metadata: { ...data.metadata, textRuns: [] },
     });
     if (error) return fail(error);
     return parseOutput(idSchema, raw);

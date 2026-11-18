@@ -1,5 +1,6 @@
 import type { Layer, LayerMaskData, PixelArray, PixelData, Psd } from "ag-psd";
 import type { PlanBox, PlanNode, PsdPlan } from "@/lib/shared/design/import/handlers/psd-plan";
+import { extractPsdMetadata } from "@/lib/shared/design/import/handlers/psd-metadata";
 import { sanitizeImportName } from "@/lib/shared/design/import/sanitize";
 import type { WorkerDocument, WorkerNode } from "@/lib/shared/design/import/worker/protocol";
 import { RASTER_BYTES_PER_PIXEL, rasterBytes } from "@/lib/shared/design/raster-store";
@@ -171,5 +172,6 @@ export const decodePsd = (
     cmyk: psd.colorMode === COLOR_MODE_CMYK,
     flattened: plan.nodes[0]?.composite === true,
     nodes,
+    metadata: extractPsdMetadata(psd),
   };
 };

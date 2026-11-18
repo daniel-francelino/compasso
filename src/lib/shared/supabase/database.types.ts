@@ -1484,6 +1484,51 @@ export type Database = {
           },
         ]
       }
+      design_import_metadata: {
+        Row: {
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          design_id: string
+          id: string
+          metadata: Json
+          source_format: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          design_id: string
+          id?: string
+          metadata: Json
+          source_format: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          design_id?: string
+          id?: string
+          metadata?: Json
+          source_format?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_import_metadata_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "design_import_metadata_design_id_brand_id_fkey"
+            columns: ["design_id", "brand_id"]
+            isOneToOne: false
+            referencedRelation: "designs"
+            referencedColumns: ["id", "brand_id"]
+          },
+        ]
+      }
       design_versions: {
         Row: {
           brand_id: string
@@ -3718,6 +3763,10 @@ export type Database = {
       }
       design_record_export: {
         Args: {          p_design: string | null,          p_format: string | null,          p_media_version: string | null,          p_page_no: number | null,          p_scale: number | null,          p_version_no: number | null}
+        Returns: Json
+      }
+      design_record_import: {
+        Args: { p_design: string | null, p_metadata: Json | null}
         Returns: Json
       }
       design_rename: {

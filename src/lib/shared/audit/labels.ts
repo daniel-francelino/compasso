@@ -96,6 +96,7 @@ export const auditActionLabels: Record<AuditActionKey, string> = {
   [AuditAction.Design.Trashed]: "Design movido para a lixeira",
   [AuditAction.Design.Restored]: "Design restaurado",
   [AuditAction.Design.HiddenPurged]: "Arquivos antigos de camadas do design apagados",
+  [AuditAction.Design.ImportRecorded]: "Importação de arquivo registrada no design",
   [AuditAction.Design.Exported]: "Design exportado para a biblioteca",
   [AuditAction.Design.VersionRestored]: "Versão do design restaurada no rascunho",
   [AuditAction.Design.TemplateChanged]: "Design marcado ou desmarcado como modelo",

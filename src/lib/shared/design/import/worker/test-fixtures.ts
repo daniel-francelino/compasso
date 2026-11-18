@@ -62,6 +62,7 @@ export const documentOf = (
   cmyk: false,
   flattened: false,
   nodes,
+  metadata: null,
   ...extra,
 });
 

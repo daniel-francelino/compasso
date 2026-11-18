@@ -91,6 +91,8 @@ export const DESIGN_IMPORT_NOTE_SENTENCE: Record<DesignImportNoteKind, (count: n
       `Imagem reduzida para caber na página (${count}).`,
     [DesignImportNoteKind.AnimationIgnored]: () =>
       "Animação ignorada: só o primeiro quadro foi importado.",
+    [DesignImportNoteKind.MetadataTruncated]: (count) =>
+      `Metadados do arquivo registrados só em parte (${plural(count, "lista", "listas")}).`,
   };
 
 export const IMPORT_CANCELLED: Failure = invalid(DESIGN_IMPORT_MESSAGE.cancelled);

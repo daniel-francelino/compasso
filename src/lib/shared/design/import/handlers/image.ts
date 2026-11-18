@@ -4,6 +4,7 @@ import {
   readImageHeader,
 } from "@/lib/shared/design/import/handlers/image-header";
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
+import { buildMetadata } from "@/lib/shared/design/import/metadata";
 import {
   DESIGN_IMPORT_LAYER_NAME,
   DESIGN_IMPORT_MESSAGE,
@@ -22,6 +23,7 @@ import {
   hasWebpSignature,
 } from "@/lib/shared/design/import/sniff";
 import {
+  DesignImportColorMode,
   DesignImportFormat,
   DesignImportKind,
   DesignImportNoteKind,
@@ -175,6 +177,24 @@ const notesOf = (plan: ImagePlan): ImportNote[] => [
   ...(plan.animated ? [{ kind: DesignImportNoteKind.AnimationIgnored, count: 1 }] : []),
 ];
 
+const imageMetadata = (format: DesignImportFormat, header: ImageHeader, decoded: Size) => {
+  const source = orientedSize(header);
+  return buildMetadata({
+    source: {
+      format,
+      colorMode: DesignImportColorMode.Rgb,
+      bitsPerChannel: null,
+      pageCount: null,
+    },
+    dimensions: {
+      sourceWidth: source.width,
+      sourceHeight: source.height,
+      pageWidth: decoded.width,
+      pageHeight: decoded.height,
+    },
+  });
+};
+
 export const decodeImage = async (
   format: DesignImportFormat,
   input: ImportInput,
@@ -198,6 +218,7 @@ export const decodeImage = async (
       fileName: input.file.name,
       notes: notesOf(plan),
       defaultName: DESIGN_IMPORT_LAYER_NAME.image,
+      metadata: imageMetadata(format, header.header, decoded),
     }),
   };
 };
