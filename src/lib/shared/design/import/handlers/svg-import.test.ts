@@ -235,7 +235,12 @@ describe("decodeSvgVector", () => {
 
 describe("mergeShapes", () => {
   it("merges consecutive shapes with the same solid paint", () => {
-    const merged = mergeShapes([shape(), shape({ d: "M20 0L30 0L30 10Z" }), shape()]);
+    const second = shape({
+      d: "M20 0L30 0L30 10Z",
+      bounds: { minX: 20, minY: 0, maxX: 30, maxY: 10 },
+    });
+    const third = shape({ bounds: { minX: 40, minY: 0, maxX: 50, maxY: 10 } });
+    const merged = mergeShapes([shape(), second, third]);
     expect(merged).toHaveLength(1);
     expect(merged[0]?.commandCount).toBe(12);
   });
@@ -264,17 +269,21 @@ describe("mergeShapes", () => {
     expect(canMerge(shape({ fill: gradient }), shape({ fill: gradient }))).toBe(false);
   });
 
-  it("keeps overlapping even-odd and translucent shapes apart but merges disjoint ones", () => {
-    const evenOdd = { fillRule: DesignPathFillRule.EvenOdd };
-    expect(canMerge(shape(evenOdd), shape(evenOdd))).toBe(false);
+  it("keeps overlapping same-paint shapes apart and merges disjoint ones", () => {
+    const near = { bounds: { minX: 5, minY: 5, maxX: 15, maxY: 15 } };
     const far = { bounds: { minX: 50, minY: 50, maxX: 60, maxY: 60 } };
+    expect(canMerge(shape(), shape(near))).toBe(false);
+    expect(mergeShapes([shape(), shape(near)])).toHaveLength(2);
+    expect(canMerge(shape(), shape(far))).toBe(true);
+    const evenOdd = { fillRule: DesignPathFillRule.EvenOdd };
     expect(canMerge(shape(evenOdd), shape({ ...evenOdd, ...far }))).toBe(true);
-    expect(canMerge(shape({ opacity: 0.5 }), shape({ opacity: 0.5 }))).toBe(false);
+    expect(canMerge(shape({ opacity: 0.5 }), shape({ opacity: 0.5, ...far }))).toBe(true);
   });
 
   it("starts a new element when the merged data would pass the path caps", () => {
     const long = shape({ d: `M0 0${"L1 1".repeat(2500)}`, commandCount: 2501 });
-    expect(mergeShapes([long, long])).toHaveLength(2);
+    const far = { bounds: { minX: 50, minY: 50, maxX: 60, maxY: 60 } };
+    expect(mergeShapes([long, { ...long, ...far }])).toHaveLength(2);
   });
 });
 

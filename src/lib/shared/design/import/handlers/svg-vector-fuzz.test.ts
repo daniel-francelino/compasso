@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { FIXTURES } from "@/lib/shared/design/import/handlers/svg-vector-fixtures";
 import { parseSvgVector } from "@/lib/shared/design/import/handlers/svg-vector";
 import { SvgFallback } from "@/lib/shared/design/import/handlers/svg-vector-types";
+import { expectValidShapes } from "@/lib/shared/design/import/handlers/svg-vector-check-fixtures";
 
 const REASONS: readonly string[] = Object.values(SvgFallback);
 const MUTATIONS = 400;
@@ -27,10 +28,12 @@ const checked = (input: Uint8Array | string): void => {
   const result = parseSvgVector(input);
   expect(performance.now() - started).toBeLessThan(TIME_BOUND_MS);
   if (result.ok) {
-    expect(result.shapes.length).toBeGreaterThan(0);
+    expectValidShapes(result);
     return;
   }
-  expect(REASONS).toContain((result as { reason: string }).reason);
+  const reason = (result as { reason: string }).reason;
+  expect(REASONS).toContain(reason);
+  expect(reason).not.toBe(SvgFallback.Internal);
 };
 
 describe("parseSvgVector fuzzing", () => {

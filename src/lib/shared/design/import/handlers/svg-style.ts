@@ -28,6 +28,7 @@ const SIMPLE_SELECTOR = /^(?:\.[A-Za-z_][\w-]*|#[A-Za-z_][\w-]*|[A-Za-z][\w-]*)$
 const IMPORTANT = "important";
 const WHITESPACE = /\s+/;
 const MAX_CLASS_TOKENS = 32;
+const INLINE_COST_SHIFT = 6;
 const MAX_DASH_ITEMS = 64;
 const SPECIFICITY_TAG = 1;
 const SPECIFICITY_CLASS = 10;
@@ -140,7 +141,7 @@ const addRule = (sheet: StyleSheet, selectorText: string, declarations: Declarat
   const { key, specificity } = selectorKey(selector);
   sheet.order += 1;
   sheet.rules += 1;
-  sheet.pairs += declarations.length;
+  sheet.pairs += Math.max(1, declarations.length);
   if (sheet.rules > SVG_VECTOR_LIMITS.maxStyleRules) throw reject(SvgFallback.ParseLimit);
   if (sheet.pairs > SVG_VECTOR_LIMITS.maxStyleDeclarations) throw reject(SvgFallback.ParseLimit);
   const rules = sheet.index.get(key) ?? [];
@@ -167,14 +168,15 @@ export const addStyleSheet = (sheet: StyleSheet, css: string): void => {
   if (source.slice(index).trim() !== "") throw reject(SvgFallback.Malformed);
 };
 
-const rulesFor = (sheet: StyleSheet, element: XmlElement): Rule[] => {
+const rulesFor = (sheet: StyleSheet, element: XmlElement, budget: Budget): Rule[] => {
   const keys = [element.name];
   const id = element.attrs.get("id");
   if (id !== undefined) keys.push(`#${id}`);
-  const classes = (element.attrs.get("class") ?? "").trim().split(WHITESPACE).filter(Boolean);
-  if (classes.length > MAX_CLASS_TOKENS) throw reject(SvgFallback.ParseLimit);
-  for (const name of classes) keys.push(`.${name}`);
+  const tokens = (element.attrs.get("class") ?? "").trim().split(WHITESPACE).filter(Boolean);
+  if (tokens.length > MAX_CLASS_TOKENS) throw reject(SvgFallback.ParseLimit);
+  for (const name of new Set(tokens)) keys.push(`.${name}`);
   const found = keys.flatMap((key) => sheet.index.get(key) ?? []);
+  spend(budget, found.length + 1);
   return found.sort((a, b) => a.specificity - b.specificity || a.order - b.order);
 };
 
@@ -189,11 +191,12 @@ export const declarationsOf = (
     checkPropertyName(name);
     if (PRESENTATION_PROPERTIES.has(name)) result.push([name, value]);
   }
-  for (const rule of rulesFor(sheet, element)) {
-    spend(budget, rule.declarations.length);
+  for (const rule of rulesFor(sheet, element, budget)) {
+    spend(budget, Math.max(1, rule.declarations.length));
     result.push(...rule.declarations);
   }
   const inline = element.attrs.get("style");
+  if (inline !== undefined) spend(budget, 1 + (inline.length >> INLINE_COST_SHIFT));
   if (inline !== undefined) result.push(...parseDeclarations(inline));
   spend(budget, result.length + 1);
   return result;

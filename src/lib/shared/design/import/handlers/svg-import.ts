@@ -1,14 +1,10 @@
 import { decodeSvg } from "@/lib/shared/design/import/handlers/svg-raster";
 import { buildPathElements } from "@/lib/shared/design/import/handlers/svg-vector-build";
-import { parseSvgVector } from "@/lib/shared/design/import/handlers/svg-vector";
-import {
-  type SvgFailure,
-  type SvgVectorResult,
-  SvgFallback,
-} from "@/lib/shared/design/import/handlers/svg-vector-types";
+import { SvgFallback } from "@/lib/shared/design/import/handlers/svg-vector-types";
 import { DESIGN_IMPORT_LIMITS, SVG_LIMITS } from "@/lib/shared/design/import/limits";
 import { buildMetadata } from "@/lib/shared/design/import/metadata";
 import { DESIGN_IMPORT_MESSAGE, IMPORT_CANCELLED } from "@/lib/shared/design/import/messages";
+import { failureReason } from "@/lib/shared/design/import/refusal";
 import { hasSvgHead } from "@/lib/shared/design/import/sniff";
 import {
   DesignImportColorMode,
@@ -20,15 +16,19 @@ import {
   type ImportKindResult,
 } from "@/lib/shared/design/import/types";
 import type { PageSize } from "@/lib/shared/design/types";
+import { type SvgJobOutcome, runSvgVectorJob } from "@/lib/shared/design/import/worker/svg-client";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 
 export type SvgImportDeps = {
-  parse: (bytes: Uint8Array) => SvgVectorResult;
+  parse: (
+    bytes: Uint8Array,
+    signal: AbortSignal | undefined,
+  ) => SvgJobOutcome | Promise<SvgJobOutcome>;
   raster: (input: ImportInput) => Promise<Result<ImportKindResult>>;
 };
 
 const DEFAULT_DEPS: SvgImportDeps = {
-  parse: (bytes) => parseSvgVector(bytes),
+  parse: (bytes, signal) => runSvgVectorJob(bytes, signal),
   raster: (input) => decodeSvg(input),
 };
 
@@ -58,9 +58,9 @@ const withLimitNote = (result: Result<ImportKindResult>): Result<ImportKindResul
 const rasterFallback = async (
   deps: SvgImportDeps,
   input: ImportInput,
-  failure: SvgFailure,
+  reason: SvgFallback,
 ): Promise<Result<ImportKindResult>> => {
-  switch (failure.reason) {
+  switch (reason) {
     case SvgFallback.Timeout:
       return invalid(DESIGN_IMPORT_MESSAGE.svgVectorTimeout);
     case SvgFallback.VectorLimit:
@@ -79,8 +79,11 @@ export const decodeSvgVector = async (
   deps: SvgImportDeps = DEFAULT_DEPS,
 ): Promise<Result<ImportKindResult>> => {
   if (input.signal?.aborted === true) return IMPORT_CANCELLED;
-  const parsed = deps.parse(input.bytes);
-  if (!parsed.ok) return rasterFallback(deps, input, parsed);
+  const parsed = await deps.parse(input.bytes, input.signal);
+  if (!parsed.ok) {
+    const coded = failureReason(parsed, SvgFallback);
+    return coded === null ? parsed : rasterFallback(deps, input, coded.reason);
+  }
   const page = pageOf(input, parsed.width, parsed.height);
   const built = buildPathElements(parsed, {
     page,
@@ -88,7 +91,7 @@ export const decodeSvgVector = async (
     documentBytes: input.documentBytes ?? 0,
     newId: input.newId,
   });
-  if (!built.ok) return rasterFallback(deps, input, built);
+  if (!built.ok) return rasterFallback(deps, input, built.reason);
   return {
     ok: true,
     kind: DesignImportKind.Document,

@@ -49,6 +49,8 @@ describe("static guards on the import module", () => {
       "worker/psd-runner.ts",
       "worker/protocol.ts",
       "worker/validate-document.ts",
+      "worker/svg.worker.ts",
+      "worker/svg-protocol.ts",
       "handlers/psd-decode.ts",
       "handlers/psd-plan.ts",
     ];

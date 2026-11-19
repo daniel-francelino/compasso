@@ -73,7 +73,7 @@ const CODE_E_LOWER = 101;
 const CODE_E_UPPER = 69;
 const UNIT = /^[a-zA-Z%]*$/;
 const STRICT_RGB =
-  /^rgb\(\s{0,4}\d{1,3}\s{0,4}(?:,\s{0,4}\d{1,3}\s{0,4},|\s{1,4}\d{1,3}\s{1,4})\d{1,3}\s{0,4}\)$/;
+  /^rgb\(\s{0,4}\d{1,3}\s{0,4}(?:,\s{0,4}\d{1,3}\s{0,4},\s{0,4}|\s{1,4}\d{1,3}\s{1,4})\d{1,3}\s{0,4}\)$/;
 const STRICT_HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/;
 const MAX_COLOR_CHARS = 64;
 const MAX_CHANNEL = 255;

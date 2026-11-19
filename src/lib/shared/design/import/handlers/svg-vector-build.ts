@@ -15,7 +15,7 @@ import {
   type PathStroke,
   pathElementSchema,
 } from "@/lib/shared/design/schemas";
-import { DESIGN_LIMITS, DesignPathFillRule, type PageSize } from "@/lib/shared/design/types";
+import { DESIGN_LIMITS, type PageSize } from "@/lib/shared/design/types";
 import {
   type Bounds,
   parsePathData,
@@ -49,15 +49,12 @@ const samePaint = (a: SvgVectorShape, b: SvgVectorShape): boolean =>
   a.fillRule === b.fillRule &&
   a.opacity === b.opacity;
 
-const overlapIsHarmless = (a: SvgVectorShape): boolean =>
-  a.fillRule === DesignPathFillRule.NonZero && a.opacity === 1 && a.stroke === null;
-
 const fitsTogether = (a: SvgVectorShape, b: SvgVectorShape): boolean =>
   a.commandCount + b.commandCount <= DESIGN_LIMITS.maxPathCommands &&
   a.d.length + b.d.length <= DESIGN_LIMITS.maxPathData;
 
 export const canMerge = (a: SvgVectorShape, b: SvgVectorShape): boolean =>
-  samePaint(a, b) && fitsTogether(a, b) && (overlapIsHarmless(a) || disjoint(a.bounds, b.bounds));
+  samePaint(a, b) && fitsTogether(a, b) && disjoint(a.bounds, b.bounds);
 
 const union = (a: Bounds, b: Bounds): Bounds => ({
   minX: Math.min(a.minX, b.minX),
