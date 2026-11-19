@@ -171,6 +171,8 @@ Columns: **Code** · **Category** · **pt-BR message** · **Raised by**.
 | `design_version_immutable` | denied | "Versões salvas de um design não podem ser alteradas." | design_versions_immutable |
 | `design_import_metadata_too_large` | invalid | "Os metadados desta importação ficaram grandes demais para salvar." | design_record_import |
 
+The vector import of Phase 5 (SVG as `path` elements, document version 4, decided 2026-11-19, not built) adds **no code** either: a `path` element with a bad shape answers `invalid_input` and a document over its limits answers `design_too_large`, both already registered above; a file that does not fit the vector limits falls back to pixels with an import note (`vector_limit_reached`, see [enums.md](enums.md)), not with an error.
+
 The file import (editor, client-side) adds **no code**: its refusals are `invalid` results with the pt-BR texts of `DESIGN_IMPORT_MESSAGE`, one catalog at `src/lib/shared/design/import/messages.ts` (listed in [../standards/ui-glossary.md](../standards/ui-glossary.md), rows "Importar…" and "Recusas da importação"); nothing is raised in SQL.
 
 ### Video editor
