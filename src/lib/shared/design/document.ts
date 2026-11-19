@@ -1,4 +1,5 @@
 import { pageSizeOf } from "@/lib/shared/design/crop";
+import { databaseDocumentBytes } from "@/lib/shared/design/document-size";
 import type {
   DesignDocument,
   DesignElement,
@@ -93,7 +94,7 @@ export const canvasBlendOperation = (mode: DesignBlendMode): GlobalCompositeOper
 export const emptyPage = (id: string): DesignPage => ({ id, background: null, elements: [] });
 
 export const emptyDocument = (pageId = "page-1"): DesignDocument => ({
-  version: 3,
+  version: 4,
   pages: [emptyPage(pageId)],
 });
 
@@ -292,7 +293,7 @@ export const coverCrop = (
   };
 };
 
-const mapElements = (
+export const mapElements = (
   page: DesignPage,
   ids: readonly string[],
   update: (element: DesignElement) => DesignElement,
@@ -595,7 +596,7 @@ export const documentBytes = (document: DesignDocument): number =>
   new TextEncoder().encode(JSON.stringify(document)).length;
 
 export const isTooLarge = (document: DesignDocument): boolean =>
-  documentBytes(document) > DESIGN_LIMITS.maxBytes;
+  databaseDocumentBytes(document) > DESIGN_LIMITS.maxBytes;
 
 export const pageImageIds = (page: DesignPage): string[] => [
   ...new Set(

@@ -16,8 +16,36 @@ export const DesignElementKind = {
   Raster: "raster",
   Adjustment: "adjustment",
   Group: "group",
+  Path: "path",
 } as const;
 export type DesignElementKind = ValueOf<typeof DesignElementKind>;
+
+export const DesignPathPaintKind = {
+  Solid: "solid",
+  Linear: "linear",
+  Radial: "radial",
+} as const;
+export type DesignPathPaintKind = ValueOf<typeof DesignPathPaintKind>;
+
+export const DesignPathCap = {
+  Butt: "butt",
+  Round: "round",
+  Square: "square",
+} as const;
+export type DesignPathCap = ValueOf<typeof DesignPathCap>;
+
+export const DesignPathJoin = {
+  Miter: "miter",
+  Round: "round",
+  Bevel: "bevel",
+} as const;
+export type DesignPathJoin = ValueOf<typeof DesignPathJoin>;
+
+export const DesignPathFillRule = {
+  NonZero: "nonzero",
+  EvenOdd: "evenodd",
+} as const;
+export type DesignPathFillRule = ValueOf<typeof DesignPathFillRule>;
 
 export const DesignBlendMode = {
   Normal: "normal",
@@ -186,6 +214,7 @@ export const DESIGN_ELEMENT_LABEL: Record<DesignElementKind, string> = {
   [DesignElementKind.Raster]: "Camada",
   [DesignElementKind.Adjustment]: "Ajuste",
   [DesignElementKind.Group]: "Grupo",
+  [DesignElementKind.Path]: "Vetor",
 };
 
 export const DESIGN_FONT_LABEL: Record<DesignFont, string> = {
@@ -453,6 +482,15 @@ export const DESIGN_LIMITS = {
   maxShadowOffset: 200,
   minStroke: 1,
   maxStroke: 100,
+  maxPathData: 16384,
+  maxPathCommands: 3000,
+  minPathStrokeWidth: 0.1,
+  maxPathStrokeWidth: 100,
+  minMiterLimit: 1,
+  maxMiterLimit: 20,
+  minGradientStops: 2,
+  maxGradientStops: 8,
+  maxVectorImportBytes: 131072,
   history: 100,
   autosaveMs: 2000,
   pixelFlushMs: 60000,

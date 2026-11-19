@@ -7,6 +7,10 @@ import {
   DesignElementKind,
   DesignExportFormat,
   DesignFont,
+  DesignPathCap,
+  DesignPathFillRule,
+  DesignPathJoin,
+  DesignPathPaintKind,
   DesignPreset,
   DesignStatusFilter,
   DesignTextAlign,
@@ -124,6 +128,72 @@ export const groupElementSchema = z.object({
   passThrough: z.boolean().default(false),
 });
 
+const PATH_DATA_ALPHABET = /^[MLCQZ0-9.eE+, -]+$/;
+const PATH_COMMAND_LETTERS = /[MLCQZ]/g;
+
+const pathData = z
+  .string()
+  .min(1)
+  .max(DESIGN_LIMITS.maxPathData)
+  .regex(PATH_DATA_ALPHABET)
+  .refine((value) => {
+    const commands = value.match(PATH_COMMAND_LETTERS)?.length ?? 0;
+    return commands >= 1 && commands <= DESIGN_LIMITS.maxPathCommands;
+  });
+
+const fraction = z.number().min(0).max(1);
+const viewSide = z.number().min(DESIGN_LIMITS.minSize).max(DESIGN_LIMITS.maxSize);
+
+export const pathGradientStopSchema = z.object({
+  offset: fraction,
+  color: hexColorSchema,
+  alpha: fraction,
+});
+
+const gradientStops = z
+  .array(pathGradientStopSchema)
+  .min(DESIGN_LIMITS.minGradientStops)
+  .max(DESIGN_LIMITS.maxGradientStops);
+
+export const pathPaintSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal(DesignPathPaintKind.Solid), color: hexColorSchema }),
+  z.object({
+    kind: z.literal(DesignPathPaintKind.Linear),
+    x1: fraction,
+    y1: fraction,
+    x2: fraction,
+    y2: fraction,
+    stops: gradientStops,
+  }),
+  z.object({
+    kind: z.literal(DesignPathPaintKind.Radial),
+    cx: fraction,
+    cy: fraction,
+    r: z.number().gt(0).max(1),
+    stops: gradientStops,
+  }),
+]);
+
+export const pathStrokeSchema = z.object({
+  color: hexColorSchema,
+  width: z.number().min(DESIGN_LIMITS.minPathStrokeWidth).max(DESIGN_LIMITS.maxPathStrokeWidth),
+  cap: z.nativeEnum(DesignPathCap),
+  join: z.nativeEnum(DesignPathJoin),
+  miterLimit: z.number().min(DESIGN_LIMITS.minMiterLimit).max(DESIGN_LIMITS.maxMiterLimit),
+  dashed: z.boolean(),
+});
+
+export const pathElementSchema = z.object({
+  ...baseElement,
+  kind: z.literal(DesignElementKind.Path),
+  d: pathData,
+  viewWidth: viewSide,
+  viewHeight: viewSide,
+  fill: pathPaintSchema.nullable(),
+  stroke: pathStrokeSchema.nullable(),
+  fillRule: z.nativeEnum(DesignPathFillRule),
+});
+
 const legacyElementSchema = z.discriminatedUnion("kind", [
   textElementSchema,
   imageElementSchema,
@@ -132,7 +202,7 @@ const legacyElementSchema = z.discriminatedUnion("kind", [
   lineElementSchema,
 ]);
 
-export const designElementSchema = z.discriminatedUnion("kind", [
+const elementSchemasV3 = [
   textElementSchema,
   imageElementSchema,
   rectElementSchema,
@@ -141,6 +211,13 @@ export const designElementSchema = z.discriminatedUnion("kind", [
   rasterElementSchema,
   adjustmentElementSchema,
   groupElementSchema,
+] as const;
+
+export const designElementSchemaV3 = z.discriminatedUnion("kind", elementSchemasV3);
+
+export const designElementSchema = z.discriminatedUnion("kind", [
+  ...elementSchemasV3,
+  pathElementSchema,
 ]);
 
 const pageSide = z.number().int().min(DESIGN_LIMITS.minPageSide).max(DESIGN_LIMITS.maxPageSide);
@@ -155,6 +232,11 @@ const pageShape = {
 export const designPageSchema = z.object({
   ...pageShape,
   elements: z.array(designElementSchema).max(DESIGN_LIMITS.maxElements),
+});
+
+const designPageSchemaV3 = z.object({
+  ...pageShape,
+  elements: z.array(designElementSchemaV3).max(DESIGN_LIMITS.maxElements),
 });
 
 const legacyPageSchema = z.object({
@@ -197,9 +279,9 @@ const documentIssues = (
   });
 };
 
-export const designDocumentV3Schema = z
+export const designDocumentV4Schema = z
   .object({
-    version: z.literal(3),
+    version: z.literal(4),
     pages: z.array(designPageSchema).min(1).max(DESIGN_LIMITS.maxPages),
   })
   .superRefine((document, context) => {
@@ -207,6 +289,18 @@ export const designDocumentV3Schema = z
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages"] });
     }
   });
+
+export const designDocumentV3Schema = z
+  .object({
+    version: z.literal(3),
+    pages: z.array(designPageSchemaV3).min(1).max(DESIGN_LIMITS.maxPages),
+  })
+  .superRefine((document, context) => {
+    if (documentIssues(document.pages, DESIGN_LIMITS.maxElements)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages"] });
+    }
+  })
+  .transform((document) => ({ version: 4 as const, pages: document.pages }));
 
 export const designDocumentV2Schema = z
   .object({
@@ -224,7 +318,7 @@ export const designDocumentV2Schema = z
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["pages"] });
     }
   })
-  .transform((document) => ({ version: 3 as const, pages: document.pages }));
+  .transform((document) => ({ version: 4 as const, pages: document.pages }));
 
 const designDocumentV1Schema = z
   .object({
@@ -233,11 +327,12 @@ const designDocumentV1Schema = z
     elements: z.array(legacyElementSchema).max(DESIGN_LIMITS.maxElementsV2),
   })
   .transform((document) => ({
-    version: 3 as const,
+    version: 4 as const,
     pages: [{ id: "page-1", background: document.background, elements: document.elements }],
   }));
 
 export const designDocumentSchema = z.union([
+  designDocumentV4Schema,
   designDocumentV3Schema,
   designDocumentV2Schema,
   designDocumentV1Schema,
@@ -251,11 +346,14 @@ export type EllipseElement = z.infer<typeof ellipseElementSchema>;
 export type LineElement = z.infer<typeof lineElementSchema>;
 export type RasterElement = z.infer<typeof rasterElementSchema>;
 export type AdjustmentElement = z.infer<typeof adjustmentElementSchema>;
+export type PathElement = z.infer<typeof pathElementSchema>;
+export type PathPaint = z.infer<typeof pathPaintSchema>;
+export type PathStroke = z.infer<typeof pathStrokeSchema>;
 export type GroupElement = z.infer<typeof groupElementSchema>;
 export type LayerMask = z.infer<typeof layerMaskSchema>;
 export type DesignElement = z.infer<typeof designElementSchema>;
 export type DesignPage = z.infer<typeof designPageSchema>;
-export type DesignDocument = z.infer<typeof designDocumentV3Schema>;
+export type DesignDocument = z.infer<typeof designDocumentV4Schema>;
 
 const designName = z.string().trim().min(1).max(DESIGN_LIMITS.nameMax);
 const expectedVersion = z.number().int().min(1);
@@ -276,12 +374,12 @@ export const createDesignSchema = z.object({
   brandId: z.string().uuid(),
   name: designName,
   preset: z.nativeEnum(DesignPreset),
-  document: designDocumentV3Schema.optional(),
+  document: designDocumentV4Schema.optional(),
 });
 
 export const saveDesignDraftSchema = z.object({
   id: designId,
-  document: designDocumentV3Schema,
+  document: designDocumentV4Schema,
   expectedVersion,
 });
 

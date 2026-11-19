@@ -2,9 +2,29 @@ import type {
   DesignElement,
   DesignPage,
   ImageElement,
+  PathElement,
   RasterElement,
 } from "@/lib/shared/design/schemas";
 import { DESIGN_LIMITS, DesignElementKind } from "@/lib/shared/design/types";
+
+export type RasterizableElement = ImageElement | PathElement;
+
+export const RASTERIZE_IMAGE_LABEL = "Rasterizar imagem";
+export const RASTERIZE_VECTOR_LABEL = "Rasterizar camada";
+export const RASTERIZE_DISABLED_REASON = "Selecione uma imagem ou um vetor.";
+export const VECTOR_PIXEL_REASON =
+  "Esta camada é um vetor. Rasterize a camada para usar esta ferramenta.";
+
+export const isRasterizable = (
+  element: DesignElement | undefined,
+): element is RasterizableElement =>
+  element?.kind === DesignElementKind.Image || element?.kind === DesignElementKind.Path;
+
+export const rasterizeLabel = (element: DesignElement | undefined): string =>
+  element?.kind === DesignElementKind.Path ? RASTERIZE_VECTOR_LABEL : RASTERIZE_IMAGE_LABEL;
+
+export const pixelToolReason = (generic: string, selected: DesignElement | undefined): string =>
+  selected?.kind === DesignElementKind.Path ? VECTOR_PIXEL_REASON : generic;
 
 export const rasterizedPixelSize = (
   width: number,
@@ -17,13 +37,38 @@ export const rasterizedPixelSize = (
   };
 };
 
-export const rasterizedElement = (source: ImageElement, id: string): RasterElement => ({
+export type RasterSource = Pick<
+  ImageElement,
+  | "x"
+  | "y"
+  | "width"
+  | "height"
+  | "rotation"
+  | "opacity"
+  | "locked"
+  | "groupId"
+  | "blendMode"
+  | "fillOpacity"
+  | "name"
+  | "hidden"
+  | "parentId"
+  | "clipToBelow"
+  | "mask"
+>;
+
+export type RasterFrame = Pick<RasterSource, "x" | "y" | "width" | "height">;
+
+export const rasterizedElement = (
+  source: RasterSource,
+  id: string,
+  frame: RasterFrame = source,
+): RasterElement => ({
   id,
   kind: DesignElementKind.Raster,
-  x: source.x,
-  y: source.y,
-  width: source.width,
-  height: source.height,
+  x: frame.x,
+  y: frame.y,
+  width: frame.width,
+  height: frame.height,
   rotation: source.rotation,
   opacity: source.opacity,
   locked: source.locked,
@@ -36,7 +81,7 @@ export const rasterizedElement = (source: ImageElement, id: string): RasterEleme
   clipToBelow: source.clipToBelow,
   mask: source.mask,
   pixelsVersionId: null,
-  ...rasterizedPixelSize(source.width, source.height),
+  ...rasterizedPixelSize(frame.width, frame.height),
 });
 
 export const adjustBrightnessContrast = (

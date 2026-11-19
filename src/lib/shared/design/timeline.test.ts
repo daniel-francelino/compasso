@@ -15,7 +15,7 @@ import {
   undoTimeline,
 } from "@/lib/shared/design/timeline";
 
-const doc = (name: string): DesignDocument => ({ version: 3, pages: [], name }) as never;
+const doc = (name: string): DesignDocument => ({ version: 4, pages: [], name }) as never;
 
 const RED = { r: 200, g: 20, b: 20 };
 

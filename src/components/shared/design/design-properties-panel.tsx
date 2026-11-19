@@ -2,6 +2,7 @@ import { FormColorPicker } from "lost-ui/forms/form-color-picker";
 import { FormSwitch } from "lost-ui/forms/form-switch";
 import { DesignBlendControls } from "@/components/shared/design/design-blend-controls";
 import { DesignImageProperties } from "@/components/shared/design/design-image-properties";
+import { DesignPathProperties } from "@/components/shared/design/design-path-properties";
 import { DesignShapeProperties } from "@/components/shared/design/design-shape-properties";
 import { DesignTextProperties } from "@/components/shared/design/design-text-properties";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
@@ -74,6 +75,16 @@ function KindProperties({
   }
   if (element.kind === DesignElementKind.Image) {
     return <DesignImageProperties element={element} editor={props.editor} disabled={disabled} />;
+  }
+  if (element.kind === DesignElementKind.Path) {
+    return (
+      <DesignPathProperties
+        element={element}
+        editor={props.editor}
+        disabled={disabled}
+        swatches={props.swatches}
+      />
+    );
   }
   if (
     element.kind !== DesignElementKind.Rect &&

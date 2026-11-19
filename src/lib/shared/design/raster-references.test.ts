@@ -8,7 +8,7 @@ const SIZE = { width: 10, height: 10 };
 const documentWith = (...ids: string[]): DesignDocument => {
   const page = emptyPage("page-1");
   return {
-    version: 3,
+    version: 4,
     pages: [{ ...page, elements: ids.map((id) => createRasterLayer(id, page, SIZE)) }],
   };
 };

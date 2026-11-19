@@ -16,6 +16,7 @@ import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
 import type { DesignViewport } from "@/hooks/shared/design/use-design-viewport";
+import type { RasterizableElement } from "@/lib/shared/design/rasterize";
 import { normalizeColor } from "@/lib/shared/design/document";
 import {
   DESIGN_ALIGN_LABEL,
@@ -35,6 +36,7 @@ export type ToolOptionsProps = {
   selection: SelectionController;
   crop: CropController;
   tool: DesignTool;
+  onRasterize: (element: RasterizableElement) => void;
 };
 
 const HINT_CLASS = "truncate text-sm text-muted-foreground";

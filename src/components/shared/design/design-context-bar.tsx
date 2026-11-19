@@ -22,6 +22,7 @@ import {
   MarqueeOptions,
   WandOptions,
 } from "@/components/shared/design/design-selection-options";
+import type { RasterizableElement } from "@/lib/shared/design/rasterize";
 import type { DesignEditor } from "@/hooks/shared/design/use-design-editor";
 import type { CropController } from "@/hooks/shared/design/use-design-crop";
 import type { DesignPaint } from "@/hooks/shared/design/use-design-paint";
@@ -59,6 +60,7 @@ export function DesignContextBar({
   paint,
   selection,
   crop,
+  onRasterize,
 }: {
   editor: DesignEditor;
   viewport: DesignViewport;
@@ -67,6 +69,7 @@ export function DesignContextBar({
   paint: DesignPaint;
   selection: SelectionController;
   crop: CropController;
+  onRasterize: (element: RasterizableElement) => void;
 }) {
   const Options = DESIGN_TOOL_OPTIONS[tool];
   return (
@@ -86,6 +89,7 @@ export function DesignContextBar({
           selection={selection}
           crop={crop}
           tool={tool}
+          onRasterize={onRasterize}
         />
       )}
     </div>

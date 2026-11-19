@@ -11,7 +11,7 @@ import {
 } from "@/lib/shared/design/layer-mask";
 import { dropTargetIndex } from "@/lib/shared/design/layers";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
-import type { ImageElement } from "@/lib/shared/design/schemas";
+import type { RasterizableElement } from "@/lib/shared/design/rasterize";
 import { LayerMove } from "@/lib/shared/design/types";
 
 const announcement = (position: number, total: number) =>
@@ -29,7 +29,7 @@ export function DesignLayersPanel({
   editor: DesignEditor;
   editable: boolean;
   onAddRaster: () => void;
-  onRasterize: (element: ImageElement) => void;
+  onRasterize: (element: RasterizableElement) => void;
   failedIds: ReadonlySet<string>;
   store: RasterStore;
   masks: MaskController;

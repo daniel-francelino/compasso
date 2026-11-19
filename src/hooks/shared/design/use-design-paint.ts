@@ -31,6 +31,8 @@ import {
   toBrushParams,
 } from "@/lib/shared/design/paint";
 import type { SelectionController } from "@/hooks/shared/design/use-design-selection";
+import type { DesignElement } from "@/lib/shared/design/schemas";
+import { pixelToolReason } from "@/lib/shared/design/rasterize";
 import { selectAllMask } from "@/lib/shared/design/selection-state";
 import {
   type BrushParams,
@@ -49,9 +51,13 @@ import {
   type PageSize,
 } from "@/lib/shared/design/types";
 
-const paintReason = (canPaint: boolean, layerReady: boolean): string | undefined => {
+const paintReason = (
+  canPaint: boolean,
+  layerReady: boolean,
+  selected: DesignElement | undefined,
+): string | undefined => {
   if (!canPaint) return PAINT_UPLOAD_REASON;
-  return layerReady ? undefined : PAINT_REASON;
+  return layerReady ? undefined : pixelToolReason(PAINT_REASON, selected);
 };
 
 const CLEAR_SELECTION_LABEL = "Limpar seleção";
@@ -128,7 +134,7 @@ export const useDesignPaint = ({
   });
   const reason =
     isBrushTool(tool) || isFillTool(tool)
-      ? paintReason(canPaint, layerReady || masked !== null)
+      ? paintReason(canPaint, layerReady || masked !== null, single)
       : undefined;
 
   const cancelFrame = () => {

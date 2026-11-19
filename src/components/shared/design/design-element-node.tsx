@@ -1,15 +1,17 @@
 import Konva from "konva";
 import { useEffect, useRef } from "react";
-import { Ellipse, Group, Image as KonvaImage, Line, Rect, Text } from "react-konva";
+import { Ellipse, Group, Image as KonvaImage, Line, Path, Rect, Text } from "react-konva";
 import type { CanvasChrome } from "@/lib/shared/design/browser";
 import { canvasBlendOperation, coverCrop, isRendered } from "@/lib/shared/design/document";
 import type {
   DesignElement,
   ImageElement,
   LineElement,
+  PathElement,
   RasterElement,
   TextElement,
 } from "@/lib/shared/design/schemas";
+import { pathDash, pathPaintProps, safePathData } from "@/lib/shared/design/path";
 import {
   DESIGN_LIMITS,
   DesignElementKind,
@@ -207,6 +209,60 @@ function LineBody({ element }: { element: LineElement }) {
   );
 }
 
+const HIT_STROKE_MIN = 8;
+
+function PathBody({ element }: { element: PathElement }) {
+  const data = safePathData(element.d);
+  if (data === null) return null;
+  const paint = pathPaintProps(element);
+  const stroke = element.stroke;
+  const fillProps =
+    paint === null
+      ? {}
+      : paint.kind === "color"
+        ? { fill: paint.color }
+        : paint.kind === "linear"
+          ? {
+              fillPriority: "linear-gradient" as const,
+              fillLinearGradientStartPoint: { x: paint.start[0], y: paint.start[1] },
+              fillLinearGradientEndPoint: { x: paint.end[0], y: paint.end[1] },
+              fillLinearGradientColorStops: paint.stops,
+            }
+          : {
+              fillPriority: "radial-gradient" as const,
+              fillRadialGradientStartPoint: { x: paint.center[0], y: paint.center[1] },
+              fillRadialGradientEndPoint: { x: paint.center[0], y: paint.center[1] },
+              fillRadialGradientStartRadius: 0,
+              fillRadialGradientEndRadius: paint.radius,
+              fillRadialGradientColorStops: paint.stops,
+            };
+  const strokeProps =
+    stroke === null
+      ? {}
+      : {
+          stroke: stroke.color,
+          strokeWidth: stroke.width,
+          lineCap: stroke.cap,
+          lineJoin: stroke.join,
+          miterLimit: stroke.miterLimit,
+          dash: pathDash(stroke),
+          hitStrokeWidth: Math.max(HIT_STROKE_MIN, stroke.width),
+        };
+  return (
+    <Path
+      data={data}
+      scaleX={element.width / element.viewWidth}
+      scaleY={element.height / element.viewHeight}
+      fillRule={element.fillRule}
+      fillEnabled={paint !== null}
+      strokeEnabled={stroke !== null}
+      strokeScaleEnabled={false}
+      {...fillProps}
+      {...strokeProps}
+    />
+  );
+}
+
 function ElementBody({
   element,
   image,
@@ -227,6 +283,7 @@ function ElementBody({
   if (element.kind === DesignElementKind.Raster) {
     return <RasterBody element={element} canvas={raster} />;
   }
+  if (element.kind === DesignElementKind.Path) return <PathBody element={element} />;
   if (element.kind === DesignElementKind.Adjustment || element.kind === DesignElementKind.Group) {
     return null;
   }

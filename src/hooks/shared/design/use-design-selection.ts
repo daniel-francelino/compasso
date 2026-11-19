@@ -26,6 +26,7 @@ import {
   shapeMask,
   shrinkSelection,
 } from "@/lib/shared/design/selection-state";
+import { pixelToolReason } from "@/lib/shared/design/rasterize";
 import type { PagePlacement } from "@/lib/shared/design/selection-state";
 import { DesignElementKind, DesignTool, type PageSize } from "@/lib/shared/design/types";
 
@@ -156,7 +157,7 @@ export const useDesignSelection = ({
   const wand = (point: Point, combine: SelectionCombine) => {
     const buffer = single?.kind === DesignElementKind.Raster ? rasters.store.get(single.id) : null;
     if (single?.kind !== DesignElementKind.Raster || buffer === null || buffer === undefined) {
-      setNotice(WAND_NEEDS_LAYER);
+      setNotice(pixelToolReason(WAND_NEEDS_LAYER, single));
       return;
     }
     setNotice(null);

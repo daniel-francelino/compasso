@@ -9,7 +9,12 @@ import {
 } from "@/lib/shared/design/layer-mask";
 import { docToLayerPoint } from "@/lib/shared/design/paint";
 import { adjustBrightnessContrast, rasterizedPixelSize } from "@/lib/shared/design/rasterize";
-import type { DesignElement, ImageElement, RasterElement } from "@/lib/shared/design/schemas";
+import type {
+  DesignElement,
+  ImageElement,
+  PathElement,
+  RasterElement,
+} from "@/lib/shared/design/schemas";
 import { type SampleSize, sampleColor } from "@/lib/shared/design/raster/fill";
 import type { CoverageMask } from "@/lib/shared/design/raster/blend";
 import {
@@ -22,6 +27,8 @@ import {
   type PixelBuffer,
   type RgbaColor,
 } from "@/lib/shared/design/raster/pixel-buffer";
+import { pathDash } from "@/lib/shared/design/path";
+import { pathFillStyle, pathRasterFrame } from "@/lib/shared/design/vector/path-paint";
 import { splitRasterRuns } from "@/lib/shared/design/raster-runs";
 import { RASTER_BYTES_PER_PIXEL, type RasterStore } from "@/lib/shared/design/raster-store";
 import {
@@ -451,6 +458,44 @@ export const rasterizeImage = (
   context.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, pixelWidth, pixelHeight);
   const pixels = context.getImageData(0, 0, pixelWidth, pixelHeight);
   adjustBrightnessContrast(pixels.data, element.brightness, element.contrast);
+  return { width: pixelWidth, height: pixelHeight, data: pixels.data };
+};
+
+export const rasterizePath = (element: PathElement): PixelBuffer | null => {
+  const frame = pathRasterFrame(element);
+  const { pixelWidth, pixelHeight } = rasterizedPixelSize(frame.width, frame.height);
+  const canvas = newCanvas(pixelWidth, pixelHeight);
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (context === null) return null;
+  const pad = (frame.width - element.width) / 2;
+  context.scale(pixelWidth / frame.width, pixelHeight / frame.height);
+  context.translate(pad, pad);
+  const shape = new Path2D();
+  shape.addPath(
+    new Path2D(element.d),
+    new DOMMatrix([
+      element.width / element.viewWidth,
+      0,
+      0,
+      element.height / element.viewHeight,
+      0,
+      0,
+    ]),
+  );
+  if (element.fill !== null) {
+    context.fillStyle = pathFillStyle(context, element.fill, element);
+    context.fill(shape, element.fillRule);
+  }
+  if (element.stroke !== null) {
+    context.strokeStyle = element.stroke.color;
+    context.lineWidth = element.stroke.width;
+    context.lineCap = element.stroke.cap;
+    context.lineJoin = element.stroke.join;
+    context.miterLimit = element.stroke.miterLimit;
+    context.setLineDash(pathDash(element.stroke));
+    context.stroke(shape);
+  }
+  const pixels = context.getImageData(0, 0, pixelWidth, pixelHeight);
   return { width: pixelWidth, height: pixelHeight, data: pixels.data };
 };
 

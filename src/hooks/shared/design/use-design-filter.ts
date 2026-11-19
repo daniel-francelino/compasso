@@ -9,6 +9,7 @@ import {
   startFilterJob,
 } from "@/lib/shared/design/filter-client";
 import { PAINT_UPLOAD_REASON } from "@/lib/shared/design/paint";
+import { pixelToolReason } from "@/lib/shared/design/rasterize";
 import {
   DESIGN_FILTER_LABEL,
   type DesignFilter,
@@ -85,7 +86,7 @@ export const useDesignFilter = ({
   const { stroking } = pixels;
   const layer = editor.single;
   const usable = layer?.kind === DesignElementKind.Raster && !layer.locked && !layer.hidden;
-  const missing = usable ? undefined : FILTER_REASON;
+  const missing = usable ? undefined : pixelToolReason(FILTER_REASON, layer);
   const reason = canPaint ? missing : PAINT_UPLOAD_REASON;
 
   const patchState = (patch: Partial<FilterState>) =>

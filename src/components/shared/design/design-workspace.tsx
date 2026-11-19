@@ -64,12 +64,14 @@ import {
 } from "@/lib/shared/design/design.functions";
 import { pageSizeOf } from "@/lib/shared/design/crop";
 import { brandFontsOf, createImage } from "@/lib/shared/design/document";
-import { rasterizeImage } from "@/lib/shared/design/raster-canvas";
-import { rasterizedElement } from "@/lib/shared/design/rasterize";
-import type { ImageElement } from "@/lib/shared/design/schemas";
+import { rasterizeImage, rasterizePath } from "@/lib/shared/design/raster-canvas";
+import { type RasterizableElement, rasterizedElement } from "@/lib/shared/design/rasterize";
+import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
+import { pathRasterFrame } from "@/lib/shared/design/vector/path-paint";
 import { SelectionAdjust } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_PRESET_LABEL,
+  DesignElementKind,
   DesignPanel,
   DesignSaveState,
   DesignTool,
@@ -317,20 +319,28 @@ export function DesignWorkspace({
     }
   };
 
-  const rasterize = (element: ImageElement) => {
-    const image = assets.images.get(element.mediaVersionId);
-    if (image === null || image === undefined) {
-      toast.error(RASTERIZE_UNAVAILABLE);
-      return;
-    }
+  const commitRaster = (element: RasterizableElement, buffer: PixelBuffer | null) => {
     const layerId = editor.newId();
-    const buffer = rasterizeImage(element, image);
     if (buffer === null || !rasters.store.set(layerId, buffer)) {
       toast.error(RASTER_MEMORY_MESSAGE);
       return;
     }
     rasters.store.markChanged(layerId);
-    editor.replaceWithRaster(element.id, rasterizedElement(element, layerId));
+    const frame = element.kind === DesignElementKind.Path ? pathRasterFrame(element) : element;
+    editor.replaceWithRaster(element.id, rasterizedElement(element, layerId, frame));
+  };
+
+  const rasterize = (element: RasterizableElement) => {
+    if (element.kind === DesignElementKind.Path) {
+      commitRaster(element, rasterizePath(element));
+      return;
+    }
+    const image = assets.images.get(element.mediaVersionId);
+    if (image === null || image === undefined) {
+      toast.error(RASTERIZE_UNAVAILABLE);
+      return;
+    }
+    commitRaster(element, rasterizeImage(element, image));
   };
 
   const openPanel = (panel: DesignPanel) => {
@@ -488,6 +498,7 @@ export function DesignWorkspace({
           paint={paint}
           selection={selection}
           crop={crop}
+          onRasterize={rasterize}
         />
       ) : null}
       <div className="flex min-h-0 flex-1">

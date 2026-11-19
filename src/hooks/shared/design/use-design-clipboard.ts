@@ -29,6 +29,7 @@ import {
   pastedLayer,
   regionPlacement,
 } from "@/lib/shared/design/pixel-clipboard";
+import { pixelToolReason } from "@/lib/shared/design/rasterize";
 import { blobToBuffer, bufferToPng } from "@/lib/shared/design/raster-canvas";
 import { type PixelBuffer, clonePixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 import { DesignElementKind, type PageSize } from "@/lib/shared/design/types";
@@ -70,10 +71,10 @@ export const useDesignClipboard = ({
   const layer = editor.single?.kind === DesignElementKind.Raster ? editor.single : null;
   const usable = layer !== null && !layer.locked && !layer.hidden;
 
-  const copyReason = layer === null ? NO_PIXELS_TO_COPY : undefined;
+  const copyReason = layer === null ? pixelToolReason(NO_PIXELS_TO_COPY, editor.single) : undefined;
   const writeReason = (): string | undefined => {
     if (!canPaint) return PAINT_UPLOAD_REASON;
-    return usable ? undefined : PAINT_REASON;
+    return usable ? undefined : pixelToolReason(PAINT_REASON, editor.single);
   };
   const cutReason = copyReason ?? writeReason();
   const pasteReason = canPaint ? undefined : PAINT_UPLOAD_REASON;

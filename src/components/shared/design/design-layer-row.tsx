@@ -15,6 +15,7 @@ import {
   type LucideIcon,
   Minus,
   Pencil,
+  PenTool,
   SlidersHorizontal,
   Square,
   Trash2,
@@ -44,7 +45,12 @@ import {
 import { DesignLayerThumb } from "@/components/shared/design/design-layer-thumb";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
-import type { DesignElement, ImageElement } from "@/lib/shared/design/schemas";
+import {
+  type RasterizableElement,
+  isRasterizable,
+  rasterizeLabel,
+} from "@/lib/shared/design/rasterize";
+import type { DesignElement } from "@/lib/shared/design/schemas";
 import { DESIGN_LIMITS, DesignElementKind, LayerMove } from "@/lib/shared/design/types";
 import { cn } from "@/lib/shared/utils";
 
@@ -57,6 +63,7 @@ const KIND_ICON: Record<DesignElementKind, LucideIcon> = {
   [DesignElementKind.Raster]: Layers,
   [DesignElementKind.Adjustment]: SlidersHorizontal,
   [DesignElementKind.Group]: FolderClosed,
+  [DesignElementKind.Path]: PenTool,
 };
 
 const THUMB = checkerboard(8);
@@ -71,7 +78,7 @@ type Props = {
   pixelsFailed: boolean;
   store: RasterStore;
   masks: MaskController;
-  onRasterize: (element: ImageElement) => void;
+  onRasterize: (element: RasterizableElement) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
   renaming: boolean;
@@ -336,10 +343,10 @@ export function DesignLayerRow(props: Props) {
           {element.hidden ? <Eye aria-hidden="true" /> : <EyeOff aria-hidden="true" />}
           {element.hidden ? "Mostrar camada" : "Ocultar camada"}
         </ContextMenuItem>
-        {element.kind === DesignElementKind.Image ? (
+        {isRasterizable(element) ? (
           <ContextMenuItem onSelect={() => props.onRasterize(element)}>
             <Layers aria-hidden="true" />
-            Rasterizar imagem
+            {rasterizeLabel(element)}
           </ContextMenuItem>
         ) : null}
         <ContextMenuItem

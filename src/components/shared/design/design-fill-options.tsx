@@ -1,5 +1,6 @@
 import { FormSelect } from "lost-ui/forms/form-select";
 import { OptionField, ToggleButton } from "@/components/shared/design/design-paint-options";
+import { PixelReason } from "@/components/shared/design/design-pixel-reason";
 import type { ToolOptionsProps } from "@/components/shared/design/design-tool-options";
 import { BLEND_ITEMS, asBlendMode } from "@/lib/shared/design/blend-items";
 import { FILL_LIMITS, GRADIENT_KIND_LABEL, GradientKind } from "@/lib/shared/design/fill-tools";
@@ -29,15 +30,7 @@ function BlendField({
   );
 }
 
-function Reason({ text }: { text: string | undefined }) {
-  return text === undefined ? null : (
-    <p role="status" className="ml-2 shrink-0 text-sm text-muted-foreground">
-      {text}
-    </p>
-  );
-}
-
-export function BucketOptionsBar({ paint }: ToolOptionsProps) {
+export function BucketOptionsBar({ paint, editor, onRasterize }: ToolOptionsProps) {
   const { bucket, setBucket } = paint.fill;
   return (
     <>
@@ -67,12 +60,12 @@ export function BucketOptionsBar({ paint }: ToolOptionsProps) {
         value={bucket.blendMode}
         onChange={(blendMode) => setBucket({ blendMode })}
       />
-      <Reason text={paint.reason} />
+      <PixelReason text={paint.reason} single={editor.single} onRasterize={onRasterize} />
     </>
   );
 }
 
-export function GradientOptionsBar({ paint }: ToolOptionsProps) {
+export function GradientOptionsBar({ paint, editor, onRasterize }: ToolOptionsProps) {
   const { gradient, setGradient } = paint.fill;
   return (
     <>
@@ -104,7 +97,7 @@ export function GradientOptionsBar({ paint }: ToolOptionsProps) {
         value={gradient.blendMode}
         onChange={(blendMode) => setGradient({ blendMode })}
       />
-      <Reason text={paint.reason} />
+      <PixelReason text={paint.reason} single={editor.single} onRasterize={onRasterize} />
     </>
   );
 }

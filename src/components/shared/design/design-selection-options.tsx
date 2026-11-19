@@ -1,6 +1,7 @@
 import { FormInputNumber } from "lost-ui/forms/form-input-number";
 import { useState } from "react";
 import { OptionField } from "@/components/shared/design/design-paint-options";
+import { PixelReason } from "@/components/shared/design/design-pixel-reason";
 import type { ToolOptionsProps } from "@/components/shared/design/design-tool-options";
 import { Button } from "@/components/shared/ui/button";
 import { SelectionCombine } from "@/lib/shared/design/raster/selection";
@@ -132,7 +133,7 @@ export function LassoOptions({ selection }: ToolOptionsProps) {
   );
 }
 
-export function WandOptions({ selection }: ToolOptionsProps) {
+export function WandOptions({ selection, editor, onRasterize }: ToolOptionsProps) {
   return (
     <>
       <ModeToggles selection={selection} />
@@ -154,11 +155,7 @@ export function WandOptions({ selection }: ToolOptionsProps) {
       >
         Contíguo
       </Button>
-      {selection.notice === null ? null : (
-        <p role="status" className="shrink-0 text-sm text-muted-foreground">
-          {selection.notice}
-        </p>
-      )}
+      <PixelReason text={selection.notice} single={editor.single} onRasterize={onRasterize} />
     </>
   );
 }

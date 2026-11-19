@@ -62,14 +62,14 @@ describe("document version 3", () => {
     expect(parses({ version: 3, pages: [next] })).toBe(true);
   });
 
-  it("writes version 3 and reads version 1 and 2 with the new defaults", () => {
-    expect(emptyDocument().version).toBe(3);
+  it("writes version 4 and reads version 1 and 2 with the new defaults", () => {
+    expect(emptyDocument().version).toBe(4);
     const element = { ...rect("e"), kind: DesignElementKind.Ellipse };
     const upgraded = designDocumentSchema.parse({
       version: 2,
       pages: [{ id: "p", background: null, elements: [element] }],
     });
-    expect(upgraded.version).toBe(3);
+    expect(upgraded.version).toBe(4);
     expect(upgraded.pages[0]?.elements[0]).toMatchObject({
       parentId: null,
       clipToBelow: false,
@@ -80,7 +80,7 @@ describe("document version 3", () => {
       background: null,
       elements: [element],
     });
-    expect(fromOne.version).toBe(3);
+    expect(fromOne.version).toBe(4);
     expect(fromOne.pages).toHaveLength(1);
   });
 

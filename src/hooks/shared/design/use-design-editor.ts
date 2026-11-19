@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { type PathPatch, patchPath } from "@/lib/shared/design/path";
 import { type CropBox, cropPage } from "@/lib/shared/design/crop";
 import {
   alignElements,
@@ -293,6 +294,8 @@ export const useDesignEditor = (initial: DesignDocument, pixels: PixelSteps = NO
       changePage((current) => patchShape(current, id, patch), mergeKey),
     patchLine: (id: string, patch: LinePatch, mergeKey?: string) =>
       changePage((current) => patchLine(current, id, patch), mergeKey),
+    patchPath: (id: string, patch: PathPatch, mergeKey?: string) =>
+      changePage((current) => patchPath(current, id, patch), mergeKey),
     setBackground: (background: string | null, mergeKey?: string) =>
       changePage((current) => setBackground(current, background), mergeKey),
     group: () => changePage((current) => groupElements(current, selectedIds, newId())),

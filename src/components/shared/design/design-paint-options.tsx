@@ -1,5 +1,6 @@
 import { FormInputNumber } from "lost-ui/forms/form-input-number";
 import { FormSlider } from "lost-ui/forms/form-slider";
+import { PixelReason } from "@/components/shared/design/design-pixel-reason";
 import type { ToolOptionsProps } from "@/components/shared/design/design-tool-options";
 import { Button } from "@/components/shared/ui/button";
 import {
@@ -105,7 +106,7 @@ function PressureToggles({ paint }: { paint: ToolOptionsProps["paint"] }) {
   );
 }
 
-export function BrushOptionsBar({ tool, paint }: ToolOptionsProps) {
+export function BrushOptionsBar({ tool, paint, editor, onRasterize }: ToolOptionsProps) {
   if (!isBrushTool(tool)) return null;
   const options = paint.brush.optionsOf(tool);
   return (
@@ -122,11 +123,7 @@ export function BrushOptionsBar({ tool, paint }: ToolOptionsProps) {
         />
       ))}
       <PressureToggles paint={paint} />
-      {paint.reason === undefined ? null : (
-        <p role="status" className="ml-2 shrink-0 text-sm text-muted-foreground">
-          {paint.reason}
-        </p>
-      )}
+      <PixelReason text={paint.reason} single={editor.single} onRasterize={onRasterize} />
     </>
   );
 }

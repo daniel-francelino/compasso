@@ -40,7 +40,7 @@ import {
   type DesignDocument,
   type DesignPage,
   designDocumentSchema,
-  designDocumentV3Schema,
+  designDocumentV4Schema,
 } from "@/lib/shared/design/schemas";
 import {
   DESIGN_LIMITS,
@@ -69,7 +69,7 @@ const samplePage = (): DesignPage => {
   );
 };
 
-const sample = (): DesignDocument => ({ version: 3, pages: [samplePage()] });
+const sample = (): DesignDocument => ({ version: 4, pages: [samplePage()] });
 
 const ids = (page: DesignPage | undefined) => page?.elements.map((element) => element.id) ?? [];
 
@@ -102,7 +102,7 @@ describe("design document", () => {
     const withLine = updatePage(document, "p1", (page) =>
       addElement(page, createLine("l1", DesignPreset.FeedSquare, palette)),
     );
-    expect(designDocumentV3Schema.safeParse(withLine).success).toBe(true);
+    expect(designDocumentV4Schema.safeParse(withLine).success).toBe(true);
   });
 
   it("reads a version 1 document as one page with the new defaults", () => {
@@ -126,7 +126,7 @@ describe("design document", () => {
         },
       ],
     });
-    expect(parsed.version).toBe(3);
+    expect(parsed.version).toBe(4);
     expect(parsed.pages).toHaveLength(1);
     expect(parsed.pages[0]?.elements[0]).toMatchObject({ groupId: null, zoom: 1, alt: "" });
   });
@@ -228,7 +228,7 @@ describe("design document", () => {
     }
     expect(document.pages).toHaveLength(DESIGN_LIMITS.maxPages);
     const full: DesignDocument = {
-      version: 3,
+      version: 4,
       pages: [
         {
           id: "f",
@@ -240,7 +240,7 @@ describe("design document", () => {
       ],
     };
     expect(canAddElements(full)).toBe(false);
-    expect(designDocumentV3Schema.safeParse(full).success).toBe(true);
+    expect(designDocumentV4Schema.safeParse(full).success).toBe(true);
   });
 
   it("measures the document size in bytes", () => {
@@ -254,15 +254,15 @@ describe("design document", () => {
   it("refuses duplicated ids and unknown kinds", () => {
     const page = samplePage();
     const duplicated = {
-      version: 3,
+      version: 4,
       pages: [{ ...page, elements: [...page.elements, page.elements[0]] }],
     };
-    expect(designDocumentV3Schema.safeParse(duplicated).success).toBe(false);
+    expect(designDocumentV4Schema.safeParse(duplicated).success).toBe(false);
     const unknown = {
-      version: 3,
+      version: 4,
       pages: [{ ...page, elements: [{ ...page.elements[1], kind: "video" }] }],
     };
-    expect(designDocumentV3Schema.safeParse(unknown).success).toBe(false);
+    expect(designDocumentV4Schema.safeParse(unknown).success).toBe(false);
   });
 
   it("resizes a square design into a story, scaled and centered", () => {

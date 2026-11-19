@@ -15,7 +15,13 @@ import type { SelectionController } from "@/hooks/shared/design/use-design-selec
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
 import { DESIGN_FILTER_LABEL, DesignFilter } from "@/lib/shared/design/raster/filter-types";
 import { ADJUSTMENT_TYPE_LABEL, AdjustmentType } from "@/lib/shared/design/raster/adjustment-types";
-import type { ImageElement } from "@/lib/shared/design/schemas";
+import {
+  RASTERIZE_DISABLED_REASON,
+  type RasterizableElement,
+  isRasterizable,
+  pixelToolReason,
+  rasterizeLabel,
+} from "@/lib/shared/design/rasterize";
 import { SELECTION_ADJUST_LABEL, SelectionAdjust } from "@/lib/shared/design/selection-state";
 import {
   DESIGN_CLIP_SHORTCUT_LABEL,
@@ -52,7 +58,7 @@ export type DesignMenuContext = {
   onAddLayer: (tool: DesignTool) => void;
   onAddRaster: () => void;
   onAddAdjustment: (type: AdjustmentType) => void;
-  onRasterize: (element: ImageElement) => void;
+  onRasterize: (element: RasterizableElement) => void;
   onPanel: (panel: DesignPanel) => void;
   onShortcuts: () => void;
   selection: SelectionController;
@@ -70,7 +76,7 @@ const TRANSFORM_REASON = "Selecione uma camada de pixels visível e desbloqueada
 const transformReason = ({ editor }: DesignMenuContext): string | undefined => {
   const layer = editor.single;
   const usable = layer?.kind === DesignElementKind.Raster && !layer.locked && !layer.hidden;
-  return usable ? undefined : TRANSFORM_REASON;
+  return usable ? undefined : pixelToolReason(TRANSFORM_REASON, layer);
 };
 
 const fileMenu = (c: DesignMenuContext): DesignMenu => ({
@@ -267,11 +273,10 @@ const layerMenu = (c: DesignMenuContext): DesignMenu => {
       },
       {
         id: "rasterize",
-        label: "Rasterizar imagem",
-        disabledReason:
-          single?.kind === DesignElementKind.Image ? undefined : "Selecione uma imagem.",
+        label: rasterizeLabel(single),
+        disabledReason: isRasterizable(single) ? undefined : RASTERIZE_DISABLED_REASON,
         onSelect: () => {
-          if (single?.kind === DesignElementKind.Image) c.onRasterize(single);
+          if (isRasterizable(single)) c.onRasterize(single);
         },
       },
       {
