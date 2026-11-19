@@ -59,4 +59,28 @@ describe("document size estimate", () => {
     const quoted = databaseDocumentBytes(documentWith(String.raw`a,b:\"c`));
     expect(quoted - plain).toBe(8);
   });
+
+  it("counts numbers that JavaScript prints with an exponent as jsonb prints them", () => {
+    const documentOf = (opacity: number) =>
+      designDocumentSchema.parse({
+        version: 4,
+        pages: [
+          {
+            id: "p",
+            background: null,
+            elements: [
+              {
+                ...createPath({ id: "e", d: "M0 0L1 1Z", width: 10, height: 10 }, PAGE),
+                opacity,
+              },
+            ],
+          },
+        ],
+      });
+    const base = databaseDocumentBytes(documentOf(1));
+    expect(databaseDocumentBytes(documentOf(1e-300))).toBeGreaterThanOrEqual(base + 300);
+    expect(databaseDocumentBytes(documentOf(0.1 + 0.2 - 0.3 + 1e-17))).toBeGreaterThanOrEqual(
+      base + 30,
+    );
+  });
 });

@@ -52,6 +52,25 @@ export const SVG_LIMITS = {
   headWindowBytes: 1024,
 } as const;
 
+export const SVG_VECTOR_LIMITS = {
+  maxFileBytes: SVG_LIMITS.maxFileBytes,
+  maxNodes: 5000,
+  maxDepth: 32,
+  maxUseExpansions: 200,
+  maxNumber: 1_000_000,
+  timeBudgetMs: 2000,
+  maxStyleChars: SVG_LIMITS.maxStyleChars,
+  maxStyleRules: 2000,
+  maxStyleDeclarations: 2000,
+  maxStyleWork: 100_000,
+  maxAttributesPerElement: 64,
+  maxAttributeChars: 4096,
+  maxDataAttributeChars: 524_288,
+  maxNumberChars: 32,
+  maxDeclarationChars: 1024,
+  maxPaintChars: 256,
+} as const;
+
 export const pageSizeRefusal = (
   width: number,
   height: number,

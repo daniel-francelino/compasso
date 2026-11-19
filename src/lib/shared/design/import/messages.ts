@@ -97,6 +97,8 @@ export const DESIGN_IMPORT_MESSAGE = {
   svgNoSize:
     "Este SVG não informa o tamanho. Defina largura e altura em pixels, ou o viewBox, e exporte de novo.",
   svgRender: "Não foi possível desenhar este SVG. Exporte como PNG e tente de novo.",
+  svgVectorTimeout:
+    "A leitura deste SVG demorou demais e foi interrompida. Simplifique o desenho e exporte de novo.",
   sketchNotZip: "Este arquivo não parece ser um documento do Sketch.",
   sketchCorrupt: "Não foi possível ler este arquivo do Sketch. Ele pode estar corrompido.",
   sketchUnsupportedVersion:
@@ -138,6 +140,8 @@ export const DESIGN_IMPORT_NOTE_SENTENCE: Record<DesignImportNoteKind, (count: n
       `Cores convertidas para RGB de forma aproximada (${count}).`,
     [DesignImportNoteKind.VectorRasterized]: () =>
       "SVG convertido em pixels: o desenho não pode mais ser editado como vetor.",
+    [DesignImportNoteKind.VectorLimitReached]: () =>
+      "O SVG tem formas ou dados demais para ser editado como vetor.",
     [DesignImportNoteKind.FontsNotImported]: (count) =>
       `Os textos do SVG usam fontes do sistema; as fontes do arquivo não foram importadas (${count}).`,
     [DesignImportNoteKind.UnsupportedNode]: (count) =>

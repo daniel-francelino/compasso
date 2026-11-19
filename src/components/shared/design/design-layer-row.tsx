@@ -42,6 +42,7 @@ import {
   MASK_ENABLE_LABEL,
   isMaskable,
 } from "@/lib/shared/design/layer-mask";
+import { DesignPathThumb } from "@/components/shared/design/design-path-thumb";
 import { DesignLayerThumb } from "@/components/shared/design/design-layer-thumb";
 import { CLIP_DISABLED_REASON, canClipToBelow } from "@/lib/shared/design/adjustment-layers";
 import type { RasterStore } from "@/lib/shared/design/raster-store";
@@ -243,7 +244,11 @@ export function DesignLayerRow(props: Props) {
             style={THUMB}
             className="flex size-8 shrink-0 items-center justify-center rounded border"
           >
-            <KindIcon className="size-4 text-foreground" />
+            {element.kind === DesignElementKind.Path ? (
+              <DesignPathThumb element={element} />
+            ) : (
+              <KindIcon className="size-4 text-foreground" />
+            )}
           </span>
         )}
         {element.mask === null || !isMaskable(element) ? null : (

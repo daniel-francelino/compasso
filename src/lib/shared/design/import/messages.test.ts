@@ -36,6 +36,7 @@ describe("import notes", () => {
       metadata_truncated: "Metadados do arquivo registrados s{o} em parte (2 listas).",
       vector_rasterized:
         "SVG convertido em pixels: o desenho n{t}o pode mais ser editado como vetor.",
+      vector_limit_reached: "O SVG tem formas ou dados demais para ser editado como vetor.",
       fonts_not_imported:
         "Os textos do SVG usam fontes do sistema; as fontes do arquivo n{t}o foram importadas (2).",
       unsupported_node: "Elementos sem suporte foram ignorados (2).",

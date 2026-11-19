@@ -16,7 +16,7 @@ import type { AdjustmentElement, DesignElement, DesignPage } from "@/lib/shared/
 import { DesignBlendMode, DesignElementKind, type PageSize } from "@/lib/shared/design/types";
 
 export const ADJUSTMENT_HINT =
-  "O ajuste atua nas camadas de pixels logo abaixo dele, sem passar por texto, formas ou imagens. Use Camada > Rasterizar imagem para ajustar uma foto.";
+  "O ajuste atua nas camadas de pixels logo abaixo dele, sem passar por texto, formas, vetores ou imagens. Use Camada > Rasterizar imagem para ajustar uma foto.";
 
 export const CLIP_DISABLED_REASON =
   "Disponível para camadas de pixels e ajustes logo acima de outra camada de pixels ou ajuste.";

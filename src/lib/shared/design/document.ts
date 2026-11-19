@@ -1,5 +1,6 @@
 import { pageSizeOf } from "@/lib/shared/design/crop";
 import { databaseDocumentBytes } from "@/lib/shared/design/document-size";
+import { scalePathStroke } from "@/lib/shared/design/path-scale";
 import type {
   DesignDocument,
   DesignElement,
@@ -644,6 +645,7 @@ const scaleElement = (
   if (base.kind === DesignElementKind.Rect) {
     return { ...base, cornerRadius: Math.round(base.cornerRadius * scale) };
   }
+  if (base.kind === DesignElementKind.Path) return scalePathStroke(base, scale);
   if (base.kind !== DesignElementKind.Line) return base;
   return {
     ...base,

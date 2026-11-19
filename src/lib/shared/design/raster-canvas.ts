@@ -28,7 +28,11 @@ import {
   type RgbaColor,
 } from "@/lib/shared/design/raster/pixel-buffer";
 import { pathDash } from "@/lib/shared/design/path";
-import { pathFillStyle, pathRasterFrame } from "@/lib/shared/design/vector/path-paint";
+import {
+  pathFillStyle,
+  pathRasterFrame,
+  safePathElement,
+} from "@/lib/shared/design/vector/path-paint";
 import { splitRasterRuns } from "@/lib/shared/design/raster-runs";
 import { RASTER_BYTES_PER_PIXEL, type RasterStore } from "@/lib/shared/design/raster-store";
 import {
@@ -461,7 +465,9 @@ export const rasterizeImage = (
   return { width: pixelWidth, height: pixelHeight, data: pixels.data };
 };
 
-export const rasterizePath = (element: PathElement): PixelBuffer | null => {
+export const rasterizePath = (source: PathElement): PixelBuffer | null => {
+  const element = safePathElement(source);
+  if (element === null) return null;
   const frame = pathRasterFrame(element);
   const { pixelWidth, pixelHeight } = rasterizedPixelSize(frame.width, frame.height);
   const canvas = newCanvas(pixelWidth, pixelHeight);

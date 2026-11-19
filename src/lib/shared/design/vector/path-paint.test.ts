@@ -7,6 +7,7 @@ import {
   pathFillStyle,
   pathRasterFrame,
   pathStrokePadding,
+  safePathElement,
 } from "@/lib/shared/design/vector/path-paint";
 import {
   DESIGN_LIMITS,
@@ -183,5 +184,61 @@ describe("pathFillStyle", () => {
       { width: 100, height: 50 },
     );
     expect(calls[0]).toEqual(["radial", 50, 25, 0, 50, 25, 25]);
+  });
+});
+
+describe("safePathElement", () => {
+  it("keeps a valid element's geometry", () => {
+    const element = base();
+    expect(safePathElement(element)).toMatchObject({ width: 100, height: 50 });
+  });
+
+  it("refuses an exponent bomb", () => {
+    expect(safePathElement({ ...base(), d: "M 1e999 0 L 1 1 Z" })).toBeNull();
+  });
+
+  it("refuses data that is not a path", () => {
+    expect(safePathElement({ ...base(), d: "ZZZ" })).toBeNull();
+  });
+
+  it("refuses more commands than the limit", () => {
+    const d = `M 0 0 ${"Z ".repeat(DESIGN_LIMITS.maxPathCommands + 1)}`;
+    expect(safePathElement({ ...base(), d })).toBeNull();
+  });
+
+  it("clamps hostile stroke values instead of using them", () => {
+    const element = stroked({ width: 1e9, miterLimit: 1e9 });
+    const safe = safePathElement(element);
+    expect(safe?.stroke?.width).toBe(DESIGN_LIMITS.maxPathStrokeWidth);
+    expect(safe?.stroke?.miterLimit).toBe(DESIGN_LIMITS.maxMiterLimit);
+  });
+
+  it("clamps stop offset and alpha", () => {
+    const safe = safePathElement({
+      ...base(),
+      fill: {
+        kind: DesignPathPaintKind.Linear,
+        x1: 0,
+        y1: 0,
+        x2: 9,
+        y2: 0,
+        stops: [
+          { offset: -3, color: "#000000", alpha: 7 },
+          { offset: 4, color: "#ffffff", alpha: -1 },
+        ],
+      },
+    });
+    expect(safe?.fill).toMatchObject({
+      x2: 1,
+      stops: [
+        { offset: 0, alpha: 1 },
+        { offset: 1, alpha: 0 },
+      ],
+    });
+  });
+
+  it("pads from the clamped stroke so the frame stays bounded", () => {
+    const element = stroked({ width: 1e9, miterLimit: 1e9 });
+    expect(pathRasterFrame(element).width).toBeLessThanOrEqual(DESIGN_LIMITS.maxSize);
   });
 });

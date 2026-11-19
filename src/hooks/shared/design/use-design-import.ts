@@ -35,7 +35,9 @@ import {
   withoutText,
 } from "@/lib/shared/design/import/metadata";
 import type { Failure, Result } from "@/lib/shared/server-utils";
-import { DESIGN_LIMITS, type DesignPreset } from "@/lib/shared/design/types";
+import { DESIGN_LIMITS, type DesignPreset, type PageSize } from "@/lib/shared/design/types";
+import { pageSizeOf } from "@/lib/shared/design/crop";
+import { databaseDocumentBytes } from "@/lib/shared/design/document-size";
 
 export type DesignImporter = {
   reason: string | undefined;
@@ -51,6 +53,8 @@ type ImportRunDeps = {
   newId: () => string;
   existingElements: () => number;
   usedBytes: () => number;
+  documentBytes?: () => number;
+  pageSize?: () => PageSize;
   placer: () => ImportPlacer;
   allowed: () => boolean;
   onBusy: (busy: boolean) => void;
@@ -147,6 +151,8 @@ export const createImportRun = (deps: ImportRunDeps) => {
       let result: Result<ImportOutcome> = await readDesignFile(file, deps.newId, {
         capacityElements: Math.max(0, DESIGN_LIMITS.maxElements - deps.existingElements()),
         usedBytes: deps.usedBytes(),
+        documentBytes: deps.documentBytes?.(),
+        page: deps.pageSize?.(),
         signal: controller.signal,
       });
       while (result.ok && result.kind === IMPORT_NEEDS_CHOICE) {
@@ -215,13 +221,15 @@ export const useDesignImport = ({
   const [pendingChoice, setPendingChoice] = useState<ImportChoice | null>(null);
   const reason = canPaint ? undefined : IMPORT_UPLOAD_REASON;
   const placer = useImportPlace({ store, editor, preset });
-  const latest = useRef({ designId, editor, placer, canPaint, onPalette });
-  latest.current = { designId, editor, placer, canPaint, onPalette };
+  const latest = useRef({ designId, editor, placer, canPaint, onPalette, preset });
+  latest.current = { designId, editor, placer, canPaint, onPalette, preset };
   const [run] = useState(() =>
     createImportRun({
       newId: () => latest.current.editor.newId(),
       existingElements: () => latest.current.editor.page.elements.length,
       usedBytes: () => store.usedBytes(),
+      documentBytes: () => databaseDocumentBytes(latest.current.editor.document),
+      pageSize: () => pageSizeOf(latest.current.editor.page, latest.current.preset),
       placer: () => latest.current.placer,
       allowed: () => latest.current.canPaint,
       onBusy: setBusy,

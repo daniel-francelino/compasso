@@ -1,6 +1,7 @@
 import type { ValueOf } from "@/lib/shared/utils";
 import type { Result } from "@/lib/shared/server-utils";
 import type { DesignElement } from "@/lib/shared/design/schemas";
+import type { PageSize } from "@/lib/shared/design/types";
 import type { PixelBuffer } from "@/lib/shared/design/raster/pixel-buffer";
 import type { ImportedDesignMetadata } from "@/lib/shared/design/import/metadata";
 
@@ -45,6 +46,7 @@ export const DesignImportNoteKind = {
   AnimationIgnored: "animation_ignored",
   MetadataTruncated: "metadata_truncated",
   VectorRasterized: "vector_rasterized",
+  VectorLimitReached: "vector_limit_reached",
   FontsNotImported: "fonts_not_imported",
   UnsupportedNode: "unsupported_node",
   SwatchConverted: "swatch_converted",
@@ -139,6 +141,8 @@ export type SketchRefusal = ValueOf<typeof SketchRefusal>;
 export type ImportContext = {
   capacityElements: number;
   usedBytes: number;
+  documentBytes?: number | undefined;
+  page?: PageSize | undefined;
   signal?: AbortSignal | undefined;
 };
 

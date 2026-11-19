@@ -1,4 +1,4 @@
-import { sortedStops } from "@/lib/shared/design/path";
+import { clampPaint, clampStroke, safePathData, sortedStops } from "@/lib/shared/design/path";
 import { hexToRgb } from "@/lib/shared/design/paint";
 import type { PathElement, PathPaint, PathStroke } from "@/lib/shared/design/schemas";
 import {
@@ -26,7 +26,8 @@ export const pathStrokePadding = (stroke: PathStroke | null): number => {
 
 export const pathRasterFrame = (element: PathElement): PathFrame => {
   const room = (DESIGN_LIMITS.maxSize - Math.max(element.width, element.height)) / 2;
-  const padding = Math.max(0, Math.min(pathStrokePadding(element.stroke), room));
+  const stroke = element.stroke === null ? null : clampStroke(element.stroke);
+  const padding = Math.max(0, Math.min(pathStrokePadding(stroke), room));
   return {
     x: element.x - padding,
     y: element.y - padding,
@@ -65,4 +66,17 @@ export const pathFillStyle = (
   for (const stop of sortedStops(paint.stops))
     gradient.addColorStop(stop.offset, rgbaOf(stop.color, stop.alpha));
   return gradient;
+};
+
+const positiveView = (value: number): boolean => Number.isFinite(value) && value > 0;
+
+export const safePathElement = (element: PathElement): PathElement | null => {
+  const d = safePathData(element.d);
+  if (d === null) return null;
+  if (!positiveView(element.viewWidth) || !positiveView(element.viewHeight)) return null;
+  const fill = element.fill === null ? null : clampPaint(element.fill);
+  const stroke = element.stroke === null ? null : clampStroke(element.stroke);
+  if (fill === null && element.fill !== null) return null;
+  if (stroke === null && element.stroke !== null) return null;
+  return { ...element, d, fill, stroke };
 };

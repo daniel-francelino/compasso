@@ -9,7 +9,7 @@ import { gplHandler } from "@/lib/shared/design/import/handlers/palette-gpl";
 import { jpegHandler, pngHandler, webpHandler } from "@/lib/shared/design/import/handlers/image";
 import { psdHandler } from "@/lib/shared/design/import/handlers/psd";
 import { sketchHandler } from "@/lib/shared/design/import/handlers/sketch";
-import { svgHandler } from "@/lib/shared/design/import/handlers/svg-raster";
+import { svgVectorHandler } from "@/lib/shared/design/import/handlers/svg-import";
 import type { ImportHandler } from "@/lib/shared/design/import/types";
 
 export const IMPORT_HANDLERS: readonly ImportHandler[] = [
@@ -25,7 +25,7 @@ export const IMPORT_HANDLERS: readonly ImportHandler[] = [
   aseHandler,
   acoHandler,
   gplHandler,
-  svgHandler,
+  svgVectorHandler,
   sketchHandler,
 ];
 
