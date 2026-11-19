@@ -695,6 +695,34 @@ Same as 2.6, plus: `npm run e2e` for the SVG network-log spec (this is the only 
 
 SVG: 5 MB file, 5000 elements, 50 `use`, scale min(2, 4096/longest), min side 64 px. Fonts: 10 MiB file, 64 tables, 32 MiB decompressed, name strings 1000 chars (family and style 80), parse timeout 10 s, brand font count follows `visualIdentitySchema.fonts` max 8 (names) unless the 3-9 decision changes it.
 
+### 3.8a Threat model (item 3-2, written 2026-11-18 by the Phase 3 developer; owner decision 2026-11-18: accept plan recommendations; the security-analyst review of 3-12 has NOT been done)
+
+SVG (3a, decided and implemented):
+
+| Threat | Control | Residual |
+|---|---|---|
+| Script execution, event handlers, `javascript:` | The `img` element is the isolation boundary (no script, no subresource in image mode). Defense in depth: the gate refuses `script`, `foreignObject`, `iframe`, `object`, `embed`, `handler`, `listener`, any element whose name starts with `animate`, `set`, `discard`, `feImage`, `parsererror`, any attribute named `on*`, and `javascript:` or `vbscript:` after the DOM decoded the entities and the gate removed whitespace and control characters | Browser behavior in image mode is NOT proven here (no browser run) |
+| External load (network, tracking) | `href` and `xlink:href` accept only `#fragment` or `data:image/(png|jpeg|webp|gif);base64,`; every `url(` in an attribute, `style` attribute or `style` element must be `#fragment` or an allowed data image; `@import`, `expression(`, `image-set(`, `src(`, `element(`, `cross-fade(`, a backslash (CSS escape) and `xml:base` are refused. The gate never rewrites to fix a violation | Network silence is provable only by the e2e network-log spec (not written) |
+| Entity expansion (billion laughs), external DTD | Any `<!ENTITY`, `<!ELEMENT`, `<!ATTLIST`, `<!NOTATION` or a DOCTYPE with `[` is refused on the text before the parser runs; a plain DOCTYPE without subset is accepted (common in exported files; the parser does not load the DTD) | none known |
+| Parser DoS, element bombs | File 5 MiB by `file.size` before reading, 5000 elements, depth 64 (iterative walk, no recursion), 50 `use`, style text 100 000 characters, NUL bytes and invalid UTF-8 refused | The parse itself is on the main thread; a 5 MiB file is bounded but not measured |
+| Render DoS (huge filters, nested `use`, blur) | `use` cap, `feImage` refused, output at most 4096 on the longest side and raster budget checked before the canvas exists, decode raced against 10 s and the cancel signal | A heavy filter can still block the main thread until the browser finishes: accepted, documented residual risk (an iframe sandbox is not recommended now) |
+| Huge or hostile size (`width="1e9"`, negative, NaN, `%`) | Only finite pixel values from 1 to 1 000 000 are used, otherwise the `viewBox` is used, otherwise the file is refused (`svgNoSize`); the rendered side must be 64 to 4096 | none known |
+| Markup reaching the page DOM | The SVG text is parsed into a detached document and drawn from a `blob:` URL; no `innerHTML`, `insertAdjacentHTML`, `dangerouslySetInnerHTML`, `document.body`, `object`, `embed`, `iframe` or CSS use; a static guard test reads the SVG sources | none known |
+| Personal data and names | The layer name comes from the file name through the existing sanitizer; `title`, `desc` and `metadata` elements are never read; metadata is built by `buildMetadata` with no text | none |
+
+Fonts (3b, threat model only; no font bytes are stored by this change):
+
+| Threat | Control (design) | State |
+|---|---|---|
+| sfnt table bombs (huge `numTables`, offsets or lengths past the file, overlapping tables, `offset + length` wrap) | Own bounds-checked reader of the table directory (`numTables` at most 64, every range checked against the buffer, range sums with no overflow) that reads only `OS/2` and `name`; no glyph table is built | Parser written and unit tested (`handlers/font-parse.ts`), NOT registered |
+| WOFF and WOFF2 decompression bombs | WOFF (zlib) tables are inflated with an output cap of 32 MiB per font, checking the declared `origLength` first; WOFF2 (Brotli plus transforms) is NOT parsed by the own reader | WOFF2 refused until the 3-5 library spike decides |
+| Hostile `name` strings (control characters, bidi, 1 MB strings, surrogates, URLs, prompt-like text) | Strings are decoded (UTF-16BE, Mac Roman as Latin-1), cut at 1000 characters (family and style 80), sanitized by `sanitizeImportText`, displayed as plain text only and never fed to a model (R5) | Done in the parser |
+| Browser parser bugs | `FontFace` from an `ArrayBuffer` passes the browser OTS sanitizer; `face.load()` failure means refusal | NOT built (3-8) |
+| Licence bypass | `OS/2.fsType` rule A4 (refuse 0x0002, 0x0004, 0x0200; accept 0x0000 and 0x0008; allow 0x0100; most restrictive bit wins; no `OS/2` means refuse); attestation and record for every accepted font | Class computed in the parser; attestation and record NOT built |
+| Storing untrusted bytes | A5: a dedicated licence-record table plus the existing media upload path with a new hidden purpose. This is a SEC-7 change | BLOCKED, proposed text below |
+
+Proposed SEC-7 change (NOT applied; needs the owner): "Fonts are an allowed upload purpose `brand_font` only: MIME allowlist `font/ttf`, `font/otf`, `font/woff` (and `font/woff2` only after the 3-5 decision), 10 MiB limit; the server verifies the real content (sfnt or wOFF header, the `OS/2` `fsType` class computed server side with the same parser, never trusted from the client) before the object is kept; private bucket, opaque key, signed URL, `Content-Disposition: attachment`; the record (family, style, class, `fsType`, SHA-256, attester user and time, strings as text capped at 1000 characters) is append-only like `design_exports`; audit action `design.font_imported` (proposed); one brand can hold at most 8 fonts (`visualIdentitySchema.fonts`). The media library stays closed to fonts for every other purpose." Also blocked before any registry line: 3-9 (how a text element references the font, document version 4) and the 3-10 migration.
+
 ### 3.9 Messages and UI copy to register (pt-BR drafts)
 
 Keys (proposed): `svgTooLarge`, `svgBlockedContent`, `svgInvalid`, `svgNoSize`, `svgRender`, `fontTooLarge`, `fontCorrupt`, `fontNoLicenseInfo`, `fontRestricted` (names the class, adds "peca uma licenca de edicao ao fornecedor"), `fontCollectionUnsupported`, `fontLimitReached`. Dialog: "Licenca da fonte", "Tenho licenca para usar esta fonte neste design", "Fonte importada.", "Fonte da marca" (Phase A). Notes: `vector_rasterized` and `fonts_not_imported` sentences from Phase A.
@@ -814,7 +842,7 @@ As 2.6 (`lint`, `typecheck`, `format:check`, `test`, `check:docs`, `check:consis
 
 ### 4.8 Limits
 
-Entries 2000, total inflated 256 MiB, per entry: JSON pages 32 MiB, `document.json` and `meta.json` 4 MiB, image 64 MiB, ratio 200:1 per entry beyond 1 MiB output, EOCD search window 64 KiB, name 255 chars, artboards listed 100, layers per import limited by the 200-element cap, group depth 8, symbol resolution depth 1, image pixels 64 Mpx each, timeout 30 s. All are proposals confirmed by 4-2.
+All Sketch and ZIP limits (entries, inflated bytes, ratio, name length, JSON depth, pixels, timeout) were accepted on 2026-11-18 and live only in [image-editor.md](image-editor.md) 8h.4 and in `SKETCH_LIMITS` (`import/limits.ts`).
 
 ### 4.9 Messages and UI copy to register (pt-BR drafts)
 

@@ -1028,7 +1028,7 @@ Rules: `.env.local` outside git (`*.local` in `.gitignore`); `.env.example` vers
 | Privilege escalation | `admin_only` actions; nobody changes their own profile; whoever is not an Owner does not assign the Owner profile; last Owner protected |
 | XSS | No `dangerouslySetInnerHTML`; rich text stored as JSON and rendered by an own component; restrictive CSP |
 | CSRF | `createCsrfMiddleware` in `start.ts` for server functions; mutating server routes require a valid origin |
-| CSP | `default-src 'self'`; `img-src` with the media domain and the signed URL host; `connect-src` with Supabase and R2; `frame-ancestors 'none'` |
+| CSP | `default-src 'self'`; `img-src` with the media domain, the signed URL host and `blob:` (the SVG import of the image editor draws a gated SVG from an object URL; decided 2026-11-18, owner decision: accept plan recommendations; the repository has no CSP configuration yet, so the deployment that enforces the policy must include `blob:`); `connect-src` with Supabase and R2; `frame-ancestors 'none'` |
 | Uploads | Allowlist of types, check by leading bytes, size limits, `stat` before reading, opaque keys, original name only in the database, `Content-Disposition: attachment` on downloads |
 | Private files | Bucket without public access; short signed URL; issuance always after checking permission |
 | Already issued URLs | Risk accepted until they expire (documented); short TTL, especially for externals |

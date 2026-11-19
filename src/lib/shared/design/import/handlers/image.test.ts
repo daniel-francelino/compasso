@@ -429,14 +429,14 @@ describe("routing through readDesignFile (extension and content)", () => {
     for (const name of ["a.jpg", "a.jpeg", "a.JPG", "a.JPEG"]) {
       stubDecode(100, 100);
       const result = await readDesignFile(fileOf(name, jpegBytes(100, 100)), newId);
-      expect(result.ok && result.design.format).toBe(DesignImportFormat.Jpeg);
+      expect(result.ok && "design" in result && result.design.format).toBe(DesignImportFormat.Jpeg);
     }
     stubDecode(100, 100);
     const png = await readDesignFile(fileOf("a.PNG", pngBytes(100, 100)), newId);
-    expect(png.ok && png.design.format).toBe(DesignImportFormat.Png);
+    expect(png.ok && "design" in png && png.design.format).toBe(DesignImportFormat.Png);
     stubDecode(100, 100);
     const webp = await readDesignFile(fileOf("a.webp", webpBytes("vp8", 100, 100)), newId);
-    expect(webp.ok && webp.design.format).toBe(DesignImportFormat.Webp);
+    expect(webp.ok && "design" in webp && webp.design.format).toBe(DesignImportFormat.Webp);
   });
 
   it("refuses a .png over 50 MiB before reading it", async () => {

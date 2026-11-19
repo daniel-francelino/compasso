@@ -40,6 +40,31 @@ export const hasJpegSignature = (head: Uint8Array): boolean =>
 export const hasWebpSignature = (head: Uint8Array): boolean =>
   startsWith(head, RIFF_TAG) && startsWith(head, WEBP_TAG, WEBP_TAG_OFFSET);
 
+const UTF8_BOM = [0xef, 0xbb, 0xbf];
+const SVG_TAG = "<svg";
+const TAB = 0x09;
+const LINE_FEED = 0x0a;
+const CARRIAGE_RETURN = 0x0d;
+const SPACE = 0x20;
+const LESS_THAN = 0x3c;
+const GREATER_THAN = 0x3e;
+const SLASH = 0x2f;
+
+const isXmlSpace = (byte: number | undefined): boolean =>
+  byte === TAB || byte === LINE_FEED || byte === CARRIAGE_RETURN || byte === SPACE;
+
+export const hasSvgHead = (head: Uint8Array): boolean => {
+  let start = startsWithBytes(head, UTF8_BOM) ? UTF8_BOM.length : 0;
+  while (start < head.length && isXmlSpace(head[start])) start += 1;
+  if (head[start] !== LESS_THAN || head.includes(0)) return false;
+  for (let offset = start; offset + SVG_TAG.length < head.length; offset += 1) {
+    if (!startsWith(head, SVG_TAG, offset)) continue;
+    const next = head[offset + SVG_TAG.length];
+    if (isXmlSpace(next) || next === GREATER_THAN || next === SLASH) return true;
+  }
+  return false;
+};
+
 export const hasPsdSignature = (head: Uint8Array): boolean => startsWith(head, PSD_SIGNATURE);
 
 export const hasPdfHeader = (head: Uint8Array): boolean =>

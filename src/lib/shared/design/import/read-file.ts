@@ -5,11 +5,13 @@ import {
 import { withMetadataNotes } from "@/lib/shared/design/import/metadata";
 import { IMPORT_HANDLERS } from "@/lib/shared/design/import/registry";
 import { SNIFF_HEAD_BYTES, extensionOf } from "@/lib/shared/design/import/sniff";
-import type {
-  ImportContext,
-  ImportHandler,
-  ImportKindResult,
-  WorkerImportInput,
+import {
+  DesignImportKind,
+  IMPORT_NEEDS_CHOICE,
+  type ImportContext,
+  type ImportHandler,
+  type ImportOutcome,
+  type WorkerImportInput,
 } from "@/lib/shared/design/import/types";
 import { errorName } from "@/lib/shared/design/import/run-limits";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
@@ -52,7 +54,7 @@ const pickHandler = (head: Uint8Array, name: string): Result<{ handler: ImportHa
 const runHandler = async (
   handler: ImportHandler,
   input: WorkerImportInput,
-): Promise<Result<ImportKindResult>> => {
+): Promise<Result<ImportOutcome>> => {
   if (handler.runsIn === "worker") return handler.decode(input);
   const bytes = await readBytes(
     handler.headBytes === undefined ? input.file : input.file.slice(0, handler.headBytes),
@@ -61,12 +63,32 @@ const runHandler = async (
   return handler.decode({ ...input, bytes });
 };
 
+const settleOutcome = (result: Result<ImportOutcome>): Result<ImportOutcome> => {
+  if (!result.ok) return result;
+  if (result.kind === DesignImportKind.Palette) return result;
+  if (result.kind === IMPORT_NEEDS_CHOICE) {
+    const { resume } = result;
+    return {
+      ...result,
+      resume: async (optionId, signal) => {
+        try {
+          return settleOutcome(await resume(optionId, signal));
+        } catch (error) {
+          logError("import resume failed", errorName(error));
+          return invalid(DESIGN_IMPORT_MESSAGE.readFailed);
+        }
+      },
+    };
+  }
+  return withMetadataNotes(result);
+};
+
 const decodeWith = async (
   handler: ImportHandler,
   input: WorkerImportInput,
-): Promise<Result<ImportKindResult>> => {
+): Promise<Result<ImportOutcome>> => {
   try {
-    return withMetadataNotes(await runHandler(handler, input));
+    return settleOutcome(await runHandler(handler, input));
   } catch (error) {
     logError("import decode failed", errorName(error));
     return invalid(DESIGN_IMPORT_MESSAGE.readFailed);
@@ -82,7 +104,7 @@ export const readDesignFile = async (
   file: File,
   newId: () => string,
   context: ImportContext = DEFAULT_CONTEXT,
-): Promise<Result<ImportKindResult>> => {
+): Promise<Result<ImportOutcome>> => {
   if (file.size === 0) return invalid(DESIGN_IMPORT_MESSAGE.empty);
   if (file.size > largestLimit()) return invalid(DESIGN_IMPORT_MESSAGE.tooLarge(largestLimit()));
   const head = await readBytes(file.slice(0, SNIFF_HEAD_BYTES));

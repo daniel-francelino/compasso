@@ -41,10 +41,11 @@ describe("IMPORT_HANDLERS", () => {
       ["png", ["png"], 50 * MIB, "main"],
       ["jpeg", ["jpg", "jpeg"], 50 * MIB, "main"],
       ["webp", ["webp"], 50 * MIB, "main"],
+      ["svg", ["svg"], 5 * MIB, "main"],
     ]);
   });
 
   it("offers exactly the documented picker accept list", () => {
-    expect(DESIGN_IMPORT_ACCEPT).toBe(".psd,.ai,.pdf,.png,.jpg,.jpeg,.webp");
+    expect(DESIGN_IMPORT_ACCEPT).toBe(".psd,.ai,.pdf,.png,.jpg,.jpeg,.webp,.svg");
   });
 });

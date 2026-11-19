@@ -75,7 +75,11 @@ const setup = (existing = 0, allowed = true) => {
   };
   const onBusy = vi.fn();
   const record = vi.fn((..._args: unknown[]) => Promise.resolve({ ok: true as const }));
+  const onChoice = vi.fn((..._args: unknown[]) => undefined);
+  const onPalette = vi.fn((..._args: unknown[]) => undefined);
   const run = createImportRun({
+    onChoice: (choice) => onChoice(choice),
+    onPalette: (palette) => onPalette(palette),
     newId: () => "id",
     existingElements: () => existing,
     usedBytes: () => 123,
@@ -85,7 +89,7 @@ const setup = (existing = 0, allowed = true) => {
     record: (value) => record(value),
   });
   const unmount = run.mount();
-  return { run, placer, onBusy, unmount, record };
+  return { run, placer, onBusy, unmount, record, onChoice, onPalette };
 };
 
 beforeEach(() => {
@@ -251,6 +255,122 @@ describe("createImportRun", () => {
     await run.open();
     expect(toastMock.error).toHaveBeenCalledWith(DESIGN_IMPORT_MESSAGE.readFailed);
     expect(run.isRunning()).toBe(false);
+  });
+});
+
+describe("interaction seam", () => {
+  const choice = {
+    title: "Escolha a página",
+    confirmLabel: "Importar página",
+    options: [
+      { id: "1", label: "Página 1" },
+      { id: "2", label: "Página 2" },
+    ],
+  };
+  const needsChoice = (resume: (...args: unknown[]) => unknown) => ({
+    ok: true,
+    kind: "needs_choice",
+    choice,
+    resume,
+  });
+  const imageResume = () =>
+    vi.fn(async (..._args: unknown[]) => ({
+      ok: true as const,
+      kind: DesignImportKind.Image,
+      design,
+    }));
+
+  it("shows the choice, keeps the import busy and resumes with the answered option", async () => {
+    const resume = imageResume();
+    read.mockResolvedValue(needsChoice(resume));
+    const { run, placer, onChoice, onBusy } = setup();
+    const pending = run.open();
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledWith(choice));
+    expect(run.isRunning()).toBe(true);
+    expect(onBusy.mock.calls).toEqual([[true]]);
+    run.answerChoice("2");
+    await pending;
+    expect(resume).toHaveBeenCalledWith("2", expect.any(AbortSignal));
+    expect(onChoice).toHaveBeenLastCalledWith(null);
+    expect(placer.image).toHaveBeenCalledWith(design);
+    expect(toastMock.dismiss).toHaveBeenCalledWith("t1");
+  });
+
+  it("treats an answer that is not an offered id as no answer", async () => {
+    const resume = imageResume();
+    read.mockResolvedValue(needsChoice(resume));
+    const { run, placer, onChoice } = setup();
+    const pending = run.open();
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledWith(choice));
+    run.answerChoice("99");
+    await pending;
+    expect(resume).not.toHaveBeenCalled();
+    expect(placer.image).not.toHaveBeenCalled();
+    expect(toastMock.error).not.toHaveBeenCalled();
+    expect(run.isRunning()).toBe(false);
+  });
+
+  it("cancelChoice ends the run silently and drops the closure", async () => {
+    const resume = imageResume();
+    read.mockResolvedValue(needsChoice(resume));
+    const { run, placer, onChoice, onBusy } = setup();
+    const pending = run.open();
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledWith(choice));
+    run.cancelChoice();
+    await pending;
+    expect(resume).not.toHaveBeenCalled();
+    expect(placer.image).not.toHaveBeenCalled();
+    expect(onBusy).toHaveBeenLastCalledWith(false);
+    run.answerChoice("1");
+    expect(resume).not.toHaveBeenCalled();
+  });
+
+  it("unmount settles an open choice and a late answer applies nothing", async () => {
+    const resume = imageResume();
+    read.mockResolvedValue(needsChoice(resume));
+    const { run, placer, onChoice, unmount } = setup();
+    const pending = run.open();
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledWith(choice));
+    unmount();
+    await pending;
+    run.answerChoice("1");
+    expect(resume).not.toHaveBeenCalled();
+    expect(placer.image).not.toHaveBeenCalled();
+  });
+
+  it("aborting the import settles the choice", async () => {
+    read.mockResolvedValue(needsChoice(vi.fn()));
+    const { run, onChoice } = setup();
+    const pending = run.open();
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledWith(choice));
+    run.cancel();
+    await pending;
+    expect(run.isRunning()).toBe(false);
+  });
+
+  it("supports a resumed result that asks again and reports a resume refusal", async () => {
+    const second = vi.fn(async (..._args: unknown[]) => invalid(DESIGN_IMPORT_MESSAGE.corrupt));
+    const first = vi.fn(async (..._args: unknown[]) => needsChoice(second));
+    read.mockResolvedValue(needsChoice(first));
+    const { run, onChoice } = setup();
+    const pending = run.open();
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledTimes(1));
+    run.answerChoice("1");
+    await vi.waitFor(() => expect(onChoice).toHaveBeenCalledTimes(3));
+    run.answerChoice("2");
+    await pending;
+    expect(toastMock.error).toHaveBeenCalledWith(DESIGN_IMPORT_MESSAGE.corrupt);
+  });
+
+  it("hands a palette result to the palette consumer and not to the placer", async () => {
+    const palette = { swatches: [{ name: "a", hex: "x", converted: false }], notes: [] };
+    read.mockResolvedValue({ ok: true, kind: DesignImportKind.Palette, palette });
+    const { run, placer, onPalette } = setup();
+    await run.open();
+    expect(onPalette).toHaveBeenCalledWith(palette);
+    expect(placer.image).not.toHaveBeenCalled();
+    expect(placer.document).not.toHaveBeenCalled();
+    expect(toastMock.success).not.toHaveBeenCalled();
   });
 });
 

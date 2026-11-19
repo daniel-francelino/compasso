@@ -20,7 +20,14 @@ import {
 } from "@/lib/shared/design/import/messages";
 import { readDesignFile } from "@/lib/shared/design/import/read-file";
 import { DESIGN_IMPORT_ACCEPT } from "@/lib/shared/design/import/registry";
-import { DesignImportKind, type ImportKindResult } from "@/lib/shared/design/import/types";
+import {
+  DesignImportKind,
+  IMPORT_NEEDS_CHOICE,
+  type ImportChoice,
+  type ImportKindResult,
+  type ImportOutcome,
+  type ImportPalette,
+} from "@/lib/shared/design/import/types";
 import { logError } from "@/lib/shared/logger";
 import {
   type ImportedDesignMetadata,
@@ -35,6 +42,9 @@ export type DesignImporter = {
   busy: boolean;
   open: () => void;
   cancel: () => void;
+  pendingChoice: ImportChoice | null;
+  answerChoice: (optionId: string) => void;
+  cancelChoice: () => void;
 };
 
 export type ImportRunDeps = {
@@ -45,7 +55,13 @@ export type ImportRunDeps = {
   allowed: () => boolean;
   onBusy: (busy: boolean) => void;
   record: (metadata: StoredDesignMetadata) => Promise<Result>;
+  onChoice: (choice: ImportChoice | null) => void;
+  onPalette: (palette: ImportPalette) => void;
 };
+
+type Settle = (optionId: string | null) => void;
+
+type Finished = Exclude<ImportOutcome, { kind: typeof IMPORT_NEEDS_CHOICE }>;
 
 const place = (placer: ImportPlacer, result: ImportKindResult): ImportPlaced => {
   switch (result.kind) {
@@ -63,6 +79,7 @@ const place = (placer: ImportPlacer, result: ImportKindResult): ImportPlaced => 
 export const createImportRun = (deps: ImportRunDeps) => {
   let running: AbortController | null = null;
   let disposed = false;
+  let pending: Settle | null = null;
 
   const recordMetadata = async (metadata: ImportedDesignMetadata): Promise<void> => {
     try {
@@ -76,8 +93,12 @@ export const createImportRun = (deps: ImportRunDeps) => {
     }
   };
 
-  const finishRead = (controller: AbortController, result: ImportKindResult): void => {
+  const finishRead = (controller: AbortController, result: Finished): void => {
     if (disposed || controller.signal.aborted) return;
+    if (result.kind === DesignImportKind.Palette) {
+      deps.onPalette(result.palette);
+      return;
+    }
     const placed = place(deps.placer(), result);
     if (!placed.ok) {
       toast.error(placed.message);
@@ -94,18 +115,48 @@ export const createImportRun = (deps: ImportRunDeps) => {
     toast.error(failure.message);
   };
 
+  const showProgress = (controller: AbortController): string | number =>
+    toast.loading(DESIGN_IMPORT_PROGRESS, {
+      action: { label: DESIGN_IMPORT_CANCEL_LABEL, onClick: () => controller.abort() },
+    });
+
+  const ask = (controller: AbortController, choice: ImportChoice): Promise<string | null> =>
+    new Promise((resolve) => {
+      if (disposed || controller.signal.aborted) {
+        resolve(null);
+        return;
+      }
+      const settle: Settle = (optionId) => {
+        controller.signal.removeEventListener("abort", onAbort);
+        pending = null;
+        if (!disposed) deps.onChoice(null);
+        const offered = optionId !== null && choice.options.some((o) => o.id === optionId);
+        resolve(offered ? optionId : null);
+      };
+      const onAbort = (): void => settle(null);
+      controller.signal.addEventListener("abort", onAbort, { once: true });
+      pending = settle;
+      deps.onChoice(choice);
+    });
+
   const run = async (controller: AbortController): Promise<void> => {
     const file = await pickFile(DESIGN_IMPORT_ACCEPT);
     if (file === null || controller.signal.aborted || disposed) return;
-    const toastId = toast.loading(DESIGN_IMPORT_PROGRESS, {
-      action: { label: DESIGN_IMPORT_CANCEL_LABEL, onClick: () => controller.abort() },
-    });
+    let toastId = showProgress(controller);
     try {
-      const result = await readDesignFile(file, deps.newId, {
+      let result: Result<ImportOutcome> = await readDesignFile(file, deps.newId, {
         capacityElements: Math.max(0, DESIGN_LIMITS.maxElements - deps.existingElements()),
         usedBytes: deps.usedBytes(),
         signal: controller.signal,
       });
+      while (result.ok && result.kind === IMPORT_NEEDS_CHOICE) {
+        const { choice, resume } = result;
+        toast.dismiss(toastId);
+        const optionId = await ask(controller, choice);
+        if (optionId === null) return;
+        toastId = showProgress(controller);
+        result = await resume(optionId, controller.signal);
+      }
       if (result.ok) finishRead(controller, result);
       else reportRefusal(result);
     } finally {
@@ -131,10 +182,13 @@ export const createImportRun = (deps: ImportRunDeps) => {
       }
     },
     cancel: (): void => running?.abort(),
+    answerChoice: (optionId: string): void => pending?.(optionId),
+    cancelChoice: (): void => pending?.(null),
     mount: (): (() => void) => {
       disposed = false;
       return () => {
         disposed = true;
+        pending?.(null);
         running?.abort();
       };
     },
@@ -147,19 +201,22 @@ export const useDesignImport = ({
   rasters,
   canPaint,
   preset,
+  onPalette,
 }: {
   designId: string;
   editor: DesignEditor;
   rasters: RasterHandle;
   canPaint: boolean;
   preset: DesignPreset;
+  onPalette?: ((palette: ImportPalette) => void) | undefined;
 }): DesignImporter => {
   const { store } = rasters;
   const [busy, setBusy] = useState(false);
+  const [pendingChoice, setPendingChoice] = useState<ImportChoice | null>(null);
   const reason = canPaint ? undefined : IMPORT_UPLOAD_REASON;
   const placer = useImportPlace({ store, editor, preset });
-  const latest = useRef({ designId, editor, placer, canPaint });
-  latest.current = { designId, editor, placer, canPaint };
+  const latest = useRef({ designId, editor, placer, canPaint, onPalette });
+  latest.current = { designId, editor, placer, canPaint, onPalette };
   const [run] = useState(() =>
     createImportRun({
       newId: () => latest.current.editor.newId(),
@@ -168,6 +225,12 @@ export const useDesignImport = ({
       placer: () => latest.current.placer,
       allowed: () => latest.current.canPaint,
       onBusy: setBusy,
+      onChoice: setPendingChoice,
+      onPalette: (palette) => {
+        const consumer = latest.current.onPalette;
+        if (consumer === undefined) toast.error(DESIGN_IMPORT_MESSAGE.readFailed);
+        else consumer(palette);
+      },
       record: (metadata) => recordDesignImport({ data: { id: latest.current.designId, metadata } }),
     }),
   );
@@ -179,5 +242,8 @@ export const useDesignImport = ({
     busy,
     open: () => void run.open(),
     cancel: run.cancel,
+    pendingChoice,
+    answerChoice: run.answerChoice,
+    cancelChoice: run.cancelChoice,
   };
 };

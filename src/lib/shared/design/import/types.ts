@@ -11,12 +11,20 @@ export const DesignImportFormat = {
   Png: "png",
   Jpeg: "jpeg",
   Webp: "webp",
+  Tiff: "tiff",
+  Avif: "avif",
+  Gif: "gif",
+  Ase: "ase",
+  Aco: "aco",
+  Gpl: "gpl",
+  Svg: "svg",
 } as const;
 export type DesignImportFormat = ValueOf<typeof DesignImportFormat>;
 
 export const DesignImportKind = {
   Document: "document",
   Image: "image",
+  Palette: "palette",
 } as const;
 export type DesignImportKind = ValueOf<typeof DesignImportKind>;
 
@@ -35,6 +43,10 @@ export const DesignImportNoteKind = {
   Downscaled: "downscaled",
   AnimationIgnored: "animation_ignored",
   MetadataTruncated: "metadata_truncated",
+  VectorRasterized: "vector_rasterized",
+  FontsNotImported: "fonts_not_imported",
+  UnsupportedNode: "unsupported_node",
+  SwatchConverted: "swatch_converted",
 } as const;
 export type DesignImportNoteKind = ValueOf<typeof DesignImportNoteKind>;
 
@@ -63,6 +75,32 @@ export type ImportedDesign = {
 export type ImportKindResult =
   | { kind: typeof DesignImportKind.Document; design: ImportedDesign }
   | { kind: typeof DesignImportKind.Image; design: ImportedDesign };
+
+export const IMPORT_NEEDS_CHOICE = "needs_choice";
+
+export type ImportSwatch = { name: string; hex: string; converted: boolean };
+
+export type ImportPalette = { swatches: ImportSwatch[]; notes: ImportNote[] };
+
+export type ImportChoiceOption = { id: string; label: string; detail?: string | undefined };
+
+export type ImportChoice = {
+  title: string;
+  confirmLabel: string;
+  options: readonly ImportChoiceOption[];
+};
+
+export type ImportOutcome =
+  | ImportKindResult
+  | { kind: typeof DesignImportKind.Palette; palette: ImportPalette }
+  | {
+      kind: typeof IMPORT_NEEDS_CHOICE;
+      choice: ImportChoice;
+      resume: (
+        optionId: string,
+        signal?: AbortSignal | undefined,
+      ) => Promise<Result<ImportOutcome>>;
+    };
 
 export const DesignImportFailure = {
   Corrupt: "corrupt",
@@ -99,7 +137,7 @@ export type ImportHandler = HandlerBase &
     | {
         runsIn: "main";
         headBytes?: number;
-        decode: (input: ImportInput) => Promise<Result<ImportKindResult>>;
+        decode: (input: ImportInput) => Promise<Result<ImportOutcome>>;
       }
-    | { runsIn: "worker"; decode: (input: WorkerImportInput) => Promise<Result<ImportKindResult>> }
+    | { runsIn: "worker"; decode: (input: WorkerImportInput) => Promise<Result<ImportOutcome>> }
   );

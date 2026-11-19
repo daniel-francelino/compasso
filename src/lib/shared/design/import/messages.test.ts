@@ -34,6 +34,12 @@ describe("import notes", () => {
       downscaled: "Imagem reduzida para caber na p{a}gina (2).",
       animation_ignored: "Anima{c}{t}o ignorada: s{o} o primeiro quadro foi importado.",
       metadata_truncated: "Metadados do arquivo registrados s{o} em parte (2 listas).",
+      vector_rasterized:
+        "SVG convertido em pixels: o desenho n{t}o pode mais ser editado como vetor.",
+      fonts_not_imported:
+        "Os textos do SVG usam fontes do sistema; as fontes do arquivo n{t}o foram importadas (2).",
+      unsupported_node: "Elementos sem suporte foram ignorados (2).",
+      swatch_converted: "Cores convertidas para RGB de forma aproximada (2).",
     };
     expect(Object.keys(expected).sort()).toEqual(Object.values(DesignImportNoteKind).sort());
     for (const kind of Object.values(DesignImportNoteKind)) {
@@ -49,6 +55,13 @@ describe("import notes", () => {
       png: "PNG",
       jpeg: "JPEG",
       webp: "WebP",
+      tiff: "TIFF",
+      avif: "AVIF",
+      gif: "GIF",
+      ase: "ASE",
+      aco: "ACO",
+      gpl: "GPL",
+      svg: "SVG",
     });
   });
 
