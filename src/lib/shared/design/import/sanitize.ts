@@ -57,3 +57,11 @@ export const countCodePoints = (value: string): number => {
   }
   return count;
 };
+
+const COLOR_NAME_MAX = 40;
+
+export const sanitizeColorName = (raw: string): string => {
+  const points = Array.from(sanitizeImportName(raw, COLOR_NAME_MAX));
+  while (points.join("").length > COLOR_NAME_MAX) points.pop();
+  return points.join("").trim();
+};

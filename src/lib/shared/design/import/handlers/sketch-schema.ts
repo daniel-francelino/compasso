@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { SKETCH_LIMITS } from "@/lib/shared/design/import/limits";
-import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
+import { sketchFailure } from "@/lib/shared/design/import/refusal";
+import { SketchRefusal } from "@/lib/shared/design/import/types";
 import { sanitizeImportName, sanitizeImportText } from "@/lib/shared/design/import/sanitize";
 import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 import type { ValueOf } from "@/lib/shared/utils";
-import { type Result, invalid } from "@/lib/shared/server-utils";
+import type { Result } from "@/lib/shared/server-utils";
 
 export const SketchNodeKind = {
   Group: "group",
@@ -32,7 +33,7 @@ const MAX_FILLS = 64;
 const MAX_REF = 200;
 const POINT_STRING_MAX = 64;
 const PAGE_REF = /^pages\/[A-Za-z0-9-]{1,64}$/;
-const IMAGE_REF = /^images\/[A-Za-z0-9._-]{1,128}$/;
+const IMAGE_REF = /^images\/[A-Za-z0-9_-][A-Za-z0-9._-]{0,127}$/;
 const COLOR_STEPS = 255;
 const UNSAFE_KEY = "__proto__";
 const QUOTE = 34;
@@ -102,9 +103,10 @@ export type SketchArtboard = {
   info: SketchArtboardInfo;
   background: SketchRgba | null;
   nodes: SketchNode[];
+  deepGroups: number;
 };
 
-const corrupt = (): Result<never> => invalid(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
+const corrupt = (): Result<never> => sketchFailure(SketchRefusal.Corrupt);
 
 const finite = z.number().finite();
 const unit = finite.min(0).max(1);
@@ -285,25 +287,36 @@ const childrenOf = (value: unknown): unknown[] | null => {
   return Object.keys(value).includes(UNSAFE_KEY) ? null : Object.values(value);
 };
 
-const walkIsSafe = (root: unknown): boolean => {
+export type JsonValueBudget = { remaining: number };
+
+export const newJsonValueBudget = (): JsonValueBudget => ({
+  remaining: SKETCH_LIMITS.maxJobJsonValues,
+});
+
+const walkIsSafe = (root: unknown, budget: JsonValueBudget | undefined): boolean => {
   const stack: unknown[] = [root];
+  const cap = Math.min(SKETCH_LIMITS.maxJsonValues, budget?.remaining ?? Infinity);
   let values = 0;
   while (stack.length > 0) {
     values += 1;
-    if (values > SKETCH_LIMITS.maxJsonValues) return false;
+    if (values > cap) return false;
     const children = childrenOf(stack.pop());
     if (children === null) return false;
     for (const child of children) stack.push(child);
   }
+  if (budget !== undefined) budget.remaining -= values;
   return true;
 };
 
-export const parseSketchJson = (data: Uint8Array): Result<{ value: unknown }> => {
+export const parseSketchJson = (
+  data: Uint8Array,
+  budget?: JsonValueBudget,
+): Result<{ value: unknown }> => {
   try {
     const text = new TextDecoder("utf-8", { fatal: true }).decode(data);
     if (!jsonDepthOk(text)) return corrupt();
     const value: unknown = JSON.parse(text);
-    return walkIsSafe(value) ? { ok: true, value } : corrupt();
+    return walkIsSafe(value, budget) ? { ok: true, value } : corrupt();
   } catch {
     return corrupt();
   }
@@ -313,7 +326,7 @@ export const parseSketchMeta = (value: unknown): Result<{ version: number }> => 
   const parsed = metaSchema.safeParse(value);
   if (!parsed.success) return corrupt();
   if (parsed.data.version < SKETCH_LIMITS.minFormatVersion) {
-    return invalid(DESIGN_IMPORT_MESSAGE.sketchUnsupportedVersion);
+    return sketchFailure(SketchRefusal.UnsupportedVersion);
   }
   return { ok: true, version: parsed.data.version };
 };
@@ -321,7 +334,10 @@ export const parseSketchMeta = (value: unknown): Result<{ version: number }> => 
 export const parseSketchDocument = (value: unknown): Result<{ pageEntries: string[] }> => {
   const parsed = documentSchema.safeParse(value);
   if (!parsed.success) return corrupt();
-  return { ok: true, pageEntries: parsed.data.pages.map((page) => `${page._ref}.json`) };
+  return {
+    ok: true,
+    pageEntries: [...new Set(parsed.data.pages.map((page) => `${page._ref}.json`))],
+  };
 };
 
 const toRgba = (color: z.infer<typeof colorSchema>): SketchRgba => ({
@@ -470,26 +486,32 @@ const parseLayer = (raw: unknown, depth: number): Built => {
     : null;
 };
 
-export const flattenLayers = (roots: readonly unknown[]): Result<{ nodes: SketchNode[] }> => {
+export const flattenLayers = (
+  roots: readonly unknown[],
+): Result<{ nodes: SketchNode[]; deepGroups: number }> => {
   const nodes: SketchNode[] = [];
+  let deepGroups = 0;
   const stack: { raw: unknown; depth: number }[] = [...roots]
     .reverse()
     .map((raw) => ({ raw, depth: 0 }));
   for (let item = stack.pop(); item !== undefined; item = stack.pop()) {
     if (nodes.length >= MAX_NODES_PER_ARTBOARD) {
-      return invalid(DESIGN_IMPORT_MESSAGE.tooManyLayers(DESIGN_LIMITS.maxElements));
+      return sketchFailure(SketchRefusal.TooManyLayers, [DESIGN_LIMITS.maxElements]);
     }
     const built = parseLayer(item.raw, item.depth);
     if (built === null) return corrupt();
     nodes.push(built.node);
+    if (built.node.kind === SketchNodeKind.Group && item.depth >= DESIGN_LIMITS.maxGroupDepth) {
+      deepGroups += 1;
+    }
     for (let index = built.children.length - 1; index >= 0; index -= 1) {
       stack.push({ raw: built.children[index], depth: item.depth + 1 });
     }
   }
-  return { ok: true, nodes };
+  return { ok: true, nodes, deepGroups };
 };
 
-type PageArtboards = { infos: SketchArtboardInfo[]; raws: unknown[] };
+export type PageArtboards = { infos: SketchArtboardInfo[]; raws: unknown[] };
 
 const readPage = (value: unknown, pageIndex: number): Result<PageArtboards> => {
   const page = pageSchema.safeParse(value);
@@ -511,6 +533,8 @@ const readPage = (value: unknown, pageIndex: number): Result<PageArtboards> => {
   }
   return { ok: true, infos, raws };
 };
+
+export const readSketchPage = readPage;
 
 export type SketchPages = { pages: PageArtboards[] };
 
@@ -534,8 +558,13 @@ export const listArtboards = (
 export const readArtboard = (
   pages: SketchPages,
   info: SketchArtboardInfo,
+): Result<{ artboard: SketchArtboard }> => readArtboardOfPage(pages.pages[info.pageIndex], info);
+
+export const readArtboardOfPage = (
+  page: PageArtboards | undefined,
+  info: SketchArtboardInfo,
 ): Result<{ artboard: SketchArtboard }> => {
-  const raw = pages.pages[info.pageIndex]?.raws[info.artboardIndex];
+  const raw = page?.raws[info.artboardIndex];
   const parsed = artboardSchema.safeParse(raw);
   if (!parsed.success) return corrupt();
   const flat = flattenLayers(parsed.data.layers);
@@ -544,5 +573,8 @@ export const readArtboard = (
     parsed.data.hasBackgroundColor && parsed.data.backgroundColor !== undefined
       ? toRgba(parsed.data.backgroundColor)
       : null;
-  return { ok: true, artboard: { info, background, nodes: flat.nodes } };
+  return {
+    ok: true,
+    artboard: { info, background, nodes: flat.nodes, deepGroups: flat.deepGroups },
+  };
 };

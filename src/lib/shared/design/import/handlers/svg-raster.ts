@@ -36,7 +36,7 @@ import { type Result, invalid } from "@/lib/shared/server-utils";
 export type SvgDeps = { parse: SvgParser; render: SvgRender };
 
 const DEFAULT_DEPS: SvgDeps = { parse: domSvgParser, render: renderSvgBlob };
-const SVG_MIME = "image/svg+xml";
+const SVG_MIME = "image/svg+xml;charset=utf-8";
 
 export const planSvgRaster = (size: SvgSize, usedBytes: number): Result<{ target: SvgSize }> => {
   const longest = Math.max(size.width, size.height);

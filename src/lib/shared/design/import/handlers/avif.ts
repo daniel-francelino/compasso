@@ -5,9 +5,11 @@ import {
   declaredPixelsFit,
   remapImageFailure,
 } from "@/lib/shared/design/import/handlers/image-remap";
+import { failureReason } from "@/lib/shared/design/import/refusal";
 import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
 import { hasAvifSignature } from "@/lib/shared/design/import/sniff";
 import {
+  DesignImportFailure,
   DesignImportFormat,
   DesignImportKind,
   type ImportHandler,
@@ -23,7 +25,7 @@ const PROBE_BASE64 =
 
 let support: Promise<boolean> | null = null;
 
-const probeBytes = (): Uint8Array =>
+const probeBytes = (): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(globalThis.atob(PROBE_BASE64), (character) => character.charCodeAt(0));
 
 export const browserOpensAvif = (): Promise<boolean> => {
@@ -46,12 +48,10 @@ export const resetAvifSupportProbe = (): void => {
 const decodeAvif = async (input: ImportInput): Promise<Result<ImportKindResult>> => {
   const info = readAvifInfo(input.bytes);
   if (info === null) return invalid(DESIGN_IMPORT_MESSAGE.avifCorrupt);
-  if (info.largestPixels > MAX_DECLARED_PIXELS) {
+  if (info.largestPixels > MAX_DECLARED_PIXELS || !declaredPixelsFit(info.width, info.height)) {
     return invalid(DESIGN_IMPORT_MESSAGE.avifTooLarge);
   }
-  if (!declaredPixelsFit(info.width, info.height)) {
-    return invalid(DESIGN_IMPORT_MESSAGE.avifTooLarge);
-  }
+  if (info.ambiguous) return invalid(DESIGN_IMPORT_MESSAGE.avifCorrupt);
   const decoded = await decodeWithHeader(DesignImportFormat.Avif, input, {
     width: info.width,
     height: info.height,
@@ -63,7 +63,8 @@ const decodeAvif = async (input: ImportInput): Promise<Result<ImportKindResult>>
     corrupt: DESIGN_IMPORT_MESSAGE.avifCorrupt,
     tooLarge: DESIGN_IMPORT_MESSAGE.avifTooLarge,
   });
-  if (mapped.ok || mapped.message !== DESIGN_IMPORT_MESSAGE.avifCorrupt) return mapped;
+  const reason = decoded.ok ? null : failureReason(decoded, DesignImportFailure)?.reason;
+  if (mapped.ok || reason !== DesignImportFailure.Corrupt) return mapped;
   return (await browserOpensAvif()) ? mapped : invalid(DESIGN_IMPORT_MESSAGE.avifUnsupported);
 };
 

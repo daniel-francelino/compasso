@@ -91,6 +91,24 @@ describe("GIF", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
+  it("refuses a 100 x 100 screen whose first frame is 65535 x 65535 before any decode", async () => {
+    const result = await run(
+      gifHandler,
+      "a.gif",
+      gifBytes(100, 100, { frameSize: [65535, 65535] }),
+    );
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.gifTooLarge);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("refuses a huge frame that comes after the first two", async () => {
+    const bytes = gifBytes(100, 100, { frames: 5, laterFrameSize: [65535, 65535] });
+    expect(messageOf(await run(gifHandler, "a.gif", bytes))).toBe(
+      DESIGN_IMPORT_MESSAGE.gifTooLarge,
+    );
+    expect(spy).not.toHaveBeenCalled();
+  });
+
   it("refuses a zero size, a truncated file and a file with no frame", async () => {
     for (const bytes of [
       gifBytes(0, 10),
@@ -157,7 +175,11 @@ describe("AVIF", () => {
   it("refuses a truncated meta box and a box of size zero", async () => {
     for (const bytes of [
       avifBytes([[100, 80]], { truncateMeta: true }),
-      avifBytes([[0, 80]], { zeroBoxSize: true }),
+      avifBytes([[100, 80]], { zeroBoxSize: true }),
+      avifBytes([
+        [100, 80],
+        [200, 80],
+      ]),
       avifBytes([[0, 10]]),
       avifBytes([]),
     ]) {
@@ -165,6 +187,13 @@ describe("AVIF", () => {
         DESIGN_IMPORT_MESSAGE.avifCorrupt,
       );
     }
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("refuses a real ispe that lies beyond the read window instead of trusting a decoy", async () => {
+    const decoy = avifBytes([[100, 80]], { padding: 1024 * 1024 + 64 });
+    const result = await run(avifHandler, "a.avif", decoy.slice(0, 1024 * 1024));
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.avifCorrupt);
     expect(spy).not.toHaveBeenCalled();
   });
 

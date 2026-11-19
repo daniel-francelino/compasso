@@ -18,6 +18,7 @@ export const DesignImportFormat = {
   Aco: "aco",
   Gpl: "gpl",
   Svg: "svg",
+  Sketch: "sketch",
 } as const;
 export type DesignImportFormat = ValueOf<typeof DesignImportFormat>;
 
@@ -108,8 +109,31 @@ export const DesignImportFailure = {
   TooManyLayers: "too_many_layers",
   LayerTooLarge: "layer_too_large",
   NoLayers: "no_layers",
+  ImageTooLarge: "image_too_large",
 } as const;
 export type DesignImportFailure = ValueOf<typeof DesignImportFailure>;
+
+export const SketchRefusal = {
+  Corrupt: "corrupt",
+  NotZip: "not_zip",
+  UnsupportedVersion: "unsupported_version",
+  NoArtboards: "no_artboards",
+  NoLayers: "no_layers",
+  Memory: "memory",
+  LayerTooLarge: "layer_too_large",
+  TimedOut: "timed_out",
+  ReadFailed: "read_failed",
+  Encrypted: "encrypted",
+  ZipEntries: "zip_entries",
+  ZipTooLarge: "zip_too_large",
+  ZipRatio: "zip_ratio",
+  ZipPath: "zip_path",
+  CanvasTooLarge: "canvas_too_large",
+  CanvasTooSmall: "canvas_too_small",
+  TooManyLayers: "too_many_layers",
+  ImageTooLarge: "image_too_large",
+} as const;
+export type SketchRefusal = ValueOf<typeof SketchRefusal>;
 
 export type ImportContext = {
   capacityElements: number;

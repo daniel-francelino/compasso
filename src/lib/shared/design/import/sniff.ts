@@ -23,6 +23,7 @@ export const findPdfStart = (bytes: Uint8Array, limit = bytes.length): number | 
   return null;
 };
 
+const ZIP_LOCAL_SIGNATURE = [0x50, 0x4b, 0x03, 0x04];
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 const JPEG_SIGNATURE = [0xff, 0xd8, 0xff];
 const RIFF_TAG = "RIFF";
@@ -131,3 +132,6 @@ export const importBaseName = (name: string): string => {
   const base = dot > 0 ? name.slice(0, dot) : name;
   return sanitizeImportName(base);
 };
+
+export const hasZipSignature = (head: Uint8Array): boolean =>
+  startsWithBytes(head, ZIP_LOCAL_SIGNATURE);

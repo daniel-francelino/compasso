@@ -38,6 +38,7 @@ const failureMessage = (failure: DesignImportFailure, limits: WorkerLimits): str
     case DesignImportFailure.TooManyLayers:
       return DESIGN_IMPORT_MESSAGE.tooManyLayers(limits.capacityElements);
     case DesignImportFailure.LayerTooLarge:
+    case DesignImportFailure.ImageTooLarge:
       return DESIGN_IMPORT_MESSAGE.layerTooLarge;
     case DesignImportFailure.NoLayers:
       return DESIGN_IMPORT_MESSAGE.noLayers;

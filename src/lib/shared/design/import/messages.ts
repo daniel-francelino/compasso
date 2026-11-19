@@ -24,6 +24,7 @@ export const DESIGN_IMPORT_FORMAT_LABEL: Record<DesignImportFormat, string> = {
   [DesignImportFormat.Aco]: "ACO",
   [DesignImportFormat.Gpl]: "GPL",
   [DesignImportFormat.Svg]: "SVG",
+  [DesignImportFormat.Sketch]: "Sketch",
 };
 
 export const DESIGN_IMPORT_LABEL = "Importar…";
@@ -150,9 +151,32 @@ export const isImportCancelled = (failure: Failure): boolean => failure === IMPO
 export const describeImportNotes = (notes: readonly ImportNote[]): string =>
   notes.map((note) => DESIGN_IMPORT_NOTE_SENTENCE[note.kind](note.count)).join(" ");
 
+export const SKETCH_ARTBOARD_CHOICE = {
+  title: "Escolha a prancheta",
+  confirmLabel: "Importar prancheta",
+  option: (index: number): string => `Prancheta ${index}`,
+  detail: (width: number, height: number): string => `${width} × ${height} px`,
+} as const;
+
 export const PDF_PAGE_CHOICE = {
   title: "Escolha a página",
   confirmLabel: "Importar página",
   cancelLabel: "Cancelar",
   option: (page: number): string => `Página ${page}`,
+} as const;
+
+export const PALETTE_COPY = {
+  title: "Importar paleta",
+  heading: "Cores importadas",
+  confirmLabel: "Adicionar à marca",
+  cancelLabel: "Cancelar",
+  brandFull: "A marca já tem 12 cores. Remova uma cor da marca para adicionar novas.",
+  permissionReason: "Adicionar cores à marca exige permissão para editar a marca.",
+  slots: (free: number): string =>
+    `Cabem mais ${free} ${free === 1 ? "cor" : "cores"} na marca. Escolha as que quer adicionar.`,
+  saved: (count: number): string =>
+    count === 0
+      ? "Nenhuma cor nova foi adicionada à marca."
+      : `${count} ${count === 1 ? "cor adicionada" : "cores adicionadas"} à marca.`,
+  saveFailed: "Não foi possível adicionar as cores à marca. Tente de novo.",
 } as const;

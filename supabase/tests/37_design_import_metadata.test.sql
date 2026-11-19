@@ -1,6 +1,6 @@
 begin;
 
-select plan(50);
+select plan(53);
 
 create function pg_temp.act_as(p_user uuid) returns void language plpgsql as $$
 begin
@@ -114,9 +114,25 @@ select throws_ok(
   'invalid_input', 'a source format outside the allowed pattern is refused'
 );
 select throws_ok(
-  format($f$select public.design_record_import(%L::uuid, pg_temp.meta('gif'))$f$, current_setting('t.design')),
+  format($f$select public.design_record_import(%L::uuid, pg_temp.meta('bmp'))$f$, current_setting('t.design')),
   'invalid_input', 'a format outside the closed list is refused'
 );
+select is(
+  (select count(*)::int from unnest(array['psd', 'ai', 'pdf', 'png', 'jpeg', 'webp', 'tiff', 'avif', 'gif', 'ase', 'aco', 'gpl', 'svg', 'sketch']) f
+   where (public.design_record_import(current_setting('t.design2')::uuid, pg_temp.meta(f)) ->> 'id') is not null),
+  14, 'every DesignImportFormat value is accepted by the function and the check'
+);
+reset role;
+select is(
+  (select count(distinct source_format)::int from public.design_import_metadata where design_id = current_setting('t.design2')::uuid),
+  14, 'each of the 14 formats was stored'
+);
+delete from public.design_import_metadata where design_id = current_setting('t.design2')::uuid;
+select throws_ok(
+  format($f$insert into public.design_import_metadata (design_id, brand_id, source_format, metadata) values (%L, %L, 'bmp', '{}')$f$, current_setting('t.design'), current_setting('t.brand')),
+  '23514', null, 'the check refuses a format outside the closed list'
+);
+select pg_temp.act_as('00000000-0000-0000-0000-0000000000c1');
 select throws_ok(
   format($f$select public.design_record_import(%L::uuid, pg_temp.meta() - 'layers')$f$, current_setting('t.design')),
   'invalid_input', 'metadata without layers is refused'

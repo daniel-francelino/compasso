@@ -20,7 +20,10 @@ const MAX_GIF_BYTES = 50 * 1024 * 1024;
 const decodeGif = async (input: ImportInput): Promise<Result<ImportKindResult>> => {
   const info = readGifInfo(input.bytes);
   if (info === null) return invalid(DESIGN_IMPORT_MESSAGE.gifCorrupt);
-  if (!declaredPixelsFit(info.width, info.height)) {
+  const fits =
+    declaredPixelsFit(info.width, info.height) &&
+    declaredPixelsFit(info.extentWidth, info.extentHeight);
+  if (!fits) {
     return invalid(DESIGN_IMPORT_MESSAGE.gifTooLarge);
   }
   const decoded = await decodeWithHeader(DesignImportFormat.Gif, input, {

@@ -17,6 +17,8 @@ import { DesignPropertiesTab } from "@/components/shared/design/design-propertie
 import { DesignSelectionDialog } from "@/components/shared/design/design-selection-dialog";
 import { DesignShortcutsDialog } from "@/components/shared/design/design-shortcuts-dialog";
 import { ImportChoiceDialog } from "@/components/shared/design/import-choice-dialog";
+import { PaletteImportDialog } from "@/components/shared/design/palette-import-dialog";
+import { usePaletteImport } from "@/hooks/shared/design/use-palette-import";
 import { DesignStatusBar } from "@/components/shared/design/design-status-bar";
 import { DesignToolRail } from "@/components/shared/design/design-tool-rail";
 import { DesignTopBar } from "@/components/shared/design/design-top-bar";
@@ -190,12 +192,14 @@ export function DesignWorkspace({
     canPaint,
     editable: canEdit,
   });
+  const palettes = usePaletteImport({ designId: design.id, brandId: design.brandId });
   const importer = useDesignImport({
     designId: design.id,
     editor,
     rasters,
     canPaint,
     preset: design.preset,
+    onPalette: palettes.receive,
   });
   const startTransform = () => {
     if (editor.transforming) return;
@@ -531,6 +535,14 @@ export function DesignWorkspace({
         onShortcuts={() => setShortcutsOpen(true)}
       />
       <DesignShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <PaletteImportDialog
+        palette={palettes.palette}
+        existing={kit.data?.colors.map((color) => color.hex) ?? []}
+        canEdit={canEdit && can(auth, Action.Brands.Update)}
+        saving={palettes.saving}
+        onApply={palettes.apply}
+        onClose={palettes.close}
+      />
       <ImportChoiceDialog
         choice={importer.pendingChoice}
         onAnswer={importer.answerChoice}

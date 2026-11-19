@@ -62,6 +62,7 @@ describe("import notes", () => {
       aco: "ACO",
       gpl: "GPL",
       svg: "SVG",
+      sketch: "Sketch",
     });
   });
 

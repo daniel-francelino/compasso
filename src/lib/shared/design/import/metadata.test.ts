@@ -333,7 +333,7 @@ describe("importedDesignMetadataSchema", () => {
     expect(
       importedDesignMetadataSchema.safeParse({
         ...base,
-        source: { ...base.source, format: "gif" },
+        source: { ...base.source, format: "mp4" },
       }).success,
     ).toBe(false);
     expect(

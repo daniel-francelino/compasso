@@ -1,4 +1,5 @@
 import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
+import { SketchRefusal } from "@/lib/shared/design/import/types";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 
 export const DESIGN_IMPORT_LIMITS = {
@@ -7,6 +8,7 @@ export const DESIGN_IMPORT_LIMITS = {
   maxLayerSide: 16384,
   workerTimeoutMs: 60_000,
   pdfTimeoutMs: 30_000,
+  tiffTimeoutMs: 20_000,
   pdfHeaderWindowBytes: 1024,
   jpegHeaderWindowBytes: 256 * 1024,
   aiTargetScale: 2,
@@ -28,9 +30,12 @@ export const SKETCH_LIMITS = {
   maxNameLength: 255,
   maxJsonDepth: 128,
   maxJsonValues: 2_000_000,
+  maxJobJsonValues: 8_000_000,
+  maxBitmapDecodes: 32,
   maxArtboardsListed: 100,
   maxSymbolDepth: 1,
   maxImagePixels: 64 * MIB,
+  maxRenderCost: 1_000_000_000,
   minFormatVersion: 88,
   timeoutMs: 30_000,
 } as const;
@@ -47,13 +52,26 @@ export const SVG_LIMITS = {
   headWindowBytes: 1024,
 } as const;
 
-export const sizeFitsPage = (width: number, height: number): Result<object> => {
+export const pageSizeRefusal = (
+  width: number,
+  height: number,
+): { refusal: SketchRefusal; limit: number } | null => {
   const { maxPageSide, minPageSide } = DESIGN_IMPORT_LIMITS;
   if (width > maxPageSide || height > maxPageSide) {
-    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooLarge(maxPageSide));
+    return { refusal: SketchRefusal.CanvasTooLarge, limit: maxPageSide };
   }
   if (width < minPageSide || height < minPageSide) {
-    return invalid(DESIGN_IMPORT_MESSAGE.canvasTooSmall(minPageSide));
+    return { refusal: SketchRefusal.CanvasTooSmall, limit: minPageSide };
   }
-  return { ok: true };
+  return null;
+};
+
+export const sizeFitsPage = (width: number, height: number): Result<object> => {
+  const refused = pageSizeRefusal(width, height);
+  if (refused === null) return { ok: true };
+  return invalid(
+    refused.refusal === SketchRefusal.CanvasTooLarge
+      ? DESIGN_IMPORT_MESSAGE.canvasTooLarge(refused.limit)
+      : DESIGN_IMPORT_MESSAGE.canvasTooSmall(refused.limit),
+  );
 };

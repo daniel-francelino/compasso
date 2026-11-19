@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type * as RenderModule from "@/lib/shared/design/import/render-pdf-page";
 
 vi.mock("pdfjs-dist/build/pdf.worker.min.mjs?url", () => ({ default: "worker.js" }));
 
 const render = vi.hoisted(() => ({ probe: vi.fn(), page: vi.fn() }));
 
 vi.mock("@/lib/shared/design/import/render-pdf-page", async (importActual) => ({
-  ...(await importActual<typeof import("@/lib/shared/design/import/render-pdf-page")>()),
+  ...(await importActual<typeof RenderModule>()),
   probeOrRenderPdfPage: render.probe,
   renderPdfPage: render.page,
 }));

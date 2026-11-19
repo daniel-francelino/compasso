@@ -15,6 +15,7 @@ import {
   errorName,
   raceWithLimits,
 } from "@/lib/shared/design/import/run-limits";
+import { imageCorruptFailure, imageTooLargeFailure } from "@/lib/shared/design/import/refusal";
 import { singleLayerDesign } from "@/lib/shared/design/import/single-layer";
 import { rasterBytes } from "@/lib/shared/design/raster-store";
 import {
@@ -66,11 +67,11 @@ export const planImage = (header: ImageHeader, usedBytes: number): Result<{ plan
   const either = [declared, { width: declared.height, height: declared.width }];
   const checked = header.orientationKnown ? [declared] : either;
   if (checked.some(sideOver)) {
-    return invalid(DESIGN_IMPORT_MESSAGE.imageTooLarge(header.width, header.height));
+    return imageTooLargeFailure(header.width, header.height);
   }
   const declaredBytes = rasterBytes(header.width, header.height);
   if (declaredBytes > DESIGN_LIMITS.rasterBudgetBytes) {
-    return invalid(DESIGN_IMPORT_MESSAGE.imageTooLarge(header.width, header.height));
+    return imageTooLargeFailure(header.width, header.height);
   }
   if (usedBytes + declaredBytes > DESIGN_LIMITS.rasterBudgetBytes) {
     return invalid(DESIGN_IMPORT_MESSAGE.memory);
@@ -142,15 +143,15 @@ const decodePixels = async (file: Blob, plan: ImagePlan): Promise<Result<Decoded
   try {
     bitmap = await createImageBitmap(file, bitmapOptions(plan));
     const size = { width: bitmap.width, height: bitmap.height };
-    if (!isExpectedSize(plan, size)) return invalid(DESIGN_IMPORT_MESSAGE.imageCorrupt);
+    if (!isExpectedSize(plan, size)) return imageCorruptFailure();
     const pixels = readPixels(bitmap);
     if (pixels === null || !isExpectedSize(plan, pixels)) {
-      return invalid(DESIGN_IMPORT_MESSAGE.imageCorrupt);
+      return imageCorruptFailure();
     }
     return { ok: true, width: pixels.width, height: pixels.height, data: pixels.data };
   } catch (error) {
     logError("image decode failed", errorName(error));
-    return invalid(DESIGN_IMPORT_MESSAGE.imageCorrupt);
+    return imageCorruptFailure();
   } finally {
     bitmap?.close();
   }
@@ -209,8 +210,7 @@ export const decodeWithHeader = async (
   input: ImportInput,
   declared: ImageHeader,
 ): Promise<Result<ImportKindResult>> => {
-  const header = { ok: true as const, header: declared };
-  const planned = planImage(header.header, input.usedBytes);
+  const planned = planImage(declared, input.usedBytes);
   if (!planned.ok) return planned;
   const { plan } = planned;
   const decoded = await decodeWithLimits(
@@ -227,7 +227,7 @@ export const decodeWithHeader = async (
       fileName: input.file.name,
       notes: notesOf(plan),
       defaultName: DESIGN_IMPORT_LAYER_NAME.image,
-      metadata: imageMetadata(format, header.header, decoded),
+      metadata: imageMetadata(format, declared, decoded),
     }),
   };
 };

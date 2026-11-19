@@ -19,8 +19,21 @@ export type TextPainter = (
   size: { width: number; height: number },
 ) => PixelBuffer | null;
 
-const clampSide = (value: number): number =>
-  Math.min(DESIGN_IMPORT_LIMITS.maxPageSide, Math.max(1, Math.ceil(value)));
+const clampSide = (value: number, bound: number): number =>
+  Math.min(DESIGN_IMPORT_LIMITS.maxPageSide, Math.max(1, Math.min(bound, Math.ceil(value))));
+
+export const renderSize = (node: SketchNode, bound: number): { width: number; height: number } => ({
+  width: clampSide(node.frame.width, bound),
+  height: clampSide(node.frame.height, bound),
+});
+
+export const renderCost = (node: SketchNode, bound: number): number => {
+  const size = renderSize(node, bound);
+  const pixels = size.width * size.height;
+  if (node.kind === SketchNodeKind.Bitmap || node.kind === SketchNodeKind.Text) return pixels;
+  const edges = node.kind === SketchNodeKind.Path ? node.points.length * CURVE_STEPS : 1;
+  return pixels * Math.max(1, edges) * SUBSAMPLES * SUBSAMPLES;
+};
 
 const bezier = (from: number, c1: number, c2: number, to: number, t: number): number => {
   const u = 1 - t;
@@ -125,11 +138,13 @@ const insideFor = (node: SketchNode, width: number, height: number): Inside | nu
   }
 };
 
-export const renderShape = (node: SketchNode): PixelBuffer | null => {
+export const renderShape = (
+  node: SketchNode,
+  bound: number = DESIGN_IMPORT_LIMITS.maxPageSide,
+): PixelBuffer | null => {
   const { fill } = node;
   if (fill === null) return null;
-  const width = clampSide(node.frame.width);
-  const height = clampSide(node.frame.height);
+  const { width, height } = renderSize(node, bound);
   const inside = insideFor(node, node.frame.width, node.frame.height);
   if (inside === null) return null;
   const data = new Uint8ClampedArray(width * height * 4);
@@ -147,13 +162,14 @@ export const renderShape = (node: SketchNode): PixelBuffer | null => {
   return { width, height, data };
 };
 
-export const renderText = (node: SketchNode, painter: TextPainter): PixelBuffer | null =>
+export const renderText = (
+  node: SketchNode,
+  painter: TextPainter,
+  bound: number = DESIGN_IMPORT_LIMITS.maxPageSide,
+): PixelBuffer | null =>
   node.text === null || node.text.value.trim() === ""
     ? null
-    : painter(node.text, {
-        width: clampSide(node.frame.width),
-        height: clampSide(node.frame.height),
-      });
+    : painter(node.text, renderSize(node, bound));
 
 export const canvasTextPainter: TextPainter = (text, size) => {
   if (typeof OffscreenCanvas === "undefined") return null;

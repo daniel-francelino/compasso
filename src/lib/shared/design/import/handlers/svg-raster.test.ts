@@ -68,7 +68,7 @@ describe("decodeSvg", () => {
       { kind: DesignImportNoteKind.FontsNotImported, count: 2 },
     ]);
     const blob = vi.mocked(render).mock.calls[0]?.[0];
-    expect(blob?.type).toBe("image/svg+xml");
+    expect(blob?.type).toBe("image/svg+xml;charset=utf-8");
   });
 
   it("never renders a refused file", async () => {

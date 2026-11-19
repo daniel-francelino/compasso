@@ -106,6 +106,14 @@ describe("parseFontLicense fsType rule (A4)", () => {
     }
   });
 
+  it("refuses reserved bits as the most restrictive class (owner decision delegated)", () => {
+    expect(classifyFsType(0x0001)).toBe(DesignFontLicenseClass.Restricted);
+    expect(classifyFsType(0x0400)).toBe(DesignFontLicenseClass.Restricted);
+    expect(classifyFsType(0x8000)).toBe(DesignFontLicenseClass.Restricted);
+    const result = parseFontLicense(font(0x0001));
+    expect(result.ok && result.record.accepted).toBe(false);
+  });
+
   it("uses the most restrictive bit of combinations", () => {
     expect(classifyFsType(0x0006)).toBe(DesignFontLicenseClass.Restricted);
     expect(classifyFsType(0x000e)).toBe(DesignFontLicenseClass.Restricted);
@@ -173,6 +181,20 @@ describe("parseFontLicense hostile input", () => {
     const wrap = font(0);
     new DataView(wrap.buffer).setUint32(12 + 12, 0xffffffff);
     expect(failureOf(wrap)).toBe(FontParseFailure.Corrupt);
+  });
+
+  it("refuses a duplicate table tag, restricted first and installable last", () => {
+    const names = nameTable([[1, "Acme Sans"]]);
+    const tables = [
+      { tag: "OS/2", data: os2Table(0x0002) },
+      { tag: "OS/2", data: os2Table(0x0000) },
+      { tag: "name", data: names },
+    ];
+    expect(failureOf(sfnt(tables))).toBe(FontParseFailure.Corrupt);
+    expect(failureOf(sfnt([...tables].reverse()))).toBe(FontParseFailure.Corrupt);
+    expect(
+      failureOf(sfnt([tables[1] ?? tables[0], tables[2]].flatMap((t) => (t ? [t] : [])))),
+    ).toBe(null);
   });
 
   it("refuses overlapping tables", () => {

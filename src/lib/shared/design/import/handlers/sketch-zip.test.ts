@@ -22,6 +22,18 @@ const BACKSLASH = String.fromCharCode(92);
 const messageOf = (result: { ok: boolean; message?: string }): string | null =>
   result.ok ? null : (result.message ?? null);
 
+const randomBytes = (length: number): Uint8Array => {
+  const bytes = new Uint8Array(length);
+  let state = 0x2545f491;
+  for (let index = 0; index < length; index += 1) {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    bytes[index] = state & 0xff;
+  }
+  return bytes;
+};
+
 const stored = (name: string, body = "x"): FixtureEntry => ({ name, data: text(body) });
 const deflated = (name: string, body: string): FixtureEntry => ({
   name,
@@ -193,33 +205,82 @@ describe("entry names", () => {
 });
 
 describe("readZipEntry bounds", () => {
-  it("stops a bomb above the cap and leaves the running total untouched", async () => {
-    const rawCompressed = await deflateRaw(new Uint8Array(100 * MIB));
+  it("stops inflation by the in-stream cap when the declared size equals the cap", async () => {
+    const CAP = 64 * 1024;
+    const rawCompressed = await deflateRaw(randomBytes(3 * MIB));
     const opened = await open([
-      { name: "pages/a.json", data: new Uint8Array(1), method: 8, rawCompressed, declaredSize: 10 },
+      {
+        name: "pages/a.json",
+        data: new Uint8Array(1),
+        method: 8,
+        rawCompressed,
+        declaredSize: CAP,
+        declaredCompressed: rawCompressed.length,
+      },
     ]);
     if (!opened.ok) throw new Error("expected an index");
-    const result = await readZipEntry(opened.zip, "pages/a.json", SKETCH_LIMITS.maxPageJsonBytes);
-    expect([DESIGN_IMPORT_MESSAGE.zipTooLarge, DESIGN_IMPORT_MESSAGE.zipRatioExceeded]).toContain(
-      messageOf(result),
-    );
+    const probe = { produced: 0, fed: 0 };
+    const result = await readZipEntry(opened.zip, "pages/a.json", CAP, undefined, probe);
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipTooLarge);
+    expect(probe.produced).toBeGreaterThan(CAP);
+    expect(probe.produced).toBeLessThan(MIB);
     expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
   });
 
-  it("stops a 1000 to 1 entry by ratio before it reaches the cap", async () => {
+  it("stops a 1000 to 1 stream by the in-stream ratio, below the cap", async () => {
+    const SIZE = 30 * MIB;
+    const rawCompressed = await deflateRaw(new Uint8Array(SIZE));
+    const opened = await open([
+      {
+        name: "pages/a.json",
+        data: new Uint8Array(1),
+        method: 8,
+        rawCompressed,
+        declaredSize: rawCompressed.length * SKETCH_LIMITS.ratioLimit,
+        declaredCompressed: rawCompressed.length,
+      },
+    ]);
+    if (!opened.ok) throw new Error("expected an index");
+    const probe = { produced: 0, fed: 0 };
+    const result = await readZipEntry(
+      opened.zip,
+      "pages/a.json",
+      SKETCH_LIMITS.maxPageJsonBytes,
+      undefined,
+      probe,
+    );
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipRatioExceeded);
+    expect(probe.produced).toBeLessThan(SIZE);
+    expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
+  });
+
+  it("refuses by the declared ratio before inflating anything", async () => {
     const rawCompressed = await deflateRaw(new Uint8Array(30 * MIB));
     const opened = await open([
-      { name: "pages/a.json", data: new Uint8Array(1), method: 8, rawCompressed, declaredSize: 10 },
+      {
+        name: "pages/a.json",
+        data: new Uint8Array(1),
+        method: 8,
+        rawCompressed,
+        declaredSize: 30 * MIB,
+        declaredCompressed: rawCompressed.length,
+      },
     ]);
     if (!opened.ok) throw new Error("expected an index");
-    const result = await readZipEntry(opened.zip, "pages/a.json", SKETCH_LIMITS.maxPageJsonBytes);
+    const probe = { produced: 0, fed: 0 };
+    const result = await readZipEntry(
+      opened.zip,
+      "pages/a.json",
+      SKETCH_LIMITS.maxPageJsonBytes,
+      undefined,
+      probe,
+    );
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipRatioExceeded);
-    expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
+    expect(probe).toEqual({ produced: 0, fed: 0 });
   });
 
-  it("stops lying sizes: declared 100 bytes, stream inflates far more", async () => {
-    const big = new Uint8Array(3 * MIB).map((_, index) => (index * 31) % 251);
-    const rawCompressed = await deflateRaw(big);
+  it("refuses lying sizes: declared 100 bytes, stream inflates more, as corrupt", async () => {
+    const rawCompressed = await deflateRaw(randomBytes(3 * MIB));
     const opened = await open([
       {
         name: "pages/a.json",
@@ -231,10 +292,48 @@ describe("readZipEntry bounds", () => {
       },
     ]);
     if (!opened.ok) throw new Error("expected an index");
-    const result = await readZipEntry(opened.zip, "pages/a.json", 64 * 1024);
-    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipTooLarge);
+    const probe = { produced: 0, fed: 0 };
+    const result = await readZipEntry(opened.zip, "pages/a.json", MIB, undefined, probe);
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
+    expect(probe.produced).toBeLessThan(MIB);
     expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
   });
+
+  it("feeds the compressed bytes in slices of at most 16 KiB and refuses with bounded output", async () => {
+    const SLICE = 16 * 1024;
+    const CAP = 64 * 1024;
+    const rawCompressed = await deflateRaw(randomBytes(8 * MIB));
+    expect(rawCompressed.length).toBeGreaterThan(MIB);
+    const opened = await open([
+      {
+        name: "pages/a.json",
+        data: new Uint8Array(1),
+        method: 8,
+        rawCompressed,
+        declaredSize: CAP,
+        declaredCompressed: rawCompressed.length,
+      },
+    ]);
+    if (!opened.ok) throw new Error("expected an index");
+    const steps: number[] = [];
+    let fed = 0;
+    const probe = {
+      produced: 0,
+      get fed(): number {
+        return fed;
+      },
+      set fed(value: number) {
+        steps.push(value - fed);
+        fed = value;
+      },
+    };
+    const result = await readZipEntry(opened.zip, "pages/a.json", CAP, undefined, probe);
+    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipTooLarge);
+    expect(steps.length).toBeGreaterThan(1);
+    expect(Math.max(...steps)).toBeLessThanOrEqual(SLICE);
+    expect(steps.reduce((sum, step) => sum + step, 0)).toBe(fed);
+    expect(probe.produced).toBeLessThan(MIB);
+  }, 30_000);
 
   it("refuses an entry whose actual size differs from the declared one", async () => {
     const opened = await open([{ ...deflated("meta.json", "0123456789"), declaredSize: 4 }]);

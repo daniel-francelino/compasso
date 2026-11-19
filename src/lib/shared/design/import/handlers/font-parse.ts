@@ -69,7 +69,22 @@ const NAME_TYPOGRAPHIC_STYLE = 17;
 const TAG_OS2 = "OS/2";
 const TAG_NAME = "name";
 
+const FS_NO_SUBSETTING = 0x0100;
+const FS_KNOWN_BITS =
+  FS_RESTRICTED | FS_PREVIEW_PRINT | FS_EDITABLE | FS_NO_SUBSETTING | FS_BITMAP_ONLY;
+const USED_NAME_IDS: ReadonlySet<number> = new Set([
+  NAME_COPYRIGHT,
+  NAME_FAMILY,
+  NAME_STYLE,
+  NAME_LICENSE,
+  NAME_LICENSE_URL,
+  NAME_TYPOGRAPHIC_FAMILY,
+  NAME_TYPOGRAPHIC_STYLE,
+]);
+const MAX_DECODED_BYTES = FONT_LIMITS.textMax * 2;
+
 export const classifyFsType = (fsType: number): DesignFontLicenseClass => {
+  if ((fsType & ~FS_KNOWN_BITS) !== 0) return DesignFontLicenseClass.Restricted;
   if ((fsType & FS_RESTRICTED) !== 0) return DesignFontLicenseClass.Restricted;
   if ((fsType & FS_PREVIEW_PRINT) !== 0) return DesignFontLicenseClass.PreviewPrint;
   if ((fsType & FS_BITMAP_ONLY) !== 0) return DesignFontLicenseClass.BitmapOnly;
@@ -117,7 +132,9 @@ const readDirectory = (view: DataView): Map<string, Table> | null => {
     const entry = HEADER_BYTES + index * DIRECTORY_ENTRY_BYTES;
     const table = { offset: view.getUint32(entry + 8), length: view.getUint32(entry + 12) };
     if (table.offset < directoryEnd || table.offset + table.length > view.byteLength) return null;
-    tables.set(tagOf(view, entry), table);
+    const tag = tagOf(view, entry);
+    if (tables.has(tag)) return null;
+    tables.set(tag, table);
   }
   return noOverlap([...tables.values()]) ? tables : null;
 };
@@ -162,8 +179,14 @@ const readNames = (view: DataView, table: Table): Map<number, string> | null => 
     const start = storage + view.getUint16(record + 10);
     if (start + length > table.offset + table.length) return null;
     const id = view.getUint16(record + 6);
-    const text = decodeNameString(view, view.getUint16(record), start, length);
-    if (text !== null && text !== "" && !names.has(id)) names.set(id, text);
+    if (!USED_NAME_IDS.has(id) || names.has(id)) continue;
+    const text = decodeNameString(
+      view,
+      view.getUint16(record),
+      start,
+      Math.min(length, MAX_DECODED_BYTES),
+    );
+    if (text !== null && text !== "") names.set(id, text);
   }
   return names;
 };

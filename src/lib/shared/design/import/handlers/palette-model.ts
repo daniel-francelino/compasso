@@ -1,5 +1,5 @@
 import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
-import { sanitizeImportText } from "@/lib/shared/design/import/sanitize";
+import { sanitizeColorName } from "@/lib/shared/design/import/sanitize";
 import {
   DesignImportKind,
   DesignImportNoteKind,
@@ -116,8 +116,7 @@ export const hsbToRgb = (
   return [CHANNEL_MAX * red, CHANNEL_MAX * green, CHANNEL_MAX * blue];
 };
 
-export const swatchName = (raw: string): string =>
-  sanitizeImportText(raw, PALETTE_LIMITS.maxNameStored) || FALLBACK_NAME;
+export const swatchName = (raw: string): string => sanitizeColorName(raw) || FALLBACK_NAME;
 
 export const finishPalette = (raw: readonly RawSwatch[]): Result<ImportOutcome> => {
   if (raw.length > PALETTE_LIMITS.maxSwatches) {

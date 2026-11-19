@@ -76,9 +76,8 @@ describe("static guards on the import module", () => {
   });
 
   it("has one render implementation shared by the ai and pdf handlers", () => {
-    for (const name of ["handlers/ai.ts", "handlers/pdf.ts"]) {
-      expect(source(name)).toContain("renderPdfPageDesign");
-    }
+    expect(source("handlers/ai.ts")).toContain("renderPdfPageDesign");
+    expect(source("handlers/pdf.ts")).toContain("pdfPageDesign");
     expect(namesWhere((text) => text.includes("getDocument("))).toEqual(["render-pdf-page.ts"]);
   });
 

@@ -1,8 +1,8 @@
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
-import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
+import { imageCorruptFailure } from "@/lib/shared/design/import/refusal";
 import { startsWith } from "@/lib/shared/design/import/sniff";
 import { DesignImportFormat } from "@/lib/shared/design/import/types";
-import { type Result, invalid } from "@/lib/shared/server-utils";
+import type { Result } from "@/lib/shared/server-utils";
 
 export type ImageHeader = {
   width: number;
@@ -241,7 +241,7 @@ export const readImageHeader = (
   format: DesignImportFormat,
 ): Result<{ header: ImageHeader }> => {
   const header = readByFormat(bytes, format);
-  return header === null ? invalid(DESIGN_IMPORT_MESSAGE.imageCorrupt) : { ok: true, header };
+  return header === null ? imageCorruptFailure() : { ok: true, header };
 };
 
 export const orientedSize = (header: ImageHeader): Size =>

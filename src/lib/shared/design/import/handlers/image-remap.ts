@@ -1,8 +1,6 @@
-import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
-import type { ImportKindResult } from "@/lib/shared/design/import/types";
+import { failureReason } from "@/lib/shared/design/import/refusal";
+import { DesignImportFailure, type ImportKindResult } from "@/lib/shared/design/import/types";
 import { type Result, invalid } from "@/lib/shared/server-utils";
-
-const TOO_LARGE_PREFIX = DESIGN_IMPORT_MESSAGE.imageTooLarge(0, 0).split(" (")[0] ?? "";
 
 export const MAX_DECLARED_PIXELS = 67_108_864;
 
@@ -14,9 +12,8 @@ export const remapImageFailure = (
   messages: { corrupt: string; tooLarge: string },
 ): Result<ImportKindResult> => {
   if (result.ok) return result;
-  if (result.message === DESIGN_IMPORT_MESSAGE.imageCorrupt) return invalid(messages.corrupt);
-  if (result.message.startsWith(TOO_LARGE_PREFIX)) {
-    return invalid(messages.tooLarge);
-  }
+  const coded = failureReason(result, DesignImportFailure);
+  if (coded?.reason === DesignImportFailure.Corrupt) return invalid(messages.corrupt);
+  if (coded?.reason === DesignImportFailure.ImageTooLarge) return invalid(messages.tooLarge);
   return result;
 };

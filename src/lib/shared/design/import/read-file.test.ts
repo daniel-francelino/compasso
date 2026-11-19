@@ -7,6 +7,10 @@ const { readDesignFile } = await import("@/lib/shared/design/import/read-file");
 const { psdHandler } = await import("@/lib/shared/design/import/handlers/psd");
 const { DESIGN_IMPORT_MESSAGE } = await import("@/lib/shared/design/import/messages");
 const { logError } = await import("@/lib/shared/logger");
+const { METADATA_LIMITS, MetadataLayerKind, buildMetadata } =
+  await import("@/lib/shared/design/import/metadata");
+const { DesignImportColorMode, DesignImportFormat, DesignImportKind, IMPORT_NEEDS_CHOICE } =
+  await import("@/lib/shared/design/import/types");
 
 const MIB = 1024 * 1024;
 
@@ -51,9 +55,11 @@ describe("readDesignFile routing", () => {
   it("refuses an empty file and an unknown type", async () => {
     const empty = await readDesignFile(fileOf("a.psd", new Uint8Array()), newId);
     expect(messageOf(empty)).toBe(DESIGN_IMPORT_MESSAGE.empty);
-    const unknown = await readDesignFile(fileOf("a.psd", bytesOf("GIF89a")), newId);
+    const unknown = await readDesignFile(fileOf("a.psd", bytesOf("XYZ123")), newId);
     expect(messageOf(unknown)).toBe(
-      DESIGN_IMPORT_MESSAGE.unsupportedType("PSD, AI, PDF, PNG, JPEG ou WebP"),
+      DESIGN_IMPORT_MESSAGE.unsupportedType(
+        "PSD, AI, PDF, PNG, JPEG, WebP, GIF, AVIF, TIFF, ASE, ACO, GPL, SVG ou Sketch",
+      ),
     );
   });
 });
@@ -81,5 +87,88 @@ describe("readDesignFile handler failures", () => {
     const result = await readDesignFile(fileOf("a.psd", psdHeaderBytes(1)), newId);
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
     expect(vi.mocked(logError)).toHaveBeenCalledWith("import decode failed", "Error");
+  });
+});
+
+const truncatedMetadata = () => {
+  const layers = Array.from({ length: METADATA_LIMITS.maxLayers + 1 }, (_, index) => ({
+    parentIndex: null,
+    name: `l${index}`,
+    kind: MetadataLayerKind.Raster,
+    visible: true,
+    opacity: 1,
+    blendMode: "normal",
+    bounds: { left: 0, top: 0, width: 10, height: 10 },
+  }));
+  return buildMetadata({
+    source: {
+      format: DesignImportFormat.Psd,
+      colorMode: DesignImportColorMode.Rgb,
+      bitsPerChannel: 8,
+      pageCount: null,
+    },
+    dimensions: { sourceWidth: 10, sourceHeight: 10, pageWidth: 10, pageHeight: 10 },
+    layers,
+  });
+};
+
+const resumedDesign = () => ({
+  format: DesignImportFormat.Psd,
+  width: 10,
+  height: 10,
+  elements: [],
+  buffers: new Map(),
+  notes: [],
+  metadata: truncatedMetadata(),
+});
+
+const choice = {
+  title: "t",
+  confirmLabel: "c",
+  options: [{ id: "a", label: "A" }],
+};
+
+describe("readDesignFile needs_choice", () => {
+  it("maps a resume exception to the read-failed message and logs the error name only", async () => {
+    vi.mocked(logError).mockClear();
+    vi.spyOn(psdHandler, "decode").mockResolvedValueOnce({
+      ok: true,
+      kind: IMPORT_NEEDS_CHOICE,
+      choice,
+      resume: async () => {
+        throw new TypeError("secret detail");
+      },
+    });
+    const result = await readDesignFile(fileOf("a.psd", psdHeaderBytes(1)), newId);
+    if (!result.ok || result.kind !== IMPORT_NEEDS_CHOICE) throw new Error("choice expected");
+    expect(result.choice).toBe(choice);
+    const resumed = await result.resume("a");
+    expect(messageOf(resumed)).toBe(DESIGN_IMPORT_MESSAGE.readFailed);
+    expect(vi.mocked(logError)).toHaveBeenCalledWith("import resume failed", "TypeError");
+  });
+
+  it("adds the metadata notes to a resumed design", async () => {
+    vi.spyOn(psdHandler, "decode").mockResolvedValueOnce({
+      ok: true,
+      kind: IMPORT_NEEDS_CHOICE,
+      choice,
+      resume: async () => ({ ok: true, kind: DesignImportKind.Document, design: resumedDesign() }),
+    });
+    const result = await readDesignFile(fileOf("a.psd", psdHeaderBytes(1)), newId);
+    if (!result.ok || result.kind !== IMPORT_NEEDS_CHOICE) throw new Error("choice expected");
+    const resumed = await result.resume("a");
+    if (!resumed.ok || resumed.kind !== DesignImportKind.Document)
+      throw new Error("design expected");
+    expect(resumed.design.notes.map((note) => note.kind)).toEqual(["metadata_truncated"]);
+  });
+
+  it("does not offer a choice when the handler fails", async () => {
+    vi.spyOn(psdHandler, "decode").mockResolvedValueOnce({
+      ok: false,
+      code: "invalid",
+      message: "x",
+    });
+    const result = await readDesignFile(fileOf("a.psd", psdHeaderBytes(1)), newId);
+    expect(result.ok).toBe(false);
   });
 });

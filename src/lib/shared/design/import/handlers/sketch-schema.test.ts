@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   SketchNodeKind,
+  flattenLayers,
   listArtboards,
+  newJsonValueBudget,
   parseSketchDocument,
   parseSketchJson,
   parseSketchMeta,
   readArtboard,
   readSketchPages,
 } from "@/lib/shared/design/import/handlers/sketch-schema";
+import { SKETCH_LIMITS } from "@/lib/shared/design/import/limits";
 import { DESIGN_IMPORT_MESSAGE } from "@/lib/shared/design/import/messages";
+import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 
 const bytes = (value: string): Uint8Array => new TextEncoder().encode(value);
 const json = (value: unknown): Uint8Array => bytes(JSON.stringify(value));
@@ -35,6 +39,15 @@ const artboard = (name: string, layers: unknown[]) => ({
 });
 const pageOf = (...artboards: unknown[]) => ({ _class: "page", layers: artboards });
 
+const nestedArrays = (levels: number): string => "[".repeat(levels) + "]".repeat(levels);
+const group = (layers: unknown[]) => ({ _class: "group", name: "g", frame, layers });
+const artboardOf = (layers: unknown[]) => {
+  const pages = read(pageOf(artboard("A", layers)));
+  const info = listArtboards(pages).listed[0];
+  if (info === undefined) throw new Error("no artboard");
+  return readArtboard(pages, info);
+};
+
 const read = (value: unknown) => {
   const pages = readSketchPages([value]);
   if (!pages.ok) throw new Error("page refused");
@@ -58,6 +71,42 @@ describe("parseSketchJson", () => {
     expect(messageOf(parseSketchJson(bytes(deep)))).toBe(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
     const objects = '{"a":'.repeat(100000) + "1" + "}".repeat(100000);
     expect(parseSketchJson(bytes(objects)).ok).toBe(false);
+  });
+
+  it("accepts nesting at the depth limit and refuses one level more", () => {
+    const limit = SKETCH_LIMITS.maxJsonDepth;
+    expect(parseSketchJson(bytes(nestedArrays(limit))).ok).toBe(true);
+    expect(messageOf(parseSketchJson(bytes(nestedArrays(limit + 1))))).toBe(
+      DESIGN_IMPORT_MESSAGE.sketchCorrupt,
+    );
+  });
+
+  it("keeps string state across escaped quotes and escaped backslashes", () => {
+    const quoted = JSON.stringify({ s: '"' + "[".repeat(300) });
+    expect(parseSketchJson(bytes(quoted)).ok).toBe(true);
+    const slashed = JSON.stringify({
+      s: String.fromCharCode(92),
+      d: JSON.parse(nestedArrays(129)),
+    });
+    expect(slashed).toContain(String.fromCharCode(92, 92));
+    expect(parseSketchJson(bytes(slashed)).ok).toBe(false);
+  });
+
+  it("accepts exactly the maximum number of JSON values and refuses one more", () => {
+    const body = (count: number): Uint8Array => bytes("[" + "0,".repeat(count - 1) + "0]");
+    const limit = SKETCH_LIMITS.maxJsonValues;
+    expect(parseSketchJson(body(limit - 1)).ok).toBe(true);
+    expect(messageOf(parseSketchJson(body(limit)))).toBe(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
+  });
+
+  it("charges the values of every parse to a shared job budget", () => {
+    const budget = { remaining: 7 };
+    expect(parseSketchJson(json([1, 2, 3]), budget).ok).toBe(true);
+    expect(budget.remaining).toBe(3);
+    expect(messageOf(parseSketchJson(json([1, 2, 3]), budget))).toBe(
+      DESIGN_IMPORT_MESSAGE.sketchCorrupt,
+    );
+    expect(newJsonValueBudget().remaining).toBe(SKETCH_LIMITS.maxJobJsonValues);
   });
 
   it("does not count brackets inside strings as depth", () => {
@@ -120,6 +169,7 @@ describe("artboards and layers", () => {
     const result = readArtboard(pages, info);
     expect(result.ok && result.artboard.nodes).toHaveLength(101);
     expect(result.ok && result.artboard.nodes.at(-1)?.depth).toBe(100);
+    expect(result.ok && result.artboard.deepGroups).toBe(92);
   });
 
   it("keeps unknown classes as unsupported nodes with only identity and frame", () => {
@@ -183,16 +233,32 @@ describe("artboards and layers", () => {
     }
   });
 
-  it("refuses an artboard with 5001 layers", () => {
+  it("refuses a children array above the schema cap as corrupt", () => {
     const layers = Array.from({ length: 5001 }, (_, index) => rectangle(`r${index}`));
-    const pages = read(pageOf(artboard("A", layers.slice(0, 5000))));
-    const info = listArtboards(pages).listed[0];
-    if (info === undefined) throw new Error("no artboard");
-    expect(readArtboard(pages, info).ok).toBe(true);
-    const over = read(pageOf(artboard("B", [{ _class: "group", frame, layers }])));
-    const overInfo = listArtboards(over).listed[0];
-    if (overInfo === undefined) throw new Error("no artboard");
-    expect(readArtboard(over, overInfo).ok).toBe(false);
+    const unlisted = read(pageOf(artboard("A", layers)));
+    expect(listArtboards(unlisted).total).toBe(0);
+    expect(messageOf(artboardOf([group(layers)]))).toBe(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
+  });
+
+  it("accepts exactly 5000 nodes per artboard and refuses 5001 with the layer limit", () => {
+    const rects = (count: number) => Array.from({ length: count }, (_, i) => rectangle(`r${i}`));
+    const atCap = artboardOf([group(rects(4999))]);
+    expect(atCap.ok && atCap.artboard.nodes).toHaveLength(5000);
+    const over = artboardOf([group(rects(5000))]);
+    expect(messageOf(over)).toBe(DESIGN_IMPORT_MESSAGE.tooManyLayers(DESIGN_LIMITS.maxElements));
+    const spread = artboardOf([group(rects(3000)), group(rects(3000))]);
+    expect(messageOf(spread)).toBe(DESIGN_IMPORT_MESSAGE.tooManyLayers(DESIGN_LIMITS.maxElements));
+  });
+
+  it("flattens a chain deeper than a recursive walk could survive", () => {
+    const levels = 4990;
+    let layer: unknown = rectangle("leaf");
+    for (let level = 0; level < levels; level += 1) layer = group([layer]);
+    const result = flattenLayers([layer]);
+    if (!result.ok) throw new Error("expected nodes");
+    expect(result.nodes).toHaveLength(levels + 1);
+    expect(result.nodes.at(-1)?.depth).toBe(levels);
+    expect(result.deepGroups).toBe(levels - DESIGN_LIMITS.maxGroupDepth);
   });
 
   it("refuses a page that is not a page", () => {
