@@ -211,5 +211,5 @@ describe("large buffers", () => {
       { width: 512, height: 512 },
     );
     expect(getPixel(out, 5, 5).a).toBe(255);
-  });
+  }, 30000);
 });

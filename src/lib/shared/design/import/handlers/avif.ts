@@ -28,7 +28,7 @@ let support: Promise<boolean> | null = null;
 const probeBytes = (): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(globalThis.atob(PROBE_BASE64), (character) => character.charCodeAt(0));
 
-export const browserOpensAvif = (): Promise<boolean> => {
+const browserOpensAvif = (): Promise<boolean> => {
   support ??= (async () => {
     try {
       const bitmap = await createImageBitmap(new Blob([probeBytes()], { type: "image/avif" }));

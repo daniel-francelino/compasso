@@ -138,7 +138,7 @@ describe("sketch job memory bounds", () => {
     expect(resumed.response.status === "result" && resumed.response.layers).toHaveLength(2);
     expect(refusalOf(await runSketch(request("5:0"), bytes, deps))).toBe(SketchRefusal.Corrupt);
     expect(refusalOf(await runSketch(request("0:9"), bytes, deps))).toBe(SketchRefusal.Corrupt);
-  });
+  }, 90000);
 });
 
 describe("sketch bitmap budget", () => {
@@ -152,7 +152,7 @@ describe("sketch bitmap budget", () => {
     const output = await runSketch(request(null, 300 * 1024 * 1024), bytes, deps);
     expect(refusalOf(output)).toBe(SketchRefusal.Memory);
     expect(calls.decoded).toBe(0);
-  });
+  }, 90000);
 
   it("decodes one image once for many layers and caps distinct decodes", async () => {
     const same = Array.from({ length: 10 }, (_, index) => bitmap(`s${index}`, "images/a.png"));

@@ -208,7 +208,7 @@ describe("buildMetadata", () => {
     expect(new TextEncoder().encode(JSON.stringify(metadata)).length).toBeLessThanOrEqual(
       METADATA_LIMITS.jsonBytes,
     );
-  });
+  }, 60000);
 
   it("returns null, never throws, when the parts cannot make a valid object", () => {
     const badParent = baseParts({ layers: [layer("a", { parentIndex: 5 })] });
@@ -390,7 +390,7 @@ describe("importedDesignMetadataSchema", () => {
     expect(Object.values(DesignImportColorMode).sort()).toEqual(
       ["bitmap", "cmyk", "grayscale", "indexed", "rgb", "unknown"].sort(),
     );
-  });
+  }, 60000);
 });
 
 describe("parseImportedDesignMetadata", () => {

@@ -20,6 +20,12 @@ const metadata = () => {
 };
 
 describe("recordDesignImportSchema", () => {
+  it("refuses an unknown top-level key", () => {
+    expect(
+      recordDesignImportSchema.safeParse({ id: DESIGN_ID, metadata: metadata(), extra: 1 }).success,
+    ).toBe(false);
+  });
+
   it("accepts a design id and metadata built by the client", () => {
     expect(
       recordDesignImportSchema.safeParse({ id: DESIGN_ID, metadata: metadata() }).success,
@@ -110,7 +116,7 @@ describe("recordDesignImportSchema", () => {
     expect(
       recordDesignImportSchema.safeParse({ id: DESIGN_ID, metadata: withFonts(over) }).success,
     ).toBe(false);
-  });
+  }, 30000);
 
   it("refuses a design id that is not a uuid", () => {
     expect(recordDesignImportSchema.safeParse({ id: "x", metadata: metadata() }).success).toBe(

@@ -312,7 +312,9 @@ export const recordDesignExportSchema = z.object({
   mediaVersionId: z.string().uuid(),
 });
 
-export const recordDesignImportSchema = z.object({
-  id: designId,
-  metadata: storedDesignMetadataSchema,
-});
+export const recordDesignImportSchema = z
+  .object({
+    id: designId,
+    metadata: storedDesignMetadataSchema,
+  })
+  .strict();

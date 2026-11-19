@@ -1,6 +1,6 @@
 # Image editor: file import implementation plan
 
-> Implementation plan for importing design files into the image editor ([image-editor.md](image-editor.md)). Date: 2026-11-18. Status: **Phase A (documents) done; Phase 0 (items 0-1 to 0-17) done in code with the deviations and the NOT proven list recorded in the Phase 0 status tables below and in [image-editor.md](image-editor.md) Implementation status; item 0-16 (build and chunk check) and item 0-18 (visual check) are not done. Next phase: Phase 1 (metadata), docs first: item 1-1 registers `DesignImportColorMode`, `metadata_truncated` and the other Phase 1 names before any code.** This file holds the plan and the work items only; the rules R1 to R12, A3 to A6, the limits and the decisions live in [image-editor.md](image-editor.md) section 8h (GOLD-1, DOC-3), so values are not repeated here and 8h wins on any difference. Names marked "proposed" must be registered before code (DOC-2, GOLD-4). Owner decision 2026-11-18: accept plan recommendations, for Phases A, 0 and 1 (8h.6); the open decisions of Phases 2 to 7 still wait for the owner (DOC-5).
+> Implementation plan for importing design files into the image editor ([image-editor.md](image-editor.md)). Date: 2026-11-18. Status (updated 2026-11-19): **Phases A, 0, 1, 2, 3 (SVG only) and 4 are implemented and reviewed; font storage (3b) is Deferred by the owner (2026-11-19, SEC-7 unchanged); Phase 5 is GO for SVG vector only (spike 5-S1 first, document version 4 approved for `path`), AI/PDF vector deferred; Phase 6 is deferred; Phase 7 is blocked. Per-phase status and what is NOT proven: "Status by phase" at the end and [image-editor.md](image-editor.md) Implementation status. The sentence that follows is the historical state of Phase 0.** Phase A (documents) done; Phase 0 (items 0-1 to 0-17) done in code with the deviations and the NOT proven list recorded in the Phase 0 status tables below and in [image-editor.md](image-editor.md) Implementation status; item 0-16 (build and chunk check) and item 0-18 (visual check) are not done. Next phase: Phase 1 (metadata), docs first: item 1-1 registers `DesignImportColorMode`, `metadata_truncated` and the other Phase 1 names before any code.** This file holds the plan and the work items only; the rules R1 to R12, A3 to A6, the limits and the decisions live in [image-editor.md](image-editor.md) section 8h (GOLD-1, DOC-3), so values are not repeated here and 8h wins on any difference. Names marked "proposed" must be registered before code (DOC-2, GOLD-4). Owner decision 2026-11-18: accept plan recommendations, for Phases A, 0 and 1 (8h.6); the open decisions of Phases 2 to 7 still wait for the owner (DOC-5).
 
 ## Decision
 
@@ -14,8 +14,8 @@ The editor imports PSD, AI, PDF pages, PNG, JPEG, WebP, TIFF, AVIF, GIF (first f
 | 2 | PDF pages, TIFF, AVIF, GIF, palettes | 2.5 to 3 weeks |
 | 3 | SVG rasterized and fonts | about 2.5 weeks |
 | 4 | Sketch | about 2 weeks |
-| 5 | SVG vector and AI/PDF vector (highest risk) | 4 to 6 weeks |
-| 6 | Lottie, HEIC, CMYK/ICC | 3 to 4 weeks |
+| 5 | SVG vector (GO 2026-11-19, spike 5-S1 first); AI/PDF vector deferred | about 3 to 4 weeks |
+| 6 | Lottie, HEIC, CMYK/ICC (deferred 2026-11-19, not started) | 3 to 4 weeks |
 | 7 | EPS, Figma, Canva (proposals only until unblocked) | 3 to 4 weeks each |
 
 Order of delegation: A, then 0, then 1 sequentially; then phases 2, 3 and 4 as parallel streams that only add handler files, their own hooks and one registry line; then 5, 6, 7. Every phase passes `standards-reviewer` before code (docs first) and after; every parser phase passes `security-analyst`; `test-reviewer` reviews what `test-engineer` writes.
@@ -90,7 +90,7 @@ Documentation checks (no code): (1) `check:docs` fails if a registry is edited w
 - Parts 2 and 3 of this plan add rows to the same 8h table and enums rows: merge conflicts in docs. Mitigation: one owner serializes Phase A edits; later phases append rows only.
 
 #### Blocked/needs-user items
-- B1 (R1-R12, A3-A6): resolved by the owner decision of 2026-11-18; the only point still awaiting a decision is the document version 4 of R11 (8h.2).
+- B1 (R1-R12, A3-A6): resolved by the owner decision of 2026-11-18; the document version 4 of R11 was decided on 2026-11-19 (approved for the Phase 5 `path` kind only, 8h.2); R4 and A5 (fonts) are Deferred.
 
 #### Decisions (accepted by the owner on 2026-11-18; summary in image-editor.md 8h.6)
 - A-D1: Where do the rules and limits live? Decided: section 8h of `image-editor.md`. This file holds the plan and the work items only and is a legitimate document of its own (DOC-3 allows creating a document without confirmation; it is listed in `docs/README.md` and `docs/modules/README.md`).
@@ -227,7 +227,7 @@ Acceptance status (2026-11-18):
 - Trust boundary: file bytes and the worker's response are both untrusted for the main thread's arithmetic (validate again). A worker is a responsiveness boundary, not a security boundary: a parser bug could return inconsistent data.
 - Budget before decode, per layer, with overflow-safe math; this is the control for decompression and memory bombs. Time budget and `terminate()` are the control for CPU bombs.
 - pdf.js: the options of 8h.4 (no `isEvalSupported` and no `enableScripting` exist in 6.5.438; no auto-fetch, no URL options); keep `pdfjs-dist` patched (version floor and CVE in 8h.4); run `npm audit` and report the real output rather than assuming.
-- Originals are never stored or uploaded (R3; the only future exception is an accepted font in Phase 3 under its own SEC-7 change); only re-encoded pixel layers go through the existing flush.
+- Originals are never stored or uploaded (R3; an accepted font under its own SEC-7 change was the only planned exception and is Deferred (owner 2026-11-19)); only re-encoded pixel layers go through the existing flush.
 - Never log file names with personal data, file bytes or text; `logError` gets a fixed context label and the error name or class, never the message of an error raised while parsing file content (SEC-12, 8h.4).
 - Messages never echo file-derived strings into `invalid` texts (no XSS or injection in toasts; toasts render text, not HTML).
 - No `dangerouslySetInnerHTML`; nothing from the file is rendered as HTML (layer names appear as text in the existing layers panel).
@@ -394,7 +394,7 @@ Cross-part dependencies for Parts 2 and 3: they append handler rows to 8h.3, enu
 
 | Id | Needs | Phases affected | What is NOT done meanwhile |
 |---|---|---|---|
-| B1 | Resolved 2026-11-18 (owner: accept plan recommendations): R1-R12, A3-A6, see image-editor.md 8h.2. Still awaiting: the document version 4 of R11 | A, 1 | Unapproved points stay "Proposed, awaiting decision" |
+| B1 | Resolved 2026-11-18 (owner: accept plan recommendations): R1-R12, A3-A6, see image-editor.md 8h.2. Decided 2026-11-19: document version 4 for the `path` kind only (R11); R4 and A5 Deferred | A, 1 | Unapproved points stay "Proposed, awaiting decision" |
 | B2 | Owner-authorized fixtures (PSD RGB/CMYK/text/groups/masks, AI, Canva PDF, CMYK JPEG, EXIF-rotated JPEG) | 0, 1 | Golden comparison and timing checks are reported "not tested" |
 | B3 | Chunk-size budget and import-time threshold; real-device checks (iOS Safari, Firefox, Chrome desktop, memory) | 0 | Only measured sizes are recorded; no performance claim |
 | B4 | Production push of any migration | 1 | Migration stays local |
@@ -404,7 +404,7 @@ Validation limits of this plan: nothing described here has been run; ag-psd/pdf.
 
 ## Part 2 - Phases 2, 3 and 4 (PDF pages, raster formats, palettes; SVG and fonts; Sketch)
 
-Date: 2026-11-18. Aligned with Part 1 (corrections: the PSD/AI draft is COMMITTED in e65bc90 and the tree is clean; enum values are registered per phase; `needs_choice` is NOT built in Phase 0). Nothing in this part has been run or tested. Inputs: base.md (GOLD-1..8, CODE-12/15, SEC-6/7/8/12, 9.1-9.3, 11), image-editor.md, docs/reference/*, and the committed PSD/AI draft in `src/lib/shared/design/` and `src/hooks/shared/design/` (read only), plus Part 1.
+Date: 2026-11-18. Aligned with Part 1 (corrections: the PSD/AI draft is COMMITTED in e65bc90 and the tree is clean; enum values are registered per phase; `needs_choice` is NOT built in Phase 0). This paragraph is the historical state at the time of writing (nothing was run then); the implemented state is in "Status by phase" at the end and in [image-editor.md](image-editor.md) Implementation status. Inputs: base.md (GOLD-1..8, CODE-12/15, SEC-6/7/8/12, 9.1-9.3, 11), image-editor.md, docs/reference/*, and the committed PSD/AI draft in `src/lib/shared/design/` and `src/hooks/shared/design/` (read only), plus Part 1.
 
 ### 0. Shared conventions for this part
 
@@ -543,15 +543,9 @@ Let a designer (a) pick which page of a PDF to import, (b) import TIFF, AVIF and
 - Brand write: the server function validates with the existing `visualIdentitySchema` colors shape (SEC-6); brand resolved from the database, never from client ids alone (SEC-3); personal data: swatch names come from files, no logs of names (SEC-12).
 - Worker protocol messages are zod-validated in both directions (Phase 0 `worker/protocol.ts`); transferable buffers only.
 
-### 2.8 Limits (proposal, confirmed by 2-2)
+### 2.8 Limits
 
-| Format | maxBytes | Pre-decode cap | Other caps |
-|---|---|---|---|
-| PDF | global 100 MiB | page viewport at the chosen scale <= 4096 per side (scale clamped), `numPages` listed up to 500 | render time budget 30 s, then cancel |
-| TIFF | 100 MiB | working set `w * h * (bytesPerPixel + 4) <= rasterBudgetBytes`, side <= 32768 declared | IFD count 64, timeout 20 s |
-| AVIF | 50 MiB | `w * h <= 67_108_864` (64 Mpx), then downscale to 4096 with `downscaled` | box depth walk <= 16 levels |
-| GIF | 50 MiB | `w * h <= 67_108_864` | block walker cap 100000 |
-| ASE/ACO/GPL | 1 MiB | swatches <= 1000, name <= 255 chars read (stored 40) | GPL lines <= 5000, line <= 256 chars |
+All limits of this phase (PDF, TIFF, AVIF, GIF, palettes: byte caps, pixel caps, counts, timeouts) are decided and live only in [image-editor.md](image-editor.md) 8h.3 and 8h.4 and in `import/limits.ts` (GOLD-1); the proposal table that stood here was removed because it duplicated them.
 
 ### 2.9 Messages and UI copy to register (pt-BR drafts; the developer finalizes in glossary)
 
@@ -632,15 +626,15 @@ Honest scoping: 3a is self-contained and shippable. 3b is NOT useful until impor
 
 | In | Out |
 |---|---|
-| SVG: size cap 5 MB, text pre-scan gate, `<img>` rasterization at up to 2x capped 4096, transparent background, `vector_rasterized` note | SVG as vectors (Phase 5), DOMPurify or any rewriting sanitizer, external resources (fonts, images, CSS), SVG animation, SVG in the media library (stays refused) |
+| SVG: size cap per 8h.4, text pre-scan gate, `<img>` rasterization at up to 2x capped 4096, transparent background, `vector_rasterized` note | SVG as vectors (Phase 5), DOMPurify or any rewriting sanitizer, external resources (fonts, images, CSS), SVG animation, SVG in the media library (stays refused) |
 | Fonts: TTF, OTF, WOFF, WOFF2 parsing in a worker, name table and `fsType` read, accept/refuse, licence record, attestation dialog, `FontFace` registration from an ArrayBuffer, curated list stays default | Font editing, subsetting, variable axes UI, font collections (`.ttc` refused), icon fonts as glyph import, font storage design beyond the decision below (blocked) |
 
 ### 3.3 Prerequisites
 
 - P-3.0: Phases A, 0, 1 and Phase 2 item 2-0 merged (the seam and the result-kind pattern exist); `svg, ttf, otf, woff, woff2`, kind `font` and the Phase 3 note kinds are registered by 3-1 of THIS phase (per-phase rule), not by Phase A.
 - P-3.1: R1, R3 and R4 in image-editor 8h.2 (decided 2026-11-18; needed for SVG and fonts respectively).
-- P-3.2 (BLOCKED, A4): the user confirms the fsType rule (refuse 0x0002, 0x0004, 0x0200; accept 0x0000, 0x0008; allow 0x0100).
-- P-3.3 (BLOCKED, A5): where font files and the licence record live (hidden media with allowlist exception; dedicated table plus private storage; session only).
+- P-3.2 (Deferred with fonts, A4): the user confirms the fsType rule (refuse 0x0002, 0x0004, 0x0200; accept 0x0000, 0x0008; allow 0x0100).
+- P-3.3 (Deferred 2026-11-19, A5): where font files and the licence record live (hidden media with allowlist exception; dedicated table plus private storage; session only).
 - P-3.4 (BLOCKED, 3-9): how a text element references an imported font.
 - P-3.5: CSP review: the SVG object URL needs `img-src blob:` (technical-architecture line 1029 lists only the media and signed-URL hosts). If CSP is enforced in production, add `blob:` (docs first) or use a `data:` URL (also needs `img-src data:`). Verified by e2e (3-11).
 - P-3.6 (BLOCKED, owner): fixtures: an icon set SVG, logo SVGs with gradients and text, fonts covering each `fsType` value (0x0000, 0x0002, 0x0004, 0x0008, 0x0100, 0x0200), WOFF, WOFF2, OTF (CFF), a TTC.
@@ -653,12 +647,12 @@ Honest scoping: 3a is self-contained and shippable. 3b is NOT useful until impor
 | 3-2 | Threat model: SVG (parser, img-mode rendering DoS, nested `use`, filters, huge `viewBox`, DOCTYPE/entities, external refs) and fonts (sfnt table bombs, WOFF/WOFF2 decompression bombs, hostile `name` strings, OTS bypass) | output into 3-1 limits table | none | security-analyst | 3-1 draft |
 | 3-3 | Test design: hostile SVG list and font forgers | test plan | none | test-designer | 3-2 |
 | 3-4 | SVG gate (pure, node-testable): size cap, no NUL bytes, UTF-8 decode, refuse DOCTYPE with internal subset or any `<!ENTITY`, `<?xml-stylesheet`, parse with `DOMParser("image/svg+xml")`, `parsererror` refusal, root must be `svg` in the SVG namespace, element count cap 5000, `use` count cap 50, denylist (`script`, `foreignObject`, `iframe`, `object`, `embed`, `handler`, `listener`, `set`, `feImage`), any attribute starting with `on`, any attribute value containing `javascript:` (case/space-insensitive after entity decode), `href`/`xlink:href` only `#fragment` or `data:image/(png|jpeg|webp|gif);base64,`, `style` and `<style>` text refused if it contains `@import`, `url(` with anything other than `#fragment` or an allowed data URI, `expression(`; refuse, never rewrite | `import/handlers/svg-gate.ts`, `svg-gate.test.ts` | `messages.ts` block `svg*` | developer | 3-1, 3-2 |
-| 3-5 | Font spike (scratch only, not in the repo): fontkit 3.0.0 vs opentype.js 2.0.0 vs own sfnt reader: WOFF2 parse, browser/worker build, gzip chunk size, ability to read `name` and OS/2 only without building glyph tables, behaviour on truncated tables; decision recorded in 3-1 | no repo change | none | developer | none |
+| 3-5 | DEFERRED (owner 2026-11-19, font storage rejected for now; reopen only with 3-9 and 3-10).  Font spike (scratch only, not in the repo): fontkit 3.0.0 vs opentype.js 2.0.0 vs own sfnt reader: WOFF2 parse, browser/worker build, gzip chunk size, ability to read `name` and OS/2 only without building glyph tables, behaviour on truncated tables; decision recorded in 3-1 | no repo change | none | developer | none |
 | 3-6 | SVG rasterization handler: gate (3-4), read intrinsic size from `width`/`height`/`viewBox` (units px only; `%`, `em` refused or fall back to viewBox), compute scale min(2, 4096 / longest), refuse sizes below 64 px or above caps, load via `Image` from a `blob:` URL of type `image/svg+xml` (no `crossOrigin`, no insertion in the DOM), `await img.decode()` with timeout 10 s, `drawImage` into canvas with explicit width and height (Firefox requires an intrinsic size: if the root lacks `width`/`height`, set them with DOM APIs on the parsed document and serialize with `XMLSerializer` after the gate; this is the only rewrite and it is validated again), revoke the URL in `finally`, bitmap to layer via P-2.2, note `vector_rasterized`, `fonts_not_imported` when `<text>` exists | `import/handlers/svg-raster.ts`, `svg-raster.test.ts`, one registry line | `messages.ts` keys | developer | 3-4, P-2.2 |
-| 3-7 | Font parse and gate (worker-side, pure where possible): header check (`0x00010000`, `OTTO`, `true`, `wOFF`, `wOF2`; `ttcf` refused), `numTables` cap 64, table bounds checks against length, read OS/2 `fsType` (offset 8 of the OS/2 table; OS/2 missing means refuse because the licence cannot be verified), read `name` ids 0, 1, 2, 4, 13, 14, 16, 17, class by the most restrictive set bit, size cap 10 MiB, name strings length-capped and control chars stripped; output `FontLicenseRecord` (family, style, copyright, licence description, licence URL as text only, fsType, class, SHA-256 of bytes) | `import/handlers/font.ts` (registry loader for ttf, otf, woff, woff2: four lines), `font-parse.ts`, tests | `DesignFontLicenseClass`, messages | developer | 3-5, 3-1, P-3.2 |
-| 3-8 | Font dialog and registration: `FontLicenseDialog` (shows family, style, class, licence strings as plain text, attestation checkbox "Tenho licenca para usar esta fonte neste design", confirm), `use-font-import.ts`; registration with `new FontFace(familyKey, arrayBuffer)` (ArrayBuffer source, no URL, no CSP `font-src` change), `await face.load()` failure means refuse (browser OTS is a second validation layer), `document.fonts.add`; family key is generated (`design-brand-font-<id>`), never the file's family name | `src/components/shared/design/font-license-dialog.tsx`, `src/hooks/shared/design/use-font-import.ts`, `import/types.ts` and `use-design-import.ts` (the second and last closed-file edit of this part: add the `font` result kind and its `case`, serialized, reviewed on its own), `src/lib/shared/design/fonts.ts` is NOT edited: a new `brand-fonts.ts` (proposed) holds registration | glossary, enums | ux-ui-designer, developer, design-review | 3-7 |
-| 3-9 | BLOCKED DECISION: text element reference to an imported font. Options in D3-3. Output: ADR text in image-editor 8h and, if a document schema change, document version and `design_assert_document` migration plan | docs only first | document section, enums | software-architect, data-integrity-auditor | P-3.3 |
-| 3-10 | BLOCKED: font file and licence record storage (A5): migration or hidden-media purpose with MIME allowlist exception (SEC-7), RLS, audit action, tests; `/migration` checklist, local only, production push needs the owner | `supabase/migrations/<timestamp>_*.sql`, `supabase/tests/*.test.sql`, data-model.md, functions.md, `src/lib/shared/media/limits.ts` only if the user picks the media option | data-model, functions, audit action (proposed `design.font_imported`), error codes if needed | developer, data-integrity-auditor, security-analyst | P-3.3, 3-9 |
+| 3-7 | DEFERRED (owner 2026-11-19, font storage rejected for now; reopen only with 3-9 and 3-10).  Font parse and gate (worker-side, pure where possible): header check (`0x00010000`, `OTTO`, `true`, `wOFF`, `wOF2`; `ttcf` refused), `numTables` cap 64, table bounds checks against length, read OS/2 `fsType` (offset 8 of the OS/2 table; OS/2 missing means refuse because the licence cannot be verified), read `name` ids 0, 1, 2, 4, 13, 14, 16, 17, class by the most restrictive set bit, size cap 10 MiB, name strings length-capped and control chars stripped; output `FontLicenseRecord` (family, style, copyright, licence description, licence URL as text only, fsType, class, SHA-256 of bytes) | `import/handlers/font.ts` (registry loader for ttf, otf, woff, woff2: four lines), `font-parse.ts`, tests | `DesignFontLicenseClass`, messages | developer | 3-5, 3-1, P-3.2 |
+| 3-8 | DEFERRED (owner 2026-11-19, font storage rejected for now; reopen only with 3-9 and 3-10).  Font dialog and registration: `FontLicenseDialog` (shows family, style, class, licence strings as plain text, attestation checkbox "Tenho licenca para usar esta fonte neste design", confirm), `use-font-import.ts`; registration with `new FontFace(familyKey, arrayBuffer)` (ArrayBuffer source, no URL, no CSP `font-src` change), `await face.load()` failure means refuse (browser OTS is a second validation layer), `document.fonts.add`; family key is generated (`design-brand-font-<id>`), never the file's family name | `src/components/shared/design/font-license-dialog.tsx`, `src/hooks/shared/design/use-font-import.ts`, `import/types.ts` and `use-design-import.ts` (the second and last closed-file edit of this part: add the `font` result kind and its `case`, serialized, reviewed on its own), `src/lib/shared/design/fonts.ts` is NOT edited: a new `brand-fonts.ts` (proposed) holds registration | glossary, enums | ux-ui-designer, developer, design-review | 3-7 |
+| 3-9 | DEFERRED (owner 2026-11-19; a later `fontRef` can ride on document version 4 only if fonts are reopened): text element reference to an imported font. Options in D3-3. Output: ADR text in image-editor 8h and, if a document schema change, document version and `design_assert_document` migration plan | docs only first | document section, enums | software-architect, data-integrity-auditor | P-3.3 |
+| 3-10 | DEFERRED (owner 2026-11-19; SEC-7 unchanged): font file and licence record storage (A5): migration or hidden-media purpose with MIME allowlist exception (SEC-7), RLS, audit action, tests; `/migration` checklist, local only, production push needs the owner | `supabase/migrations/<timestamp>_*.sql`, `supabase/tests/*.test.sql`, data-model.md, functions.md, `src/lib/shared/media/limits.ts` only if the user picks the media option | data-model, functions, audit action (proposed `design.font_imported`), error codes if needed | developer, data-integrity-auditor, security-analyst | P-3.3, 3-9 |
 | 3-11 | Tests: hostile list (3.10), network-log e2e for SVG | `*.test.ts`, `e2e/` spec (path per the existing e2e folder) | none | test-engineer | 3-3, 3-4, 3-6, 3-7 |
 | 3-12 | Test review, security review (mandatory, parsers of untrusted bytes), code review, standards gate and Implementation status | docs | none | test-reviewer, security-analyst, code-reviewer, standards-reviewer | 3-11 |
 | 3-13 | Manual checks: Firefox/Safari SVG without intrinsic size, WOFF2 and OTF real fonts, rendering of an accepted font on canvas and in export | checklist | none | developer + owner | P-3.6 |
@@ -669,7 +663,7 @@ Delivery split: 3a = items 3-1(svg part), 3-2, 3-3, 3-4, 3-6, 3-11(svg), 3-12 (s
 
 1. An SVG containing `<script>`, `onload`, `<foreignObject>`, `<use href="http://...">`, `<image href="https://...">`, `@import url(http...)`, a DOCTYPE with an entity, or `javascript:` in any attribute is refused with `svgBlockedContent`; none of them reaches `Image`.
 2. A benign logo SVG (gradient, paths, embedded `data:image/png`) imports as a layer at 2x capped 4096 with transparent background and the `vector_rasterized` note; zero network requests are made during import (Playwright request log asserts none other than the app's own).
-3. SVG over 5 MB is refused by `file.size` before reading; element count over cap is refused; an SVG with no `viewBox` and no size is refused or uses the documented default, never a zero-size canvas.
+3. SVG over the 8h.4 size cap is refused by `file.size` before reading; element count over cap is refused; an SVG with no `viewBox` and no size is refused or uses the documented default, never a zero-size canvas.
 4. Markup never enters the DOM and `dangerouslySetInnerHTML` is absent (ESLint rule SEC-8 passes; grep of the new files).
 5. A font with `fsType` 0x0002, 0x0004 or 0x0200 is refused with the class named in the message; 0x0000, 0x0008 and 0x0100 are accepted; a font with several mutually exclusive bits set is classed as the most restrictive; a font with no OS/2 table is refused.
 6. A truncated, table-bomb or oversized (over 10 MiB) font returns `invalid` and never throws; the tab does not freeze (worker terminated by timeout 10 s).
@@ -693,9 +687,9 @@ Same as 2.6, plus: `npm run e2e` for the SVG network-log spec (this is the only 
 
 ### 3.8 Limits
 
-SVG: 5 MB file, 5000 elements, 50 `use`, scale min(2, 4096/longest), min side 64 px. Fonts: 10 MiB file, 64 tables, 32 MiB decompressed, name strings 1000 chars (family and style 80), parse timeout 10 s, brand font count follows `visualIdentitySchema.fonts` max 8 (names) unless the 3-9 decision changes it.
+SVG and font limits (file size, elements, `use`, scale, tables, decompressed size, name lengths, parse timeout, brand font count) live only in [image-editor.md](image-editor.md) 8h.4 and in `import/limits.ts`; see also 8h.2 A4 and A5 for fonts.
 
-### 3.8a Threat model (item 3-2, written 2026-11-18 by the Phase 3 developer; owner decision 2026-11-18: accept plan recommendations; the security-analyst review of 3-12 has NOT been done)
+### 3.8a Threat model (item 3-2, written 2026-11-18 by the Phase 3 developer; owner decision 2026-11-18: accept plan recommendations; security reviews of the SVG gate were done in 2026-11-19, rounds 1 to 3, see [image-editor.md](image-editor.md) Implementation status; the 3-12 review of the font part is not done because fonts are blocked)
 
 SVG (3a, decided and implemented):
 
@@ -704,7 +698,7 @@ SVG (3a, decided and implemented):
 | Script execution, event handlers, `javascript:` | The `img` element is the isolation boundary (no script, no subresource in image mode). Defense in depth: the gate refuses `script`, `foreignObject`, `iframe`, `object`, `embed`, `handler`, `listener`, any element whose name starts with `animat`, `set`, `discard`, `feImage`, `parsererror`, any attribute named `on*`, and `javascript:` or `vbscript:` after the DOM decoded the entities and the gate removed whitespace and control characters | Browser behavior in image mode is NOT proven here (no browser run) |
 | External load (network, tracking) | `href` and `xlink:href` accept only `#fragment` or `data:image/(png|jpeg|webp|gif);base64,`; every `url(` in an attribute, `style` attribute or `style` element must be `#fragment` or an allowed data image; `@import`, `expression(`, `image-set(`, `src(`, `element(`, `cross-fade(`, a backslash (CSS escape) and `xml:base` are refused. The gate never rewrites to fix a violation | Network silence is provable only by the e2e network-log spec (not written) |
 | Entity expansion (billion laughs), external DTD | Any `<!ENTITY`, `<!ELEMENT`, `<!ATTLIST`, `<!NOTATION` or a DOCTYPE with `[` is refused on the text before the parser runs; a DOCTYPE with `SYSTEM` or `PUBLIC` is refused as well (R1; owner delegated 2026-11-19), only a bare `<!DOCTYPE svg>` passes | none known |
-| Parser DoS, element bombs | File 5 MiB by `file.size` before reading, 5000 elements, depth 64 (iterative walk, no recursion), 50 `use`, style text 100 000 characters, NUL bytes and invalid UTF-8 refused | The parse itself is on the main thread; a 5 MiB file is bounded but not measured |
+| Parser DoS, element bombs | File size by `file.size` before reading, element, depth, `use` and style caps from 8h.4 (iterative walk, no recursion), NUL bytes and invalid UTF-8 refused | The parse itself is on the main thread; a file at the cap is bounded but not measured |
 | Render DoS (huge filters, nested `use`, blur) | The count of 50 `use` elements does NOT bound the expansion (10 levels of 5 `use` is 50 elements and about 9.7 million instances), so the gate refuses any `use` whose target subtree contains a `use` (this also refuses a self reference) and refuses when the elements plus the sizes of all `use` targets exceed 5000 (security review F2, 2026-11-19). The lookup must match the browser (review 3): a duplicate `id` or `xml:id` is refused (browsers take the first, a decoy last id would hide the bomb), a `use` with more than one `href`-like attribute is refused (precedence differs by namespace), and a percent-encoded `#fragment` is decoded before the lookup; `feImage` refused, output at most 4096 on the longest side and raster budget checked before the canvas exists, decode raced against 10 s and the cancel signal | A heavy filter can still block the main thread until the browser finishes: accepted, documented residual risk (an iframe sandbox is not recommended now) |
 | Huge or hostile size (`width="1e9"`, negative, NaN, `%`) | Only finite pixel values from 1 to 1 000 000 are used, otherwise the `viewBox` is used, otherwise the file is refused (`svgNoSize`); the rendered side must be 64 to 4096 | none known |
 | Gate and renderer reading different text (XML `encoding` declaration) | The Blob is typed `image/svg+xml;charset=utf-8` and a declaration with an encoding other than UTF-8 is refused (F4) | Not proven in a browser |
@@ -721,9 +715,9 @@ Fonts (3b, threat model only; no font bytes are stored by this change):
 | Hostile `name` strings (control characters, bidi, 1 MB strings, surrogates, URLs, prompt-like text) | Strings are decoded (UTF-16BE, Mac Roman as Latin-1), cut at 1000 characters (family and style 80), sanitized by `sanitizeImportText`, displayed as plain text only and never fed to a model (R5) | Done in the parser |
 | Browser parser bugs | `FontFace` from an `ArrayBuffer` passes the browser OTS sanitizer; `face.load()` failure means refusal | NOT built (3-8) |
 | Licence bypass | `OS/2.fsType` rule A4 (refuse 0x0002, 0x0004, 0x0200; accept 0x0000 and 0x0008; allow 0x0100; most restrictive bit wins; no `OS/2` means refuse); attestation and record for every accepted font | Class computed in the parser; attestation and record NOT built |
-| Storing untrusted bytes | A5: a dedicated licence-record table plus the existing media upload path with a new hidden purpose. This is a SEC-7 change | BLOCKED, proposed text below |
+| Storing untrusted bytes | A5: a dedicated licence-record table plus the existing media upload path with a new hidden purpose. This is a SEC-7 change | Deferred 2026-11-19, text below not approved |
 
-Proposed SEC-7 change (NOT applied; needs the owner): "Fonts are an allowed upload purpose `brand_font` only: MIME allowlist `font/ttf`, `font/otf`, `font/woff` (and `font/woff2` only after the 3-5 decision), 10 MiB limit; the server verifies the real content (sfnt or wOFF header, the `OS/2` `fsType` class computed server side with the same parser, never trusted from the client) before the object is kept; private bucket, opaque key, signed URL, `Content-Disposition: attachment`; the record (family, style, class, `fsType`, SHA-256, attester user and time, strings as text capped at 1000 characters) is append-only like `design_exports`; audit action `design.font_imported` (proposed); one brand can hold at most 8 fonts (`visualIdentitySchema.fonts`). The media library stays closed to fonts for every other purpose." Also blocked before any registry line: 3-9 (how a text element references the font, document version 4) and the 3-10 migration.
+Proposed SEC-7 change (NOT approved by the owner on 2026-11-19, NOT applied, kept as reference only; SEC-7 is unchanged; if reopened, amend first: drop `font/woff2` until 3-5, add a per-brand byte quota, limit the server check to a header and size check plus a bounded `OS/2` read, RLS by brand, opaque keys, `nosniff`, SHA-256 dedupe, retention statement per SEC-12, registry names first per GOLD-4): "Fonts are an allowed upload purpose `brand_font` only: MIME allowlist `font/ttf`, `font/otf`, `font/woff` (and `font/woff2` only after the 3-5 decision), 10 MiB limit; the server verifies the real content (sfnt or wOFF header, the `OS/2` `fsType` class computed server side with the same parser, never trusted from the client) before the object is kept; private bucket, opaque key, signed URL, `Content-Disposition: attachment`; the record (family, style, class, `fsType`, SHA-256, attester user and time, strings as text capped at 1000 characters) is append-only like `design_exports`; audit action `design.font_imported` (proposed); one brand can hold at most 8 fonts (`visualIdentitySchema.fonts`). The media library stays closed to fonts for every other purpose." Also blocked before any registry line: 3-9 (how a text element references the font, document version 4) and the 3-10 migration.
 
 ### 3.9 Messages and UI copy to register (pt-BR drafts)
 
@@ -767,7 +761,7 @@ Not testable here: real FontFace load in all browsers, glyph rendering in export
 
 ### 3.12 Blocked or needs the user
 
-R1, R3 and R4 are decided (8h.2); A4 (fsType rule), A5 (storage), 3-9 (text reference); legal/counsel view on `fsType` 0x0004 Preview and print (recommended refuse); owner fixtures; CSP production config access; production migration push (8e item 11).
+Owner decision 2026-11-19: font storage is rejected for now (SEC-7 unchanged; R4, A5, 3-5, 3-7 to 3-10 Deferred; `font-parse.ts` stays unregistered under the dated CODE-11 exception). R1 and R3 are decided (8h.2). Still open only if fonts are reopened: A4 (fsType rule), A5 (storage), 3-9 (text reference); legal/counsel view on `fsType` 0x0004 Preview and print (recommended refuse); owner fixtures; CSP production config access; production migration push (8e item 11).
 
 ### 3.13 Open decisions (one recommendation each)
 
@@ -907,11 +901,11 @@ Phase 2: `tiff`, `avif`, `gif`, `ase`, `aco`, `gpl` (the `pdf` entry is unchange
 
 ### New dependencies (each with stack-table row in the same change, R9)
 
-`utif2` 4.1.0 (Phase 2); font library per 3-5, expected `fontkit` 3.0.0 (Phase 3b); `fflate` 0.8.3 (Phase 4). No dependency for palettes, SVG or GIF/AVIF.
+`utif2` 4.1.0 (Phase 2); font library per 3-5, expected `fontkit` 3.0.0 (Phase 3b); no ZIP library (Phase 4: the ZIP reader is own code over `DecompressionStream`, decision 8h.4, so `fflate` was NOT added). No dependency for palettes, SVG or GIF/AVIF.
 
 ### Order and parallelism
 
-Phase 2 items 2-4, 2-6/2-7/2-8 and 2-9/2-10 are independent streams after 2-1 and P-2.x. Phase 3a runs parallel to Phase 2 (needs only P-2.2). Phase 3b waits for A4, A5 and 3-9. Phase 4 needs 2-5 (choice dialog) and P-2.2, otherwise parallel.
+Phase 2 items 2-4, 2-6/2-7/2-8 and 2-9/2-10 are independent streams after 2-1 and P-2.x. Phase 3a runs parallel to Phase 2 (needs only P-2.2). Phase 3b is Deferred (owner 2026-11-19). Phase 4 needs 2-5 (choice dialog) and P-2.2, otherwise parallel.
 
 ### Edits of closed Phase 0 files (complete list)
 
@@ -938,7 +932,9 @@ Facts checked in the repo for this part (read only):
 
 ---
 
-### Phase 5 - SVG and AI/PDF as vectors
+### Phase 5 - SVG as vectors (AI/PDF vector deferred)
+
+**Status (owner decision 2026-11-19): GO for SVG vector (`path` kind) only, spike 5-S1 first, then document version 4, then the SVG vector handler. AI/PDF vector (spike 5-S2, items 5-9 and 5-10) is DEFERRED. No code yet; the `path` names are registered in item 5-0 before any code (GOLD-4).**
 
 #### Objective
 
@@ -950,7 +946,7 @@ In:
 
 - A new element kind `path` (vector shape) and document version 4, with reader, SQL validation, upgrade of drafts, renderer on canvas and in export, layer row and thumbnail, properties panel (fill, stroke), flatten to raster ("Rasterizar camada", reuse of `rasterize.ts` ideas).
 - SVG vector import through an own sanitizing parser (`DOMParser` with `image/svg+xml` on a detached document, never inserted in the DOM (image-editor.md section 3), never `dangerouslySetInnerHTML` (SEC-8)) with element and attribute allowlists.
-- AI and PDF vector import from the pdf.js operator list for the same subset, with raster fallback.
+- DEFERRED (owner 2026-11-19): AI and PDF vector import from the pdf.js operator list (5-S2, 5-9, 5-10). AI and PDF keep importing through the raster path.
 - Caps so a vector import never breaks the 200-element and 256 KiB limits.
 
 Out:
@@ -958,15 +954,15 @@ Out:
 - Node editing (Bezier handles, pen tool, boolean path operations): editing limits below.
 - Filters, masks, patterns, embedded images, `foreignObject`, animation (SMIL, CSS animation), `use` across files, fonts embedded in SVG, mesh gradients, blend modes inside the SVG.
 - Per-subtree rasterization and "raster plus vector overlay" (rejected: whole-file fallback only, see decision 5.D1).
-- PDF text as outlines (depends on spike 5-S2; default out).
+- PDF text as outlines (AI/PDF vector is deferred; out).
 - Any server processing. Any change to the 4096 px page cap.
 - Vector export (SVG/PDF/AI export stays out, 4.4).
 
 #### Prerequisites
 
-1. Phase A decisions R1 (SVG wording), R11 (vector subset, `path` kind may need version 4) approved by the user, and 8h item 8 rewritten from "cost recorded" to "decided" (this phase flips it, docs first, GOLD-3).
+1. DECIDED 2026-11-19 (owner): R1 (SVG wording) and R11 (vector subset; document version 4 approved for the `path` kind only, not for fonts) are decided, and 8h item 8 is now "decided" instead of "cost recorded" (docs first, GOLD-3). The production migration still needs the separate explicit go-ahead of the owner.
 2. Phase 3 SVG raster handler exists and is the fallback target; Phase 2 (item 2-4) pdf.js path exists.
-3. Spikes 5-S1 and 5-S2 (below) done before items 5-9 and 5-10 start.
+3. Spike 5-S1 (below) done before item 5-6 starts and before the version is bumped in code (so version 4 is not bumped for a feature that is then cut). Spike 5-S2 is deferred with AI/PDF vector.
 4. `data-integrity-auditor` available for the migration (document version change is a gate in plan section 3).
 5. Baseline commands green (record output): `npm run lint`, `typecheck`, `test`, `check:consistency`, `check:docs`.
 
@@ -984,7 +980,7 @@ Out:
 
 Rationale: one path element with several subpaths in one `d` keeps the element count low (a logo with 40 same-colored pieces is one element). Colors stay user data in the document (UI-9 is about app source, image-editor 5.2). No `href`, no `style`, no free-text attributes are carried: the document stores only numbers, enums and hex colors, so a hostile SVG cannot smuggle anything through the model.
 
-**Version decision (5.D2).** Recommended: **document version 4** (new migration), not an additive kind inside v3. Reasons: `design_assert_document` already keys its kind list and cap by version; an old browser tab or cached client reading a v4 document fails the zod union loudly instead of silently dropping or mis-rendering an unknown kind (silently dropping a layer inside an autosave is data loss); the v3 precedent (`design_upgrade_document`, v2 schema transform) gives a tested pattern. Cost: a migration (checklist `/migration`: RLS untouched, functions replaced, pgTAP, `supabase db reset` local only; production push needs the owner's explicit go-ahead, 8e item 11), `designDocumentV4Schema`, v3 to v4 transform in the reader, `emptyDocument` writes 4, all `version: 3` literals and tests updated, saved versions stay v3 (immutable, GOLD-8) and are read through the transform. The upgrade of drafts is a version number change only (no element rewrite), so it is cheap and reversible in data terms. Alternative (additive v3) is cheaper by about half a week but weaker as a safety gate.
+**Version decision (5.D2).** DECIDED (owner 2026-11-19): **document version 4** for the `path` kind only (new migration), not an additive kind inside v3. Reasons: `design_assert_document` already keys its kind list and cap by version; an old browser tab or cached client reading a v4 document fails the zod union loudly instead of silently dropping or mis-rendering an unknown kind (silently dropping a layer inside an autosave is data loss); the v3 precedent (`design_upgrade_document`, v2 schema transform) gives a tested pattern. Cost: a migration (checklist `/migration`: RLS untouched, functions replaced, pgTAP, `supabase db reset` local only; production push needs the owner's explicit go-ahead, 8e item 11), `designDocumentV4Schema`, v3 to v4 transform in the reader, `emptyDocument` writes 4, all `version: 3` literals and tests updated, saved versions stay v3 (immutable, GOLD-8) and are read through the transform. The upgrade of drafts is a version number change only (no element rewrite), so it is cheap and reversible in data terms. Alternative (additive v3) is cheaper by about half a week but weaker as a safety gate and was not chosen. A v4 document must never be written to production until every reader accepts v4; an optional `fontRef` on the text element could ride on v4 only if fonts are reopened (confirm first that the text schema is strict).
 
 **Limits (all proposed values, owner can adjust):**
 
@@ -1029,7 +1025,7 @@ Keyboard and accessibility (UI-8): the layers list is the accessible alternative
 |---|---|---|---|---|---|
 | 5-0 | Docs first: rewrite 8h item 8 as a decision (vector subset, version 4), new section for the `path` element in 5.2, editing limits table, 4.4 scope line, SVG D2 wording stays as Phase A; new glossary rows; stack rows (none new unless 5-S1 picks DOMPurify) | `docs/modules/image-editor.md`, `docs/reference/enums.md`, `docs/reference/data-model.md` (document shape note), `docs/standards/ui-glossary.md`, `docs/reference/error-codes.md` (paragraph: no new code) | `DesignElementKind.Path` ("path", "Vetor"); `DesignPathPaintKind` (solid, linear, radial); import note kind `vector_limit_reached`; `DESIGN_LIMITS.maxPathData`, `maxVectorImportBytes`; glossary: "Rasterizar camada" (check if it already exists, reuse), vector notes, "Vetor" layer name prefix | developer, then standards-reviewer gate | Phase A, user approval of R11 |
 | 5-S1 | Spike (scratch, not repo): SVG parser choice. Compare own tokenizer in a worker vs DOMParser plus walker on the main thread vs DOMPurify. Measure with 30 icons and 5 hostile fixtures: correctness, time, bundle bytes. Result unknown until run | scratch only; report in the spike note, then 8h text | none | developer, security-analyst reviews the threat model | 5-0 |
-| 5-S2 | Spike: pdf.js operator list on 10 owner-provided AI/PDF files (logos, icons, outlined type, live type). Questions: are colors RGB in the list, are shadings reachable, can glyph outlines be obtained without internal API, how often does a clip force a fallback. Result unknown until run; if the fallback rate on owner files is above 50 percent, recommend cutting 5-10 | scratch only | none | developer | Phase 2 (item 2-4), owner fixtures |
+| 5-S2 | DEFERRED (owner 2026-11-19, AI/PDF vector).  Spike: pdf.js operator list on 10 owner-provided AI/PDF files (logos, icons, outlined type, live type). Questions: are colors RGB in the list, are shadings reachable, can glyph outlines be obtained without internal API, how often does a clip force a fallback. Result unknown until run; if the fallback rate on owner files is above 50 percent, recommend cutting 5-10 | scratch only | none | developer | Phase 2 (item 2-4), owner fixtures |
 | 5-1 | Document model: `pathElementSchema`, `designDocumentV4Schema`, v3 to v4 transform in the union, `emptyDocument` version 4, `DESIGN_LIMITS` additions, `types.ts` kind, `createPath` helper in `document.ts` with clamps | `src/lib/shared/design/types.ts`, `schemas.ts`, `document.ts` (check the 600-line CODE-13 limit: `document.ts` is 754 lines today, so put path helpers in a new `path.ts`), `document-v3.test.ts` renamed/extended | as 5-0 | developer | 5-0 |
 | 5-2 | Migration: `design_assert_document` accepts version 4, kind list adds `path`, validates each path element (types, `d` length and alphabet regex, paint shape, numeric ranges, `viewWidth/viewHeight`), per-document vector bytes; `design_upgrade_document` v3 to v4 version bump; draft rewrite statement; `design_create`, `design_save_draft`, `design_save_version`, `design_restore_version`, `design_set_template` re-checked for hard-coded version lists | `supabase/migrations/<timestamp>_design_document_v4.sql` (timestamp after the last migration, name rules by hooks), `supabase/tests/*` | `docs/reference/functions.md` note on the changed functions; no new error code (invalid shape answers `invalid_input`, size `design_too_large`, both exist) | developer, data-integrity-auditor (mandatory gate) | 5-1 |
 | 5-3 | Path geometry library (pure, no DOM): path normalizer (relative to absolute, `H V S T A` to `M L C Q`), arc to cubic, matrix compose, bounds, merge, validator of the allowed alphabet, `Path2D`-safe serializer | `src/lib/shared/design/vector/path-data.ts`, `matrix.ts`, tests | none (internal) | developer | 5-1 |
@@ -1038,8 +1034,8 @@ Keyboard and accessibility (UI-8): the layers list is the accessible alternative
 | 5-6 | SVG tokenizer and allowlist walker per 5-S1 outcome; style subset; gradients; transform baking | `src/lib/shared/design/import/handlers/svg-vector.ts`, `svg-xml.ts`, `svg-style.ts` | none new beyond 5-0 | developer | 5-S1, 5-3 |
 | 5-7 | Vector import orchestration: caps, merge policy, whole-file fallback to `svg-raster` / `pdf` raster with notes, time budget, `ImportedDesign` of kind document with `path` elements, registry line in `registry.ts` (`svg` handler now offers vector first, raster fallback; one handler decision documented) | `registry.ts` (one line), `use-import-place.ts` (placement of vector results, budget check, one history step), `messages.ts` (append keys) | glossary: refusal and note sentences (vector too complex, unsupported feature fallback, time budget) | developer | 5-6 |
 | 5-8 | Security pass on SVG: threat model (XXE, entity expansion, `use` recursion, huge coordinates, path data bombs, CSS injection, `href` schemes), hostile fixtures generated in tests | tests and review notes | none | security-analyst, then test-designer | 5-6 |
-| 5-9 | AI/PDF vector converter from the operator list with CTM, clip detection, caps, fallback | `src/lib/shared/design/import/handlers/pdf-vector.ts` (or extend `pdf.ts`), tests with PDFs built as strings in the test | none new | developer | 5-S2, 5-7 |
-| 5-10 | Cut decision gate: if spike 5-S2 shows a fallback rate above 50 percent on owner files, ship 5-6 and 5-7 only and record AI/PDF vector as not delivered (open decision, not silent) | image-editor.md status | none | standards-reviewer | 5-S2 |
+| 5-9 | DEFERRED (owner 2026-11-19, AI/PDF vector).  AI/PDF vector converter from the operator list with CTM, clip detection, caps, fallback | `src/lib/shared/design/import/handlers/pdf-vector.ts` (or extend `pdf.ts`), tests with PDFs built as strings in the test | none new | developer | 5-S2, 5-7 |
+| 5-10 | DEFERRED (owner 2026-11-19, AI/PDF vector).  Cut decision gate: if spike 5-S2 shows a fallback rate above 50 percent on owner files, ship 5-6 and 5-7 only and record AI/PDF vector as not delivered (open decision, not silent) | image-editor.md status | none | standards-reviewer | 5-S2 |
 | 5-11 | Tests: unit (geometry, caps, migration pgTAP), hostile inputs, document round trips (v3 read, v4 write, undo), export golden check on one fixture (manual compare), a11y of the new panel | `*.test.ts`, `supabase/tests/`, Playwright only if the project already has an editor e2e (check) | none | test-designer, test-engineer, test-reviewer | 5-4, 5-7 |
 | 5-12 | Reviews and closure: code-reviewer, standards-reviewer, data-integrity-auditor re-check, module Implementation status (files, migration, commands, not tested) | `docs/modules/image-editor.md` | none | code-reviewer, standards-reviewer, data-integrity-auditor | all |
 
@@ -1052,7 +1048,7 @@ Keyboard and accessibility (UI-8): the layers list is the accessible alternative
 5. An import that exceeds the element or byte cap falls back to raster for the whole file with the note; no partial vector import occurs.
 6. Time budget: a 5 MB SVG of nested groups aborts within 2.5 s with a message and the tab stays responsive (worker terminated).
 7. Flatten to raster produces a raster layer of the same bounds in one undo step, and undo restores the path element.
-8. For AI/PDF: a generated PDF of a logo (rectangles, curves, solid fills) imports as paths with fill colors equal to the source within 1 per channel; a PDF with live text or a non-page clip imports through the raster path with the note, no error.
+8. DEFERRED with AI/PDF vector (owner 2026-11-19): not part of this phase. AI and PDF files keep importing through the raster path, unchanged and covered by the existing Phase 0 and 2 tests.
 9. No file in `src` over 600 lines (CODE-13), no comments in `src` (CODE-1), no `any` (hooks), no new `eval`/`Function`.
 
 #### Verification commands (base.md section 11)
@@ -1096,8 +1092,8 @@ Edge: import into a page that already has 190 elements; import of an SVG larger 
 
 #### Blocked or needs the user
 
-- Approval of R11 wording and the **decision to bump to version 4** (5.D2) and to run the migration on production later (separate owner instruction).
-- Owner-provided fixtures: 6 to 10 SVG icons and logos, 3 hostile SVGs may be generated by tests, 5 to 10 AI/PDF logos and layouts (needed for spike 5-S2 and acceptance 3 and 8).
+- Approved 2026-11-19: R11 and the bump to version 4 for the `path` kind (5.D2). Still needed: the separate instruction of the owner before the migration runs on production.
+- Owner-provided fixtures: 6 to 10 SVG icons and logos, 3 hostile SVGs may be generated by tests, owner fixtures for AI/PDF are not needed now (deferred); the SVG fixtures are needed for spike 5-S1 and acceptance 3.
 - Visual sign-off of fidelity (a human must compare exports): cannot be validated by tests alone.
 
 #### Open decisions (one recommendation each, DOC-5)
@@ -1105,14 +1101,16 @@ Edge: import into a page that already has 190 elements; import of an SVG larger 
 | Id | Question | Recommendation |
 |---|---|---|
 | 5.D1 | Mixed imports (vector paths plus raster images inside one SVG/PDF) | Whole-file fallback to raster; no hybrid. Reason: hybrid doubles the matrix of cases and the history/undo semantics |
-| 5.D2 | Version 4 or additive kind in v3 | Version 4 (explicit gate, matches the v3 precedent); cost about half a week more |
-| 5.D3 | Text and `clipPath` in v1 | Both out: file falls back to raster. Revisit text after spike 5-S2 shows whether outlines are reachable, and a single rectangular `clipPath` later |
+| 5.D2 | Version 4 or additive kind in v3 | DECIDED 2026-11-19: version 4 (explicit gate, matches the v3 precedent); cost about half a week more; for the `path` kind only |
+| 5.D3 | Text and `clipPath` in v1 | Both out: file falls back to raster. Revisit text if AI/PDF vector is reopened (spike 5-S2 deferred), and a single rectangular `clipPath` later |
 | 5.D4 | Gradients in v1 | In (linear and radial, 8 stops, solid stroke only); logos use them constantly |
 | 5.D5 | `alt` text on vector elements | Not in v1; layer name is the label; add `alt` with images' 300-character limit only if design-review asks for it |
 
 ---
 
 ### Phase 6 - Static Lottie, HEIC, CMYK with ICC
+
+**Status (owner decision 2026-11-19): DEFERRED as a whole, not started. Unblock conditions: 6a needs five owner Lottie files and a build or browser to check the chunk for `eval(` and `new Function` (both unavailable under CLAUDE.md item 11); a refusal-only validator is not built alone (CODE-11). 6b is blocked on counsel (LGPL libheif and HEVC patents). 6c needs owner reference files and its spike may end the work; the naive-conversion notes cover the gap meanwhile.**
 
 Three independent tracks. They may run in parallel after their own prerequisites; 6b is blocked on counsel; 6c begins with a spike whose result is unknown.
 
@@ -1466,7 +1464,7 @@ Everything functional in this phase is blocked by design: Figma and Canva develo
 
 #### Order and parallelism
 
-Phase 5 (5-0, 5-S1, 5-S2 in parallel) then 5-1, 5-2, 5-3 (sequential on the document model), 5-4 and 5-6 in parallel, then 5-7, 5-8, 5-9. Phase 6a, 6b, 6c are independent of Phase 5 except that 6c-3 edits the PSD/TIFF/image handlers that earlier phases own (serialize that edit; registry and `use-import-place.ts` are closed files after Phase 0 per the Phase A collision rules, so Phase 5 touching `use-import-place.ts` is a documented exception to be coordinated with the Phase 0 owner). Phase 7 documents can be written any time after Phase A.
+Phase 5, SVG only (owner 2026-11-19): 5-0 (docs and registries), then spike 5-S1, then 5-1, 5-2, 5-3 (sequential on the document model), 5-4 and 5-6 in parallel, then 5-7, 5-8 (5-9, 5-10 and 5-S2 are deferred). Phase 6 is deferred as a whole (not started); Phase 7 stays blocked. Phase 6a, 6b, 6c are independent of Phase 5 except that 6c-3 edits the PSD/TIFF/image handlers that earlier phases own (serialize that edit; registry and `use-import-place.ts` are closed files after Phase 0 per the Phase A collision rules, so Phase 5 touching `use-import-place.ts` is a documented exception to be coordinated with the Phase 0 owner). Phase 7 documents can be written any time after Phase A.
 
 #### Review gates (same rules as plan section 3)
 
@@ -1474,7 +1472,7 @@ standards-reviewer before code (docs-first order and registry coverage) and afte
 
 #### Effort (rough developer-weeks, estimates not measurements)
 
-Phase 5: 4 to 6 (SVG about 2.5, AI/PDF about 2 with a real chance of being cut at 5-10, migration and consumers about 1.5). Phase 6a: 1 to 2 (up to 3 if an own renderer is needed). 6b: 1.5 to 2 after sign-off (0.5 for native-only). 6c: 3 to 4 including the spike, with a real chance that the spike ends the work. Phase 7: 0.5 for the document and the EPS hint.
+Phase 5 (SVG only after the 2026-11-19 decision): about 3 to 4 (the earlier 4 to 6 included about 2 for AI/PDF, now deferred). Phase 6a: 1 to 2 (up to 3 if an own renderer is needed). 6b: 1.5 to 2 after sign-off (0.5 for native-only). 6c: 3 to 4 including the spike, with a real chance that the spike ends the work. Phase 7: 0.5 for the document and the EPS hint.
 
 #### What cannot be validated without real devices or accounts
 
@@ -1482,7 +1480,7 @@ Visual fidelity of vector import and CMYK conversion (needs human comparison and
 
 ## Implementation status
 
-**Phase A (2026-11-18): documents and registries written, no code (this block records the state at the end of Phase A). A-10 (security review) done; no record of an A-11 re-gate exists in the documents.** Phase 0 was done afterwards (see "Phase 0" below). Phases 1 to 7 are not started; the next phase is Phase 1, docs first (item 1-1).
+**Phase A (2026-11-18): documents and registries written, no code (this block records the state at the end of Phase A). A-10 (security review) done; no record of an A-11 re-gate exists in the documents.** Phase 0 was done afterwards (see "Phase 0" below). This sentence is historical; see "Status by phase" below.
 
 Files changed: `docs/modules/image-editor.md` (sections 3, 4.3, 4.4, 7b, 8g pointers, new 8h, Implementation status), `docs/reference/enums.md`, `docs/reference/error-codes.md`, `docs/standards/ui-glossary.md`, `docs/standards/base.md` (section 2, row "Result and errors"), `docs/technical-architecture-v0.1.md` (stack rows, ADR-14 note), `docs/spaces/media-library.md` (section 7), this plan, `docs/README.md` and `docs/modules/README.md` (links). No `src/`, `supabase/` or `package*.json` file was touched.
 
@@ -1521,10 +1519,26 @@ This plan file is untracked, so `git diff --stat` does not list it. Not applicab
 Not done or not verified:
 
 - A-11 (standards-reviewer gate): no record of the re-gate exists in the documents; Phase 0 went ahead on the owner's delegation of 2026-11-18.
-- The wording of the rules listed once under the 8h.2 table (R1, R2, R5, R6, R12) was rebuilt from this plan because the original rule text was not in the repository; the owner should read it once. R4 and A5 (storage path) are "Proposed, awaiting" the Phase 3 threat model and the SEC-7 change; R7 is blocked and Proposed.
+- The wording of the rules listed once under the 8h.2 table (R1, R2, R5, R6, R12) was rebuilt from this plan because the original rule text was not in the repository; the owner should read it once. R4 and A5 (fonts) are Deferred (owner 2026-11-19, SEC-7 unchanged); R7 is blocked and Proposed.
 - Decisions A-D5 and the others rest on the owner's instruction of 2026-11-18 to accept what a review agent recommends; A-D5 is revertible on owner veto.
-- The document version 4 of R11 (plan 5.D2) is still "Proposed, awaiting decision".
+- The document version 4 of R11 (plan 5.D2) is Decided (owner 2026-11-19, `path` kind only); the production migration needs a separate go-ahead.
 - The registries named values that the code got only in Phase 0; since Phase 0 item 0-17 they match the code (`enums.md`, `ui-glossary.md`, checked by `glossary-sync.test.ts`).
 - The pdf.js and ag-psd option names come from the Phase 0 spike (pdfjs-dist 6.5.438, ag-psd 34.2.1) and are in the code since Phase 0; `npm audit`, bundle sizes (item 0-16, stale) and real worker behavior are unverified.
 
 Phase 0 validation (2026-11-18, real output; details in the module entry): lint, typecheck and format:check clean; `npm run test` 93 files, 968 tests passed (twice by the test-engineer, once by the developer); check:consistency and check:docs passed. NOT run, by owner decision (CLAUDE.md item 11, base.md section 11): `npm run build` and e2e (none written); the chunk sizes of item 0-16 were measured once before that decision and not re-measured. NOT done: manual browser matrix, real devices, `npm audit`, mutation testing, items 0-13 and 0-18. NOT proven: module-worker bundling, `ImageData` in the worker, real peak memory, `destroy` during render, EXIF agreement with the real decoder, network log, jsonb surrogate refusal, abandoned image decode after a timeout, real ag-psd composite fallback, owner fixtures (B2).
+
+### Status by phase (2026-11-19)
+
+The full record, deviations and the consolidated "NOT proven / not run" block are in [image-editor.md](image-editor.md) Implementation status; this table only points there.
+
+| Phase | State |
+|---|---|
+| A (documents) | done |
+| 0 (PSD/AI hardening, worker, registry) | implemented and reviewed |
+| 1 (metadata, `design_record_import`) | implemented and reviewed; migrations present on origin/main, not applied to any database |
+| 2 (PDF pages, TIFF, AVIF, GIF, palettes) | implemented and reviewed |
+| 3 (SVG raster) | implemented and reviewed; 3b fonts: parser only, storage Deferred by the owner on 2026-11-19 (SEC-7 unchanged) |
+| 4 (Sketch) | implemented and reviewed (own worker) |
+| 5 | GO for SVG vector only (owner 2026-11-19), spike 5-S1 first, document version 4 approved for `path`; AI/PDF vector deferred; no code yet |
+| 6 | deferred (owner 2026-11-19), not started |
+| 7 (Figma, Canva, EPS) | blocked on the owner |

@@ -47,7 +47,7 @@ export type DesignImporter = {
   cancelChoice: () => void;
 };
 
-export type ImportRunDeps = {
+type ImportRunDeps = {
   newId: () => string;
   existingElements: () => number;
   usedBytes: () => number;

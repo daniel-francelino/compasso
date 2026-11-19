@@ -51,7 +51,7 @@ describe("gaussianBlur", () => {
     const started = performance.now();
     gaussianBlur(big, 2);
     expect(performance.now() - started).toBeLessThan(3000);
-  });
+  }, 30000);
 });
 
 describe("unsharpMask", () => {

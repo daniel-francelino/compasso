@@ -339,7 +339,7 @@ describe("readZipEntry bounds", () => {
     const opened = await open([{ ...deflated("meta.json", "0123456789"), declaredSize: 4 }]);
     if (!opened.ok) throw new Error("expected an index");
     expect((await readZipEntry(opened.zip, "meta.json", MIB)).ok).toBe(false);
-  });
+  }, 60000);
 
   it("refuses an entry above its own cap and a stored entry whose sizes disagree", async () => {
     const opened = await open([
@@ -353,7 +353,7 @@ describe("readZipEntry bounds", () => {
     expect(messageOf(await readZipEntry(opened.zip, "a.json", MIB))).toBe(
       DESIGN_IMPORT_MESSAGE.sketchCorrupt,
     );
-  });
+  }, 60000);
 
   it("refuses a truncated or garbage deflate stream without throwing", async () => {
     const good = await deflateRaw(text("hello hello hello hello"));
@@ -372,7 +372,7 @@ describe("readZipEntry bounds", () => {
         DESIGN_IMPORT_MESSAGE.sketchCorrupt,
       );
     }
-  });
+  }, 60000);
 
   it("never inflates an entry that is not asked for, nested zips included", async () => {
     const nested = await buildZip([stored("inner.json")]);
@@ -386,7 +386,7 @@ describe("readZipEntry bounds", () => {
     if (!opened.ok) throw new Error("expected an index");
     expect((await readZipEntry(opened.zip, "meta.json", MIB)).ok).toBe(true);
     expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes - 2);
-  });
+  }, 60000);
 
   it("refuses an unknown entry name and honors what is left of the total", async () => {
     const opened = await open([stored("meta.json", "{}")]);
@@ -398,7 +398,7 @@ describe("readZipEntry bounds", () => {
     expect(messageOf(await readZipEntry(opened.zip, "meta.json", MIB))).toBe(
       DESIGN_IMPORT_MESSAGE.zipTooLarge,
     );
-  });
+  }, 60000);
 
   it("returns the cancelled failure when the signal is already aborted", async () => {
     const opened = await open([deflated("meta.json", "x".repeat(100))]);

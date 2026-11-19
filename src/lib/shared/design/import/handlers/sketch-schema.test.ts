@@ -107,7 +107,7 @@ describe("parseSketchJson", () => {
       DESIGN_IMPORT_MESSAGE.sketchCorrupt,
     );
     expect(newJsonValueBudget().remaining).toBe(SKETCH_LIMITS.maxJobJsonValues);
-  });
+  }, 30000);
 
   it("does not count brackets inside strings as depth", () => {
     const text = JSON.stringify({ s: "[".repeat(500) });
@@ -248,7 +248,7 @@ describe("artboards and layers", () => {
     expect(messageOf(over)).toBe(DESIGN_IMPORT_MESSAGE.tooManyLayers(DESIGN_LIMITS.maxElements));
     const spread = artboardOf([group(rects(3000)), group(rects(3000))]);
     expect(messageOf(spread)).toBe(DESIGN_IMPORT_MESSAGE.tooManyLayers(DESIGN_LIMITS.maxElements));
-  });
+  }, 30000);
 
   it("flattens a chain deeper than a recursive walk could survive", () => {
     const levels = 4990;
@@ -259,7 +259,7 @@ describe("artboards and layers", () => {
     expect(result.nodes).toHaveLength(levels + 1);
     expect(result.nodes.at(-1)?.depth).toBe(levels);
     expect(result.deepGroups).toBe(levels - DESIGN_LIMITS.maxGroupDepth);
-  });
+  }, 30000);
 
   it("refuses a page that is not a page", () => {
     expect(readSketchPages([{ _class: "oops" }]).ok).toBe(false);

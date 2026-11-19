@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export type NewBrandColor = { name: string; hex: string };
+type NewBrandColor = { name: string; hex: string };
 
 const storedColorsSchema = z.object({ colors: z.array(z.record(z.string(), z.unknown())) });
 

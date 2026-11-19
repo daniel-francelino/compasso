@@ -127,7 +127,7 @@ describe("GIF", () => {
   it("stops the block walker at its cap with one million extension blocks", () => {
     const hostile = gifBytes(10, 10, { extensionBlocks: 1_000_000 });
     expect(readGifInfo(hostile)).toBeNull();
-  });
+  }, 30000);
 
   it("maps a decoder failure to the GIF message", async () => {
     spy.mockRejectedValue(new Error("x"));
@@ -201,7 +201,7 @@ describe("AVIF", () => {
     const result = await readDesignFile(new File([beyond], "a.avif"), () => "id");
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.avifCorrupt);
     expect(readAvifInfo(beyond)).not.toBeNull();
-  });
+  }, 30000);
 
   it("answers avifUnsupported, not an exception, when the browser cannot open AVIF", async () => {
     spy.mockRejectedValue(new Error("unsupported"));

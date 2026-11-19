@@ -25,7 +25,7 @@ export type ImportPlacer = {
   image: (design: ImportedDesign) => ImportPlaced;
 };
 
-export type PlaceTarget = {
+type PlaceTarget = {
   store: Pick<RasterStore, "set" | "release" | "markChanged" | "usedBytes">;
   editor: Pick<DesignEditor, "page" | "canAdd" | "addImported">;
   preset: DesignPreset;

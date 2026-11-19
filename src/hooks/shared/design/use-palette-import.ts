@@ -7,7 +7,7 @@ import type { ImportPalette, ImportSwatch } from "@/lib/shared/design/import/typ
 import { logError } from "@/lib/shared/logger";
 import { QueryKey } from "@/lib/shared/query-keys";
 
-export type PaletteImporter = {
+type PaletteImporter = {
   palette: ImportPalette | null;
   saving: boolean;
   receive: (palette: ImportPalette) => void;

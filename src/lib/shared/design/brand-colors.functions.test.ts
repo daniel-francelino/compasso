@@ -24,6 +24,14 @@ describe("addDesignBrandColors input schema", () => {
     expect(parse([color(0)], "not-a-uuid").success).toBe(false);
   });
 
+  it("refuses unknown keys on the input and on a color", () => {
+    expect(
+      addDesignBrandColorsSchema.safeParse({ designId: DESIGN_ID, colors: [color(0)], x: 1 })
+        .success,
+    ).toBe(false);
+    expect(parse([{ ...color(0), extra: true }]).success).toBe(false);
+  });
+
   it("accepts only six-digit hex colors with a leading hash", () => {
     for (const hex of ["#abcdef", "#ABCDEF", "#012345"]) {
       expect(parse([{ name: "a", hex }]).success).toBe(true);

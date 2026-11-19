@@ -4,25 +4,29 @@ import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
 import { appendBrandColors } from "@/lib/shared/design/brand-colors-merge";
 import { toJson } from "@/lib/shared/content/published";
+import { PALETTE_COPY } from "@/lib/shared/design/import/messages";
 import { sanitizeColorName } from "@/lib/shared/design/import/sanitize";
 import { visualIdentitySchema } from "@/lib/shared/brands/visual-identity";
 import { type Result, denied, fail, invalid, parseOutput } from "@/lib/shared/server-utils";
 
 export const BRAND_COLOR_LIMIT = 12;
-const FALLBACK_NAME = "Cor";
 
-export const addDesignBrandColorsSchema = z.object({
-  designId: z.string().uuid(),
-  colors: z
-    .array(
-      z.object({
-        name: z.string().min(1).max(400),
-        hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
-      }),
-    )
-    .min(1)
-    .max(BRAND_COLOR_LIMIT),
-});
+export const addDesignBrandColorsSchema = z
+  .object({
+    designId: z.string().uuid(),
+    colors: z
+      .array(
+        z
+          .object({
+            name: z.string().min(1).max(400),
+            hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(BRAND_COLOR_LIMIT),
+  })
+  .strict();
 
 const savedSchema = z.object({ id: z.string().uuid(), version: z.number().int() });
 
@@ -60,7 +64,7 @@ export const addDesignBrandColors = createServerFn({ method: "POST" })
     });
     const room = Math.max(0, BRAND_COLOR_LIMIT - identity.data.colors.length);
     const added = fresh.slice(0, room).map((color) => ({
-      name: sanitizeColorName(color.name) || FALLBACK_NAME,
+      name: sanitizeColorName(color.name) || PALETTE_COPY.fallbackColorName,
       hex: color.hex.toLowerCase(),
     }));
     if (added.length === 0) return { ok: true, added: 0 };

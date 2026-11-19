@@ -7,7 +7,7 @@ const MAX_DEPTH = 16;
 const MAX_BOXES = 4096;
 const ISPE_PAYLOAD = 8;
 
-export type AvifInfo = {
+type AvifInfo = {
   width: number;
   height: number;
   largestPixels: number;

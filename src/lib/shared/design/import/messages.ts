@@ -184,4 +184,5 @@ export const PALETTE_COPY = {
       ? "Nenhuma cor nova foi adicionada à marca."
       : `${count} ${count === 1 ? "cor adicionada" : "cores adicionadas"} à marca.`,
   saveFailed: "Não foi possível adicionar as cores à marca. Tente de novo.",
+  fallbackColorName: "Cor",
 } as const;

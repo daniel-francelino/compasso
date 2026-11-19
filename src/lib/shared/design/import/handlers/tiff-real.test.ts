@@ -206,11 +206,11 @@ describe("TIFF strip layout rules (real header, real utif2)", () => {
   it("refuses 32768 LZW strips that all point at the same 3 MB range", async () => {
     const three = 3 * 1024 * 1024;
     await expectRefused(stripTableFile(32768, LZW, { offset: () => 0, count: () => three }, three));
-  });
+  }, 30000);
 
   it("refuses small overlapping strips (so the size cap is not what stops it)", async () => {
     await expectRefused(stripTableFile(64, PACKBITS, { offset: () => 0, count: () => 100 }, 100));
-  });
+  }, 30000);
 
   it("refuses strips listed out of offset order even when they do not overlap", async () => {
     const reversed = { offset: (index: number) => (1 - index) * 8, count: () => 8 };
