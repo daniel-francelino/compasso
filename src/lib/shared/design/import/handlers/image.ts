@@ -201,6 +201,15 @@ export const decodeImage = async (
 ): Promise<Result<ImportKindResult>> => {
   const header = readImageHeader(input.bytes, format);
   if (!header.ok) return header;
+  return decodeWithHeader(format, input, header.header);
+};
+
+export const decodeWithHeader = async (
+  format: DesignImportFormat,
+  input: ImportInput,
+  declared: ImageHeader,
+): Promise<Result<ImportKindResult>> => {
+  const header = { ok: true as const, header: declared };
   const planned = planImage(header.header, input.usedBytes);
   if (!planned.ok) return planned;
   const { plan } = planned;

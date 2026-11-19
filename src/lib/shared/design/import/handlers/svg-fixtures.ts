@@ -42,34 +42,56 @@ const readAttributes = (source: string): SvgAttribute[] =>
 const namespaceOf = (attributes: SvgAttribute[], parent: string | null): string | null =>
   attributes.find((attribute) => attribute.name === "xmlns")?.value ?? parent;
 
-const parseTree = (text: string): MutableNode | null => {
-  const stack: MutableNode[] = [];
-  let root: MutableNode | null = null;
-  for (const match of text.matchAll(TOKEN)) {
-    const [, cdata, closing, opening, attributeSource, selfClosing, chars] = match;
-    const top = stack[stack.length - 1];
-    if (cdata !== undefined && top !== undefined) top.textContent += cdata;
-    else if (chars !== undefined && top !== undefined) top.textContent += decodeEntities(chars);
-    else if (closing !== undefined) {
-      if (stack.pop() === undefined) return null;
-    } else if (opening !== undefined) {
-      const attributes = readAttributes(attributeSource ?? "");
-      const colon = opening.lastIndexOf(":");
-      const node: MutableNode = {
-        localName: colon < 0 ? opening : opening.slice(colon + 1),
-        namespaceURI: namespaceOf(attributes, top?.namespaceURI ?? null),
-        attributes,
-        children: [],
-        textContent: "",
-      };
-      if (top === undefined) {
-        if (root !== null) return null;
-        root = node;
-      } else top.children.push(node);
-      if (selfClosing !== "/") stack.push(node);
-    }
+type ParseState = { stack: MutableNode[]; root: MutableNode | null };
+
+const makeNode = (opening: string, attributeSource: string, parent: MutableNode | undefined) => {
+  const attributes = readAttributes(attributeSource);
+  const colon = opening.lastIndexOf(":");
+  const node: MutableNode = {
+    localName: colon < 0 ? opening : opening.slice(colon + 1),
+    namespaceURI: namespaceOf(attributes, parent?.namespaceURI ?? null),
+    attributes,
+    children: [],
+    textContent: "",
+  };
+  return node;
+};
+
+const attach = (state: ParseState, node: MutableNode): boolean => {
+  const top = state.stack[state.stack.length - 1];
+  if (top !== undefined) {
+    top.children.push(node);
+    return true;
   }
-  return stack.length === 0 ? root : null;
+  if (state.root !== null) return false;
+  state.root = node;
+  return true;
+};
+
+const openNode = (state: ParseState, match: RegExpMatchArray): boolean => {
+  const [, , , opening, attributeSource, selfClosing] = match;
+  if (opening === undefined) return true;
+  const node = makeNode(opening, attributeSource ?? "", state.stack[state.stack.length - 1]);
+  if (!attach(state, node)) return false;
+  if (selfClosing !== "/") state.stack.push(node);
+  return true;
+};
+
+const addText = (state: ParseState, match: RegExpMatchArray): void => {
+  const [, cdata, , , , , chars] = match;
+  const top = state.stack[state.stack.length - 1];
+  if (top === undefined) return;
+  top.textContent += cdata ?? (chars === undefined ? "" : decodeEntities(chars));
+};
+
+const parseTree = (text: string): MutableNode | null => {
+  const state: ParseState = { stack: [], root: null };
+  for (const match of text.matchAll(TOKEN)) {
+    if (match[2] !== undefined && state.stack.pop() === undefined) return null;
+    if (!openNode(state, match)) return null;
+    addText(state, match);
+  }
+  return state.stack.length === 0 ? state.root : null;
 };
 
 const escapeAttribute = (value: string): string =>

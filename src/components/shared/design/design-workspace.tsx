@@ -16,6 +16,7 @@ import { DesignPanelDock } from "@/components/shared/design/design-panel-dock";
 import { DesignPropertiesTab } from "@/components/shared/design/design-properties-tab";
 import { DesignSelectionDialog } from "@/components/shared/design/design-selection-dialog";
 import { DesignShortcutsDialog } from "@/components/shared/design/design-shortcuts-dialog";
+import { ImportChoiceDialog } from "@/components/shared/design/import-choice-dialog";
 import { DesignStatusBar } from "@/components/shared/design/design-status-bar";
 import { DesignToolRail } from "@/components/shared/design/design-tool-rail";
 import { DesignTopBar } from "@/components/shared/design/design-top-bar";
@@ -530,6 +531,11 @@ export function DesignWorkspace({
         onShortcuts={() => setShortcutsOpen(true)}
       />
       <DesignShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <ImportChoiceDialog
+        choice={importer.pendingChoice}
+        onAnswer={importer.answerChoice}
+        onCancel={importer.cancelChoice}
+      />
       <DesignFilterDialog filter={filter} />
       <DesignSelectionDialog kind={adjust} onApply={applyAdjust} onClose={() => setAdjust(null)} />
       <Sheet open={panelsOpen} onOpenChange={setPanelsOpen}>

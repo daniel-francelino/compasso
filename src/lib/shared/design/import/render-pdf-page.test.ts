@@ -18,8 +18,14 @@ const logger = vi.hoisted(() => ({ logError: vi.fn() }));
 
 vi.mock("@/lib/shared/logger", () => logger);
 
-const { buildPdfOpenOptions, extractPdfBytes, pageRenderSize, renderPdfPage, renderPdfPageDesign } =
-  await import("@/lib/shared/design/import/render-pdf-page");
+const {
+  buildPdfOpenOptions,
+  extractPdfBytes,
+  pageRenderSize,
+  probeOrRenderPdfPage,
+  renderPdfPage,
+  renderPdfPageDesign,
+} = await import("@/lib/shared/design/import/render-pdf-page");
 
 const FAILURE = "falha de desenho";
 const PDF = "%PDF-1.7";
@@ -368,5 +374,47 @@ describe("renderPdfPageDesign", () => {
     );
     expect(result.ok).toBe(false);
     expect(pdfjs.getDocument).not.toHaveBeenCalled();
+  });
+});
+
+describe("page selection", () => {
+  it("asks for a choice when the file has several pages and renders nothing", async () => {
+    const { getPage, create } = setup({ numPages: 5 });
+    const result = await probeOrRenderPdfPage(bytesOf(PDF), {
+      usedBytes: 0,
+      renderFailure: FAILURE,
+    });
+    expect(result).toEqual({ ok: true, choose: true, pageCount: 5 });
+    expect(getPage).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("renders the requested page and refuses a page outside the document", async () => {
+    const { getPage } = setup({ numPages: 5 });
+    const rendered = await renderPdfPage(bytesOf(PDF), {
+      usedBytes: 0,
+      renderFailure: FAILURE,
+      pageNumber: 3,
+    });
+    expect(rendered.ok).toBe(true);
+    expect(getPage).toHaveBeenCalledWith(3);
+    setup({ numPages: 5 });
+    for (const pageNumber of [0, 6, 1.5, Number.NaN]) {
+      const refused = await renderPdfPage(bytesOf(PDF), {
+        usedBytes: 0,
+        renderFailure: FAILURE,
+        pageNumber,
+      });
+      expect(!refused.ok && refused.message).toBe(DESIGN_IMPORT_MESSAGE.pdfPageInvalid);
+    }
+  });
+
+  it("refuses a document with no pages", async () => {
+    setup({ numPages: 0 });
+    const result = await probeOrRenderPdfPage(bytesOf(PDF), {
+      usedBytes: 0,
+      renderFailure: FAILURE,
+    });
+    expect(!result.ok && result.message).toBe(DESIGN_IMPORT_MESSAGE.pdfNoPages);
   });
 });

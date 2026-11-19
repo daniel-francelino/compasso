@@ -149,3 +149,10 @@ export const isImportCancelled = (failure: Failure): boolean => failure === IMPO
 
 export const describeImportNotes = (notes: readonly ImportNote[]): string =>
   notes.map((note) => DESIGN_IMPORT_NOTE_SENTENCE[note.kind](note.count)).join(" ");
+
+export const PDF_PAGE_CHOICE = {
+  title: "Escolha a página",
+  confirmLabel: "Importar página",
+  cancelLabel: "Cancelar",
+  option: (page: number): string => `Página ${page}`,
+} as const;

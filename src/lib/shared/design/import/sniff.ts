@@ -65,6 +65,53 @@ export const hasSvgHead = (head: Uint8Array): boolean => {
   return false;
 };
 
+const GIF_SIGNATURES = ["GIF87a", "GIF89a"];
+const TIFF_LITTLE = [0x49, 0x49];
+const TIFF_BIG = [0x4d, 0x4d];
+const FTYP_OFFSET = 4;
+const FTYP_BRANDS_OFFSET = 16;
+const FTYP_MAX_BRANDS = 16;
+const FTYP_MIN_BOX = 16;
+const AVIF_BRANDS = ["avif", "avis"];
+const ACO_HEAD_BYTES = 4;
+const ACO_MAX_COUNT = 1000;
+
+export const hasGifSignature = (head: Uint8Array): boolean =>
+  GIF_SIGNATURES.some((signature) => startsWith(head, signature));
+
+export const hasTiffSignature = (head: Uint8Array): boolean => {
+  if (head.length < 4) return false;
+  const little =
+    startsWithBytes(head, TIFF_LITTLE) && head[3] === 0 && [42, 43].includes(head[2] ?? 0);
+  const big = startsWithBytes(head, TIFF_BIG) && head[2] === 0 && [42, 43].includes(head[3] ?? 0);
+  return little || big;
+};
+
+export const hasAvifSignature = (head: Uint8Array): boolean => {
+  if (!startsWith(head, "ftyp", FTYP_OFFSET) || head.length < FTYP_MIN_BOX) return false;
+  const view = new DataView(head.buffer, head.byteOffset, head.byteLength);
+  const boxSize = view.getUint32(0, false);
+  if (boxSize < FTYP_MIN_BOX) return false;
+  const end = Math.min(boxSize, head.length, FTYP_BRANDS_OFFSET + FTYP_MAX_BRANDS * 4);
+  if (AVIF_BRANDS.some((brand) => startsWith(head, brand, 8))) return true;
+  for (let offset = FTYP_BRANDS_OFFSET; offset + 4 <= end; offset += 4) {
+    if (AVIF_BRANDS.some((brand) => startsWith(head, brand, offset))) return true;
+  }
+  return false;
+};
+
+export const hasAsePalette = (head: Uint8Array): boolean => startsWith(head, "ASEF");
+
+export const hasGplPalette = (head: Uint8Array): boolean => startsWith(head, "GIMP Palette");
+
+export const hasAcoPalette = (head: Uint8Array): boolean => {
+  if (head.length < ACO_HEAD_BYTES) return false;
+  const view = new DataView(head.buffer, head.byteOffset, head.byteLength);
+  const version = view.getUint16(0, false);
+  const count = view.getUint16(2, false);
+  return (version === 1 || version === 2) && count >= 1 && count <= ACO_MAX_COUNT;
+};
+
 export const hasPsdSignature = (head: Uint8Array): boolean => startsWith(head, PSD_SIGNATURE);
 
 export const hasPdfHeader = (head: Uint8Array): boolean =>

@@ -31,6 +31,8 @@ import { DESIGN_LIMITS } from "@/lib/shared/design/types";
 const PASSWORD_ERROR = "PasswordException";
 const TRANSPARENT = "rgba(0,0,0,0)";
 
+export type PdfPageCount = { choose: true; pageCount: number };
+
 export type PdfPage = {
   width: number;
   height: number;
@@ -89,13 +91,22 @@ const failureOf = (error: unknown, renderFailure: string): Result<PdfPage> => {
   return invalid(renderFailure);
 };
 
-const drawFirstPage = async (
+const drawPage = async (
   task: PDFDocumentLoadingTask,
+  request: number | "auto",
   usedBytes: number,
   renderFailure: string,
-): Promise<Result<PdfPage>> => {
+): Promise<Result<PdfPage | PdfPageCount>> => {
   const document = await task.promise;
-  const page = await document.getPage(1);
+  const pageCount = document.numPages;
+  if (!Number.isInteger(pageCount) || pageCount < 1)
+    return invalid(DESIGN_IMPORT_MESSAGE.pdfNoPages);
+  if (request === "auto" && pageCount > 1) return { ok: true, choose: true, pageCount };
+  const pageNumber = request === "auto" ? 1 : request;
+  if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pageCount) {
+    return invalid(DESIGN_IMPORT_MESSAGE.pdfPageInvalid);
+  }
+  const page = await document.getPage(pageNumber);
   const natural = page.getViewport({ scale: 1 });
   if (!isUsableSide(natural.width) || !isUsableSide(natural.height)) {
     return invalid(renderFailure);
@@ -136,20 +147,23 @@ const drawFirstPage = async (
   }
 };
 
-export const renderPdfPage = async (
+type RenderOptions = {
+  usedBytes: number;
+  renderFailure: string;
+  timeoutMs?: number;
+  signal?: AbortSignal | undefined;
+};
+
+const renderRequest = async (
   bytes: Uint8Array,
-  options: {
-    usedBytes: number;
-    renderFailure: string;
-    timeoutMs?: number;
-    signal?: AbortSignal | undefined;
-  },
-): Promise<Result<PdfPage>> => {
+  request: number | "auto",
+  options: RenderOptions,
+): Promise<Result<PdfPage | PdfPageCount>> => {
   if (options.signal?.aborted === true) return IMPORT_CANCELLED;
   const pdfjs = await import("pdfjs-dist");
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
   const task = pdfjs.getDocument(buildPdfOpenOptions(ownedBytes(bytes)));
-  const work = drawFirstPage(task, options.usedBytes, options.renderFailure);
+  const work = drawPage(task, request, options.usedBytes, options.renderFailure);
   try {
     return await raceWithLimits(work, {
       timeoutMs: options.timeoutMs ?? DESIGN_IMPORT_LIMITS.pdfTimeoutMs,
@@ -162,8 +176,22 @@ export const renderPdfPage = async (
   }
 };
 
-const pdfPageNotes = (pageCount: number): ImportNote[] =>
-  pageCount > 1 ? [{ kind: DesignImportNoteKind.FirstPageOnly, count: 1 }] : [];
+export const renderPdfPage = async (
+  bytes: Uint8Array,
+  options: RenderOptions & { pageNumber?: number },
+): Promise<Result<PdfPage>> => {
+  const rendered = await renderRequest(bytes, options.pageNumber ?? 1, options);
+  if (!rendered.ok) return rendered;
+  return "choose" in rendered ? invalid(options.renderFailure) : rendered;
+};
+
+export const probeOrRenderPdfPage = (
+  bytes: Uint8Array,
+  options: RenderOptions,
+): Promise<Result<PdfPage | PdfPageCount>> => renderRequest(bytes, "auto", options);
+
+const pdfPageNotes = (pageCount: number, chosen: boolean): ImportNote[] =>
+  pageCount > 1 && !chosen ? [{ kind: DesignImportNoteKind.FirstPageOnly, count: 1 }] : [];
 
 const pdfMetadata = (format: DesignImportFormat, page: PdfPage) =>
   buildMetadata({
@@ -179,6 +207,19 @@ const pdfMetadata = (format: DesignImportFormat, page: PdfPage) =>
       pageWidth: page.width,
       pageHeight: page.height,
     },
+  });
+
+export const pdfPageDesign = (
+  format: DesignImportFormat,
+  page: PdfPage,
+  input: { fileName: string; newId: () => string; chosen: boolean },
+): ImportKindResult =>
+  singleLayerDesign(format, page, {
+    newId: input.newId,
+    fileName: input.fileName,
+    notes: pdfPageNotes(page.pageCount, input.chosen),
+    defaultName: DESIGN_IMPORT_LAYER_NAME.art,
+    metadata: pdfMetadata(format, page),
   });
 
 export const renderPdfPageDesign = async (
@@ -203,12 +244,10 @@ export const renderPdfPageDesign = async (
   if (!rendered.ok) return rendered;
   return {
     ok: true,
-    ...singleLayerDesign(format, rendered, {
+    ...pdfPageDesign(format, rendered, {
       newId: input.newId,
       fileName: input.fileName,
-      notes: pdfPageNotes(rendered.pageCount),
-      defaultName: DESIGN_IMPORT_LAYER_NAME.art,
-      metadata: pdfMetadata(format, rendered),
+      chosen: false,
     }),
   };
 };
