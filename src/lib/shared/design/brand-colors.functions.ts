@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { Action } from "@/lib/shared/auth/actions";
 import { requireActionServer } from "@/lib/shared/auth/server-guards.server";
+import { appendBrandColors } from "@/lib/shared/design/brand-colors-merge";
+import { toJson } from "@/lib/shared/content/published";
 import { sanitizeColorName } from "@/lib/shared/design/import/sanitize";
 import { visualIdentitySchema } from "@/lib/shared/brands/visual-identity";
 import { type Result, denied, fail, invalid, parseOutput } from "@/lib/shared/server-utils";
@@ -62,10 +64,6 @@ export const addDesignBrandColors = createServerFn({ method: "POST" })
       hex: color.hex.toLowerCase(),
     }));
     if (added.length === 0) return { ok: true, added: 0 };
-    const stored =
-      typeof row.visual_identity === "object" && row.visual_identity !== null
-        ? row.visual_identity
-        : {};
     const { error: saveError, data: saved } = await caller.supabase.rpc("brand_save", {
       p_brand: {
         id: row.id,
@@ -76,7 +74,7 @@ export const addDesignBrandColors = createServerFn({ method: "POST" })
         tone_of_voice: row.tone_of_voice,
         objectives: row.objectives,
         references_notes: row.references_notes,
-        visual_identity: { ...stored, colors: [...identity.data.colors, ...added] },
+        visual_identity: toJson(appendBrandColors(row.visual_identity, added)),
         timezone: row.timezone,
         expected_version: row.version,
       },

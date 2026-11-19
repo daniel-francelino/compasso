@@ -25,7 +25,6 @@ export const IMPORT_HANDLERS: readonly ImportHandler[] = [
   aseHandler,
   acoHandler,
   gplHandler,
-
   svgHandler,
   sketchHandler,
 ];

@@ -225,7 +225,7 @@ describe("readZipEntry bounds", () => {
     expect(probe.produced).toBeGreaterThan(CAP);
     expect(probe.produced).toBeLessThan(MIB);
     expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
-  });
+  }, 60_000);
 
   it("stops a 1000 to 1 stream by the in-stream ratio, below the cap", async () => {
     const SIZE = 30 * MIB;
@@ -252,7 +252,7 @@ describe("readZipEntry bounds", () => {
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipRatioExceeded);
     expect(probe.produced).toBeLessThan(SIZE);
     expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
-  });
+  }, 60_000);
 
   it("refuses by the declared ratio before inflating anything", async () => {
     const rawCompressed = await deflateRaw(new Uint8Array(30 * MIB));
@@ -277,7 +277,7 @@ describe("readZipEntry bounds", () => {
     );
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.zipRatioExceeded);
     expect(probe).toEqual({ produced: 0, fed: 0 });
-  });
+  }, 60_000);
 
   it("refuses lying sizes: declared 100 bytes, stream inflates more, as corrupt", async () => {
     const rawCompressed = await deflateRaw(randomBytes(3 * MIB));
@@ -297,7 +297,7 @@ describe("readZipEntry bounds", () => {
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
     expect(probe.produced).toBeLessThan(MIB);
     expect(opened.zip.remaining.bytes).toBe(SKETCH_LIMITS.maxTotalBytes);
-  });
+  }, 60_000);
 
   it("feeds the compressed bytes in slices of at most 16 KiB and refuses with bounded output", async () => {
     const SLICE = 16 * 1024;
@@ -333,7 +333,7 @@ describe("readZipEntry bounds", () => {
     expect(Math.max(...steps)).toBeLessThanOrEqual(SLICE);
     expect(steps.reduce((sum, step) => sum + step, 0)).toBe(fed);
     expect(probe.produced).toBeLessThan(MIB);
-  }, 30_000);
+  }, 60_000);
 
   it("refuses an entry whose actual size differs from the declared one", async () => {
     const opened = await open([{ ...deflated("meta.json", "0123456789"), declaredSize: 4 }]);

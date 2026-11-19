@@ -1,4 +1,8 @@
-import { DESIGN_IMPORT_MESSAGE, PDF_PAGE_CHOICE } from "@/lib/shared/design/import/messages";
+import {
+  DESIGN_IMPORT_MESSAGE,
+  IMPORT_CANCELLED,
+  PDF_PAGE_CHOICE,
+} from "@/lib/shared/design/import/messages";
 import {
   extractPdfBytes,
   pdfPageDesign,
@@ -21,21 +25,31 @@ const MAX_LISTED_PAGES = 500;
 const PAGE_ID = /^[1-9][0-9]{0,8}$/;
 
 const pageChoice = (pageCount: number): ImportChoice => ({
-  title: PDF_PAGE_CHOICE.title,
+  title:
+    pageCount > MAX_LISTED_PAGES
+      ? PDF_PAGE_CHOICE.titleTruncated(MAX_LISTED_PAGES, pageCount)
+      : PDF_PAGE_CHOICE.title,
   confirmLabel: PDF_PAGE_CHOICE.confirmLabel,
+  cancelLabel: PDF_PAGE_CHOICE.cancelLabel,
   options: Array.from({ length: Math.min(pageCount, MAX_LISTED_PAGES) }, (_, index) => ({
     id: String(index + 1),
     label: PDF_PAGE_CHOICE.option(index + 1),
   })),
 });
 
+const isAborted = (signal: AbortSignal | undefined): boolean => signal?.aborted === true;
+
+type Retained = Pick<ImportInput, "file" | "usedBytes" | "newId">;
+
 const renderChosen = async (
-  input: ImportInput,
+  input: Retained,
   optionId: string,
   signal: AbortSignal | undefined,
 ): Promise<Result<ImportOutcome>> => {
   if (!PAGE_ID.test(optionId)) return invalid(DESIGN_IMPORT_MESSAGE.pdfPageInvalid);
+  if (isAborted(signal)) return IMPORT_CANCELLED;
   const fresh = new Uint8Array(await input.file.arrayBuffer());
+  if (isAborted(signal)) return IMPORT_CANCELLED;
   const pdf = extractPdfBytes(fresh);
   if (pdf === null) return invalid(DESIGN_IMPORT_MESSAGE.corrupt);
   const rendered = await renderPdfPage(pdf, {
@@ -69,7 +83,14 @@ const decodePdf = async (input: ImportInput): Promise<Result<ImportOutcome>> => 
       ok: true,
       kind: IMPORT_NEEDS_CHOICE,
       choice: pageChoice(probed.pageCount),
-      resume: (optionId, signal) => renderChosen(input, optionId, signal),
+      resume: (
+        (retained: Retained) => (optionId: string, signal?: AbortSignal | undefined) =>
+          renderChosen(retained, optionId, signal)
+      )({
+        file: input.file,
+        usedBytes: input.usedBytes,
+        newId: input.newId,
+      }),
     };
   }
   return {

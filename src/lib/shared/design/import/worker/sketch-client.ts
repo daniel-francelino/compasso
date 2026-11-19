@@ -1,7 +1,7 @@
 import { SKETCH_LIMITS, sizeFitsPage } from "@/lib/shared/design/import/limits";
 import { DESIGN_IMPORT_MESSAGE, IMPORT_CANCELLED } from "@/lib/shared/design/import/messages";
 import { sketchRefusalMessage } from "@/lib/shared/design/import/refusal";
-import { errorName } from "@/lib/shared/design/import/run-limits";
+import { runWorkerJob } from "@/lib/shared/design/import/worker/run-worker-job";
 import {
   SketchResponseSchema,
   type SketchRequest,
@@ -64,42 +64,17 @@ export const runSketchJob = (
   signal: AbortSignal | undefined,
   timeoutMs: number = SKETCH_LIMITS.timeoutMs,
 ): Promise<Result<{ job: SketchJob }>> =>
-  new Promise((resolve) => {
-    if (signal?.aborted === true) {
-      resolve(IMPORT_CANCELLED);
-      return;
-    }
-    if (typeof Worker === "undefined") {
-      resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-      return;
-    }
-    let worker: Worker;
-    try {
-      worker = createWorker();
-    } catch (error) {
-      logError("sketch worker start failed", errorName(error));
-      resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-      return;
-    }
-    let settled = false;
-    const finish = (outcome: Result<{ job: SketchJob }>): void => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", onAbort);
-      worker.terminate();
-      resolve(outcome);
-    };
-    const onAbort = (): void => finish(IMPORT_CANCELLED);
-    const timer = setTimeout(() => finish(invalid(DESIGN_IMPORT_MESSAGE.timedOut)), timeoutMs);
-    signal?.addEventListener("abort", onAbort, { once: true });
-    const fail = (label: string, event: Event): void => {
-      logError(label, event.type);
-      finish(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-    };
-    worker.onmessage = (event: MessageEvent<unknown>) => {
-      if (settled) return;
-      const parsed = SketchResponseSchema.safeParse(event.data);
+  runWorkerJob<Result<{ job: SketchJob }>>({
+    label: "sketch worker",
+    create: createWorker,
+    request: { id: 0, ...request },
+    timeoutMs,
+    signal,
+    readFailed: () => invalid(DESIGN_IMPORT_MESSAGE.readFailed),
+    timedOut: () => invalid(DESIGN_IMPORT_MESSAGE.timedOut),
+    cancelled: () => IMPORT_CANCELLED,
+    onMessage: (data, finish) => {
+      const parsed = SketchResponseSchema.safeParse(data);
       if (!parsed.success) {
         logError("sketch worker response invalid", "ZodError");
         finish(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
@@ -107,8 +82,5 @@ export const runSketchJob = (
       }
       if (parsed.data.id !== 0) return;
       finish(checkSketchResponse(parsed.data, request));
-    };
-    worker.onerror = (event) => fail("sketch worker failed", event);
-    worker.onmessageerror = (event) => fail("sketch worker message failed", event);
-    worker.postMessage({ id: 0, ...request });
+    },
   });

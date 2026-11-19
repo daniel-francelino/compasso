@@ -14,8 +14,7 @@ vi.mock("@/lib/shared/design/import/render-pdf-page", async (importActual) => ({
 const { pdfHandler } = await import("@/lib/shared/design/import/handlers/pdf");
 const { DESIGN_IMPORT_MESSAGE, PDF_PAGE_CHOICE } =
   await import("@/lib/shared/design/import/messages");
-const { IMPORT_NEEDS_CHOICE, DesignImportNoteKind } =
-  await import("@/lib/shared/design/import/types");
+const { IMPORT_NEEDS_CHOICE } = await import("@/lib/shared/design/import/types");
 
 const bytes = Uint8Array.from("%PDF-1.7 body", (character) => character.charCodeAt(0));
 const file = new File([bytes], "a.pdf");
@@ -93,7 +92,21 @@ describe("pdfHandler page selection", () => {
     expect(result.ok).toBe(false);
   });
 
-  it("keeps the first-page note kind out of a chosen page", () => {
-    expect(DesignImportNoteKind.FirstPageOnly).toBe("first_page_only");
+  it("says so in the title when more than 500 pages exist", async () => {
+    render.probe.mockResolvedValue({ ok: true, choose: true, pageCount: 650 });
+    const result = await decode();
+    if (!result.ok || result.kind !== IMPORT_NEEDS_CHOICE) throw new Error("choice expected");
+    expect(result.choice.options).toHaveLength(500);
+    expect(result.choice.title).toContain("500");
+    expect(result.choice.title).toContain("650");
+  });
+
+  it("does not render a page once the signal is aborted", async () => {
+    render.probe.mockResolvedValue({ ok: true, choose: true, pageCount: 3 });
+    const result = await decode();
+    if (!result.ok || result.kind !== IMPORT_NEEDS_CHOICE) throw new Error("choice expected");
+    const resumed = await result.resume("2", AbortSignal.abort());
+    expect(resumed.ok).toBe(false);
+    expect(render.page).not.toHaveBeenCalled();
   });
 });

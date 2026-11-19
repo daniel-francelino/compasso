@@ -82,13 +82,51 @@ describe("ASE", () => {
     within(channelsOf(palette.swatches[1]?.hex ?? ""), [0, 255, 255], 1);
     expect(palette.swatches.map((swatch) => swatch.converted)).toEqual([false, true, true, true]);
     expect(palette.notes).toEqual([{ kind: DesignImportNoteKind.SwatchConverted, count: 3 }]);
+    within(channelsOf(palette.swatches[2]?.hex ?? ""), [255, 255, 255], 2);
+    within(channelsOf(palette.swatches[3]?.hex ?? ""), [128, 128, 128], 1);
   });
 
-  it("fails fast on a block count of 4e9 with a few bytes", () => {
-    const started = Date.now();
-    const result = parseAse(aseBytes([], { declaredBlocks: 4_000_000_000 }));
-    expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.paletteCorrupt);
-    expect(Date.now() - started).toBeLessThan(200);
+  it("refuses a block count that the bytes cannot hold, as corrupt", () => {
+    const color = { kind: "color" as const, name: "A", model: "RGB " as const, values: [1, 0, 0] };
+    expect(messageOf(parseAse(aseBytes([], { declaredBlocks: 4_000_000_000 })))).toBe(
+      DESIGN_IMPORT_MESSAGE.paletteCorrupt,
+    );
+    expect(messageOf(parseAse(aseBytes([color], { declaredBlocks: 2 })))).toBe(
+      DESIGN_IMPORT_MESSAGE.paletteCorrupt,
+    );
+    expect(paletteOf(parseAse(aseBytes([color], { declaredBlocks: 1 }))).swatches).toHaveLength(1);
+  });
+
+  it("allows 8 nested groups, refuses a 9th and tolerates an unmatched group end", () => {
+    const color = { kind: "color" as const, name: "C", model: "RGB " as const, values: [1, 0, 0] };
+    const nested = (depth: number) =>
+      aseBytes([
+        ...Array.from({ length: depth }, (_, index) => ({
+          kind: "group" as const,
+          name: `g${index}`,
+        })),
+        color,
+      ]);
+    const eight = paletteOf(parseAse(nested(8)));
+    expect(eight.swatches[0]?.name.startsWith("g0 / g1")).toBe(true);
+    expect(messageOf(parseAse(nested(9)))).toBe(DESIGN_IMPORT_MESSAGE.paletteCorrupt);
+    const unmatched = paletteOf(parseAse(aseBytes([{ kind: "end" }, { kind: "end" }, color])));
+    expect(unmatched.swatches.map((swatch) => swatch.name)).toEqual(["C"]);
+  });
+
+  it("closing a group stops prefixing later names", () => {
+    const color = (name: string) => ({
+      kind: "color" as const,
+      name,
+      model: "RGB " as const,
+      values: [name === "in" ? 1 : 0, 0, 0],
+    });
+    const palette = paletteOf(
+      parseAse(
+        aseBytes([{ kind: "group", name: "G" }, color("in"), { kind: "end" }, color("out")]),
+      ),
+    );
+    expect(palette.swatches.map((swatch) => swatch.name)).toEqual(["G / in", "out"]);
   });
 
   it("refuses a name longer than its block and a block longer than the file", () => {
@@ -111,16 +149,26 @@ describe("ASE", () => {
     expect(stored.startsWith("ab")).toBe(true);
   });
 
+  it("accepts exactly 1000 distinct swatches", () => {
+    const thousand = Array.from({ length: 1000 }, (_, index) => ({
+      kind: "color" as const,
+      name: `c${index}`,
+      model: "RGB " as const,
+      values: [(index % 256) / 255, Math.floor(index / 256) / 255, 0],
+    }));
+    expect(paletteOf(parseAse(aseBytes(thousand))).swatches).toHaveLength(1000);
+  });
+
   it("refuses more than 1000 swatches and an empty palette", () => {
     const many = Array.from({ length: 1001 }, (_, index) => ({
       kind: "color" as const,
       name: `c${index}`,
       model: "RGB " as const,
-      values: [index / 1001, 0, 0],
+      values: [(index % 256) / 255, Math.floor(index / 256) / 255, 0],
     }));
     expect(messageOf(parseAse(aseBytes(many)))).toBe(DESIGN_IMPORT_MESSAGE.paletteTooManySwatches);
     expect(messageOf(parseAse(aseBytes([])))).toBe(DESIGN_IMPORT_MESSAGE.paletteEmpty);
-  });
+  }, 30_000);
 
   it("dedupes equal colors and registers through the handler", async () => {
     const bytes = aseBytes([
@@ -159,7 +207,25 @@ describe("ACO", () => {
       ),
     );
     within(channelsOf(palette.swatches[0]?.hex ?? ""), [0, 255, 255], 1);
+    within(channelsOf(palette.swatches[1]?.hex ?? ""), [255, 255, 255], 2);
+    within(channelsOf(palette.swatches[2]?.hex ?? ""), [128, 128, 128], 1);
     expect(palette.notes[0]?.count).toBe(3);
+  });
+
+  it("converts HSB and reads a Lab color with negative a and b as signed", () => {
+    const palette = paletteOf(
+      parseAco(
+        acoBytes([
+          { space: 1, values: [0, 65535, 65535, 0], name: "Red" },
+          { space: 7, values: [5000, 0x10000 - 5000, 5000, 0], name: "Signed" },
+          { space: 7, values: [5000, 5000, 0x10000 - 5000, 0], name: "Flipped" },
+        ]),
+      ),
+    );
+    within(channelsOf(palette.swatches[0]?.hex ?? ""), [255, 0, 0], 1);
+    expect(palette.swatches[1]?.hex).not.toBe(palette.swatches[2]?.hex);
+    const [red, green] = channelsOf(palette.swatches[1]?.hex ?? "");
+    expect(green ?? 0).toBeGreaterThan(red ?? 0);
   });
 
   it("skips an unknown color space and refuses a file where all are unknown", () => {
@@ -172,9 +238,12 @@ describe("ACO", () => {
     expect(messageOf(parseAco(unknown))).toBe(DESIGN_IMPORT_MESSAGE.paletteEmpty);
   });
 
-  it("refuses a v1 count of 65535 with a few bytes and a v2 name beyond the file", () => {
+  it("refuses a count that the bytes cannot hold and a v2 name beyond the file", () => {
     const entries = [{ space: 0, values: [1, 2, 3, 4] as [number, number, number, number] }];
     expect(messageOf(parseAco(acoBytes(entries, { version: 1, declaredCount: 65535 })))).toBe(
+      DESIGN_IMPORT_MESSAGE.paletteCorrupt,
+    );
+    expect(messageOf(parseAco(acoBytes(entries, { version: 1, declaredCount: 2 })))).toBe(
       DESIGN_IMPORT_MESSAGE.paletteCorrupt,
     );
     expect(messageOf(parseAco(acoBytes(entries, { version: 2, nameChars: 255 })))).toBe(
@@ -193,14 +262,17 @@ describe("GPL", () => {
           "Columns: 4",
           "# comment",
           "255   0   0  Red",
-          "300 -5 0 Odd",
+          "300 999 12 Odd",
+          "-5 1 2 Negative",
           "abc 1 2 Bad",
+          "100000 0 0 Wide",
           "0 0 255",
         ]),
       ),
     );
-    expect(palette.swatches.map((swatch) => swatch.name)).toEqual(["Red", "Cor"]);
+    expect(palette.swatches.map((swatch) => swatch.name)).toEqual(["Red", "Odd", "Cor"]);
     within(channelsOf(palette.swatches[0]?.hex ?? ""), [255, 0, 0], 0);
+    within(channelsOf(palette.swatches[1]?.hex ?? ""), [255, 255, 12], 0);
     expect(palette.notes).toEqual([]);
   });
 

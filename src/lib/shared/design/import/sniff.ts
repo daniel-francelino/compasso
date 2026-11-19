@@ -70,6 +70,7 @@ const GIF_SIGNATURES = ["GIF87a", "GIF89a"];
 const TIFF_LITTLE = [0x49, 0x49];
 const TIFF_BIG = [0x4d, 0x4d];
 const FTYP_OFFSET = 4;
+const FTYP_MAJOR_OFFSET = 8;
 const FTYP_BRANDS_OFFSET = 16;
 const FTYP_MAX_BRANDS = 16;
 const FTYP_MIN_BOX = 16;
@@ -88,18 +89,19 @@ export const hasTiffSignature = (head: Uint8Array): boolean => {
   return little || big;
 };
 
-export const hasAvifSignature = (head: Uint8Array): boolean => {
-  if (!startsWith(head, "ftyp", FTYP_OFFSET) || head.length < FTYP_MIN_BOX) return false;
+export const ftypBrands = (head: Uint8Array): string[] => {
+  if (!startsWith(head, "ftyp", FTYP_OFFSET) || head.length < FTYP_MIN_BOX) return [];
   const view = new DataView(head.buffer, head.byteOffset, head.byteLength);
   const boxSize = view.getUint32(0, false);
-  if (boxSize < FTYP_MIN_BOX) return false;
+  if (boxSize < FTYP_MIN_BOX) return [];
   const end = Math.min(boxSize, head.length, FTYP_BRANDS_OFFSET + FTYP_MAX_BRANDS * 4);
-  if (AVIF_BRANDS.some((brand) => startsWith(head, brand, 8))) return true;
-  for (let offset = FTYP_BRANDS_OFFSET; offset + 4 <= end; offset += 4) {
-    if (AVIF_BRANDS.some((brand) => startsWith(head, brand, offset))) return true;
-  }
-  return false;
+  const offsets = [FTYP_MAJOR_OFFSET];
+  for (let offset = FTYP_BRANDS_OFFSET; offset + 4 <= end; offset += 4) offsets.push(offset);
+  return offsets.map((offset) => String.fromCharCode(...head.subarray(offset, offset + 4)));
 };
+
+export const hasAvifSignature = (head: Uint8Array): boolean =>
+  ftypBrands(head).some((brand) => AVIF_BRANDS.includes(brand));
 
 export const hasAsePalette = (head: Uint8Array): boolean => startsWith(head, "ASEF");
 

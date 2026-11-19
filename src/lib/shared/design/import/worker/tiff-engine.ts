@@ -89,7 +89,7 @@ const stripsOf = async (info: TiffInfo, bytes: Uint8Array): Promise<Uint8Array[]
       out.push(raw);
       continue;
     }
-    const inflated = await inflateBounded(raw, expected);
+    const inflated = await inflateBounded(Uint8Array.from(raw), expected);
     if (inflated === null) return null;
     out.push(padded(inflated, expected));
   }

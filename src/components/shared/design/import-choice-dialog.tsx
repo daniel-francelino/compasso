@@ -1,15 +1,9 @@
 import { useState } from "react";
-import { Button } from "@/components/shared/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/shared/ui/dialog";
-import { Label } from "@/components/shared/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/shared/ui/radio-group";
-import { PDF_PAGE_CHOICE } from "@/lib/shared/design/import/messages";
+import { Button } from "lost-ui/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "lost-ui/ui/dialog";
+import { Label } from "lost-ui/ui/label";
+import { RadioGroup, RadioGroupItem } from "lost-ui/ui/radio-group";
+import { IMPORT_CHOICE_CANCEL_LABEL } from "@/lib/shared/design/import/messages";
 import type { ImportChoice } from "@/lib/shared/design/import/types";
 
 function ChoiceBody({
@@ -47,7 +41,7 @@ function ChoiceBody({
       </RadioGroup>
       <DialogFooter>
         <Button type="button" variant="ghost" onClick={onCancel}>
-          {PDF_PAGE_CHOICE.cancelLabel}
+          {choice.cancelLabel ?? IMPORT_CHOICE_CANCEL_LABEL}
         </Button>
         <Button type="button" disabled={selected === ""} onClick={() => onAnswer(selected)}>
           {choice.confirmLabel}

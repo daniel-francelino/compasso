@@ -77,7 +77,7 @@ const pixelsMatch = (
 ): boolean =>
   pixels.width === target.width &&
   pixels.height === target.height &&
-  pixels.data.length === target.width * target.height * 4;
+  pixels.data.length === rasterBytes(target.width, target.height);
 
 export const decodeSvg = async (
   input: ImportInput,

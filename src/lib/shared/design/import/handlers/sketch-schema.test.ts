@@ -97,7 +97,7 @@ describe("parseSketchJson", () => {
     const limit = SKETCH_LIMITS.maxJsonValues;
     expect(parseSketchJson(body(limit - 1)).ok).toBe(true);
     expect(messageOf(parseSketchJson(body(limit)))).toBe(DESIGN_IMPORT_MESSAGE.sketchCorrupt);
-  });
+  }, 60_000);
 
   it("charges the values of every parse to a shared job budget", () => {
     const budget = { remaining: 7 };

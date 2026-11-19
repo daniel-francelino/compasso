@@ -1,3 +1,5 @@
+import { ftypBrands } from "@/lib/shared/design/import/sniff";
+
 const BOX_HEADER = 8;
 const LARGE_BOX_HEADER = 16;
 const FULL_BOX_EXTRA = 4;
@@ -87,15 +89,6 @@ const walk = (
   return true;
 };
 
-const hasBrand = (bytes: Uint8Array, brand: string): boolean => {
-  const size = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0, false);
-  const end = Math.min(size, bytes.length);
-  for (let offset = 8; offset + 4 <= end; offset += offset === 8 ? 8 : 4) {
-    if (typeAt(bytes, offset) === brand) return true;
-  }
-  return false;
-};
-
 export const readAvifInfo = (bytes: Uint8Array): AvifInfo | null => {
   if (bytes.length < BOX_HEADER * 2) return null;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -109,6 +102,6 @@ export const readAvifInfo = (bytes: Uint8Array): AvifInfo | null => {
     height: first[1],
     largestPixels,
     ambiguous: new Set(state.sizes.map(([w, h]) => `${w}x${h}`)).size > 1,
-    animated: hasBrand(bytes, "avis"),
+    animated: ftypBrands(bytes).includes("avis"),
   };
 };

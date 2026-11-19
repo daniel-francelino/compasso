@@ -9,7 +9,7 @@ import {
   WorkerStatus,
 } from "@/lib/shared/design/import/worker/protocol";
 import { validateWorkerDocument } from "@/lib/shared/design/import/worker/validate-document";
-import { errorName } from "@/lib/shared/design/import/run-limits";
+import { runWorkerJob } from "@/lib/shared/design/import/worker/run-worker-job";
 import { logError } from "@/lib/shared/logger";
 import { type Result, invalid } from "@/lib/shared/server-utils";
 
@@ -55,42 +55,22 @@ const runOnce = (
   options: ImportJobOptions,
   bindCancel: (cancel: () => void) => void,
 ): Promise<WorkerOutcome> =>
-  new Promise<WorkerOutcome>((resolve, reject) => {
-    if (typeof Worker === "undefined") {
-      resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-      return;
-    }
-    let worker: Worker;
-    try {
-      worker = createWorker();
-    } catch (error) {
-      logError("import worker start failed", errorName(error));
-      resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-      return;
-    }
-    let settled = false;
-    const finish = (settle: () => void) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      worker.terminate();
-      settle();
-    };
-    const timer = setTimeout(
-      () => finish(() => resolve(invalid(DESIGN_IMPORT_MESSAGE.timedOut))),
-      DESIGN_IMPORT_LIMITS.workerTimeoutMs,
-    );
-    const failGeneric = (label: string, event: Event) => {
-      logError(label, event.type);
-      finish(() => resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed)));
-    };
-    bindCancel(() => finish(() => reject(new ImportCancelledError())));
-    worker.onmessage = (event: MessageEvent<unknown>) => {
-      if (settled) return;
-      const parsed = WorkerResponseSchema.safeParse(event.data);
+  runWorkerJob<WorkerOutcome>({
+    label: "import worker",
+    create: createWorker,
+    request,
+    timeoutMs: DESIGN_IMPORT_LIMITS.workerTimeoutMs,
+    readFailed: () => invalid(DESIGN_IMPORT_MESSAGE.readFailed),
+    timedOut: () => invalid(DESIGN_IMPORT_MESSAGE.timedOut),
+    cancelled: () => {
+      throw new ImportCancelledError();
+    },
+    bindCancel,
+    onMessage: (data, finish) => {
+      const parsed = WorkerResponseSchema.safeParse(data);
       if (!parsed.success) {
         logError("import worker response invalid", "ZodError");
-        finish(() => resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed)));
+        finish(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
         return;
       }
       const response = parsed.data;
@@ -99,15 +79,12 @@ const runOnce = (
         options.onProgress?.(response.done, response.total);
         return;
       }
-      const outcome =
+      finish(
         response.status === WorkerStatus.Error
           ? invalid(failureMessage(response.failure, request.limits))
-          : validateWorkerDocument(response.document, request.limits);
-      finish(() => resolve(outcome));
-    };
-    worker.onerror = (event) => failGeneric("import worker failed", event);
-    worker.onmessageerror = (event) => failGeneric("import worker message failed", event);
-    worker.postMessage(request);
+          : validateWorkerDocument(response.document, request.limits),
+      );
+    },
   });
 
 let queue: Promise<unknown> = Promise.resolve();

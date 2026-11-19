@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { renderShape, renderText } from "@/lib/shared/design/import/handlers/sketch-render";
+import {
+  renderShape,
+  renderSize,
+  renderText,
+} from "@/lib/shared/design/import/handlers/sketch-render";
 import { SketchNodeKind, type SketchNode } from "@/lib/shared/design/import/handlers/sketch-schema";
 
 const node = (overrides: Partial<SketchNode>): SketchNode => ({
@@ -76,11 +80,18 @@ describe("renderShape", () => {
     expect(renderShape(node({ kind: SketchNodeKind.Group }))).toBeNull();
   });
 
-  it("clamps a 10000 px frame to the page side limit", () => {
-    const buffer = renderShape(
-      node({ kind: SketchNodeKind.Oval, frame: { x: 0, y: 0, width: 4, height: 4 } }),
+  it("clamps a 10000 px frame to the page side limit and to the bound", () => {
+    const wide = renderShape(
+      node({ kind: SketchNodeKind.Oval, frame: { x: 0, y: 0, width: 10000, height: 3 } }),
     );
-    expect(buffer?.width).toBe(4);
+    expect([wide?.width, wide?.height]).toEqual([4096, 3]);
+    expect(wide?.data.length).toBe(4096 * 3 * 4);
+    const bounded = renderShape(node({ frame: { x: 0, y: 0, width: 10000, height: 50 } }), 100);
+    expect([bounded?.width, bounded?.height]).toEqual([100, 50]);
+    expect(renderSize(node({ frame: { x: 0, y: 0, width: 0.2, height: 0 } }), 100)).toEqual({
+      width: 1,
+      height: 1,
+    });
   });
 });
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BRAND_COLOR_LIMIT } from "@/lib/shared/design/brand-colors.functions";
-import { Button } from "@/components/shared/ui/button";
-import { Checkbox } from "@/components/shared/ui/checkbox";
+import { Button } from "lost-ui/ui/button";
+import { Checkbox } from "lost-ui/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/shared/ui/dialog";
-import { Label } from "@/components/shared/ui/label";
+} from "lost-ui/ui/dialog";
+import { Label } from "lost-ui/ui/label";
 import { PALETTE_COPY, describeImportNotes } from "@/lib/shared/design/import/messages";
 import type { ImportPalette, ImportSwatch } from "@/lib/shared/design/import/types";
 
@@ -45,7 +45,7 @@ function PaletteBody({
       <DialogHeader>
         <DialogTitle>{PALETTE_COPY.title}</DialogTitle>
         <DialogDescription>
-          {free === 0 ? PALETTE_COPY.brandFull : PALETTE_COPY.slots(free)}
+          {free === 0 ? PALETTE_COPY.brandFull(BRAND_COLOR_LIMIT) : PALETTE_COPY.slots(free)}
         </DialogDescription>
       </DialogHeader>
       <h3 className="text-sm font-medium">{PALETTE_COPY.heading}</h3>

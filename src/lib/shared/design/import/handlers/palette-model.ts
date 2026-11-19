@@ -119,9 +119,6 @@ export const hsbToRgb = (
 export const swatchName = (raw: string): string => sanitizeColorName(raw) || FALLBACK_NAME;
 
 export const finishPalette = (raw: readonly RawSwatch[]): Result<ImportOutcome> => {
-  if (raw.length > PALETTE_LIMITS.maxSwatches) {
-    return invalid(DESIGN_IMPORT_MESSAGE.paletteTooManySwatches);
-  }
   const seen = new Set<string>();
   const swatches: ImportSwatch[] = [];
   for (const entry of raw) {
@@ -129,6 +126,9 @@ export const finishPalette = (raw: readonly RawSwatch[]): Result<ImportOutcome> 
     if (seen.has(hex)) continue;
     seen.add(hex);
     swatches.push({ name: swatchName(entry.name), hex, converted: entry.converted });
+  }
+  if (swatches.length > PALETTE_LIMITS.maxSwatches) {
+    return invalid(DESIGN_IMPORT_MESSAGE.paletteTooManySwatches);
   }
   if (swatches.length === 0) return invalid(DESIGN_IMPORT_MESSAGE.paletteEmpty);
   const converted = swatches.filter((swatch) => swatch.converted).length;
@@ -144,10 +144,11 @@ export const finishPalette = (raw: readonly RawSwatch[]): Result<ImportOutcome> 
 };
 
 export const decodeUtf16Be = (bytes: Uint8Array, start: number, chars: number): string | null => {
-  if (chars > PALETTE_LIMITS.maxNameRead || start + chars * 2 > bytes.length) return null;
+  if (start + chars * 2 > bytes.length) return null;
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const units: number[] = [];
-  for (let index = 0; index < chars; index += 1) {
+  const read = Math.min(chars, PALETTE_LIMITS.maxNameRead);
+  for (let index = 0; index < read; index += 1) {
     const unitValue = view.getUint16(start + index * 2, false);
     if (unitValue === 0) break;
     units.push(unitValue);

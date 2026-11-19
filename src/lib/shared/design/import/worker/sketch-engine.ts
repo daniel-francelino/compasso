@@ -385,19 +385,26 @@ const buildChosen = async (
   return build(loaded, page, info, request, deps);
 };
 
+const resume = async (
+  loaded: Loaded,
+  artboard: string,
+  request: SketchEngineRequest,
+  deps: SketchDeps,
+): Promise<SketchOutput> => {
+  const wanted = parseArtboardId(artboard);
+  const page = await readPageAt(loaded, wanted.page);
+  const info = page.infos[wanted.index];
+  if (info === undefined) throw new Refused(SketchRefusal.Corrupt);
+  return build(loaded, page, info, request, deps);
+};
+
 const start = async (
   request: SketchEngineRequest,
   bytes: Uint8Array,
   deps: SketchDeps,
 ): Promise<SketchOutput> => {
   const loaded = await load(bytes);
-  if (request.artboard !== null) {
-    const wanted = parseArtboardId(request.artboard);
-    const page = await readPageAt(loaded, wanted.page);
-    const info = page.infos[wanted.index];
-    if (info === undefined) throw new Refused(SketchRefusal.Corrupt);
-    return build(loaded, page, info, request, deps);
-  }
+  if (request.artboard !== null) return resume(loaded, request.artboard, request, deps);
   const { listed, total } = await probeArtboards(loaded);
   const first = listed[0];
   if (first === undefined || total === 0) throw new Refused(SketchRefusal.NoArtboards);

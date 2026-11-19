@@ -1,6 +1,6 @@
 import { DESIGN_IMPORT_LIMITS } from "@/lib/shared/design/import/limits";
 import { DESIGN_IMPORT_MESSAGE, IMPORT_CANCELLED } from "@/lib/shared/design/import/messages";
-import { errorName } from "@/lib/shared/design/import/run-limits";
+import { runWorkerJob } from "@/lib/shared/design/import/worker/run-worker-job";
 import { TiffRefusal } from "@/lib/shared/design/import/worker/tiff-header";
 import {
   TiffResponseSchema,
@@ -32,7 +32,7 @@ export const validateTiffResult = (
   response: TiffResult,
   usedBytes: number,
 ): Result<{ result: TiffResult }> => {
-  const bytes = response.width * response.height * 4;
+  const bytes = rasterBytes(response.width, response.height);
   const consistent =
     response.pixels.byteLength === bytes && bytes <= DESIGN_LIMITS.rasterBudgetBytes;
   if (!consistent) return invalid(DESIGN_IMPORT_MESSAGE.tiffCorrupt);
@@ -47,42 +47,17 @@ export const runTiffJob = (
   signal: AbortSignal | undefined,
   timeoutMs: number = DESIGN_IMPORT_LIMITS.tiffTimeoutMs,
 ): Promise<Result<{ result: TiffResult }>> =>
-  new Promise((resolve) => {
-    if (signal?.aborted === true) {
-      resolve(IMPORT_CANCELLED);
-      return;
-    }
-    if (typeof Worker === "undefined") {
-      resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-      return;
-    }
-    let worker: Worker;
-    try {
-      worker = createWorker();
-    } catch (error) {
-      logError("tiff worker start failed", errorName(error));
-      resolve(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-      return;
-    }
-    let settled = false;
-    const finish = (outcome: Result<{ result: TiffResult }>): void => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", onAbort);
-      worker.terminate();
-      resolve(outcome);
-    };
-    const onAbort = (): void => finish(IMPORT_CANCELLED);
-    const timer = setTimeout(() => finish(invalid(DESIGN_IMPORT_MESSAGE.timedOut)), timeoutMs);
-    signal?.addEventListener("abort", onAbort, { once: true });
-    const fail = (label: string, event: Event): void => {
-      logError(label, event.type);
-      finish(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
-    };
-    worker.onmessage = (event: MessageEvent<unknown>) => {
-      if (settled) return;
-      const parsed = TiffResponseSchema.safeParse(event.data);
+  runWorkerJob<Result<{ result: TiffResult }>>({
+    label: "tiff worker",
+    create: createWorker,
+    request: { id: 0, ...request },
+    timeoutMs,
+    signal,
+    readFailed: () => invalid(DESIGN_IMPORT_MESSAGE.readFailed),
+    timedOut: () => invalid(DESIGN_IMPORT_MESSAGE.timedOut),
+    cancelled: () => IMPORT_CANCELLED,
+    onMessage: (data, finish) => {
+      const parsed = TiffResponseSchema.safeParse(data);
       if (!parsed.success) {
         logError("tiff worker response invalid", "ZodError");
         finish(invalid(DESIGN_IMPORT_MESSAGE.readFailed));
@@ -95,8 +70,5 @@ export const runTiffJob = (
           ? invalid(refusalMessage(response.refusal))
           : validateTiffResult(response, request.usedBytes),
       );
-    };
-    worker.onerror = (event) => fail("tiff worker failed", event);
-    worker.onmessageerror = (event) => fail("tiff worker message failed", event);
-    worker.postMessage({ id: 0, ...request });
+    },
   });

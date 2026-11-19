@@ -88,6 +88,7 @@ export type ImportChoiceOption = { id: string; label: string; detail?: string | 
 export type ImportChoice = {
   title: string;
   confirmLabel: string;
+  cancelLabel?: string | undefined;
   options: readonly ImportChoiceOption[];
 };
 

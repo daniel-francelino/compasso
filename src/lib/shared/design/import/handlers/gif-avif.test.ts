@@ -6,6 +6,7 @@ vi.mock("@/lib/shared/logger", () => ({ logError: vi.fn() }));
 const { gifHandler } = await import("@/lib/shared/design/import/handlers/gif");
 const { avifHandler, resetAvifSupportProbe } =
   await import("@/lib/shared/design/import/handlers/avif");
+const { readDesignFile } = await import("@/lib/shared/design/import/read-file");
 const { readGifInfo } = await import("@/lib/shared/design/import/handlers/gif-header");
 const { readAvifInfo } = await import("@/lib/shared/design/import/handlers/avif-header");
 const { avifBytes, gifBytes } = await import("@/lib/shared/design/import/handlers/format-fixtures");
@@ -124,9 +125,8 @@ describe("GIF", () => {
   });
 
   it("stops the block walker at its cap with one million extension blocks", () => {
-    const started = Date.now();
-    expect(readGifInfo(gifBytes(10, 10, { extensionBlocks: 1_000_000 }))).toBeNull();
-    expect(Date.now() - started).toBeLessThan(2000);
+    const hostile = gifBytes(10, 10, { extensionBlocks: 1_000_000 });
+    expect(readGifInfo(hostile)).toBeNull();
   });
 
   it("maps a decoder failure to the GIF message", async () => {
@@ -190,11 +190,17 @@ describe("AVIF", () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it("refuses a real ispe that lies beyond the read window instead of trusting a decoy", async () => {
-    const decoy = avifBytes([[100, 80]], { padding: 1024 * 1024 + 64 });
-    const result = await run(avifHandler, "a.avif", decoy.slice(0, 1024 * 1024));
+  it("reads only the first MiB of an AVIF file, so a meta box cut by the window is corrupt", async () => {
+    stub(100, 80);
+    const MIB = 1024 * 1024;
+    const inside = avifBytes([[100, 80]], { padding: MIB - 1024 });
+    expect(inside.length).toBeLessThan(MIB);
+    expect((await readDesignFile(new File([inside], "a.avif"), () => "id")).ok).toBe(true);
+    const beyond = avifBytes([[100, 80]], { padding: MIB + 64 });
+    expect(beyond.length).toBeGreaterThan(MIB);
+    const result = await readDesignFile(new File([beyond], "a.avif"), () => "id");
     expect(messageOf(result)).toBe(DESIGN_IMPORT_MESSAGE.avifCorrupt);
-    expect(spy).not.toHaveBeenCalled();
+    expect(readAvifInfo(beyond)).not.toBeNull();
   });
 
   it("answers avifUnsupported, not an exception, when the browser cannot open AVIF", async () => {

@@ -163,14 +163,19 @@ export const PDF_PAGE_CHOICE = {
   confirmLabel: "Importar página",
   cancelLabel: "Cancelar",
   option: (page: number): string => `Página ${page}`,
+  titleTruncated: (listed: number, total: number): string =>
+    `Escolha a página (as primeiras ${listed} de ${total} páginas)`,
 } as const;
+
+export const IMPORT_CHOICE_CANCEL_LABEL = "Cancelar";
 
 export const PALETTE_COPY = {
   title: "Importar paleta",
   heading: "Cores importadas",
   confirmLabel: "Adicionar à marca",
   cancelLabel: "Cancelar",
-  brandFull: "A marca já tem 12 cores. Remova uma cor da marca para adicionar novas.",
+  brandFull: (limit: number): string =>
+    `A marca já tem ${limit} cores. Remova uma cor da marca para adicionar novas.`,
   permissionReason: "Adicionar cores à marca exige permissão para editar a marca.",
   slots: (free: number): string =>
     `Cabem mais ${free} ${free === 1 ? "cor" : "cores"} na marca. Escolha as que quer adicionar.`,

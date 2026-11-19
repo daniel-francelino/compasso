@@ -295,7 +295,8 @@ describe("sketch handler", () => {
     const buffer = design.buffers.get(design.elements[0]?.id ?? "");
     expect([buffer?.width, buffer?.height]).toEqual([4, 2]);
     expect(buffer?.data.every((value) => value === 7)).toBe(true);
-    expect(design.elements[0]?.pixelWidth).toBe(4);
+    const element = design.elements[0];
+    expect(element !== undefined && "pixelWidth" in element ? element.pixelWidth : null).toBe(4);
     expect(design.elements[0]?.width).toBe(16);
   });
 

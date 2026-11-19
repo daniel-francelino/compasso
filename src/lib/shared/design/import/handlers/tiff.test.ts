@@ -78,7 +78,7 @@ describe("TIFF header pre-pass", () => {
     expect(result.ok && result.info.ifdCount).toBe(4);
   });
 
-  it("refuses more samples than BitsPerSample values, duplicate tags and a zero count", () => {
+  it("refuses more samples than BitsPerSample values (duplicate tags and counts are in tiff-real.test.ts)", () => {
     expect(refusalOf(tiffBytes(100, 80, { samples: 9 }))).toBe(TiffRefusal.Corrupt);
   });
 
@@ -198,6 +198,7 @@ const goodResponse = (extra: Record<string, unknown> = {}) => ({
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   FakeWorker.instances = [];
 });
@@ -242,8 +243,11 @@ describe("TIFF worker client", () => {
   });
 
   it("times out and terminates", async () => {
+    vi.useFakeTimers();
     vi.stubGlobal("Worker", FakeWorker);
-    const result = await startJob(undefined, 5);
+    const pending = startJob(undefined, 5000);
+    await vi.advanceTimersByTimeAsync(5000);
+    const result = await pending;
     expect(!result.ok && result.message).toBe(DESIGN_IMPORT_MESSAGE.timedOut);
     expect(FakeWorker.instances[0]?.terminated).toBe(true);
   });

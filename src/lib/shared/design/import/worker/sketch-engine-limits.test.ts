@@ -54,6 +54,7 @@ const zipOf = (
   refs: string[],
   pages: Record<string, unknown>,
   extra: { name: string; data: Uint8Array }[] = [],
+  method = 8,
 ) =>
   buildZip([
     { name: "meta.json", data: json({ version: 136 }) },
@@ -61,7 +62,7 @@ const zipOf = (
     ...Object.entries(pages).map(([name, value]) => ({
       name: `${name}.json`,
       data: json(value),
-      method: 8,
+      method,
     })),
     ...extra,
   ]);
@@ -85,7 +86,10 @@ const deps = {
 const refusalOf = (output: Awaited<ReturnType<typeof runSketch>>) =>
   output.response.status === "error" ? output.response.refusal : output.response.status;
 
-const bulkLayers = (count: number): unknown[] => Array.from({ length: count }, () => ({}));
+const BULK_VALUES = 1_000_000;
+
+const bulkLayers = (values: number): unknown[] =>
+  Array.from({ length: Math.floor(values / 2) }, (_, index) => ({ n: (index * 7919) % 1_000_003 }));
 
 describe("sketch job memory bounds", () => {
   it("dedupes repeated page refs in document.json", () => {
@@ -97,21 +101,28 @@ describe("sketch job memory bounds", () => {
   it("holds one page, not forty, when the same heavy page is listed 40 times", async () => {
     const page = {
       _class: "page",
-      layers: [artboard("A", [rect("r")]), ...bulkLayers(1_900_000)],
+      layers: [artboard("A", [rect("r")])],
+      extra: bulkLayers(BULK_VALUES),
     };
     const bytes = await zipOf(
       Array.from({ length: 40 }, () => "pages/x"),
       { "pages/x": page },
+      [],
+      0,
     );
     const output = await runSketch(request(), bytes, deps);
-    expect(output.response.status).toBe("result");
+    expect(refusalOf(output)).toBe("result");
   }, 60_000);
 
   it("refuses distinct heavy pages once the job value cap is spent", async () => {
-    const heavy = { _class: "page", layers: bulkLayers(1_900_000) };
-    const count = Math.ceil(SKETCH_LIMITS.maxJobJsonValues / 1_900_000) + 1;
+    const heavy = {
+      _class: "page",
+      layers: [artboard("A", [rect("r")])],
+      extra: bulkLayers(BULK_VALUES),
+    };
+    const count = Math.ceil(SKETCH_LIMITS.maxJobJsonValues / BULK_VALUES) + 1;
     const names = Array.from({ length: count }, (_, index) => `pages/p${index}`);
-    const bytes = await zipOf(names, Object.fromEntries(names.map((name) => [name, heavy])));
+    const bytes = await zipOf(names, Object.fromEntries(names.map((name) => [name, heavy])), [], 0);
     const output = await runSketch(request(), bytes, deps);
     expect(refusalOf(output)).toBe(SketchRefusal.Corrupt);
   }, 120_000);
